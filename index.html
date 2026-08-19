@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Idun — Amica PC</title>
+  <meta name="description" content="Idun project hub — Azure AI Foundry agent SDK, playground, and related repos." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0e0e12;
+      --surface: #16161d;
+      --border: #2c2c36;
+      --ink: #e7e7ee;
+      --muted: #8b8b99;
+      --purple: #8b5cf6;
+      --blue: #3b82f6;
+      --amber: #fcd34d;
+      --green: #4ade80;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--ink);
+      font-family: Inter, system-ui, sans-serif;
+      min-height: 100vh; padding: 32px 16px 64px;
+    }
+    .wrap { max-width: 960px; margin: 0 auto; }
+
+    /* Amica PC frame */
+    .crt {
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      background: linear-gradient(180deg, #121219, #0c0c11);
+      box-shadow: 0 0 0 6px #050507, 0 18px 60px rgba(0,0,0,.6),
+                  inset 0 0 60px rgba(139,92,246,.06);
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .crt::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(0deg, rgba(255,255,255,.018) 0 1px, transparent 1px 3px);
+      mix-blend-mode: overlay;
+    }
+    .crt::after {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(120% 80% at 50% -10%, rgba(139,92,246,.12), transparent 60%);
+    }
+    header { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+    .logo {
+      width: 46px; height: 46px; border-radius: 10px; flex: none;
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      display: grid; place-items: center; font-weight: 800; color: #fff;
+      font-family: "JetBrains Mono", monospace; font-size: 20px;
+      box-shadow: 0 0 24px rgba(139,92,246,.45);
+    }
+    h1 { font-size: 26px; margin: 0; letter-spacing: -.5px; }
+    .sub { color: var(--muted); font-size: 13px; margin: 2px 0 0; font-family: "JetBrains Mono", monospace; }
+    .tagline { color: var(--muted); margin: 18px 0 24px; font-size: 15px; line-height: 1.6; }
+    .tagline b { color: var(--ink); }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px; text-decoration: none; color: inherit;
+      display: block; transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+    .card:hover { transform: translateY(-3px); border-color: var(--purple); box-shadow: 0 10px 30px rgba(139,92,246,.18); }
+    .card .name { font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 15px; color: var(--purple); }
+    .card .desc { color: var(--muted); font-size: 13px; margin-top: 8px; line-height: 1.55; }
+    .card .meta { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip {
+      font-size: 11px; font-family: "JetBrains Mono", monospace;
+      padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted);
+    }
+    .chip.live { color: var(--green); border-color: rgba(74,222,128,.4); }
+    .chip.demo { color: var(--amber); border-color: rgba(252,211,77,.4); }
+
+    footer { margin-top: 28px; color: var(--muted); font-size: 12px; font-family: "JetBrains Mono", monospace; text-align: center; }
+    a.inline { color: var(--blue); text-decoration: none; }
+    a.inline:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="crt">
+      <header>
+        <div class="logo">iD</div>
+        <div>
+          <h1>Idun — Amica PC</h1>
+          <p class="sub">project hub · Azure AI Foundry · NatureLM-Idun-5-MoE</p>
+        </div>
+      </header>
+
+      <p class="tagline">
+        The <b>Idun</b> stack — a stdlib-only client/CLI for the NatureLM-Idun-5-MoE
+        agent, a live trajectory playground, and the supporting webapp. Everything
+        here is <b>tenant-agnostic</b>: bring your own Azure AI Foundry resource, or
+        just explore the recorded demo traces — no account needed.
+      </p>
+
+      <div class="grid">
+        <a class="card" href="https://github.com/qapdex-maker/idun-sdk" target="_blank" rel="noopener">
+          <div class="name">idun-sdk</div>
+          <div class="desc">Thin, stdlib-only client + CLI for the NatureLM-Idun-5-MoE agent — 17-provider registry, retro console, MCP server.</div>
+          <div class="meta">
+            <span class="chip live">PyPI 1.0.16</span>
+            <span class="chip">Python ≥3.8</span>
+          </div>
+        </a>
+
+        <a class="card" href="https://qapdex-maker.github.io/idun-playground/" target="_blank" rel="noopener">
+          <div class="name">idun-playground</div>
+          <div class="desc">Live tool-agent trajectory playground (dark Azure AI Foundry look). Step-by-step demo replay, no backend, no account.</div>
+          <div class="meta">
+            <span class="chip demo">Demo live</span>
+            <span class="chip">GitHub Pages</span>
+          </div>
+        </a>
+
+        <a class="card" href="https://github.com/qapdex-maker/foundry-agent-webapp" target="_blank" rel="noopener">
+          <div class="name">foundry-agent-webapp</div>
+          <div class="desc">Web application with Entra ID authentication, integrated with Azure AI Foundry Agents.</div>
+          <div class="meta">
+            <span class="chip">Entra ID</span>
+            <span class="chip">fork</span>
+          </div>
+        </a>
+      </div>
+
+      <footer>
+        Built with the Idun SDK · <a class="inline" href="https://github.com/qapdex-maker" target="_blank" rel="noopener">github.com/qapdex-maker</a>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>
