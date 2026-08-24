@@ -50,6 +50,12 @@
     .badge .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:blink 1.4s infinite}
     @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
     @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+    .badge.ignite{border-color:rgba(255,185,0,.5); color:var(--orange);
+      box-shadow:0 0 18px rgba(255,185,0,.28); text-decoration:none;
+      animation:floaty 4s ease-in-out infinite; margin-left:10px;}
+    .badge.ignite:hover{color:#fff; border-color:var(--orange);}
+    .badge.ignite .mslogo{vertical-align:middle; margin-right:6px;
+      filter:drop-shadow(0 0 4px rgba(255,185,0,.5));}
 
     h1{font-family:Orbitron,monospace; font-weight:900; font-size:clamp(40px,8vw,92px);
       margin:22px 0 4px; line-height:.95; letter-spacing:2px;
@@ -155,6 +161,15 @@
 
   <div class="wrap">
     <div class="badge"><span class="dot"></span> IDUN · AZURE AI FOUNDRY AGENT</div>
+    <a class="badge ignite" href="https://ignite.microsoft.com/" target="_blank" rel="noopener">
+      <svg class="mslogo" viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
+        <rect x="0" y="0" width="7" height="7" fill="#f25022"/>
+        <rect x="9" y="0" width="7" height="7" fill="#7fba00"/>
+        <rect x="0" y="9" width="7" height="7" fill="#00a4ef"/>
+        <rect x="9" y="9" width="7" height="7" fill="#ffb900"/>
+      </svg>
+      SEE US AT MICROSOFT IGNITE 2026 · SAN FRANCISCO · NOV 17–20
+    </a>
     <h1>IDUN</h1>
     <p class="intro" id="intro"></p>
     <p class="tag">A neon-outrun console for the NatureLM-Idun-5-MoE agent. Watch it reason and call tools on the IDUN-40 — then bring your own Azure AI Foundry resource, or just explore the recorded demo. Tenant-agnostic by design.</p>
@@ -164,7 +179,7 @@
       <div class="dev-top">
         <span class="led"></span>
         <span class="brand">IDUN-40</span>
-        <span class="slot"><span class="cart"></span> CARTRIDGE · idun-sdk v1.0.17</span>
+        <span class="slot"><span class="cart"></span> CARTRIDGE · idun-sdk v1.0.32</span>
         <span class="pad"><span class="cross"></span><span class="btn a"></span><span class="btn b"></span></span>
       </div>
 
@@ -186,7 +201,7 @@
       <a class="card" href="https://github.com/qapdex-maker/idun-sdk" target="_blank" rel="noopener">
         <div class="nm">idun-sdk</div>
         <div class="ds">Stdlib-only client + CLI for NatureLM-Idun-5-MoE — 17-provider registry, retro console, MCP server.</div>
-        <div class="mt"><span class="chip live">PyPI 1.0.16</span><span class="chip">Python ≥3.8</span></div>
+        <div class="mt"><span class="chip live">PyPI 1.0.32</span><span class="chip">Python ≥3.8</span></div>
       </a>
       <a class="card" href="https://qapdex-maker.github.io/idun-playground/" target="_blank" rel="noopener">
         <div class="nm">idun-playground</div>
