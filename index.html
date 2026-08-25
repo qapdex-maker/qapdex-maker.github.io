@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" class="lang-de">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -87,6 +87,9 @@
   .btn.ignite-on{background:var(--accent);color:#fff}
   .toggle-dot{width:9px;height:9px;background:var(--ink);border:2px solid var(--ink);display:inline-block}
   html.ignite .toggle-dot{background:var(--accent-2);box-shadow:var(--glow)}
+  .btn.lang{font-family:"IBM Plex Mono",monospace}
+  html.lang-en .btn.lang{background:var(--accent);color:#fff}
+  html.lang-de .btn.lang{background:var(--accent);color:#fff}
 
   /* ============ HERO ============ */
   .hero{padding:54px 0 30px}
@@ -191,14 +194,15 @@
   <div class="wrap">
     <a class="brand" href="#top"><span class="mark"></span>qapdex-maker.github.io</a>
     <nav class="links">
-      <a href="#top">Home</a>
-      <a href="#featured">Featured</a>
-      <a href="#pages">Seiten</a>
-      <a href="#add">Erweitern</a>
+      <a href="#top" data-de="Home" data-en="Home">Home</a>
+      <a href="#featured" data-de="Featured" data-en="Featured">Featured</a>
+      <a href="#pages" data-de="Seiten" data-en="Pages">Seiten</a>
+      <a href="#add" data-de="Erweitern" data-en="Extend">Erweitern</a>
     </nav>
     <div class="bar-actions">
       <button class="btn" id="igniteBtn" aria-pressed="false"><span class="toggle-dot"></span>Ignite</button>
-      <a class="btn accent" href="https://github.com/qapdex-maker" target="_blank" rel="noopener">GitHub</a>
+      <button class="btn lang" id="langBtn" aria-pressed="false">EN</button>
+      <a class="btn accent" href="https://github.com/qapdex-maker" target="_blank" rel="noopener" data-de="GitHub" data-en="GitHub">GitHub</a>
     </div>
   </div>
 </header>
@@ -209,11 +213,11 @@
     <div class="wrap">
       <div>
         <span class="tag">Portal · v1</span>
-        <h1>Alle deine Seiten.<br><span class="hl">Ein Portal.</span></h1>
-        <p class="lead">qapdex-maker.github.io bündelt deine Self-hosted Deployment, Dev-Tools und Docs — strukturiert, durchsuchbar und jederzeit erweiterbar. Neu dazu kommende Projekte erscheinen hier automatisch.</p>
+        <h1 data-de="Alle deine Seiten.<br><span class=&quot;hl&quot;>Ein Portal.</span>" data-en="All your pages.<br><span class=&quot;hl&quot;>One portal.</span>">Alle deine Seiten.<br><span class="hl">Ein Portal.</span></h1>
+        <p class="lead" data-de="qapdex-maker.github.io bündelt deine Self-hosted Deployment, Dev-Tools und Docs — strukturiert, durchsuchbar und jederzeit erweiterbar. Neu dazu kommende Projekte erscheinen hier automatisch." data-en="qapdex-maker.github.io gathers your self-hosted deployments, dev tools and docs — structured, searchable, and endlessly extensible. New projects appear here automatically.">qapdex-maker.github.io bündelt deine Self-hosted Deployment, Dev-Tools und Docs — strukturiert, durchsuchbar und jederzeit erweiterbar. Neu dazu kommende Projekte erscheinen hier automatisch.</p>
         <div class="cta">
-          <a class="btn accent" href="#pages">Seiten erkunden</a>
-          <a class="btn" href="https://github.com/qapdex-maker" target="_blank" rel="noopener">Auf GitHub</a>
+          <a class="btn accent" href="#pages" data-de="Seiten erkunden" data-en="Explore pages">Seiten erkunden</a>
+          <a class="btn" href="https://github.com/qapdex-maker" target="_blank" rel="noopener" data-de="Auf GitHub" data-en="On GitHub">Auf GitHub</a>
         </div>
       </div>
       <div class="hero-visual" aria-hidden="true">
@@ -230,16 +234,16 @@
     <div class="wrap">
       <div class="feat neo">
         <div class="left">
-          <span class="kicker">★ Featured Deployment</span>
+          <span class="kicker" data-de="★ Featured Deployment" data-en="★ Featured Deployment">★ Featured Deployment</span>
           <h2>selfhost.os</h2>
-          <p>Neo-brutalist Archiv & Stack-Builder für Self-hosted Anwendungen — direkt sichtbar, weil hier der Einstieg in deine Deployment-Landschaft beginnt.</p>
-          <a class="btn accent" href="https://github.com/qapdex-maker" target="_blank" rel="noopener" style="align-self:flex-start">Öffnen</a>
+          <p data-de="Neo-brutalist Archiv & Stack-Builder für Self-hosted Anwendungen — direkt sichtbar, weil hier der Einstieg in deine Deployment-Landschaft beginnt." data-en="Neo-brutalist archive & stack builder for self-hosted applications — front and center, because this is where your deployment landscape begins.">Neo-brutalist Archiv & Stack-Builder für Self-hosted Anwendungen — direkt sichtbar, weil hier der Einstieg in deine Deployment-Landschaft beginnt.</p>
+          <a class="btn accent" href="https://qapdex-maker.github.io/awesome-selfhosted/" target="_blank" rel="noopener" style="align-self:flex-start" data-de="Öffnen" data-en="Open">Öffnen</a>
         </div>
         <div class="right">
-          <span class="pill">Sofort sichtbar</span>
-          <div class="meta">Typ: Self-hosted App</div>
-          <div class="meta">Status: live</div>
-          <div class="meta">Kategorie: App-Archiv / Stack-Builder</div>
+          <span class="pill" data-de="Sofort sichtbar" data-en="Visible at a glance">Sofort sichtbar</span>
+          <div class="meta"><span data-de="Typ:" data-en="Type:">Typ:</span> <span data-de="Self-hosted App" data-en="Self-hosted App">Self-hosted App</span></div>
+          <div class="meta"><span data-de="Status:" data-en="Status:">Status:</span> <span data-de="live" data-en="live">live</span></div>
+          <div class="meta"><span data-de="Kategorie:" data-en="Category:">Kategorie:</span> <span data-de="App-Archiv / Stack-Builder" data-en="App archive / Stack builder">App-Archiv / Stack-Builder</span></div>
         </div>
       </div>
     </div>
@@ -250,23 +254,23 @@
     <div class="wrap">
       <div class="browser-head">
         <div>
-          <h2>Seiten &amp; Deployment</h2>
-          <div class="sub">← Horizontal scrollen, wie ein Insite-Panel →</div>
+          <h2 data-de="Seiten &amp; Deployment" data-en="Pages &amp; deployments">Seiten &amp; Deployment</h2>
+          <div class="sub" data-de="← Horizontal scrollen, wie ein Insite-Panel →" data-en="← Scroll horizontally, like an insite panel →">← Horizontal scrollen, wie ein Insite-Panel →</div>
         </div>
       </div>
       <div class="chips" id="chips">
-        <button class="chip active" data-f="all">Alle</button>
-        <button class="chip" data-f="Self-hosted App">Self-hosted</button>
-        <button class="chip" data-f="Dev Tools">Dev Tools</button>
-        <button class="chip" data-f="soon">Demnächst</button>
+        <button class="chip active" data-f="all" data-de="Alle" data-en="All">Alle</button>
+        <button class="chip" data-f="Self-hosted App" data-de="Self-hosted" data-en="Self-hosted">Self-hosted</button>
+        <button class="chip" data-f="Dev Tools" data-de="Dev Tools" data-en="Dev Tools">Dev Tools</button>
+        <button class="chip" data-f="soon" data-de="Demnächst" data-en="Soon">Demnächst</button>
       </div>
 
       <div class="browser-shell neo">
         <div class="browser-bar">
           <span class="title">qapdex-maker.github.io / pages</span>
           <div class="arrows">
-            <button class="arrow" id="prev" aria-label="zurück">‹</button>
-            <button class="arrow" id="next" aria-label="weiter">›</button>
+            <button class="arrow" id="prev" aria-label="zurück" data-de="zurück" data-en="back">‹</button>
+            <button class="arrow" id="next" aria-label="weiter" data-de="weiter" data-en="next">›</button>
           </div>
         </div>
         <div class="scroller" id="scroller"><!-- Karten werden per JS gerendert --></div>
@@ -278,7 +282,7 @@
   <section class="hint" id="add">
     <div class="wrap">
       <div class="box">
-        <strong>Erweitern:</strong> Neue Deployment kommen mit der Zeit dazu. Einfach ein Objekt in das <code>pages</code>-Array (unten im Script) einfügen — Kategorie + Status (<code>live</code> / <code>soon</code>) reichen. Die Filter-Chips und der Insite-Scroller aktualisieren sich automatisch.
+        <strong data-de="Erweitern:" data-en="Extend:">Erweitern:</strong> <span data-de="Neue Deployment kommen mit der Zeit dazu. Einfach ein Objekt in das " data-en="New deployments join over time. Just add an object to the ">Neue Deployment kommen mit der Zeit dazu. Einfach ein Objekt in das </span><code>pages</code><span data-de="-Array (unten im Script) einfügen — Kategorie + Status (" data-en="-array (in the script below) — category + status (">-Array (unten im Script) einfügen — Kategorie + Status (</span><code>live</code><span data-de=" / " data-en=" / "> / </span><code>soon</code><span data-de=") reichen. Die Filter-Chips und der Insite-Scroller aktualisieren sich automatisch." data-en=") is enough. Filter chips and the insite scroller update automatically.">) reichen. Die Filter-Chips und der Insite-Scroller aktualisieren sich automatisch.</span>
       </div>
     </div>
   </section>
@@ -288,12 +292,12 @@
   <div class="wrap">
     <div class="fbrand">qapdex-maker.github.io</div>
     <div class="flinks">
-      <a href="https://github.com/qapdex-maker" target="_blank" rel="noopener">GitHub</a>
-      <a href="#pages">Seiten</a>
-      <a href="#add">Erweitern</a>
-      <a href="#top">Nach oben</a>
+      <a href="https://github.com/qapdex-maker" target="_blank" rel="noopener" data-de="GitHub" data-en="GitHub">GitHub</a>
+      <a href="#pages" data-de="Seiten" data-en="Pages">Seiten</a>
+      <a href="#add" data-de="Erweitern" data-en="Extend">Erweitern</a>
+      <a href="#top" data-de="Nach oben" data-en="Back to top">Nach oben</a>
     </div>
-    <div class="copy">© 2026 qapdex-maker — strukturiertes Portal für Self-hosted Deployment.</div>
+    <div class="copy" data-de="© 2026 qapdex-maker — strukturiertes Portal für Self-hosted Deployment." data-en="© 2026 qapdex-maker — structured portal for self-hosted deployments.">© 2026 qapdex-maker — strukturiertes Portal für Self-hosted Deployment.</div>
   </div>
 </footer>
 
@@ -308,20 +312,72 @@
     btn.addEventListener('click',function(){on=!on;document.documentElement.classList.toggle('ignite',on);localStorage.setItem('qpd_ignite',on?'1':'0');paint();});
   })();
 
+  // ===== LANGUAGE (DE/EN, localStorage) =====
+  var I18N={
+    live:{de:'live',en:'live'},
+    soon:{de:'geplant',en:'planned'},
+    soonCat:{de:'Demnächst',en:'Soon'},
+    arrowBack:{de:'zurück',en:'back'},
+    arrowNext:{de:'weiter',en:'next'}
+  };
+  function setLang(lang){
+    var L=(lang==='en')?'en':'de';
+    document.documentElement.setAttribute('lang',L);
+    document.documentElement.classList.toggle('lang-en',L==='en');
+    document.documentElement.classList.toggle('lang-de',L==='de');
+    // statische Texte
+    document.querySelectorAll('[data-de][data-en]').forEach(function(el){
+      el.innerHTML=el.getAttribute('data-'+L);
+    });
+    // Button-Label
+    var lb=document.getElementById('langBtn');
+    if(lb){lb.textContent=(L==='en')?'DE':'EN';lb.setAttribute('aria-pressed',L==='en');}
+    // Arrow aria-labels
+    var pb=document.getElementById('prev'), nb=document.getElementById('next');
+    if(pb)pb.setAttribute('aria-label',I18N.arrowBack[L]);
+    if(nb)nb.setAttribute('aria-label',I18N.arrowNext[L]);
+    // Karten neu rendern (Texte kommen aus JS)
+    if(typeof window.__renderCards==='function')window.__renderCards();
+    localStorage.setItem('qpd_lang',L);
+  }
+  document.getElementById('langBtn').addEventListener('click',function(){
+    var cur=document.documentElement.classList.contains('lang-en')?'en':'de';
+    setLang(cur==='en'?'de':'en');
+  });
+
   // ===== PAGES DATEN (erweiterbar) =====
+  // desc-Objekte für DE/EN; name + href sprachneutral
   var pages=[
-    {name:'selfhost.os', cat:'Self-hosted App', desc:'Neo-brutalist App-Archiv & Stack-Builder für Self-hosted Anwendungen.', href:'https://github.com/qapdex-maker', status:'live'},
-    {name:'idun console', cat:'Self-hosted App', desc:'Azure AI Foundry Client + Multi-LLM-Console (idun-sdk / idun-playground) — selbst gehostet.', href:'idun/', status:'live'},
-    {name:'dotnet-skills', cat:'Dev Tools', desc:'.NET/C# Agent-Skills, inkl. .NET 11 Preview Telemetrie & Local-Dev-Docs.', href:'https://github.com/qapdex-maker/dotnet-skills', status:'live'},
-    {name:'ubuntu-termux', cat:'Dev Tools', desc:'PRoot Ubuntu 24.04 Gast für glibc-Tooling (z.B. .NET 11) auf Android/Termux.', href:'https://github.com/qapdex-maker/ubuntu-termux', status:'live'},
-    {name:'antigravity-cli-termux', cat:'Dev Tools', desc:'Google Antigravity CLI für Termux — glibc-Launcher über PRoot.', href:'https://github.com/qapdex-maker/antigravity-cli-termux', status:'live'},
-    {name:'Neues Deployment', cat:'soon', desc:'Platz für das nächste Self-hosted-Projekt dieser Art.', href:'#', status:'soon'},
-    {name:'Neues Deployment', cat:'soon', desc:'Platz für das nächste Self-hosted-Projekt dieser Art.', href:'#', status:'soon'}
+    {name:'selfhost.os', catLabel:{de:'Self-hosted',en:'Self-hosted'}, status:'live',
+      desc:{de:'Neo-brutalist App-Archiv & Stack-Builder für Self-hosted Anwendungen.', en:'Neo-brutalist app archive & stack builder for self-hosted applications.'},
+      href:'https://qapdex-maker.github.io/awesome-selfhosted/'},
+    {name:'idun console', catLabel:{de:'Self-hosted',en:'Self-hosted'}, status:'live',
+      desc:{de:'Azure AI Foundry Client + Multi-LLM-Console (idun-sdk / idun-playground) — selbst gehostet.', en:'Azure AI Foundry client + multi-LLM console (idun-sdk / idun-playground) — self-hosted.'},
+      href:'idun/'},
+    {name:'dotnet-skills', catLabel:{de:'Dev Tools',en:'Dev Tools'}, status:'live',
+      desc:{de:'.NET/C# Agent-Skills, inkl. .NET 11 Preview Telemetrie & Local-Dev-Docs.', en:'.NET/C# agent skills, incl. .NET 11 preview telemetry & local-dev docs.'},
+      href:'https://github.com/qapdex-maker/dotnet-skills'},
+    {name:'ubuntu-termux', catLabel:{de:'Dev Tools',en:'Dev Tools'}, status:'live',
+      desc:{de:'PRoot Ubuntu 24.04 Gast für glibc-Tooling (z.B. .NET 11) auf Android/Termux.', en:'PRoot Ubuntu 24.04 guest for glibc tooling (e.g. .NET 11) on Android/Termux.'},
+      href:'https://github.com/qapdex-maker/ubuntu-termux'},
+    {name:'antigravity-cli-termux', catLabel:{de:'Dev Tools',en:'Dev Tools'}, status:'live',
+      desc:{de:'Google Antigravity CLI für Termux — glibc-Launcher über PRoot.', en:'Google Antigravity CLI for Termux — glibc launcher via PRoot.'},
+      href:'https://github.com/qapdex-maker/antigravity-cli-termux'},
+    {name:'Neues Deployment', catLabel:{de:'Demnächst',en:'Soon'}, status:'soon',
+      desc:{de:'Platz für das nächste Self-hosted-Projekt dieser Art.', en:'Room for the next self-hosted project of this kind.'},
+      href:'#'},
+    {name:'Neues Deployment', catLabel:{de:'Demnächst',en:'Soon'}, status:'soon',
+      desc:{de:'Platz für das nächste Self-hosted-Projekt dieser Art.', en:'Room for the next self-hosted project of this kind.'},
+      href:'#'}
   ];
 
   var scroller=document.getElementById('scroller');
   function ini(c){return (c||'x').slice(0,1).toUpperCase();}
-  function render(filter){
+  function curLang(){return document.documentElement.classList.contains('lang-en')?'en':'de';}
+  window.__renderCards=function(){
+    var lang=curLang();
+    var active=document.querySelector('.chip.active');
+    var filter=active?active.dataset.f:'all';
     scroller.innerHTML='';
     pages.filter(function(p){
       if(filter==='all')return true;
@@ -329,26 +385,27 @@
       return p.cat===filter;
     }).forEach(function(p){
       var soon=p.status==='soon';
+      var catLabel=soon?I18N.soonCat[lang]:p.catLabel[lang];
       var a=document.createElement('a');
       a.className='pcard neo'+(soon?' soon':'');
       a.href=p.href; if(p.href.indexOf('http')===0){a.target='_blank';a.rel='noopener';}
       a.innerHTML=
         '<div class="top"><div class="ico">'+ini(p.name)+'</div>'+
-        '<div class="cat">'+(soon?'Demnächst':p.cat)+'</div></div>'+
+        '<div class="cat">'+catLabel+'</div></div>'+
         '<h3>'+p.name+'</h3>'+
-        '<p>'+p.desc+'</p>'+
-        '<div class="foot"><span class="'+(soon?'status-soon':'status-live')+'">'+(soon?'geplant':'live')+'</span>'+
+        '<p>'+p.desc[lang]+'</p>'+
+        '<div class="foot"><span class="'+(soon?'status-soon':'status-live')+'">'+I18N[soon?'soon':'live'][lang]+'</span>'+
         '<span>↗</span></div>';
       scroller.appendChild(a);
     });
-  }
-  render('all');
+  };
+  window.__renderCards();
 
   // Filter-Chips
   document.getElementById('chips').addEventListener('click',function(e){
     var b=e.target.closest('.chip'); if(!b)return;
     document.querySelectorAll('.chip').forEach(function(c){c.classList.remove('active');});
-    b.classList.add('active'); render(b.dataset.f);
+    b.classList.add('active'); window.__renderCards();
   });
 
   // Pfeil-Scroll
@@ -361,6 +418,9 @@
   window.addEventListener('mousemove',function(e){
     trail.style.transform='translate('+e.clientX+'px,'+e.clientY+'px) translate(-50%,-50%)';
   });
+
+  // ===== INIT SPRACHE =====
+  setLang(localStorage.getItem('qpd_lang')||'de');
 </script>
 </body>
 </html>
