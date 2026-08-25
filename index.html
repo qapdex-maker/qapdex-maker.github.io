@@ -1,270 +1,366 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Idun — IDUN-40 Neon Agent Console</title>
-  <meta name="description" content="Idun — a neon-outrun agent console (IDUN-40) for the Azure AI Foundry agent NatureLM-Idun-5-MoE. Watch it work." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <style>
-    :root{
-      --bg:#0b021a; --bg2:#1a0533;
-      --pink:#ff2e88; --cyan:#2de2e6; --purple:#b14aed; --orange:#ff6b35;
-      --ink:#f3e9ff; --muted:#a98fd0;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0}
-    body{background:var(--bg); color:var(--ink); font-family:Inter,system-ui,sans-serif;
-      overflow-x:hidden; min-height:100vh; position:relative;}
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>qapdex-maker.github.io — Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============ TOKENS ============ */
+  :root{
+    --ink:#0b0b0c;
+    --paper:#f1ede3;
+    --surface:#ffffff;
+    --muted:#5d584e;
+    --accent:#2547ff;       /* eigenes Kobalt, bewusst kein Violet/Indigo-Default */
+    --accent-2:#ffd400;     /* Sekundär-Gelb */
+    --line:#0b0b0c;
+    --shadow:4px 4px 0 var(--ink);
+    --shadow-hover:8px 8px 0 var(--accent);
+    --radius:2px;
+    --maxw:1200px;
+    --glow:0 0 0 rgba(0,0,0,0);
+  }
+  /* IGNITE — warme, energetische Stimmung; per Toggle zuschaltbar */
+  html.ignite{
+    --accent:#ff4d00;
+    --accent-2:#ffb000;
+    --shadow-hover:8px 8px 0 var(--accent);
+    --glow:0 0 22px rgba(255,77,0,.55);
+  }
 
-    /* ===== animated background ===== */
-    .sky{position:fixed; inset:0; z-index:0; overflow:hidden;
-      background:linear-gradient(180deg,#05010f 0%, #1a0533 45%, #3a0a52 70%, #ff2e88 130%);}
-    .sun{position:absolute; left:50%; top:28%; transform:translate(-50%,-50%);
-      width:320px; height:320px; border-radius:50%;
-      background:linear-gradient(180deg,#ffd36e 0%, #ff6b35 45%, #ff2e88 100%);
-      filter:blur(2px); box-shadow:0 0 120px 40px rgba(255,46,136,.45);
-      -webkit-mask:repeating-linear-gradient(180deg,#000 0 14px, transparent 14px 22px);
-              mask:repeating-linear-gradient(180deg,#000 0 14px, transparent 14px 22px);
-      animation:sunPulse 6s ease-in-out infinite;}
-    @keyframes sunPulse{0%,100%{opacity:.85;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-52%) scale(1.04)}}
-    .grid{position:absolute; left:-50%; right:-50%; bottom:0; height:58vh;
-      background-image:
-        linear-gradient(rgba(45,226,230,.5) 2px, transparent 2px),
-        linear-gradient(90deg, rgba(255,46,136,.5) 2px, transparent 2px);
-      background-size:60px 60px; transform:perspective(380px) rotateX(72deg);
-      transform-origin:bottom center; animation:grid 2.2s linear infinite; opacity:.5;}
-    @keyframes grid{0%{background-position:0 0}100%{background-position:0 60px}}
-    .scan{position:fixed; inset:0; z-index:5; pointer-events:none;
-      background:repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px); mix-blend-mode:overlay;}
-    .stars{position:fixed; inset:0; z-index:1; pointer-events:none;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"IBM Plex Sans",system-ui,sans-serif;
+    color:var(--ink);
+    background-color:var(--paper);
+    background-image:radial-gradient(rgba(11,11,12,.07) 1px, transparent 1px);
+    background-size:22px 22px;
+    line-height:1.55;
+    min-height:100vh;
+    display:flex;flex-direction:column;
+    overflow-x:hidden;
+  }
 
-    .wrap{position:relative; z-index:10; max-width:1040px; margin:0 auto; padding:44px 20px 80px;}
+  h1,h2,h3,.display{font-family:"Space Grotesk",system-ui,sans-serif;letter-spacing:-.02em;line-height:1.05}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;letter-spacing:.04em}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;width:100%;padding:0 22px}
 
-    .badge{display:inline-flex; align-items:center; gap:8px; font-family:"JetBrains Mono",monospace;
-      font-size:12px; color:var(--cyan); border:1px solid rgba(45,226,230,.4); padding:6px 14px;
-      border-radius:999px; letter-spacing:1px; box-shadow:0 0 18px rgba(45,226,230,.25);
-      background:rgba(13,2,26,.5); animation:floaty 4s ease-in-out infinite;}
-    .badge .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:blink 1.4s infinite}
-    @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
-    @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-    .badge.ignite{border-color:rgba(255,185,0,.5); color:var(--orange);
-      box-shadow:0 0 18px rgba(255,185,0,.28); text-decoration:none;
-      animation:floaty 4s ease-in-out infinite; margin-left:10px;}
-    .badge.ignite:hover{color:#fff; border-color:var(--orange);}
-    .badge.ignite .mslogo{vertical-align:middle; margin-right:6px;
-      filter:drop-shadow(0 0 4px rgba(255,185,0,.5));}
+  /* ============ NEO-BRUTALIST CARD ============ */
+  .neo{
+    background:var(--surface);
+    border:3px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+  }
+  .neo:hover{transform:translate(-2px,-2px);box-shadow:var(--shadow-hover);border-color:var(--accent)}
+  .neo:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
 
-    h1{font-family:Orbitron,monospace; font-weight:900; font-size:clamp(40px,8vw,92px);
-      margin:22px 0 4px; line-height:.95; letter-spacing:2px;
-      background:linear-gradient(180deg,#fff 0%, var(--cyan) 40%, var(--pink) 100%);
-      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
-      filter:drop-shadow(0 0 24px rgba(255,46,136,.55)); animation:h1glow 5s ease-in-out infinite;}
-    @keyframes h1glow{0%,100%{filter:drop-shadow(0 0 18px rgba(255,46,136,.45))}50%{filter:drop-shadow(0 0 38px rgba(45,226,230,.6))}}
+  /* ============ TOPBAR ============ */
+  header.bar{
+    position:sticky;top:0;z-index:50;
+    background:var(--paper);
+    border-bottom:3px solid var(--line);
+    box-shadow:0 4px 0 rgba(11,11,12,.08);
+  }
+  .bar .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;gap:16px}
+  .brand{font-family:"Space Grotesk";font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:-.03em;display:flex;align-items:center;gap:10px}
+  .brand .mark{width:26px;height:26px;background:var(--accent);border:3px solid var(--line);box-shadow:2px 2px 0 var(--ink);transform:rotate(0)}
+  nav.links{display:none;gap:22px}
+  nav.links a{font-weight:600;font-size:14px;border-bottom:3px solid transparent;padding-bottom:2px}
+  nav.links a:hover{border-color:var(--accent)}
+  .bar-actions{display:flex;align-items:center;gap:10px}
+  .btn{
+    font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13px;text-transform:uppercase;
+    border:3px solid var(--line);background:var(--surface);padding:9px 14px;border-radius:var(--radius);
+    box-shadow:var(--shadow);cursor:pointer;transition:transform .12s ease,box-shadow .12s ease;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .btn:hover{transform:translate(-2px,-2px);box-shadow:var(--shadow-hover);border-color:var(--accent)}
+  .btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+  .btn.accent{background:var(--accent);color:#fff;border-color:var(--line)}
+  .btn.ignite-on{background:var(--accent);color:#fff}
+  .toggle-dot{width:9px;height:9px;background:var(--ink);border:2px solid var(--ink);display:inline-block}
+  html.ignite .toggle-dot{background:var(--accent-2);box-shadow:var(--glow)}
 
-    .intro{margin:8px 0 0; font-family:"JetBrains Mono",monospace; font-size:clamp(13px,2.4vw,17px); color:var(--muted)}
-    .intro span{display:inline-block; opacity:0; transform:translateY(14px); animation:rise .6s forwards}
-    @keyframes rise{to{opacity:1; transform:none}}
-    .intro .k{color:var(--cyan)} .intro .p{color:var(--pink)} .intro .o{color:var(--orange)}
-    .tag{margin:18px 0 34px; max-width:620px; color:#d9c7f5; font-size:15px; line-height:1.6; opacity:0; animation:rise .7s .9s forwards}
+  /* ============ HERO ============ */
+  .hero{padding:54px 0 30px}
+  .hero .wrap{display:grid;grid-template-columns:1fr;gap:34px;align-items:center}
+  .tag{display:inline-block;font-family:"IBM Plex Mono";font-size:12px;font-weight:600;text-transform:uppercase;
+       background:var(--accent-2);border:3px solid var(--line);padding:4px 10px;margin-bottom:18px;box-shadow:var(--shadow)}
+  .hero h1{font-size:clamp(40px,8vw,76px);font-weight:700;text-transform:uppercase}
+  .hero h1 .hl{background:var(--accent);color:#fff;padding:0 10px;box-shadow:var(--shadow)}
+  .hero p.lead{font-size:18px;color:var(--muted);max-width:54ch;margin:20px 0 26px}
+  .hero .cta{display:flex;gap:12px;flex-wrap:wrap}
+  .hero-visual{position:relative;aspect-ratio:1/1;border:3px solid var(--line);box-shadow:var(--shadow);background:var(--surface);padding:18px}
+  .grid4{position:absolute;inset:18px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:14px}
+  .grid4 > div{border:3px solid var(--line);box-shadow:var(--shadow)}
+  .g-a{background:var(--accent);animation:pulse 2.6s ease-in-out infinite}
+  .g-b{background:var(--accent-2)}
+  .g-c{background:var(--ink)}
+  .g-d{background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:"Space Grotesk";font-weight:700;font-size:30px}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(.94)}}
+  html.ignite .g-a{box-shadow:var(--glow)}
 
-    /* ===== IDUN-40 device ===== */
-    .device{position:relative; margin:0 auto; max-width:760px;
-      border-radius:26px; padding:16px 16px 14px;
-      background:linear-gradient(165deg,#241036 0%, #140821 60%, #0a0414 100%);
-      box-shadow:0 0 0 2px rgba(177,74,237,.4), 0 30px 80px rgba(255,46,136,.22),
-                 inset 0 1px 0 rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.08);}
-    .device::before{content:""; position:absolute; inset:0; border-radius:26px; pointer-events:none;
-      background:repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 2px, transparent 2px 5px); opacity:.5;}
+  /* ============ FEATURED (sofort sichtbar) ============ */
+  .featured{padding:18px 0 8px}
+  .feat{display:grid;grid-template-columns:1fr;gap:0;border:3px solid var(--line);box-shadow:var(--shadow);background:var(--surface)}
+  .feat .left{padding:26px;border-right:3px solid var(--line);display:flex;flex-direction:column;gap:12px;justify-content:center}
+  .feat .right{padding:26px;display:flex;flex-direction:column;justify-content:center;gap:14px;background:var(--paper)}
+  .feat .kicker{font-family:"IBM Plex Mono";font-size:12px;font-weight:600;text-transform:uppercase;color:var(--accent)}
+  .feat h2{font-size:clamp(30px,5vw,46px);text-transform:uppercase}
+  .feat p{color:var(--muted);max-width:50ch}
+  .pill{display:inline-block;font-family:"IBM Plex Mono";font-size:11px;font-weight:600;text-transform:uppercase;border:2px solid var(--line);padding:3px 8px;background:var(--accent-2)}
+  .feat .right .meta{font-family:"IBM Plex Mono";font-size:12px;color:var(--muted)}
 
-    .dev-top{display:flex; align-items:center; gap:12px; padding:4px 6px 12px; flex-wrap:wrap}
-    .led{width:11px;height:11px;border-radius:50%; background:var(--cyan);
-      box-shadow:0 0 12px var(--cyan); animation:blink 1.5s infinite}
-    .brand{font-family:Orbitron,monospace; font-weight:900; font-size:18px; color:var(--pink);
-      letter-spacing:3px; text-shadow:0 0 14px rgba(255,46,136,.6)}
-    .slot{margin-left:auto; display:flex; align-items:center; gap:8px;
-      font-family:"JetBrains Mono",monospace; font-size:10px; color:var(--muted);
-      border:1px solid rgba(45,226,230,.3); border-radius:8px; padding:5px 10px;
-      background:rgba(45,226,230,.06)}
-    .slot .cart{width:22px;height:10px;border-radius:2px;background:linear-gradient(90deg,var(--purple),var(--pink));
-      box-shadow:0 0 8px rgba(177,74,237,.6)}
-    .pad{display:flex; gap:6px; align-items:center}
-    .btn{width:16px;height:16px;border-radius:50%; border:1px solid rgba(255,255,255,.18);
-      background:#1c0c2e; box-shadow:inset 0 1px 2px rgba(255,255,255,.08)}
-    .btn.a{background:radial-gradient(circle at 30% 30%, #ff6b35, #8a2b12)}
-    .btn.b{background:radial-gradient(circle at 30% 30%, var(--cyan), #0c5b5e)}
-    .cross{width:22px;height:22px; position:relative}
-    .cross::before,.cross::after{content:""; position:absolute; background:#2a1240; border-radius:2px}
-    .cross::before{left:8px; top:0; width:6px; height:22px}
-    .cross::after{top:8px; left:0; width:22px; height:6px}
+  /* ============ PAGES BROWSER (insite scroll) ============ */
+  .browser-sec{padding:40px 0 10px}
+  .browser-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+  .browser-head h2{font-size:clamp(26px,4vw,38px);text-transform:uppercase}
+  .browser-head .sub{font-family:"IBM Plex Mono";font-size:12px;color:var(--muted);text-transform:uppercase}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .chip{font-family:"IBM Plex Mono";font-size:12px;font-weight:600;text-transform:uppercase;border:3px solid var(--line);background:var(--surface);padding:6px 12px;cursor:pointer;box-shadow:var(--shadow);transition:transform .1s,box-shadow .1s}
+  .chip:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow-hover);border-color:var(--accent)}
+  .chip.active{background:var(--accent);color:#fff}
+  .browser-shell{border:3px solid var(--line);box-shadow:var(--shadow);background:var(--surface);position:relative}
+  .browser-bar{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--line);padding:10px 14px;background:var(--paper)}
+  .browser-bar .title{font-family:"IBM Plex Mono";font-size:12px;font-weight:600;text-transform:uppercase}
+  .arrows{display:flex;gap:8px}
+  .arrow{width:34px;height:34px;border:3px solid var(--line);background:var(--surface);box-shadow:var(--shadow);cursor:pointer;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:"Space Grotesk"}
+  .arrow:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow-hover);border-color:var(--accent)}
+  .scroller{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;padding:18px 16px 22px;scrollbar-width:thin}
+  .scroller::-webkit-scrollbar{height:10px}
+  .scroller::-webkit-scrollbar-thumb{background:var(--ink);border:2px solid var(--paper)}
+  .scroller::-webkit-scrollbar-track{background:var(--paper)}
+  .pcard{flex:0 0 290px;scroll-snap-align:start;display:flex;flex-direction:column;gap:10px;padding:18px;min-height:200px}
+  .pcard .top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+  .pcard .ico{width:42px;height:42px;border:3px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:"Space Grotesk";font-weight:700;font-size:18px;background:var(--paper)}
+  .pcard .cat{font-family:"IBM Plex Mono";font-size:10px;font-weight:600;text-transform:uppercase;border:2px solid var(--line);padding:3px 7px;background:var(--accent-2);white-space:nowrap}
+  .pcard h3{font-size:22px;text-transform:uppercase;margin-top:4px}
+  .pcard p{font-size:13px;color:var(--muted);flex:1}
+  .pcard .foot{display:flex;align-items:center;justify-content:space-between;font-family:"IBM Plex Mono";font-size:11px;text-transform:uppercase}
+  .pcard .status-live{color:var(--accent)}
+  .pcard .status-soon{color:var(--muted)}
+  .pcard.soon{background:repeating-linear-gradient(45deg,var(--surface),var(--surface) 10px,#efe9da 10px,#efe9da 20px)}
+  .pcard.soon .ico{background:var(--paper);color:var(--muted)}
 
-    /* screen */
-    .screen{position:relative; border-radius:14px; overflow:hidden;
-      background:#05010f; border:2px solid #000;
-      box-shadow:inset 0 0 60px rgba(45,226,230,.12), inset 0 0 18px rgba(0,0,0,.9),
-                 0 0 0 6px #0a0414, 0 0 0 8px rgba(177,74,237,.35);}
-    .trace{padding:16px 18px; font-family:"JetBrains Mono",monospace; font-size:13.5px; line-height:1.7;
-      max-height:300px; overflow:hidden; position:relative; color:var(--ink)}
-    .trace::after{content:""; position:absolute; left:0; right:0; bottom:0; height:56px;
-      background:linear-gradient(transparent, #05010f);}
-    .crt{position:absolute; inset:0; pointer-events:none; z-index:3;
-      background:repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0 1px, transparent 1px 3px);
-      mix-blend-mode:multiply;}
-    .crt::after{content:""; position:absolute; inset:0;
-      box-shadow:inset 0 0 90px rgba(0,0,0,.7); border-radius:14px;}
-    .aberr{position:absolute; inset:0; pointer-events:none; z-index:2;
-      background:linear-gradient(90deg, rgba(255,46,136,.05), transparent 40%, rgba(45,226,230,.05));}
-    .row{opacity:0; transform:translateX(-10px); animation:rowIn .5s forwards}
-    @keyframes rowIn{to{opacity:1; transform:none}}
-    .row .think{color:var(--purple)} .row .tool{color:var(--cyan)} .row .q{color:var(--orange)}
-    .row .ok{color:var(--cyan); opacity:.8}
-    .caret{display:inline-block; width:9px; height:15px; background:var(--pink); margin-left:2px;
-      vertical-align:middle; animation:blink 1s steps(1) infinite; box-shadow:0 0 8px var(--pink)}
+  /* ============ ADD-HINT ============ */
+  .hint{padding:26px 0 10px}
+  .hint .box{padding:18px 20px;border:3px dashed var(--line);background:var(--surface)}
+  .hint code{font-family:"IBM Plex Mono";font-size:12px;background:var(--paper);border:2px solid var(--line);padding:2px 6px}
 
-    .dev-bot{display:flex; align-items:center; gap:14px; padding:10px 8px 2px; flex-wrap:wrap;
-      font-family:"JetBrains Mono",monospace; font-size:10px; color:var(--muted)}
-    .vol{display:flex; gap:3px; align-items:center}
-    .vol i{width:5px;height:12px;border-radius:1px;background:var(--cyan);box-shadow:0 0 6px var(--cyan);display:inline-block}
-    .vol i.off{background:#2a1240;box-shadow:none}
-    .rec{display:flex;align-items:center;gap:5px}
-    .rec .r{width:9px;height:9px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 8px #ff3b3b;animation:blink 1.3s infinite}
-    .bat{display:flex;gap:2px;align-items:center}
-    .bat i{width:7px;height:11px;border:1px solid var(--muted);border-radius:1px}
-    .bat i.on{background:var(--green,#4ade80);border-color:var(--green,#4ade80);box-shadow:0 0 6px #4ade80}
-    .spacer{margin-left:auto}
+  /* ============ FOOTER ============ */
+  footer{margin-top:auto;border-top:3px solid var(--line);background:var(--ink);color:var(--paper);padding:34px 0}
+  footer .wrap{display:flex;flex-direction:column;gap:18px;align-items:flex-start}
+  footer .fbrand{font-family:"Space Grotesk";font-weight:700;font-size:24px;text-transform:uppercase;letter-spacing:-.03em}
+  footer .flinks{display:flex;gap:20px;flex-wrap:wrap}
+  footer a{font-family:"IBM Plex Mono";font-size:12px;text-transform:uppercase;border-bottom:2px solid transparent}
+  footer a:hover{border-color:var(--accent-2)}
+  footer .copy{font-family:"IBM Plex Mono";font-size:11px;color:#9b958a}
 
-    .grid-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:16px; margin-top:42px}
-    .card{position:relative; text-decoration:none; color:var(--ink); border:1px solid rgba(255,255,255,.08);
-      border-radius:14px; padding:20px; background:rgba(13,2,26,.6); backdrop-filter:blur(4px);
-      transition:transform .2s, border-color .2s, box-shadow .2s; overflow:hidden}
-    .card::before{content:""; position:absolute; inset:0; background:linear-gradient(135deg, rgba(255,46,136,.12), rgba(45,226,230,.1)); opacity:0; transition:opacity .2s}
-    .card:hover{transform:translateY(-4px); border-color:var(--cyan); box-shadow:0 14px 40px rgba(45,226,230,.22)}
-    .card:hover::before{opacity:1}
-    .card .nm{font-family:"JetBrains Mono",monospace; font-weight:700; font-size:16px; color:var(--cyan); position:relative}
-    .card .ds{color:var(--muted); font-size:13px; margin-top:8px; line-height:1.55; position:relative}
-    .card .mt{margin-top:14px; display:flex; gap:8px; flex-wrap:wrap; position:relative}
-    .chip{font-size:11px; font-family:"JetBrains Mono",monospace; padding:2px 9px; border-radius:999px; border:1px solid rgba(255,255,255,.15); color:var(--muted)}
-    .chip.live{color:var(--cyan); border-color:rgba(45,226,230,.45)}
-    .chip.demo{color:var(--pink); border-color:rgba(255,46,136,.45)}
+  /* ============ MICRO-INTERACTIONS ============ */
+  .trail{position:fixed;top:0;left:0;width:14px;height:14px;background:var(--accent);border:2px solid var(--line);
+         pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .08s linear, background .2s;mix-blend-mode:normal}
+  .scanlines{position:fixed;inset:0;pointer-events:none;z-index:9998;opacity:0;transition:opacity .4s;
+    background:repeating-linear-gradient(to bottom, rgba(0,0,0,.05) 0 1px, transparent 1px 3px)}
+  html.ignite .scanlines{opacity:1}
+  html.ignite .neo:hover, html.ignite .feat:hover{box-shadow:var(--shadow-hover), var(--glow)}
 
-    footer{margin-top:48px; text-align:center; color:var(--muted); font-family:"JetBrains Mono",monospace; font-size:12px}
-    a.il{color:var(--cyan); text-decoration:none} a.il:hover{text-decoration:underline}
-  </style>
+  @media (min-width:860px){
+    nav.links{display:flex}
+    .hero .wrap{grid-template-columns:1.1fr .9fr}
+    .feat{grid-template-columns:1.4fr 1fr}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+    .trail{display:none}
+  }
+</style>
 </head>
 <body>
-  <div class="sky"><div class="sun"></div><div class="grid"></div></div>
-  <div class="stars" id="stars"></div>
-  <div class="scan"></div>
+<div class="trail" id="trail"></div>
+<div class="scanlines"></div>
 
+<!-- TOPBAR -->
+<header class="bar">
   <div class="wrap">
-    <div class="badge"><span class="dot"></span> IDUN · AZURE AI FOUNDRY AGENT</div>
-    <a class="badge ignite" href="https://ignite.microsoft.com/" target="_blank" rel="noopener">
-      <svg class="mslogo" viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
-        <rect x="0" y="0" width="7" height="7" fill="#f25022"/>
-        <rect x="9" y="0" width="7" height="7" fill="#7fba00"/>
-        <rect x="0" y="9" width="7" height="7" fill="#00a4ef"/>
-        <rect x="9" y="9" width="7" height="7" fill="#ffb900"/>
-      </svg>
-      SEE US AT MICROSOFT IGNITE 2026 · SAN FRANCISCO · NOV 17–20
-    </a>
-    <h1>IDUN</h1>
-    <p class="intro" id="intro"></p>
-    <p class="tag">A neon-outrun console for the NatureLM-Idun-5-MoE agent. Watch it reason and call tools on the IDUN-40 — then bring your own Azure AI Foundry resource, or just explore the recorded demo. Tenant-agnostic by design.</p>
-
-    <!-- IDUN-40 device -->
-    <div class="device">
-      <div class="dev-top">
-        <span class="led"></span>
-        <span class="brand">IDUN-40</span>
-        <span class="slot"><span class="cart"></span> CARTRIDGE · idun-sdk v1.0.32</span>
-        <span class="pad"><span class="cross"></span><span class="btn a"></span><span class="btn b"></span></span>
-      </div>
-
-      <div class="screen">
-        <div class="trace" id="trace"></div>
-        <div class="aberr"></div>
-        <div class="crt"></div>
-      </div>
-
-      <div class="dev-bot">
-        <span class="rec"><span class="r"></span> REC</span>
-        <span class="vol">VOL <i></i><i></i><i></i><i class="off"></i><i class="off"></i></span>
-        <span class="bat"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
-        <span class="spacer">MODE · AGENT</span>
-      </div>
+    <a class="brand" href="#top"><span class="mark"></span>qapdex-maker.github.io</a>
+    <nav class="links">
+      <a href="#top">Home</a>
+      <a href="#featured">Featured</a>
+      <a href="#pages">Seiten</a>
+      <a href="#add">Erweitern</a>
+    </nav>
+    <div class="bar-actions">
+      <button class="btn" id="igniteBtn" aria-pressed="false"><span class="toggle-dot"></span>Ignite</button>
+      <a class="btn accent" href="https://github.com/qapdex-maker" target="_blank" rel="noopener">GitHub</a>
     </div>
-
-    <div class="grid-cards">
-      <a class="card" href="https://github.com/qapdex-maker/idun-sdk" target="_blank" rel="noopener">
-        <div class="nm">idun-sdk</div>
-        <div class="ds">Stdlib-only client + CLI for NatureLM-Idun-5-MoE — 17-provider registry, retro console, MCP server.</div>
-        <div class="mt"><span class="chip live">PyPI 1.0.32</span><span class="chip">Python ≥3.8</span></div>
-      </a>
-      <a class="card" href="https://qapdex-maker.github.io/idun-playground/" target="_blank" rel="noopener">
-        <div class="nm">idun-playground</div>
-        <div class="ds">Live tool-agent trajectory playground (dark Foundry look). Step-by-step demo replay, no backend, no account.</div>
-        <div class="mt"><span class="chip demo">Demo live</span><span class="chip">GitHub Pages</span></div>
-      </a>
-      <a class="card" href="https://github.com/qapdex-maker/foundry-agent-webapp" target="_blank" rel="noopener">
-        <div class="nm">foundry-agent-webapp</div>
-        <div class="ds">Web application with Entra ID authentication, integrated with Azure AI Foundry Agents.</div>
-        <div class="mt"><span class="chip">Entra ID</span><span class="chip">fork</span></div>
-      </a>
-    </div>
-
-    <a class="badge ignite" href="https://qapdex-maker.github.io/idun-playground/ignite.html" target="_blank" rel="noopener" style="margin-top:28px;display:inline-flex">
-      <svg class="mslogo" viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
-        <rect x="0" y="0" width="7" height="7" fill="#f25022"/>
-        <rect x="9" y="0" width="7" height="7" fill="#7fba00"/>
-        <rect x="0" y="9" width="7" height="7" fill="#00a4ef"/>
-        <rect x="9" y="9" width="7" height="7" fill="#ffb900"/>
-      </svg>
-      AT IGNITE 2026 →
-    </a>
-
-    <footer>Built with the Idun SDK · <a class="il" href="https://github.com/qapdex-maker" target="_blank" rel="noopener">github.com/qapdex-maker</a></footer>
   </div>
+</header>
 
-  <script>
-    (function(){const s=document.getElementById('stars');let h='';
-      for(let i=0;i<90;i++){const x=Math.random()*100,y=Math.random()*100,r=Math.random()*1.6+.4,a=Math.random()*.7+.3;
-        h+=`<span style="position:absolute;left:${x}%;top:${y}%;width:${r}px;height:${r}px;border-radius:50%;background:#fff;opacity:${a};box-shadow:0 0 6px #fff"></span>`;}
-      s.innerHTML=h;})();
+<main id="top">
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <span class="tag">Portal · v1</span>
+        <h1>Alle deine Seiten.<br><span class="hl">Ein Portal.</span></h1>
+        <p class="lead">qapdex-maker.github.io bündelt deine Self-hosted Deployment, Dev-Tools und Docs — strukturiert, durchsuchbar und jederzeit erweiterbar. Neu dazu kommende Projekte erscheinen hier automatisch.</p>
+        <div class="cta">
+          <a class="btn accent" href="#pages">Seiten erkunden</a>
+          <a class="btn" href="https://github.com/qapdex-maker" target="_blank" rel="noopener">Auf GitHub</a>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="grid4">
+          <div class="g-a"></div><div class="g-b"></div>
+          <div class="g-c"></div><div class="g-d">Q</div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    (function(){const el=document.getElementById('intro');
-      const parts=[{t:'Introducing ',c:''},{t:'Idun',c:'k'},{t:' on the ',c:''},{t:'IDUN-40',c:'p'},{t:' — a ',c:''},{t:'neon agent console',c:'o'}];
-      let html='',i=0; parts.forEach(p=>{const cls=p.c?`class="${p.c}"`:''; html+=`<span style="animation-delay:${i*0.12}s" ${cls}>${p.t}</span>`; i++;});
-      el.innerHTML=html;})();
+  <!-- FEATURED -->
+  <section class="featured" id="featured">
+    <div class="wrap">
+      <div class="feat neo">
+        <div class="left">
+          <span class="kicker">★ Featured Deployment</span>
+          <h2>selfhost.os</h2>
+          <p>Neo-brutalist Archiv & Stack-Builder für Self-hosted Anwendungen — direkt sichtbar, weil hier der Einstieg in deine Deployment-Landschaft beginnt.</p>
+          <a class="btn accent" href="https://github.com/qapdex-maker" target="_blank" rel="noopener" style="align-self:flex-start">Öffnen</a>
+        </div>
+        <div class="right">
+          <span class="pill">Sofort sichtbar</span>
+          <div class="meta">Typ: Self-hosted App</div>
+          <div class="meta">Status: live</div>
+          <div class="meta">Kategorie: App-Archiv / Stack-Builder</div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    (function(){const trace=document.getElementById('trace');
-      function row(cls,text){const d=document.createElement('div');d.className='row';
-        d.innerHTML=`<span class="${cls}">${text}</span>`;trace.appendChild(d);
-        while(trace.children.length>14)trace.removeChild(trace.firstChild);trace.scrollTop=trace.scrollHeight;}
-      function typeLine(cls,text,speed,cb){let i=0;const d=document.createElement('div');d.className='row';
-        const span=document.createElement('span');span.className=cls;d.appendChild(span);trace.appendChild(d);
-        const iv=setInterval(()=>{span.textContent=text.slice(0,++i);
-          while(trace.children.length>14)trace.removeChild(trace.firstChild);
-          if(i>=text.length){clearInterval(iv);cb&&cb();}},speed);}
-      const script=[
-        (n)=>typeLine('think','› Reasoning: structuring the circular-economy answer from public Contoso materials…',18,n),
-        (n)=>row('tool','⚙ web_search  "Contoso circular economy business model"'),
-        (n)=>row('ok','  ↳ completed'),
-        (n)=>row('tool','⚙ web_search  "Contoso sustainability report 2026 circularity"'),
-        (n)=>row('ok','  ↳ completed'),
-        (n)=>typeLine('think','› Three levers recur: product-as-a-service, recyclate, take-back system.',16,n),
-        (n)=>typeLine('tool','✓ Contoso embeds circularity at 3 points in its business model.',14,n),
-        (n)=>typeLine('tool','  1) Product-as-a-Service — leased, not sold.',14,n),
-        (n)=>typeLine('tool','  2) Recyclate — 62% of housing parts, target 80% by 2028.',14,n),
-        (n)=>typeLine('tool','  3) Take-back — 4,200 collection points feed modules back.',14,n),
-      ];
-      let idx=0;
-      function next(){if(idx>=script.length){idx=0;setTimeout(()=>{while(trace.children.length)trace.removeChild(trace.firstChild);},1400);}
-        const f=script[idx++];f(next);}
-      row('think','› IDUN-40 online — watching the agent work');
-      setTimeout(next,500);})();
-  </script>
+  <!-- PAGES BROWSER (insite scroll) -->
+  <section class="browser-sec" id="pages">
+    <div class="wrap">
+      <div class="browser-head">
+        <div>
+          <h2>Seiten &amp; Deployment</h2>
+          <div class="sub">← Horizontal scrollen, wie ein Insite-Panel →</div>
+        </div>
+      </div>
+      <div class="chips" id="chips">
+        <button class="chip active" data-f="all">Alle</button>
+        <button class="chip" data-f="Self-hosted App">Self-hosted</button>
+        <button class="chip" data-f="Dev Tools">Dev Tools</button>
+        <button class="chip" data-f="soon">Demnächst</button>
+      </div>
+
+      <div class="browser-shell neo">
+        <div class="browser-bar">
+          <span class="title">qapdex-maker.github.io / pages</span>
+          <div class="arrows">
+            <button class="arrow" id="prev" aria-label="zurück">‹</button>
+            <button class="arrow" id="next" aria-label="weiter">›</button>
+          </div>
+        </div>
+        <div class="scroller" id="scroller"><!-- Karten werden per JS gerendert --></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADD HINT -->
+  <section class="hint" id="add">
+    <div class="wrap">
+      <div class="box">
+        <strong>Erweitern:</strong> Neue Deployment kommen mit der Zeit dazu. Einfach ein Objekt in das <code>pages</code>-Array (unten im Script) einfügen — Kategorie + Status (<code>live</code> / <code>soon</code>) reichen. Die Filter-Chips und der Insite-Scroller aktualisieren sich automatisch.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="fbrand">qapdex-maker.github.io</div>
+    <div class="flinks">
+      <a href="https://github.com/qapdex-maker" target="_blank" rel="noopener">GitHub</a>
+      <a href="#pages">Seiten</a>
+      <a href="#add">Erweitern</a>
+      <a href="#top">Nach oben</a>
+    </div>
+    <div class="copy">© 2026 qapdex-maker — strukturiertes Portal für Self-hosted Deployment.</div>
+  </div>
+</footer>
+
+<script>
+  // ===== IGNITE TOGGLE (saisonal abschaltbar, localStorage) =====
+  (function(){
+    var btn=document.getElementById('igniteBtn');
+    var on=localStorage.getItem('qpd_ignite')==='1';
+    if(on)document.documentElement.classList.add('ignite');
+    function paint(){btn.classList.toggle('ignite-on',on);btn.setAttribute('aria-pressed',on);btn.lastChild&&(btn.childNodes[btn.childNodes.length-1].textContent=on?' Ignite':' Ignite');}
+    paint();
+    btn.addEventListener('click',function(){on=!on;document.documentElement.classList.toggle('ignite',on);localStorage.setItem('qpd_ignite',on?'1':'0');paint();});
+  })();
+
+  // ===== PAGES DATEN (erweiterbar) =====
+  var pages=[
+    {name:'selfhost.os', cat:'Self-hosted App', desc:'Neo-brutalist App-Archiv & Stack-Builder für Self-hosted Anwendungen.', href:'https://github.com/qapdex-maker', status:'live'},
+    {name:'idun console', cat:'Self-hosted App', desc:'Azure AI Foundry Client + Multi-LLM-Console (idun-sdk / idun-playground) — selbst gehostet.', href:'idun/', status:'live'},
+    {name:'dotnet-skills', cat:'Dev Tools', desc:'.NET/C# Agent-Skills, inkl. .NET 11 Preview Telemetrie & Local-Dev-Docs.', href:'https://github.com/qapdex-maker/dotnet-skills', status:'live'},
+    {name:'ubuntu-termux', cat:'Dev Tools', desc:'PRoot Ubuntu 24.04 Gast für glibc-Tooling (z.B. .NET 11) auf Android/Termux.', href:'https://github.com/qapdex-maker/ubuntu-termux', status:'live'},
+    {name:'antigravity-cli-termux', cat:'Dev Tools', desc:'Google Antigravity CLI für Termux — glibc-Launcher über PRoot.', href:'https://github.com/qapdex-maker/antigravity-cli-termux', status:'live'},
+    {name:'Neues Deployment', cat:'soon', desc:'Platz für das nächste Self-hosted-Projekt dieser Art.', href:'#', status:'soon'},
+    {name:'Neues Deployment', cat:'soon', desc:'Platz für das nächste Self-hosted-Projekt dieser Art.', href:'#', status:'soon'}
+  ];
+
+  var scroller=document.getElementById('scroller');
+  function ini(c){return (c||'x').slice(0,1).toUpperCase();}
+  function render(filter){
+    scroller.innerHTML='';
+    pages.filter(function(p){
+      if(filter==='all')return true;
+      if(filter==='soon')return p.status==='soon';
+      return p.cat===filter;
+    }).forEach(function(p){
+      var soon=p.status==='soon';
+      var a=document.createElement('a');
+      a.className='pcard neo'+(soon?' soon':'');
+      a.href=p.href; if(p.href.indexOf('http')===0){a.target='_blank';a.rel='noopener';}
+      a.innerHTML=
+        '<div class="top"><div class="ico">'+ini(p.name)+'</div>'+
+        '<div class="cat">'+(soon?'Demnächst':p.cat)+'</div></div>'+
+        '<h3>'+p.name+'</h3>'+
+        '<p>'+p.desc+'</p>'+
+        '<div class="foot"><span class="'+(soon?'status-soon':'status-live')+'">'+(soon?'geplant':'live')+'</span>'+
+        '<span>↗</span></div>';
+      scroller.appendChild(a);
+    });
+  }
+  render('all');
+
+  // Filter-Chips
+  document.getElementById('chips').addEventListener('click',function(e){
+    var b=e.target.closest('.chip'); if(!b)return;
+    document.querySelectorAll('.chip').forEach(function(c){c.classList.remove('active');});
+    b.classList.add('active'); render(b.dataset.f);
+  });
+
+  // Pfeil-Scroll
+  var step=320;
+  document.getElementById('prev').addEventListener('click',function(){scroller.scrollBy({left:-step,behavior:'smooth'});});
+  document.getElementById('next').addEventListener('click',function(){scroller.scrollBy({left:step,behavior:'smooth'});});
+
+  // Cursor-Trail (Neo-Punkt)
+  var trail=document.getElementById('trail');
+  window.addEventListener('mousemove',function(e){
+    trail.style.transform='translate('+e.clientX+'px,'+e.clientY+'px) translate(-50%,-50%)';
+  });
+</script>
 </body>
 </html>

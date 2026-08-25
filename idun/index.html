@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Idun — IDUN-40 Neon Agent Console</title>
+  <meta name="description" content="Idun — a neon-outrun agent console (IDUN-40) for the Azure AI Foundry agent NatureLM-Idun-5-MoE. Watch it work." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg:#0b021a; --bg2:#1a0533;
+      --pink:#ff2e88; --cyan:#2de2e6; --purple:#b14aed; --orange:#ff6b35;
+      --ink:#f3e9ff; --muted:#a98fd0;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{background:var(--bg); color:var(--ink); font-family:Inter,system-ui,sans-serif;
+      overflow-x:hidden; min-height:100vh; position:relative;}
+
+    /* ===== animated background ===== */
+    .sky{position:fixed; inset:0; z-index:0; overflow:hidden;
+      background:linear-gradient(180deg,#05010f 0%, #1a0533 45%, #3a0a52 70%, #ff2e88 130%);}
+    .sun{position:absolute; left:50%; top:28%; transform:translate(-50%,-50%);
+      width:320px; height:320px; border-radius:50%;
+      background:linear-gradient(180deg,#ffd36e 0%, #ff6b35 45%, #ff2e88 100%);
+      filter:blur(2px); box-shadow:0 0 120px 40px rgba(255,46,136,.45);
+      -webkit-mask:repeating-linear-gradient(180deg,#000 0 14px, transparent 14px 22px);
+              mask:repeating-linear-gradient(180deg,#000 0 14px, transparent 14px 22px);
+      animation:sunPulse 6s ease-in-out infinite;}
+    @keyframes sunPulse{0%,100%{opacity:.85;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-52%) scale(1.04)}}
+    .grid{position:absolute; left:-50%; right:-50%; bottom:0; height:58vh;
+      background-image:
+        linear-gradient(rgba(45,226,230,.5) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(255,46,136,.5) 2px, transparent 2px);
+      background-size:60px 60px; transform:perspective(380px) rotateX(72deg);
+      transform-origin:bottom center; animation:grid 2.2s linear infinite; opacity:.5;}
+    @keyframes grid{0%{background-position:0 0}100%{background-position:0 60px}}
+    .scan{position:fixed; inset:0; z-index:5; pointer-events:none;
+      background:repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px); mix-blend-mode:overlay;}
+    .stars{position:fixed; inset:0; z-index:1; pointer-events:none;}
+
+    .wrap{position:relative; z-index:10; max-width:1040px; margin:0 auto; padding:44px 20px 80px;}
+
+    .badge{display:inline-flex; align-items:center; gap:8px; font-family:"JetBrains Mono",monospace;
+      font-size:12px; color:var(--cyan); border:1px solid rgba(45,226,230,.4); padding:6px 14px;
+      border-radius:999px; letter-spacing:1px; box-shadow:0 0 18px rgba(45,226,230,.25);
+      background:rgba(13,2,26,.5); animation:floaty 4s ease-in-out infinite;}
+    .badge .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:blink 1.4s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+    @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+    .badge.ignite{border-color:rgba(255,185,0,.5); color:var(--orange);
+      box-shadow:0 0 18px rgba(255,185,0,.28); text-decoration:none;
+      animation:floaty 4s ease-in-out infinite; margin-left:10px;}
+    .badge.ignite:hover{color:#fff; border-color:var(--orange);}
+    .badge.ignite .mslogo{vertical-align:middle; margin-right:6px;
+      filter:drop-shadow(0 0 4px rgba(255,185,0,.5));}
+
+    h1{font-family:Orbitron,monospace; font-weight:900; font-size:clamp(40px,8vw,92px);
+      margin:22px 0 4px; line-height:.95; letter-spacing:2px;
+      background:linear-gradient(180deg,#fff 0%, var(--cyan) 40%, var(--pink) 100%);
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+      filter:drop-shadow(0 0 24px rgba(255,46,136,.55)); animation:h1glow 5s ease-in-out infinite;}
+    @keyframes h1glow{0%,100%{filter:drop-shadow(0 0 18px rgba(255,46,136,.45))}50%{filter:drop-shadow(0 0 38px rgba(45,226,230,.6))}}
+
+    .intro{margin:8px 0 0; font-family:"JetBrains Mono",monospace; font-size:clamp(13px,2.4vw,17px); color:var(--muted)}
+    .intro span{display:inline-block; opacity:0; transform:translateY(14px); animation:rise .6s forwards}
+    @keyframes rise{to{opacity:1; transform:none}}
+    .intro .k{color:var(--cyan)} .intro .p{color:var(--pink)} .intro .o{color:var(--orange)}
+    .tag{margin:18px 0 34px; max-width:620px; color:#d9c7f5; font-size:15px; line-height:1.6; opacity:0; animation:rise .7s .9s forwards}
+
+    /* ===== IDUN-40 device ===== */
+    .device{position:relative; margin:0 auto; max-width:760px;
+      border-radius:26px; padding:16px 16px 14px;
+      background:linear-gradient(165deg,#241036 0%, #140821 60%, #0a0414 100%);
+      box-shadow:0 0 0 2px rgba(177,74,237,.4), 0 30px 80px rgba(255,46,136,.22),
+                 inset 0 1px 0 rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);}
+    .device::before{content:""; position:absolute; inset:0; border-radius:26px; pointer-events:none;
+      background:repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 2px, transparent 2px 5px); opacity:.5;}
+
+    .dev-top{display:flex; align-items:center; gap:12px; padding:4px 6px 12px; flex-wrap:wrap}
+    .led{width:11px;height:11px;border-radius:50%; background:var(--cyan);
+      box-shadow:0 0 12px var(--cyan); animation:blink 1.5s infinite}
+    .brand{font-family:Orbitron,monospace; font-weight:900; font-size:18px; color:var(--pink);
+      letter-spacing:3px; text-shadow:0 0 14px rgba(255,46,136,.6)}
+    .slot{margin-left:auto; display:flex; align-items:center; gap:8px;
+      font-family:"JetBrains Mono",monospace; font-size:10px; color:var(--muted);
+      border:1px solid rgba(45,226,230,.3); border-radius:8px; padding:5px 10px;
+      background:rgba(45,226,230,.06)}
+    .slot .cart{width:22px;height:10px;border-radius:2px;background:linear-gradient(90deg,var(--purple),var(--pink));
+      box-shadow:0 0 8px rgba(177,74,237,.6)}
+    .pad{display:flex; gap:6px; align-items:center}
+    .btn{width:16px;height:16px;border-radius:50%; border:1px solid rgba(255,255,255,.18);
+      background:#1c0c2e; box-shadow:inset 0 1px 2px rgba(255,255,255,.08)}
+    .btn.a{background:radial-gradient(circle at 30% 30%, #ff6b35, #8a2b12)}
+    .btn.b{background:radial-gradient(circle at 30% 30%, var(--cyan), #0c5b5e)}
+    .cross{width:22px;height:22px; position:relative}
+    .cross::before,.cross::after{content:""; position:absolute; background:#2a1240; border-radius:2px}
+    .cross::before{left:8px; top:0; width:6px; height:22px}
+    .cross::after{top:8px; left:0; width:22px; height:6px}
+
+    /* screen */
+    .screen{position:relative; border-radius:14px; overflow:hidden;
+      background:#05010f; border:2px solid #000;
+      box-shadow:inset 0 0 60px rgba(45,226,230,.12), inset 0 0 18px rgba(0,0,0,.9),
+                 0 0 0 6px #0a0414, 0 0 0 8px rgba(177,74,237,.35);}
+    .trace{padding:16px 18px; font-family:"JetBrains Mono",monospace; font-size:13.5px; line-height:1.7;
+      max-height:300px; overflow:hidden; position:relative; color:var(--ink)}
+    .trace::after{content:""; position:absolute; left:0; right:0; bottom:0; height:56px;
+      background:linear-gradient(transparent, #05010f);}
+    .crt{position:absolute; inset:0; pointer-events:none; z-index:3;
+      background:repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0 1px, transparent 1px 3px);
+      mix-blend-mode:multiply;}
+    .crt::after{content:""; position:absolute; inset:0;
+      box-shadow:inset 0 0 90px rgba(0,0,0,.7); border-radius:14px;}
+    .aberr{position:absolute; inset:0; pointer-events:none; z-index:2;
+      background:linear-gradient(90deg, rgba(255,46,136,.05), transparent 40%, rgba(45,226,230,.05));}
+    .row{opacity:0; transform:translateX(-10px); animation:rowIn .5s forwards}
+    @keyframes rowIn{to{opacity:1; transform:none}}
+    .row .think{color:var(--purple)} .row .tool{color:var(--cyan)} .row .q{color:var(--orange)}
+    .row .ok{color:var(--cyan); opacity:.8}
+    .caret{display:inline-block; width:9px; height:15px; background:var(--pink); margin-left:2px;
+      vertical-align:middle; animation:blink 1s steps(1) infinite; box-shadow:0 0 8px var(--pink)}
+
+    .dev-bot{display:flex; align-items:center; gap:14px; padding:10px 8px 2px; flex-wrap:wrap;
+      font-family:"JetBrains Mono",monospace; font-size:10px; color:var(--muted)}
+    .vol{display:flex; gap:3px; align-items:center}
+    .vol i{width:5px;height:12px;border-radius:1px;background:var(--cyan);box-shadow:0 0 6px var(--cyan);display:inline-block}
+    .vol i.off{background:#2a1240;box-shadow:none}
+    .rec{display:flex;align-items:center;gap:5px}
+    .rec .r{width:9px;height:9px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 8px #ff3b3b;animation:blink 1.3s infinite}
+    .bat{display:flex;gap:2px;align-items:center}
+    .bat i{width:7px;height:11px;border:1px solid var(--muted);border-radius:1px}
+    .bat i.on{background:var(--green,#4ade80);border-color:var(--green,#4ade80);box-shadow:0 0 6px #4ade80}
+    .spacer{margin-left:auto}
+
+    .grid-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:16px; margin-top:42px}
+    .card{position:relative; text-decoration:none; color:var(--ink); border:1px solid rgba(255,255,255,.08);
+      border-radius:14px; padding:20px; background:rgba(13,2,26,.6); backdrop-filter:blur(4px);
+      transition:transform .2s, border-color .2s, box-shadow .2s; overflow:hidden}
+    .card::before{content:""; position:absolute; inset:0; background:linear-gradient(135deg, rgba(255,46,136,.12), rgba(45,226,230,.1)); opacity:0; transition:opacity .2s}
+    .card:hover{transform:translateY(-4px); border-color:var(--cyan); box-shadow:0 14px 40px rgba(45,226,230,.22)}
+    .card:hover::before{opacity:1}
+    .card .nm{font-family:"JetBrains Mono",monospace; font-weight:700; font-size:16px; color:var(--cyan); position:relative}
+    .card .ds{color:var(--muted); font-size:13px; margin-top:8px; line-height:1.55; position:relative}
+    .card .mt{margin-top:14px; display:flex; gap:8px; flex-wrap:wrap; position:relative}
+    .chip{font-size:11px; font-family:"JetBrains Mono",monospace; padding:2px 9px; border-radius:999px; border:1px solid rgba(255,255,255,.15); color:var(--muted)}
+    .chip.live{color:var(--cyan); border-color:rgba(45,226,230,.45)}
+    .chip.demo{color:var(--pink); border-color:rgba(255,46,136,.45)}
+
+    footer{margin-top:48px; text-align:center; color:var(--muted); font-family:"JetBrains Mono",monospace; font-size:12px}
+    a.il{color:var(--cyan); text-decoration:none} a.il:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+  <div class="sky"><div class="sun"></div><div class="grid"></div></div>
+  <div class="stars" id="stars"></div>
+  <div class="scan"></div>
+
+  <div class="wrap">
+    <div class="badge"><span class="dot"></span> IDUN · AZURE AI FOUNDRY AGENT</div>
+    <a class="badge ignite" href="https://ignite.microsoft.com/" target="_blank" rel="noopener">
+      <svg class="mslogo" viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
+        <rect x="0" y="0" width="7" height="7" fill="#f25022"/>
+        <rect x="9" y="0" width="7" height="7" fill="#7fba00"/>
+        <rect x="0" y="9" width="7" height="7" fill="#00a4ef"/>
+        <rect x="9" y="9" width="7" height="7" fill="#ffb900"/>
+      </svg>
+      SEE US AT MICROSOFT IGNITE 2026 · SAN FRANCISCO · NOV 17–20
+    </a>
+    <h1>IDUN</h1>
+    <p class="intro" id="intro"></p>
+    <p class="tag">A neon-outrun console for the NatureLM-Idun-5-MoE agent. Watch it reason and call tools on the IDUN-40 — then bring your own Azure AI Foundry resource, or just explore the recorded demo. Tenant-agnostic by design.</p>
+
+    <!-- IDUN-40 device -->
+    <div class="device">
+      <div class="dev-top">
+        <span class="led"></span>
+        <span class="brand">IDUN-40</span>
+        <span class="slot"><span class="cart"></span> CARTRIDGE · idun-sdk v1.0.32</span>
+        <span class="pad"><span class="cross"></span><span class="btn a"></span><span class="btn b"></span></span>
+      </div>
+
+      <div class="screen">
+        <div class="trace" id="trace"></div>
+        <div class="aberr"></div>
+        <div class="crt"></div>
+      </div>
+
+      <div class="dev-bot">
+        <span class="rec"><span class="r"></span> REC</span>
+        <span class="vol">VOL <i></i><i></i><i></i><i class="off"></i><i class="off"></i></span>
+        <span class="bat"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
+        <span class="spacer">MODE · AGENT</span>
+      </div>
+    </div>
+
+    <div class="grid-cards">
+      <a class="card" href="https://github.com/qapdex-maker/idun-sdk" target="_blank" rel="noopener">
+        <div class="nm">idun-sdk</div>
+        <div class="ds">Stdlib-only client + CLI for NatureLM-Idun-5-MoE — 17-provider registry, retro console, MCP server.</div>
+        <div class="mt"><span class="chip live">PyPI 1.0.32</span><span class="chip">Python ≥3.8</span></div>
+      </a>
+      <a class="card" href="https://qapdex-maker.github.io/idun-playground/" target="_blank" rel="noopener">
+        <div class="nm">idun-playground</div>
+        <div class="ds">Live tool-agent trajectory playground (dark Foundry look). Step-by-step demo replay, no backend, no account.</div>
+        <div class="mt"><span class="chip demo">Demo live</span><span class="chip">GitHub Pages</span></div>
+      </a>
+      <a class="card" href="https://github.com/qapdex-maker/foundry-agent-webapp" target="_blank" rel="noopener">
+        <div class="nm">foundry-agent-webapp</div>
+        <div class="ds">Web application with Entra ID authentication, integrated with Azure AI Foundry Agents.</div>
+        <div class="mt"><span class="chip">Entra ID</span><span class="chip">fork</span></div>
+      </a>
+    </div>
+
+    <a class="badge ignite" href="https://qapdex-maker.github.io/idun-playground/ignite.html" target="_blank" rel="noopener" style="margin-top:28px;display:inline-flex">
+      <svg class="mslogo" viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
+        <rect x="0" y="0" width="7" height="7" fill="#f25022"/>
+        <rect x="9" y="0" width="7" height="7" fill="#7fba00"/>
+        <rect x="0" y="9" width="7" height="7" fill="#00a4ef"/>
+        <rect x="9" y="9" width="7" height="7" fill="#ffb900"/>
+      </svg>
+      AT IGNITE 2026 →
+    </a>
+
+    <footer>Built with the Idun SDK · <a class="il" href="https://github.com/qapdex-maker" target="_blank" rel="noopener">github.com/qapdex-maker</a></footer>
+  </div>
+
+  <script>
+    (function(){const s=document.getElementById('stars');let h='';
+      for(let i=0;i<90;i++){const x=Math.random()*100,y=Math.random()*100,r=Math.random()*1.6+.4,a=Math.random()*.7+.3;
+        h+=`<span style="position:absolute;left:${x}%;top:${y}%;width:${r}px;height:${r}px;border-radius:50%;background:#fff;opacity:${a};box-shadow:0 0 6px #fff"></span>`;}
+      s.innerHTML=h;})();
+
+    (function(){const el=document.getElementById('intro');
+      const parts=[{t:'Introducing ',c:''},{t:'Idun',c:'k'},{t:' on the ',c:''},{t:'IDUN-40',c:'p'},{t:' — a ',c:''},{t:'neon agent console',c:'o'}];
+      let html='',i=0; parts.forEach(p=>{const cls=p.c?`class="${p.c}"`:''; html+=`<span style="animation-delay:${i*0.12}s" ${cls}>${p.t}</span>`; i++;});
+      el.innerHTML=html;})();
+
+    (function(){const trace=document.getElementById('trace');
+      function row(cls,text){const d=document.createElement('div');d.className='row';
+        d.innerHTML=`<span class="${cls}">${text}</span>`;trace.appendChild(d);
+        while(trace.children.length>14)trace.removeChild(trace.firstChild);trace.scrollTop=trace.scrollHeight;}
+      function typeLine(cls,text,speed,cb){let i=0;const d=document.createElement('div');d.className='row';
+        const span=document.createElement('span');span.className=cls;d.appendChild(span);trace.appendChild(d);
+        const iv=setInterval(()=>{span.textContent=text.slice(0,++i);
+          while(trace.children.length>14)trace.removeChild(trace.firstChild);
+          if(i>=text.length){clearInterval(iv);cb&&cb();}},speed);}
+      const script=[
+        (n)=>typeLine('think','› Reasoning: structuring the circular-economy answer from public Contoso materials…',18,n),
+        (n)=>row('tool','⚙ web_search  "Contoso circular economy business model"'),
+        (n)=>row('ok','  ↳ completed'),
+        (n)=>row('tool','⚙ web_search  "Contoso sustainability report 2026 circularity"'),
+        (n)=>row('ok','  ↳ completed'),
+        (n)=>typeLine('think','› Three levers recur: product-as-a-service, recyclate, take-back system.',16,n),
+        (n)=>typeLine('tool','✓ Contoso embeds circularity at 3 points in its business model.',14,n),
+        (n)=>typeLine('tool','  1) Product-as-a-Service — leased, not sold.',14,n),
+        (n)=>typeLine('tool','  2) Recyclate — 62% of housing parts, target 80% by 2028.',14,n),
+        (n)=>typeLine('tool','  3) Take-back — 4,200 collection points feed modules back.',14,n),
+      ];
+      let idx=0;
+      function next(){if(idx>=script.length){idx=0;setTimeout(()=>{while(trace.children.length)trace.removeChild(trace.firstChild);},1400);}
+        const f=script[idx++];f(next);}
+      row('think','› IDUN-40 online — watching the agent work');
+      setTimeout(next,500);})();
+  </script>
+</body>
+</html>

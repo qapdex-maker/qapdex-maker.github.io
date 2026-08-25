@@ -1,0 +1,9 @@
+Deploy qapdex-maker.github.io landing portal
+
+- Root index.html: neo-brutalist portal listing all qapdex-maker deployments
+  (selfhost.os featured, idun console, dev-tools repos), with an insite-scroll
+  pages browser, Ignite (seasonal, localStorage) theme toggle, and micro-interactions.
+- Preserve the previous root page (Idun IDUN-40 Neon Agent Console) as idun/index.html
+  so the idun console remains its own page and is linked from the portal.
+- All links point to real targets: idun console -> /idun/, selfhost.os -> org
+  overview (repo not yet deployed), dev tools -> their GitHub repos.
