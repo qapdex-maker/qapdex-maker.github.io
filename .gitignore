@@ -2,3 +2,7 @@ server.log/server.log
 
 # local server logs
 msgraph/server.log
+
+# local server logs
+msgraph/preview*.log
+msgraph/server.log
