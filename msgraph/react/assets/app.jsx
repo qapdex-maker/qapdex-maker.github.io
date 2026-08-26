@@ -75,17 +75,25 @@ function Reference() {
   const [items, setItems] = useState([]);
   const [q, setQ] = useState('');
   const [status, setStatus] = useState('lädt…');
-  const fileMap = { 'v1.0': 'data/index.v1.0.json', beta: 'data/index.beta.json' };
+  // Web Worker löst relative fetch() gegen die Worker-Skript-URL auf
+  // (/msgraph/react/assets/), nicht gegen die Seite (/msgraph/react/).
+  // Deshalb hier ABSOLUTE URLs bauen und an den Worker durchreichen.
+  const base = window.location.href.replace(/index\.html?$/, '');
+  const fileMap = {
+    'v1.0': base + 'data/index.v1.0.json',
+    beta: base + 'data/index.beta.json'
+  };
   const workerRef = useRef(null);
+  const variantRef = useRef(variant);
+  variantRef.current = variant; // immer aktueller Wert für onmessage-Stale-Guard
 
   useEffect(() => {
     const w = new Worker('assets/worker.js');
     workerRef.current = w;
     w.onmessage = (e) => {
-      if (e.data.variant === variant) {
-        if (e.data.ok) { setItems(e.data.items); setStatus(e.data.count + ' Endpoints'); }
-        else setStatus('Fehler: ' + e.data.error);
-      }
+      if (e.data.variant !== variantRef.current) return; // stale Antwort ignorieren
+      if (e.data.ok) { setItems(e.data.items); setStatus(e.data.count + ' Endpoints'); }
+      else setStatus('Fehler: ' + e.data.error);
     };
     return () => w.terminate();
   }, []);
@@ -108,7 +116,7 @@ function Reference() {
       <p className="hint">Durchsuchbare Endpoint-Liste aus den echten Metadaten (im Web Worker geladen → kein Freeze).</p>
       <div className="ref-tabs">
         <button className={'reftab' + (variant === 'v1.0' ? ' active' : '')} onClick={() => setVariant('v1.0')}>v1.0 (stabil)</button>
-        <button className={'reftab' + (variant === 'beta' ? ' active' : '')} onClick={() => setBeta()}>beta (Preview)</button>
+        <button className={'reftab' + (variant === 'beta' ? ' active' : '')} onClick={() => setVariant('beta')}>beta (Preview)</button>
       </div>
       <div className="ref-controls">
         <input className="epinput" placeholder="Endpoint suchen (z.B. /me, team)…" value={q} onChange={e => setQ(e.target.value)} />
