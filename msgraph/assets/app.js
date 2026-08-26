@@ -54,6 +54,12 @@ async function boot(){
     d.innerHTML=`<h3>${n}</h3><p><a class="dl" href="${RAW+path}" target="_blank" rel="noopener">raw herunterladen ↗</a></p>`;
     dc.appendChild(d);
   });
+  // Sichtbarer "JS lebt" Indikator
+  const live=document.getElementById('liveDot');
+  if(live){ live.textContent='● live'; live.classList.add('on'); }
+  // Console + Reference IM HINTERGRUND vorladen, damit Tab-Klick sofort Inhalt zeigt
+  lazyLoadConsole();
+  lazyLoadReference();
 }
 
 // ---------- Lazy: Console (lädt erst die 2.5MB Index) ----------

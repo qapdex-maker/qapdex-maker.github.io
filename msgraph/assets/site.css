@@ -45,6 +45,8 @@ code { background:var(--bg2); padding:1px 5px; border-radius:4px; color:var(--ac
 .tbtn { background:var(--card); color:var(--muted); border:1px solid var(--border);
   border-radius:6px; padding:.25rem .5rem; cursor:pointer; font-family:inherit; font-size:.75rem; }
 .tbtn.active { color:var(--bg); background:var(--accent); border-color:var(--accent); }
+.livedot { font-size:.7rem; font-family:"IBM Plex Mono",monospace; color:var(--muted); align-self:center; margin-right:.4rem; }
+.livedot.on { color:#3fb950; text-shadow:0 0 8px rgba(63,185,80,.6); }
 
 /* panels */
 main { max-width:1100px; margin:0 auto; padding:1.5rem 1rem 4rem; }
