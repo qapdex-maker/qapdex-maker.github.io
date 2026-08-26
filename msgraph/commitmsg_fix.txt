@@ -1,0 +1,12 @@
+Fix metadata-msgraph Hub: reference spec 404 + beta freeze
+
+- Bug 1: SITE key was 'v10' but HTML used data-spec="v1.0" -> spec-url
+  resolved to RAW+'undefined' -> 404 on raw.githubusercontent. Renamed
+  SITE key to 'v1.0' so RAW+SITE['v1.0'] builds the correct URL.
+- Bug 2: clicking beta (41MB spec) loaded inline via RapiDoc, blocking the
+  main thread and freezing the whole page. Now beta opens the raw spec in a
+  new tab instead; v1.0 (8MB) still loads inline with a timeout fallback
+  so a failed load shows a hint instead of an infinite spinner.
+
+Verified: RAW+SITE['v1.0'] and ['beta'] resolve correctly; both raw URLs
+return HTTP 200; app.js passes node -c.

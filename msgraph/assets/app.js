@@ -1,6 +1,6 @@
 'use strict';
 const RAW = 'https://raw.githubusercontent.com/qapdex-maker/metadata-msgraph/master/';
-const SITE = { v10: 'openapi/v1.0/openapi.yaml', beta: 'openapi/beta/openapi.yaml' };
+const SITE = { 'v1.0': 'openapi/v1.0/openapi.yaml', beta: 'openapi/beta/openapi.yaml' };
 
 // ---------- Theme ----------
 const THEME_KEY = 'qgraph-theme';
@@ -70,21 +70,44 @@ async function lazyLoadConsole(){
   }catch(e){ console.error('index load failed', e); }
 }
 
-// ---------- Lazy: Reference (lädt erst die 41MB Spec bei Tab-Klick) ----------
+// ---------- Lazy: Reference ----------
+// v1.0 (8MB) laedt inline via RapiDoc. beta (41MB) wuerde den Main-Thread
+// blockieren und die Seite einfrieren -> daher raw-Spec in neuem Tab oeffnen.
 let refLoaded=false;
 function lazyLoadReference(){
   if(refLoaded) return; refLoaded=true;
   const rd=document.getElementById('rapidoc');
-  rd.setAttribute('spec-url', RAW+SITE['v1.0']);
-  document.getElementById('refPlaceholder').style.display='none';
+  loadSpecIntoRapiDoc('v1.0');
+}
+function loadSpecIntoRapiDoc(spec){
+  const rd=document.getElementById('rapidoc');
+  const ph=document.getElementById('refPlaceholder');
+  const url=RAW+(spec==='beta'?SITE.beta:SITE['v1.0']);
+  ph.style.display='block';
+  ph.textContent='⏳ Lade Spec ('+(spec==='beta'?'41 MB — das kann die Seite kurz blockieren; nutze besser den raw-Link unten':'~8 MB')+')…';
   rd.style.display='block';
+  // RapiDoc laedt ueber das spec-url Attribut. Bei Fehler (404) nicht einfrieren:
+  rd.setAttribute('spec-url', url);
+  // Fallback: wenn nach 20s nichts da ist -> Hinweis statt Freeze
+  setTimeout(()=>{
+    if(ph.style.display!=='none'){
+      ph.textContent='⚠ Spec nicht geladen (Timeout/Blockiert). Öffne roh: '+url;
+    }
+  }, 20000);
 }
 document.querySelectorAll('.reftab').forEach(t=>t.addEventListener('click',()=>{
   document.querySelectorAll('.reftab').forEach(x=>x.classList.remove('active'));
   t.classList.add('active');
   const spec=t.dataset.spec;
-  const rd=document.getElementById('rapidoc');
-  rd.setAttribute('spec-url', RAW+SITE[spec]);
+  if(spec==='beta'){
+    // 41MB wuerde Main-Thread blockieren -> raw in neuem Tab, kein Inline
+    const url=RAW+SITE.beta;
+    window.open(url, '_blank', 'noopener');
+    document.getElementById('refPlaceholder').style.display='block';
+    document.getElementById('refPlaceholder').textContent='βeta (41 MB) wird in neuem Tab geöffnet (roh). Inline würde diese Seite einfrieren.';
+    return;
+  }
+  loadSpecIntoRapiDoc('v1.0');
 }));
 
 // ---------- Console ----------
