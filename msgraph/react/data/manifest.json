@@ -1,0 +1,22 @@
+{
+  "site": "qapdex-maker.github.io (proto)",
+  "title": "Graph Metadata Hub + Semantics Console",
+  "schemaVersion": "1.4.711.0",
+  "syncDate": "2026-08-26",
+  "projects": [
+    { "name": "metadata-msgraph", "role": "Datenquelle (CSDL/OpenAPI/Typ-Mappings)", "repo": "qapdex-maker/metadata-msgraph" },
+    { "name": "idun-sdk", "role": "Azure AI Foundry Client", "repo": "qapdex-maker/idun-sdk" },
+    { "name": "idun-playground", "role": "Multi-LLM-Console (17 Provider)", "repo": "qapdex-maker/idun-playground" }
+  ],
+  "tabs": [
+    { "id": "hub", "label": "Hub", "type": "hub" },
+    { "id": "reference", "label": "Reference", "type": "reference", "spec": "https://raw.githubusercontent.com/qapdex-maker/metadata-msgraph/master/openapi/v1.0/openapi.yaml" },
+    { "id": "console", "label": "Console", "type": "console" },
+    { "id": "permissions", "label": "Permissions", "type": "permissions" },
+    { "id": "radar", "label": "Breaking Radar", "type": "radar" }
+  ],
+  "specRaw": {
+    "v1.0": "https://raw.githubusercontent.com/qapdex-maker/metadata-msgraph/master/openapi/v1.0/openapi.yaml",
+    "beta": "https://raw.githubusercontent.com/qapdex-maker/metadata-msgraph/master/openapi/beta/openapi.yaml"
+  }
+}
