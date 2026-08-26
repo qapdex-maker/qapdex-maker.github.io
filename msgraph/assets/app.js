@@ -70,45 +70,59 @@ async function lazyLoadConsole(){
   }catch(e){ console.error('index load failed', e); }
 }
 
-// ---------- Lazy: Reference ----------
-// v1.0 (8MB) laedt inline via RapiDoc. beta (41MB) wuerde den Main-Thread
-// blockieren und die Seite einfrieren -> daher raw-Spec in neuem Tab oeffnen.
+// ---------- Lazy: Reference (leichtgewichtig, kein RapiDoc) ----------
+// RapiDoc blockiert den Main-Thread bei 8-41MB Specs -> Seite friert ein.
+// Stattdessen: durchsuchbare Endpoint-Liste aus den Index-JSONs
+// (index.v1.0.json / index.beta.json), die ohnehin fuer die Console da sind.
+// "rohe Spec oeffnen" -> raw.githubusercontent in neuem Tab. Kein Freeze.
 let refLoaded=false;
-function lazyLoadReference(){
-  if(refLoaded) return; refLoaded=true;
-  const rd=document.getElementById('rapidoc');
-  loadSpecIntoRapiDoc('v1.0');
+let refData = { 'v1.0':null, 'beta':null };
+let refVariant='v1.0';
+const REF_FILE = { 'v1.0':'index.v1.0.json', 'beta':'index.beta.json' };
+
+async function loadRefVariant(variant){
+  if(!refData[variant]){
+    const r = await fetch('data/'+REF_FILE[variant]);
+    refData[variant] = await r.json();
+  }
+  return refData[variant];
 }
-function loadSpecIntoRapiDoc(spec){
-  const rd=document.getElementById('rapidoc');
-  const ph=document.getElementById('refPlaceholder');
-  const url=RAW+(spec==='beta'?SITE.beta:SITE['v1.0']);
-  ph.style.display='block';
-  ph.textContent='⏳ Lade Spec ('+(spec==='beta'?'41 MB — das kann die Seite kurz blockieren; nutze besser den raw-Link unten':'~8 MB')+')…';
-  rd.style.display='block';
-  // RapiDoc laedt ueber das spec-url Attribut. Bei Fehler (404) nicht einfrieren:
-  rd.setAttribute('spec-url', url);
-  // Fallback: wenn nach 20s nichts da ist -> Hinweis statt Freeze
-  setTimeout(()=>{
-    if(ph.style.display!=='none'){
-      ph.textContent='⚠ Spec nicht geladen (Timeout/Blockiert). Öffne roh: '+url;
-    }
-  }, 20000);
+function renderRefList(){
+  const data = refData[refVariant];
+  const el = document.getElementById('refList');
+  if(!data){ el.innerHTML='<div class="hint">lade…</div>'; return; }
+  const q=(document.getElementById('refSearch').value||'').toLowerCase();
+  // flat list
+  const flat=[];
+  Object.entries(data.paths||{}).forEach(([p,ops])=>ops.forEach(o=>{
+    flat.push({path:p, method:o.method.toUpperCase(), summary:o.summary||''});
+  }));
+  const items = q ? flat.filter(f=>f.path.toLowerCase().includes(q)||f.summary.toLowerCase().includes(q)) : flat;
+  document.getElementById('refStats').innerHTML =
+    `<span class="badge">${data.variant||refVariant}: ${data.pathCount||flat.length} Endpoints</span>`+
+    (q?`<span class="badge">Treffer: ${items.length}</span>`:'');
+  el.innerHTML = (items.length?items:[]).slice(0,300).map(f=>`<div class="card">
+    <h3><span class="mth">${f.method}</span> <span class="pth">${f.path}</span></h3>
+    ${f.summary?`<p>${f.summary}</p>`:''}
+  </div>`).join('') || '<div class="hint">Kein Treffer.</div>';
+}
+async function lazyLoadReference(){
+  const spec=refVariant;
+  document.getElementById('refRawBtn').href = RAW + SITE[spec];
+  if(refLoaded && refData[spec]){ renderRefList(); return; }
+  refLoaded=true;
+  await loadRefVariant(spec);
+  renderRefList();
 }
 document.querySelectorAll('.reftab').forEach(t=>t.addEventListener('click',()=>{
   document.querySelectorAll('.reftab').forEach(x=>x.classList.remove('active'));
   t.classList.add('active');
-  const spec=t.dataset.spec;
-  if(spec==='beta'){
-    // 41MB wuerde Main-Thread blockieren -> raw in neuem Tab, kein Inline
-    const url=RAW+SITE.beta;
-    window.open(url, '_blank', 'noopener');
-    document.getElementById('refPlaceholder').style.display='block';
-    document.getElementById('refPlaceholder').textContent='βeta (41 MB) wird in neuem Tab geöffnet (roh). Inline würde diese Seite einfrieren.';
-    return;
-  }
-  loadSpecIntoRapiDoc('v1.0');
+  refVariant=t.dataset.spec;
+  document.getElementById('refRawBtn').href = RAW + SITE[refVariant];
+  loadRefVariant(refVariant).then(renderRefList);
 }));
+document.getElementById('refSearch').addEventListener('input', renderRefList);
+
 
 // ---------- Console ----------
 function initConsole(){

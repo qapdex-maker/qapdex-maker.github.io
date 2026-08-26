@@ -51,19 +51,19 @@
 
   <!-- ============ REFERENCE ============ -->
   <section id="reference" class="panel">
-    <h2 class="sect">API Reference (RapiDoc)</h2>
-    <p class="hint">Lädt die Spec live per <code>raw.githubusercontent.com</code> — keine Kopie nötig.
-      Bei 41&nbsp;MB dauert der erste Aufbau einen Moment.</p>
+    <h2 class="sect">API Reference</h2>
+    <p class="hint">Durchsuchbare Endpoint-Liste aus den echten Metadaten (kein schweres
+      Inline-Rendering → keine Freezes). Klick auf roh öffnet die volle Spec.</p>
     <div class="ref-tabs">
       <button class="reftab active" data-spec="v1.0">v1.0 (stabil)</button>
       <button class="reftab" data-spec="beta">beta (Preview)</button>
     </div>
-    <div id="refPlaceholder" class="hint" style="padding:2rem;text-align:center">
-      ⏳ Spec wird erst geladen, wenn du oben einen Tab wählst (spart 41&nbsp;MB beim Hub-Besuch).
+    <div class="ref-controls">
+      <input id="refSearch" class="epinput" placeholder="Endpoint suchen (z.B. /me, user, team)…" autocomplete="off" />
+      <a id="refRawBtn" class="btn" target="_blank" rel="noopener" style="margin-left:.5rem">↗ rohe Spec öffnen</a>
     </div>
-    <rapi-doc id="rapidoc" style="display:none" render-style="view" theme="dark"
-      show-method-in-nav-bar="as-colored-block" primary-color="#36c5f0">
-    </rapi-doc>
+    <div id="refStats" class="badges"></div>
+    <div id="refList" class="cards"></div>
   </section>
 
   <!-- ============ PERMISSIONS [2] ============ -->
@@ -154,7 +154,6 @@
   <span>qapdex-maker.github.io · Prototyp · Daten: github.com/qapdex-maker/metadata-msgraph</span>
 </footer>
 
-<script src="https://unpkg.com/rapidoc@9.3.4/dist/rapidoc-min.js"></script>
 <script src="data/manifest.json" id="manifestScript"></script>
 <script src="assets/app.js"></script>
 </body>
