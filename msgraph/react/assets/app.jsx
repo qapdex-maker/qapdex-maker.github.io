@@ -11,12 +11,12 @@ function VirtList({ items, rowHeight = 54, height = 480, renderRow }) {
   const end = Math.min(total, Math.ceil((scrollTop + height) / rowHeight) + 4);
   const visible = items.slice(start, end);
   return (
-    <div style={{ height, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 10 }}
+    <div className="virtlist" style={{ height, overflowY: 'auto', border: '1px solid var(--line)' }}
          onScroll={e => setScrollTop(e.currentTarget.scrollTop)}>
       <div style={{ height: total * rowHeight, position: 'relative' }}>
         <div style={{ transform: `translateY(${start * rowHeight}px)` }}>
           {visible.map((it, i) => (
-            <div key={start + i} style={{ height: rowHeight, borderBottom: '1px solid var(--border)', padding: '8px 10px' }}>
+            <div key={start + i} style={{ height: rowHeight, display: 'flex', alignItems: 'center' }}>
               {renderRow(it)}
             </div>
           ))}
@@ -26,12 +26,46 @@ function VirtList({ items, rowHeight = 54, height = 480, renderRow }) {
   );
 }
 
+// ---------- i18n ----------
+const I18N = {
+  de: {
+    hero_h1: <>Graph Metadata <span className="hl">Hub</span></>,
+    hero_lead: 'Schaufenster für metadata-msgraph — Microsoft Graph als OpenAPI, CSDL & Typ-Mappings. Plus die Semantics Console.',
+    schema: 'schema', sync: 'sync',
+    projekte: 'Projekte', downloads: 'Download-Hub (roh)',
+    raw: 'raw herunterladen ↗',
+    reference: 'API Reference', ref_hint: 'Durchsuchbare Endpoint-Liste aus den echten Metadaten (im Web Worker geladen → kein Freeze).',
+    ref_ph: 'Endpoint suchen (z.B. /me, team)…', ref_open: '↗ rohe Spec öffnen',
+    console: 'Semantics Console', console_hint: 'Gib natürliche Sprache oder einen Endpoint ein → curl + idun-Befehl.',
+    nl: 'Natürliche Sprache', nl_btn: 'NL → Graph', endpoint: 'Endpoint',
+    perm: 'Permission Intelligence', perm_hint: 'Kuratiert (OpenAPI hier hat keine strukturierten scopes). Jede Permission mit least-privilege-Empfehlung.',
+    perm_ph: 'Permission suchen…',
+    radar: 'Breaking-Change Radar', radar_hint: 'Echte Deprecations aus den Metadaten (x-ms-deprecation).',
+    dep: 'Deprecations',
+    live: '● live', ignite: 'Ignite', en: 'EN',
+    footer: 'qapdex-maker.github.io · React Prototyp · Daten: metadata-msgraph',
+  },
+  en: {
+    hero_h1: <>Graph Metadata <span className="hl">Hub</span></>,
+    hero_lead: 'Showcase for metadata-msgraph — Microsoft Graph as OpenAPI, CSDL & Type Mappings. Plus the Semantics Console.',
+    schema: 'schema', sync: 'sync',
+    projekte: 'Projects', downloads: 'Download-Hub (raw)',
+    raw: 'download raw ↗',
+    reference: 'API Reference', ref_hint: 'Searchable endpoint list from the real metadata (loaded in a Web Worker → no freeze).',
+    ref_ph: 'Search endpoint (e.g. /me, team)…', ref_open: '↗ open raw spec',
+    console: 'Semantics Console', console_hint: 'Enter natural language or an endpoint → curl + idun command.',
+    nl: 'Natural Language', nl_btn: 'NL → Graph', endpoint: 'Endpoint',
+    perm: 'Permission Intelligence', perm_hint: 'Curated (the OpenAPI here has no structured scopes). Least-privilege note per permission.',
+    perm_ph: 'Search permission…',
+    radar: 'Breaking-Change Radar', radar_hint: 'Real deprecations from the metadata (x-ms-deprecation).',
+    dep: 'Deprecations',
+    live: '● live', ignite: 'Ignite', en: 'EN',
+    footer: 'qapdex-maker.github.io · React Prototype · Data: metadata-msgraph',
+  }
+};
+
 // ---------- Hub ----------
-function Hub() {
-  const [m, setM] = useState(null);
-  useEffect(() => {
-    fetch('data/manifest.json').then(r => r.json()).then(setM).catch(() => setM({}));
-  }, []);
+function Hub({ t, m }) {
   const projects = m?.projects || [];
   const dls = [
     ['OpenAPI v1.0', SITE['v1.0']],
@@ -40,13 +74,13 @@ function Hub() {
   ];
   return (
     <div className="panel-inner">
-      <h1 className="hero-h1">Graph Metadata Hub</h1>
-      <p className="lead">Schaufenster für metadata-msgraph — Microsoft Graph als OpenAPI, CSDL & Typ-Mappings. Plus die Semantics Console.</p>
+      <h1 className="hero-h1">{t.hero_h1}</h1>
+      <p className="lead">{t.hero_lead}</p>
       <div className="badges">
-        <span className="badge">schema {m?.schemaVersion || '?'}</span>
-        <span className="badge">sync {m?.syncDate || '?'}</span>
+        <span className="badge">{t.schema} {m?.schemaVersion || '?'}</span>
+        <span className="badge">{t.sync} {m?.syncDate || '?'}</span>
       </div>
-      <h2 className="sect">Projekte</h2>
+      <h2 className="sect">{t.projekte}</h2>
       <div className="cards">
         {projects.map(p => (
           <div className="card" key={p.name}>
@@ -56,12 +90,12 @@ function Hub() {
           </div>
         ))}
       </div>
-      <h2 className="sect">Download-Hub (roh)</h2>
+      <h2 className="sect">{t.downloads}</h2>
       <div className="cards">
         {dls.map(([n, path]) => (
           <div className="card" key={n}>
             <h3>{n}</h3>
-            <a className="dl" href={RAW + path} target="_blank" rel="noopener">raw herunterladen ↗</a>
+            <a className="dl" href={RAW + path} target="_blank" rel="noopener">{t.raw}</a>
           </div>
         ))}
       </div>
@@ -70,12 +104,12 @@ function Hub() {
 }
 
 // ---------- Reference (worker-backed, virtualized) ----------
-function Reference() {
+function Reference({ t }) {
   const [variant, setVariant] = useState('v1.0');
   const [items, setItems] = useState([]);
   const [q, setQ] = useState('');
-  const [status, setStatus] = useState('lädt…');
-  // Web Worker löst relative fetch() gegen die Worker-Skript-URL auf
+  const [status, setStatus] = useState(t.ref_hint ? 'lädt…' : 'loading…');
+  // Web Worker löst relatives fetch() gegen die Worker-Skript-URL auf
   // (/msgraph/react/assets/), nicht gegen die Seite (/msgraph/react/).
   // Deshalb hier ABSOLUTE URLs bauen und an den Worker durchreichen.
   const base = window.location.href.replace(/index\.html?$/, '');
@@ -105,39 +139,38 @@ function Reference() {
   }, [variant]);
 
   const filtered = useMemo(() => {
-    const t = q.toLowerCase();
-    if (!t) return items;
-    return items.filter(f => f.path.toLowerCase().includes(t) || f.summary.toLowerCase().includes(t));
+    const s = q.toLowerCase();
+    if (!s) return items;
+    return items.filter(f => f.path.toLowerCase().includes(s) || f.summary.toLowerCase().includes(s));
   }, [items, q]);
 
   return (
     <div className="panel-inner">
-      <h2 className="sect">API Reference</h2>
-      <p className="hint">Durchsuchbare Endpoint-Liste aus den echten Metadaten (im Web Worker geladen → kein Freeze).</p>
+      <h2 className="sect">{t.reference}</h2>
+      <p className="hint">{t.ref_hint}</p>
       <div className="ref-tabs">
         <button className={'reftab' + (variant === 'v1.0' ? ' active' : '')} onClick={() => setVariant('v1.0')}>v1.0 (stabil)</button>
         <button className={'reftab' + (variant === 'beta' ? ' active' : '')} onClick={() => setVariant('beta')}>beta (Preview)</button>
       </div>
       <div className="ref-controls">
-        <input className="epinput" placeholder="Endpoint suchen (z.B. /me, team)…" value={q} onChange={e => setQ(e.target.value)} />
-        <a className="btn" target="_blank" rel="noopener" href={RAW + SITE[variant]}>↗ rohe Spec öffnen</a>
+        <input className="epinput" placeholder={t.ref_ph} value={q} onChange={e => setQ(e.target.value)} />
+        <a className="btn" target="_blank" rel="noopener" href={RAW + SITE[variant]}>{t.ref_open}</a>
       </div>
       <div className="badges"><span className="badge">{status}</span>{q && <span className="badge">Treffer: {filtered.length}</span>}</div>
       {filtered.length > 0 ? (
         <VirtList items={filtered} renderRow={f => (
-          <div>
+          <div className="refrow" style={{ width: '100%' }}>
             <span className="mth">{f.method}</span> <span className="pth">{f.path}</span>
             {f.summary && <div className="meta-row">{f.summary}</div>}
           </div>
         )} />
-      ) : <div className="hint" style={{marginTop:'1rem'}}>{status}</div>}
+      ) : <div className="hint" style={{ marginTop: '1rem' }}>{status}</div>}
     </div>
   );
-  function setBeta() { setVariant('beta'); }
 }
 
 // ---------- Console ----------
-function ConsolePanel() {
+function ConsolePanel({ t }) {
   const [ep, setEp] = useState({ method: 'GET', path: '/me', meta: 'Aktueller Benutzer' });
   const [nl, setNl] = useState('');
   const [idx, setIdx] = useState(null);
@@ -152,16 +185,18 @@ function ConsolePanel() {
     }).catch(() => setIdx([]));
   }, []);
 
-  function nlMap(t) {
-    t = t.toLowerCase();
-    const has = (...k) => k.some(x => t.includes(x));
+  function nlMap(s) {
+    const tt = s.toLowerCase();
+    const has = (...k) => k.some(x => tt.includes(x));
     if (has('team')) return { method: 'GET', path: '/me/joinedTeams', perm: 'Team.ReadBasic.All', reason: 'Teams' };
     if (has('mail', 'email')) return { method: 'GET', path: '/me/messages', perm: 'Mail.Read', reason: 'Mails' };
     if (has('termin', 'event', 'calendar')) return { method: 'GET', path: '/me/events', perm: 'Calendars.Read', reason: 'Kalender' };
+    if (has('drive', 'onedrive', 'datei', 'file')) return { method: 'GET', path: '/me/drive/root/children', perm: 'Files.Read', reason: 'OneDrive' };
+    if (has('photo', 'bild', 'avatar')) return { method: 'GET', path: '/me/photo/$value', perm: 'User.Read', reason: 'Profilfoto' };
     return { method: 'GET', path: '/me', perm: 'User.Read', reason: 'Default' };
   }
   function cmd(path, method) {
-    const curl = `curl -X ${method} "https://graph.microsoft.com/v1.0${path}" -H "Authorization: Bearer $GRAPH_TOKEN"`;
+    const curl = `curl -X ${method} "https://graph.microsoft.com/v1.0${path}" -H "Authorization: Bearer ***"`;
     const idun = `idun graph call ${method} ${path}`;
     return { curl, idun };
   }
@@ -169,22 +204,22 @@ function ConsolePanel() {
     const r = nlMap(nl);
     setEp({ method: r.method, path: r.path, meta: 'NL: ' + (r.reason || '') + (r.perm ? ' · ' + r.perm : '') });
   }
-  function showSuggest(q) {
-    if (!idx || !q.trim()) { setSug([]); return; }
-    const t = q.toLowerCase();
-    setSug(idx.filter(f => f.path.toLowerCase().includes(t) || f.summary.toLowerCase().includes(t)).slice(0, 12));
+  function showSuggest(val) {
+    if (!idx || !val.trim()) { setSug([]); return; }
+    const s = val.toLowerCase();
+    setSug(idx.filter(f => f.path.toLowerCase().includes(s) || f.summary.toLowerCase().includes(s)).slice(0, 12));
   }
   const c = cmd(ep.path, ep.method);
   return (
     <div className="panel-inner">
-      <h2 className="sect">Semantics Console <span className="newtag">Neuheit</span></h2>
-      <p className="hint">Gib natürliche Sprache oder einen Endpoint ein → curl + idun-Befehl.</p>
+      <h2 className="sect">{t.console} <span className="newtag">Neuheit</span></h2>
+      <p className="hint">{t.console_hint}</p>
       <div className="console-grid">
         <div>
-          <label className="lbl">Natürliche Sprache</label>
+          <label className="lbl">{t.nl}</label>
           <textarea id="nlInput" value={nl} onChange={e => setNl(e.target.value)} placeholder="z.B. alle Teams des Users" />
-          <button className="primary" onClick={runNl}>NL → Graph</button>
-          <label className="lbl">Endpoint</label>
+          <button className="primary" onClick={runNl}>{t.nl_btn}</button>
+          <label className="lbl">{t.endpoint}</label>
           <input className="epinput" placeholder="/me" onInput={e => showSuggest(e.target.value)} onChange={e => showSuggest(e.target.value)} />
           <div className="suggest">
             {sug.map((s, i) => <div className="s" key={i} onClick={() => { setEp({ method: s.method, path: s.path, meta: s.summary }); setSug([]); }}>{s.method} {s.path}</div>)}
@@ -192,7 +227,7 @@ function ConsolePanel() {
         </div>
         <div>
           <div className="result-head"><span className="mth">{ep.method}</span><span className="pth">{ep.path}</span></div>
-          <div className="meta-row">{ep.meta}</div>
+          <div className="meta-row" style={{ textAlign: 'left', marginLeft: 0, maxWidth: 'none' }}>{ep.meta}</div>
           <div className="block"><div className="block-title">curl</div><pre>{c.curl}</pre></div>
           <div className="block"><div className="block-title">idun</div><pre>{c.idun}</pre></div>
         </div>
@@ -214,14 +249,14 @@ const PERMS = [
   { p: 'Directory.Read.All', least: 'nur für Verzeichnis-Abfragen', cat: 'Entra ID' },
   { p: 'DeviceManagementManagedDevices.Read.All', least: 'nur Intune-Devices', cat: 'Intune' }
 ];
-function Permissions() {
+function Permissions({ t }) {
   const [q, setQ] = useState('');
   const list = PERMS.filter(x => !q || x.p.toLowerCase().includes(q) || x.cat.toLowerCase().includes(q));
   return (
     <div className="panel-inner">
-      <h2 className="sect">Permission Intelligence <span className="newtag">[2]</span></h2>
-      <p className="hint">Kuratiert (OpenAPI hier hat keine strukturierten scopes). Jede Permission mit least-privilege-Empfehlung.</p>
-      <input className="epinput" placeholder="Permission suchen…" value={q} onChange={e => setQ(e.target.value)} />
+      <h2 className="sect">{t.perm} <span className="newtag">[2]</span></h2>
+      <p className="hint">{t.perm_hint}</p>
+      <input className="epinput" placeholder={t.perm_ph} value={q} onChange={e => setQ(e.target.value)} style={{ maxWidth: 360 }} />
       <div className="cards">
         {list.map(x => <div className="card" key={x.p}><h3>{x.p}</h3><div className="role">{x.cat}</div><p>{x.least}</p></div>)}
       </div>
@@ -230,7 +265,7 @@ function Permissions() {
 }
 
 // ---------- Radar (real deprecations) ----------
-function Radar() {
+function Radar({ t }) {
   const [variant, setVariant] = useState('v1.0');
   const [data, setData] = useState(null);
   const fileMap = { 'v1.0': 'data/deprecations.v1.0.json', beta: 'data/deprecations.beta.json' };
@@ -241,16 +276,16 @@ function Radar() {
   const items = (data?.items || []).filter(it => filter === 'all' || it.status === filter);
   return (
     <div className="panel-inner">
-      <h2 className="sect">Breaking-Change Radar <span className="newtag">[3]</span></h2>
-      <p className="hint">Echte Deprecations aus den Metadaten (x-ms-deprecation).</p>
+      <h2 className="sect">{t.radar} <span className="newtag">[3]</span></h2>
+      <p className="hint">{t.radar_hint}</p>
       <div className="radar-controls">
-        <button className="reftab" onClick={() => setVariant('v1.0')}>v1.0</button>
-        <button className="reftab" onClick={() => setVariant('beta')}>beta</button>
+        <button className={'reftab' + (variant === 'v1.0' ? ' active' : '')} onClick={() => setVariant('v1.0')}>v1.0</button>
+        <button className={'reftab' + (variant === 'beta' ? ' active' : '')} onClick={() => setVariant('beta')}>beta</button>
         <button className="reftab" onClick={() => setFilter('all')}>alle</button>
         <button className="reftab" onClick={() => setFilter('soon')}>bald</button>
         <button className="reftab" onClick={() => setFilter('removed')}>entfernt</button>
       </div>
-      <div className="badges"><span className="badge">{data?.count || 0} Deprecations ({variant})</span></div>
+      <div className="badges"><span className="badge">{data?.count || 0} {t.dep} ({variant})</span></div>
       <div className="cards">
         {items.slice(0, 60).map((it, i) => (
           <div className={'card ' + (it.status === 'removed' ? 'removed' : it.status === 'soon' ? 'soon' : 'planned')} key={i}>
@@ -274,34 +309,62 @@ const TABS = [
 ];
 function App() {
   const [tab, setTab] = useState('hub');
-  const [theme, setTheme] = useState('idun-retro');
+  const [lang, setLang] = useState('de');
+  const [ignite, setIgnite] = useState(false);
+  const [m, setM] = useState(null);
+
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    try { localStorage.setItem('theme', theme); } catch (e) {}
-    document.querySelectorAll('.tbtn').forEach(b => b.classList.toggle('active', b.dataset.setTheme === theme));
-  }, [theme]);
-  useEffect(() => {
-    const t = localStorage.getItem('theme');
-    if (t) setTheme(t);
+    fetch('data/manifest.json').then(r => r.json()).then(setM).catch(() => setM({}));
   }, []);
-  const Active = TABS.find(t => t[0] === tab)[2];
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('ignite', ignite);
+  }, [ignite]);
+
+  const t = I18N[lang];
+
+  // micro-interactions: cursor trail + scanlines
+  useEffect(() => {
+    const trail = document.getElementById('trail');
+    const scan = document.getElementById('scan');
+    const move = (e) => {
+      if (trail) { trail.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%,-50%)`; }
+    };
+    window.addEventListener('mousemove', move);
+    if (trail) trail.style.display = 'block';
+    return () => window.removeEventListener('mousemove', move);
+  }, []);
+
+  const Active = TABS.find(tt => tt[0] === tab)[2];
   return (
     <>
-      <div className="topbar">
-        <span className="logo">◇</span>
-        <span className="brandname">qapdex Graph Hub</span>
-        <nav className="nav">
-          {TABS.map(t => <a key={t[0]} href={'#' + t[0]} className={tab === t[0] ? 'active' : ''} onClick={() => setTab(t[0])}>{t[1]}</a>)}
-        </nav>
-        <div className="themeswitch">
-          <span id="liveDot" className="livedot on">● live</span>
-          {['idun-retro', 'papers-ms', 'selfhost-os'].map(th => (
-            <button key={th} className="tbtn" data-set-theme={th} onClick={() => setTheme(th)}>{th.split('-')[0]}</button>
-          ))}
+      <div className="trail" id="trail" style={{ display: 'none' }}></div>
+      <div className="scanlines" id="scan"></div>
+
+      <header className="topbar">
+        <div className="wrap">
+          <span className="brandname"><span className="mark"></span>qapdex-maker.github.io</span>
+          <nav className="nav">
+            {TABS.map(tt => <a key={tt[0]} href={'#' + tt[0]} className={tab === tt[0] ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab(tt[0]); }}>{tt[1]}</a>)}
+          </nav>
+          <div className="themeswitch">
+            <span id="liveDot" className="livedot on">{t.live}</span>
+            <button className="tbtn" data-set-theme="idun-retro" onClick={() => setTab('reference')}>React</button>
+            <button className="btn-ignite" id="igniteBtn" aria-pressed={ignite} onClick={() => setIgnite(v => !v)}><span className="toggle-dot"></span>{t.ignite}</button>
+            <button className="tbtn" id="langBtn" aria-pressed={lang === 'en'} onClick={() => setLang(l => l === 'de' ? 'en' : 'de')}>{t.en}</button>
+          </div>
         </div>
-      </div>
-      <main><Active /></main>
-      <footer className="foot">qapdex-maker.github.io · Prototyp (React, leichtgewichtig) · Daten: metadata-msgraph</footer>
+      </header>
+
+      <main>
+        {tab === 'hub' && <Hub t={t} m={m} />}
+        {tab === 'reference' && <Reference t={t} />}
+        {tab === 'console' && <ConsolePanel t={t} />}
+        {tab === 'permissions' && <Permissions t={t} />}
+        {tab === 'radar' && <Radar t={t} />}
+      </main>
+
+      <footer className="foot">{t.footer}</footer>
     </>
   );
 }
