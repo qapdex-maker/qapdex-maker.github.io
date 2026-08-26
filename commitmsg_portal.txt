@@ -1,0 +1,6 @@
+Link metadata-msgraph Hub in portal pages browser
+
+- Add "Graph Metadata Hub" card to the portal pages-Array (root index.html),
+  category Self-hosted, status live, linking to /msgraph/.
+- Keeps the existing neo-brutalist portal + idun/ + awesome-selfhosted intact.
+- DE/EN bilingual text added per the portal i18n pattern.
