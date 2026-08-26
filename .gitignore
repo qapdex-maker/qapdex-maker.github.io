@@ -1,0 +1,4 @@
+server.log/server.log
+
+# local server logs
+msgraph/server.log
