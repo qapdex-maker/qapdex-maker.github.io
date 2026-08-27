@@ -56,15 +56,18 @@ Keine Regression. Details in PROJECT_NOTES "Bug-Hunting".
 - [x] deprecations-Status-Enum vs Daten: {removed,planned,soon} voll abgedeckt, card-Klassen OK.
 - Fazit: Portal-Daten frisch + konsistent, kein Re-Sync nötig. Phase 2 ohne Änderung fertig.
 
-### Phase 3 — msgraph/react Vertiefung (mittel)
-- [ ] Permissions-Tab + Breaking Radar real mit Daten füllen (aktuell Heuristik?)
-- [ ] Console: NL→Graph Heuristik gegen echte nlMap-Coverage testen (edge cases)
-- [ ] A11y: Tabs per Tastatur erreichbar, Focus-Styles vorhanden?
+### Phase 3 — msgraph/react Vertiefung (gefikt + verifiziert, gepusht 1c263d7)
+- [x] A11y Tabs: role=tablist/tab + aria, Pfeil/Home/Ende-Navigation, focus-visible Outline.
+- [x] Breaking Radar: slice(0,60) → scrollbarer .radar-scroll (volle Liste, 1792 items).
+- [x] NL→Graph nlMap: "Team-Termine"→events, "Foto"→photo; +kalender/e-mail/dateien/foto/profil.
+      Bewiesen per 9-Input-Coverage-Test. Babel OK, i18n clean, Live-Marker bestätigt.
 
-### Phase 4 — Live-Mode / Backend (lang, Keys nötig)
-- [ ] Echter Graph-Live-Mode (Azure-Tenant-Token + App-Registration) — nur Recherche bisher
-- [ ] NL→Graph echte LLM-Bridge via idun-multi (Backend/Key nötig)
-- [ ] Phase-7 justbash-Sandbox: pnpm-Bundle nur Desktop (Termux blockt native Module)
+### Phase 4 — Live-Mode / Backend (AUFGESCHOBEN bis IGNITE)
+- [ ] Echter Graph-Live-Mode (Azure-Tenant-Token + App-Registration) — WARTET auf IGNITE.
+      User-Plan: bei IGNITE ggf. echte Microsoft-Daten (Logins etc.) — dann integrativ bauen,
+      damit jederzeit anschlussfähig. Permissions-Tab bleibt bis dahin kuratiert.
+- [ ] NL→Graph echte LLM-Bridge via idun-multi (Backend/Key nötig) — ebenfalls nach IGNITE.
+- [ ] Phase-7 justbash-Sandbox: pnpm-Bundle nur Desktop (Termux blockt native Module).
 
 ### Phase 5 — Deploy-Hygiene (vor jedem Push)
 - [ ] Version-Bump in manifest/PROJekt_notes

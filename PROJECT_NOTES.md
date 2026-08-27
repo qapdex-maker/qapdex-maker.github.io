@@ -96,6 +96,19 @@ Re-Check aller 9 dokumentierten Bugs + Regressions-Screen. Alle GRÜN.
   (I18N.de/en.status) deckt alle ab. card-Klasse mappt removed/soon/planned korrekt.
 - Fazit: Phase 2 ohne Änderung abgeschlossen — Daten sind frisch + konsistent.
 
+## Phase 3 — msgraph/react Vertiefung (2026-08-27, gefixt + verifiziert)
+- A11y Tabs: vorher keine Tastatur-Erreichbarkeit (kein role/aria/focus-Style).
+  Fix: nav role=tablist, Tabs role=tab + aria-selected/controls, Pfeil/Home/Ende
+  Navigation, <main> role=tabpanel, .nav a:focus-visible Outline in CSS.
+- Breaking Radar: vorher slice(0,60) → bei 1792 beta-Items 96% unsichtbar.
+  Fix: volle Liste in scrollbarem .radar-scroll (max-height 520px, overflow-y).
+- NL→Graph nlMap: zwei Edge-Case-Lücken geschlossen (per 9-Input-Test bewiesen):
+  (a) "Profilfoto"/"Foto" → vorher /me (default), jetzt /me/photo/$value (photo).
+  (b) "Team-Termine" → vorher /me/joinedTeams (teams), jetzt /me/events (calendar).
+  Reihenfolge calendar vor team; + "kalender"/"e-mail"/"dateien"/"foto"/"profil".
+- Verifiziert: Babel OK, i18n clean, Live-Fix-Marker (role=tablist, radar-scroll,
+  foto, focus-visible) im Deploy bestätigt. Commit 1c263d7 (gepusht).
+
 ## Offen / Nicht gebaut
 - Phase 7 "justbash Sandbox" in der Console: pnpm-Browser-Bundle nur auf Desktop baubar
   (Termux/Bionic blockt native Module wie node-liblzma/@mongodb-js/zstd). Deferred.
