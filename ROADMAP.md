@@ -62,6 +62,17 @@ Keine Regression. Details in PROJECT_NOTES "Bug-Hunting".
 - [x] NL→Graph nlMap: "Team-Termine"→events, "Foto"→photo; +kalender/e-mail/dateien/foto/profil.
       Bewiesen per 9-Input-Coverage-Test. Babel OK, i18n clean, Live-Marker bestätigt.
 
+### Phase 5 — Deploy-Hygiene (etabliert + verifiziert, gepusht e9740ad)
+- [x] `deploy-hygiene.js` (Repo-Root): Pre-Push-Check — Babel, i18n, relative Pfade,
+      absolute Spec-URL erlaubt, manifest siteVersion/buildDate, git local==remote.
+- [x] manifest.json: siteVersion + buildDate; Footer zeigt " · v<siteVersion>".
+- [x] Relative Pfade verifiziert (assets/data relativ, Spec-URL absolut OK).
+- [x] Live bestätigt (siteVersion im manifest + app.jsx). Deploy-Hygiene green.
+
+### Phase 6 — Aufräumen (optional)
+- [ ] msgraph/ (Vanilla, veraltet, NICHT verlinkt): als Archiv markieren oder löschen.
+- [ ] commitmsg_*-Dateien im Repo-Root/msgraph aufräumen (historische Notizen, nicht nötig im Deploy).
+
 ### Phase 4 — Live-Mode / Backend (AUFGESCHOBEN bis IGNITE)
 - [ ] Echter Graph-Live-Mode (Azure-Tenant-Token + App-Registration) — WARTET auf IGNITE.
       User-Plan: bei IGNITE ggf. echte Microsoft-Daten (Logins etc.) — dann integrativ bauen,

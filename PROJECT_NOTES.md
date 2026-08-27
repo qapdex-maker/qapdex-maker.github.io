@@ -109,6 +109,19 @@ Re-Check aller 9 dokumentierten Bugs + Regressions-Screen. Alle GRÜN.
 - Verifiziert: Babel OK, i18n clean, Live-Fix-Marker (role=tablist, radar-scroll,
   foto, focus-visible) im Deploy bestätigt. Commit 1c263d7 (gepusht).
 
+## Phase 5 — Deploy-Hygiene (2026-08-27, etabliert + verifiziert)
+- Repo-weites Pre-Push-Skript `deploy-hygiene.js` (Repo-Root): prüft automatisch
+  Babel, i18n (Skill-Checker), relative Pfade (kein /assets /data), absolute Spec-URL
+  erlaubt, manifest.siteVersion/buildDate vorhanden, git local==remote. Exit 1 blockiert.
+  Vor jedem Push lokal ausführen: `node deploy-hygiene.js`.
+- manifest.json: `siteVersion` ("2026.08.27-3") + `buildDate` ergänzt. Footer zeigt
+  " · v<siteVersion>" (aus manifest, client-seitig gerendert). Version-Bump bei
+  künftigen Änderungen nötig (nicht Graph-schemaVersion, sondern Seiten-Build).
+- Relative Pfade verifiziert: index.html `assets/...`, app.jsx `base+data/...`.
+  Spec-URL absolut (raw.githubusercontent) — erlaubt per Konvention.
+- Verifiziert: deploy-hygiene green, Tip-Sync, Live-Marker (siteVersion in manifest
+  + app.jsx) im Deploy bestätigt. Commit e9740ad (gepusht).
+
 ## Offen / Nicht gebaut
 - Phase 7 "justbash Sandbox" in der Console: pnpm-Browser-Bundle nur auf Desktop baubar
   (Termux/Bionic blockt native Module wie node-liblzma/@mongodb-js/zstd). Deferred.
