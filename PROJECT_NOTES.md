@@ -122,6 +122,16 @@ Re-Check aller 9 dokumentierten Bugs + Regressions-Screen. Alle GRÜN.
 - Verifiziert: deploy-hygiene green, Tip-Sync, Live-Marker (siteVersion in manifest
   + app.jsx) im Deploy bestätigt. Commit e9740ad (gepusht).
 
+## Phase 6 — Aufräumen (2026-08-27, erledigt + verifiziert)
+- .gitignore: `commitmsg*.txt` + `preview*.log` (root + subdirs) ignoriert. Die zuvor
+  getrackten commitmsg-Dateien per `git rm --cached` aus dem Index genommen — Dateien
+  bleiben LOKAL erhalten (nicht destruktiv). Status danach sauber.
+- msgraph/ (Vanilla) als ARCHIV markiert: `msgraph/ARCHIVE_README.md` legt fest, dass
+  msgraph/react die aktive/verlinkte Variante ist. Vanilla-Dateien bewusst NICHT gelöscht
+  (nur markiert), da ungelinkt + potenziell wiederverwendbare Logik (Worker-Parser).
+- Deploy-Hygiene weiterhin grün. Commit 44ff593 (gepusht).
+- Nicht destruktiv: physische Dateien erhalten, nur Tracking bereinigt.
+
 ## Offen / Nicht gebaut
 - Phase 7 "justbash Sandbox" in der Console: pnpm-Browser-Bundle nur auf Desktop baubar
   (Termux/Bionic blockt native Module wie node-liblzma/@mongodb-js/zstd). Deferred.

@@ -73,6 +73,12 @@ Keine Regression. Details in PROJECT_NOTES "Bug-Hunting".
 - [ ] msgraph/ (Vanilla, veraltet, NICHT verlinkt): als Archiv markieren oder löschen.
 - [ ] commitmsg_*-Dateien im Repo-Root/msgraph aufräumen (historische Notizen, nicht nötig im Deploy).
 
+### Phase 6 — Aufräumen (erledigt + verifiziert, gepusht 44ff593)
+- [x] .gitignore: commitmsg*.txt + preview*.log ignoriert; getrackte commitmsg per
+      git rm --cached aus Index (Dateien lokal erhalten, nicht destruktiv).
+- [x] msgraph/ Vanilla als ARCHIV markiert (ARCHIVE_README.md); msgraph/react aktiv.
+- [x] git status sauber, Deploy-Hygiene grün, Tip-Sync, lokale Dateien erhalten.
+
 ### Phase 4 — Live-Mode / Backend (AUFGESCHOBEN bis IGNITE)
 - [ ] Echter Graph-Live-Mode (Azure-Tenant-Token + App-Registration) — WARTET auf IGNITE.
       User-Plan: bei IGNITE ggf. echte Microsoft-Daten (Logins etc.) — dann integrativ bauen,
