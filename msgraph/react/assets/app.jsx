@@ -48,7 +48,7 @@ const I18N = {
       'qapdex-maker/idun-playground': { de: 'Multi-LLM-Console (17 Provider)', en: 'Multi-LLM console (17 providers)' },
     },
     status: { de: { removed: 'entfernt', soon: 'bald', planned: 'geplant' }, en: { removed: 'removed', soon: 'soon', planned: 'planned' } },
-    live: '● live', ignite: 'Ignite', en: 'EN',
+    live: '● live', ignite: 'Ignite', en: 'EN', de: 'DE',
     footer: 'qapdex-maker.github.io · React Prototyp · Daten: metadata-msgraph',
     loading: 'lädt…', loading_var: 'lädt {v}…', count_n: '{n} Endpoints', err: 'Fehler:',
     tab_v10: 'v1.0 (stabil)', tab_beta: 'beta (Preview)', hits: 'Treffer:',
@@ -75,7 +75,7 @@ const I18N = {
       'qapdex-maker/idun-playground': { de: 'Multi-LLM-Console (17 Provider)', en: 'Multi-LLM console (17 providers)' },
     },
     status: { de: { removed: 'entfernt', soon: 'bald', planned: 'geplant' }, en: { removed: 'removed', soon: 'soon', planned: 'planned' } },
-    live: '● live', ignite: 'Ignite', en: 'EN',
+    live: '● live', ignite: 'Ignite', en: 'EN', de: 'DE',
     footer: 'qapdex-maker.github.io · React Prototype · Data: metadata-msgraph',
     loading: 'loading…', loading_var: 'loading {v}…', count_n: '{n} endpoints', err: 'Error:',
     tab_v10: 'v1.0 (stable)', tab_beta: 'beta (Preview)', hits: 'Hits:',
@@ -375,7 +375,6 @@ function App() {
     return () => window.removeEventListener('mousemove', move);
   }, []);
 
-  const Active = TABS.find(tt => tt[0] === tab)[2];
   return (
     <>
       <div className="trail" id="trail" style={{ display: 'none' }}></div>
@@ -391,7 +390,7 @@ function App() {
             <span id="liveDot" className="livedot on">{t.live}</span>
             <button className="tbtn" onClick={() => setTab('reference')}>React</button>
             <button className="btn-ignite" id="igniteBtn" aria-pressed={ignite} onClick={() => setIgnite(v => !v)}><span className="toggle-dot"></span>{t.ignite}</button>
-            <button className="tbtn" id="langBtn" aria-pressed={lang === 'en'} onClick={() => setLang(l => l === 'de' ? 'en' : 'de')}>{t.en}</button>
+            <button className="tbtn" id="langBtn" aria-pressed={lang === 'en'} onClick={() => setLang(l => l === 'de' ? 'en' : 'de')}>{lang === 'en' ? t.de : t.en}</button>
           </div>
         </div>
       </header>
