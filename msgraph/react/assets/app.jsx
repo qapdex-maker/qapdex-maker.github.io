@@ -50,6 +50,7 @@ const I18N = {
     status: { de: { removed: 'entfernt', soon: 'bald', planned: 'geplant' }, en: { removed: 'removed', soon: 'soon', planned: 'planned' } },
     live: '● live', ignite: 'Ignite', en: 'EN', de: 'DE',
     footer: 'qapdex-maker.github.io · React Prototyp · Daten: metadata-msgraph',
+    cur_user: 'Aktueller Benutzer',
     loading: 'lädt…', loading_var: 'lädt {v}…', count_n: '{n} Endpoints', err: 'Fehler:',
     tab_v10: 'v1.0 (stabil)', tab_beta: 'beta (Preview)', hits: 'Treffer:',
     filter_all: 'alle', filter_soon: 'bald', filter_removed: 'entfernt', removal: 'Entfernung:',
@@ -77,6 +78,7 @@ const I18N = {
     status: { de: { removed: 'entfernt', soon: 'bald', planned: 'geplant' }, en: { removed: 'removed', soon: 'soon', planned: 'planned' } },
     live: '● live', ignite: 'Ignite', en: 'EN', de: 'DE',
     footer: 'qapdex-maker.github.io · React Prototype · Data: metadata-msgraph',
+    cur_user: 'Current user',
     loading: 'loading…', loading_var: 'loading {v}…', count_n: '{n} endpoints', err: 'Error:',
     tab_v10: 'v1.0 (stable)', tab_beta: 'beta (Preview)', hits: 'Hits:',
     filter_all: 'all', filter_soon: 'soon', filter_removed: 'removed', removal: 'Removal:',
@@ -199,7 +201,7 @@ function Reference({ t }) {
 
 // ---------- Console ----------
 function ConsolePanel({ t }) {
-  const [ep, setEp] = useState({ method: 'GET', path: '/me', meta: 'Aktueller Benutzer' });
+  const [ep, setEp] = useState({ method: 'GET', path: '/me', kind: 'cur' });
   const [nl, setNl] = useState('');
   const [epq, setEpq] = useState('');
   const [idx, setIdx] = useState(null);
@@ -231,7 +233,7 @@ function ConsolePanel({ t }) {
   }
   function runNl() {
     const r = nlMap(nl);
-    setEp({ method: r.method, path: r.path, meta: 'NL: ' + (t.nl_reasons[r.reason] || r.reason) + (r.perm ? ' · ' + r.perm : '') });
+    setEp({ method: r.method, path: r.path, kind: 'nl', reason: r.reason, perm: r.perm });
   }
   function onEpInput(val) {
     setEpq(val);
@@ -240,9 +242,14 @@ function ConsolePanel({ t }) {
     setSug(idx.filter(f => f.path.toLowerCase().includes(s) || f.summary.toLowerCase().includes(s)).slice(0, 12));
   }
   function selectEndpoint(s) {
-    setEp({ method: s.method, path: s.path, meta: s.summary });
+    setEp({ method: s.method, path: s.path, kind: 'data', data: s.summary });
     setEpq(s.path);
     setSug([]);
+  }
+  function epMeta(e) {
+    if (e.kind === 'cur') return t.cur_user;
+    if (e.kind === 'nl') return 'NL: ' + (t.nl_reasons[e.reason] || e.reason) + (e.perm ? ' · ' + e.perm : '');
+    return e.data || '';
   }
   const c = cmd(ep.path, ep.method);
   return (
@@ -262,7 +269,7 @@ function ConsolePanel({ t }) {
         </div>
         <div>
           <div className="result-head"><span className="mth">{ep.method}</span><span className="pth">{ep.path}</span></div>
-          <div className="meta-row" style={{ textAlign: 'left', marginLeft: 0, maxWidth: 'none' }}>{ep.meta}</div>
+          <div className="meta-row" style={{ textAlign: 'left', marginLeft: 0, maxWidth: 'none' }}>{epMeta(ep)}</div>
           <div className="block"><div className="block-title">curl</div><pre>{c.curl}</pre></div>
           <div className="block"><div className="block-title">idun</div><pre>{c.idun}</pre></div>
         </div>
