@@ -424,7 +424,7 @@ function App() {
         {tab === 'radar' && <Radar t={t} lang={lang} />}
       </main>
 
-      <footer className="foot">{t.footer}</footer>
+      <footer className="foot">{t.footer}{m && m.siteVersion ? ' · v' + m.siteVersion : ''}</footer>
     </>
   );
 }
