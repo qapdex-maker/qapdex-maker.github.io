@@ -219,11 +219,11 @@ function ConsolePanel({ t }) {
   function nlMap(s) {
     const tt = s.toLowerCase();
     const has = (...k) => k.some(x => tt.includes(x));
+    if (has('termin', 'event', 'calendar', 'kalender')) return { method: 'GET', path: '/me/events', perm: 'Calendars.Read', reason: 'calendar' };
     if (has('team')) return { method: 'GET', path: '/me/joinedTeams', perm: 'Team.ReadBasic.All', reason: 'teams' };
-    if (has('mail', 'email')) return { method: 'GET', path: '/me/messages', perm: 'Mail.Read', reason: 'mails' };
-    if (has('termin', 'event', 'calendar')) return { method: 'GET', path: '/me/events', perm: 'Calendars.Read', reason: 'calendar' };
-    if (has('drive', 'onedrive', 'datei', 'file')) return { method: 'GET', path: '/me/drive/root/children', perm: 'Files.Read', reason: 'onedrive' };
-    if (has('photo', 'bild', 'avatar')) return { method: 'GET', path: '/me/photo/$value', perm: 'User.Read', reason: 'photo' };
+    if (has('mail', 'email', 'e-mail')) return { method: 'GET', path: '/me/messages', perm: 'Mail.Read', reason: 'mails' };
+    if (has('drive', 'onedrive', 'datei', 'file', 'dateien')) return { method: 'GET', path: '/me/drive/root/children', perm: 'Files.Read', reason: 'onedrive' };
+    if (has('photo', 'bild', 'avatar', 'foto', 'profil')) return { method: 'GET', path: '/me/photo/$value', perm: 'User.Read', reason: 'photo' };
     return { method: 'GET', path: '/me', perm: 'User.Read', reason: 'default' };
   }
   function cmd(path, method) {
@@ -332,8 +332,8 @@ function Radar({ t, lang }) {
         <button className="reftab" onClick={() => setFilter('removed')}>{t.filter_removed}</button>
       </div>
       <div className="badges"><span className="badge">{data?.count || 0} {t.dep} ({variant})</span></div>
-      <div className="cards">
-        {items.slice(0, 60).map((it, i) => (
+      <div className="cards radar-scroll">
+        {items.map((it, i) => (
           <div className={'card ' + (it.status === 'removed' ? 'removed' : it.status === 'soon' ? 'soon' : 'planned')} key={i}>
             <h3>{it.endpoint || it.path || '?'}</h3>
             <div className="role">{it.method || ''} · {t.status[lang][it.status]}</div>
@@ -390,8 +390,22 @@ function App() {
       <header className="topbar">
         <div className="wrap">
           <span className="brandname"><span className="mark"></span>qapdex-maker.github.io</span>
-          <nav className="nav">
-            {TABS.map(tt => <a key={tt[0]} href={'#' + tt[0]} className={tab === tt[0] ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab(tt[0]); }}>{tt[1]}</a>)}
+          <nav className="nav" role="tablist" aria-label="Hauptbereiche">
+            {TABS.map((tt, ti) => <a key={tt[0]} id={'tab-'+tt[0]} role="tab" href={'#'+tt[0]}
+              aria-selected={tab === tt[0]} aria-controls={'panel-'+tt[0]}
+              className={tab === tt[0] ? 'active' : ''}
+              onClick={(e) => { e.preventDefault(); setTab(tt[0]); }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                  e.preventDefault();
+                  const dir = e.key === 'ArrowRight' ? 1 : -1;
+                  const next = (ti + dir + TABS.length) % TABS.length;
+                  setTab(TABS[next][0]);
+                  const el = document.getElementById('tab-'+TABS[next][0]);
+                  if (el) el.focus();
+                } else if (e.key === 'Home') { e.preventDefault(); setTab(TABS[0][0]); document.getElementById('tab-'+TABS[0][0])?.focus(); }
+                else if (e.key === 'End') { e.preventDefault(); setTab(TABS[TABS.length-1][0]); document.getElementById('tab-'+TABS[TABS.length-1][0])?.focus(); }
+              }}>{tt[1]}</a>)}
           </nav>
           <div className="themeswitch">
             <span id="liveDot" className="livedot on">{t.live}</span>
@@ -402,7 +416,7 @@ function App() {
         </div>
       </header>
 
-      <main>
+      <main id={'panel-'+tab} role="tabpanel" aria-labelledby={'tab-'+tab}>
         {tab === 'hub' && <Hub t={t} m={m} lang={lang} />}
         {tab === 'reference' && <Reference t={t} />}
         {tab === 'console' && <ConsolePanel t={t} />}
