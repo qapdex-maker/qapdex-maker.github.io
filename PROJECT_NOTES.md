@@ -1,7 +1,8 @@
 # PROJECT_NOTES — qapdex-maker.github.io (Portal + msgraph/react)
 
 Stand: 2026-08-27 (Session mit Hermes/idun). Wissensstand, nicht push-pflichtig.
-Letztes Push-Tip dieser Session: af610d0.
+Letztes Push-Tip: af610d0. Lokaler HEAD: c5e6f40 (9 ungepushte Commits seit af610d0).
+Detaillierter Fahrplan + tiefe Bereiche: siehe ROADMAP.md (im Repo-Root).
 
 ## Architektur
 - User-Page: Repo `qapdex-maker/qapdex-maker.github.io`, Branch `main`, Root-Veröffentlichung.
@@ -52,6 +53,13 @@ Letztes Push-Tip dieser Session: af610d0.
 9. **[2026-08-27] selfhost.os-Beschreibung enthielt "Neo-brutalist archive".** Aus beiden Stellen
    (sichtbarer `<p>` + `data-de`/`data-en` + JS `desc`) entfernt → nur "Stack-Builder für
    Self-hosted Anwendungen". Commit: af610d0.
+10. **[2026-08-27, Phase 1] Portal-Kategorie-Filter kaputt.** `pages`-Objekte hatten nur
+    `catLabel` (Anzeige), aber KEIN `cat`-Feld. Filter `p.cat===filter` verglich gegen
+    `undefined` → Klick auf "Self-hosted App"/"Dev Tools" zeigte 0 Karten (nur All/Soon
+    funktionierten). Bewiesen per Node-Sim (vor Fix: 0/0 Karten, nach Fix: 3/3).
+    Fix: `cat:'Self-hosted App'` bzw. `cat:'Dev Tools'` bzw. `cat:'soon'` zu jeder Karte.
+    Noch NICHT gepusht (lokaler HEAD c5e6f40 + Fix). Verifiziert lokal: alle Chips OK,
+    github.com-Hrefs via gh api 200, lokale Subpages (idun/, msgraph/react/) HTTP 200.
 
 ## Verifikation (echte Calls, nicht behauptet)
 - Tip local==remote nach jedem Push via `gh api ... --jq '.sha'`.
@@ -59,6 +67,34 @@ Letztes Push-Tip dieser Session: af610d0.
 - Pure-Funktionen (nlMap/epMeta/Status-Enum) in Node logikgetestet (kein "undefined", beide Locales).
 - Kein Headless-Browser auf Termux → DOM-Rendering nicht sehend geprüft; JSX-Transpile
   (@babel/standalone, gleich wie Browser) als Korrektheits-Proxy.
+
+## Bug-Hunting (2026-08-27, echte Checks, nicht behauptet)
+Re-Check aller 9 dokumentierten Bugs + Regressions-Screen. Alle GRÜN.
+- Babel: app.jsx transpiliert sauber (Syntax-Proxy). ✅
+- i18n de/en parity: status (removed/soon/planned) deckt alle Daten-Status; nl_reasons
+  (teams/mails/calendar/onedrive/photo/default) deckt alle nlMap-Keys. Kein setStatus(),
+  keine harten DE-Literale. ✅
+- Mobile: keine `.nav{display:none}` in site.css (Scroll-Leiste <760px). ✅
+- Worker-fetch: Page → absolute URLs (base + data/*.json), Worker fetcht nur `file` aus
+  postMessage. ✅
+- Overflow: flex-wrap + min-width:0 + overflow-wrap:anywhere + .card overflow:hidden;
+  VirtList rowHeight=58px. ✅
+- Lokal HTTP-Ready: index.html/app.jsx/site.css/worker.js/manifest.json/index*.json/
+  deprecations.beta.json → alle 200. ✅
+- Skill-Checker `verify-i18n.js` war veraltet (crashte an JSX-Werten in I18N-Map +
+  falsche nl_reasons-Struktur). Im Skill auf JSX-sicheres Brace-Scanning + echte
+  I18N.de/I18N.en-Trennung umgeschrieben. Läuft jetzt sauber (i18n clean ✅).
+
+## Phase 2 — Daten-Frische (2026-08-27, verifiziert, kein Fix nötig)
+- metadata-msgraph: lokal HEAD db0e9c6 == remote (gh api). KEINE neuen Commits upstream.
+- Portal-Index-Counts stimmen exakt mit OpenAPI-Quelle überein:
+  v1.0 = 1387 Pfade (openapi/v1.0/openapi.yaml), beta = 2870 (openapi/beta/openapi.yaml).
+  → Portal-Daten aktuell bezüglich Quelle, kein Re-Sync nötig.
+- manifest.json: schemaVersion 1.4.711.0, syncDate 2026-08-26 (passt zu Quell-Stand
+  2026-08-25/26). CSDL-Schema Version="4.0".
+- deprecations-Status-Enum: Daten nutzen nur {removed, planned, soon}; Code-Enum
+  (I18N.de/en.status) deckt alle ab. card-Klasse mappt removed/soon/planned korrekt.
+- Fazit: Phase 2 ohne Änderung abgeschlossen — Daten sind frisch + konsistent.
 
 ## Offen / Nicht gebaut
 - Phase 7 "justbash Sandbox" in der Console: pnpm-Browser-Bundle nur auf Desktop baubar
