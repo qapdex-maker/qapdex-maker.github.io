@@ -41,7 +41,7 @@ Keine Regression. Details in PROJECT_NOTES "Bug-Hunting".
 
 ## 2. Fahrplan
 
-### Phase 1 — Stabilisierung (lokal fertig, noch nicht gepusht)
+### Phase 1 — Stabilisierung (fertig + gepusht de21d73)
 - [x] Bug-Hunting Re-Check (alle 9 Bugs grün, echte Runs)
 - [x] Skill-Checker JSX-sicher
 - [x] Portal `pages`-Array i18n + Kategorie-Consistency: BUG GEFUNDEN+GEFIXT (Bug #10:
@@ -69,10 +69,6 @@ Keine Regression. Details in PROJECT_NOTES "Bug-Hunting".
 - [x] Relative Pfade verifiziert (assets/data relativ, Spec-URL absolut OK).
 - [x] Live bestätigt (siteVersion im manifest + app.jsx). Deploy-Hygiene green.
 
-### Phase 6 — Aufräumen (optional)
-- [ ] msgraph/ (Vanilla, veraltet, NICHT verlinkt): als Archiv markieren oder löschen.
-- [ ] commitmsg_*-Dateien im Repo-Root/msgraph aufräumen (historische Notizen, nicht nötig im Deploy).
-
 ### Phase 6 — Aufräumen (erledigt + verifiziert, gepusht 44ff593)
 - [x] .gitignore: commitmsg*.txt + preview*.log ignoriert; getrackte commitmsg per
       git rm --cached aus Index (Dateien lokal erhalten, nicht destruktiv).
@@ -85,12 +81,6 @@ Keine Regression. Details in PROJECT_NOTES "Bug-Hunting".
       damit jederzeit anschlussfähig. Permissions-Tab bleibt bis dahin kuratiert.
 - [ ] NL→Graph echte LLM-Bridge via idun-multi (Backend/Key nötig) — ebenfalls nach IGNITE.
 - [ ] Phase-7 justbash-Sandbox: pnpm-Bundle nur Desktop (Termux blockt native Module).
-
-### Phase 5 — Deploy-Hygiene (vor jedem Push)
-- [ ] Version-Bump in manifest/PROJekt_notes
-- [ ] relative Pfade unter Subpages, Spec-URL darf absolut
-- [ ] http.server NICHT nach /tmp loggen; curl-Grep Fix-Marker im LIVE-Deploy
-- [ ] tip local==remote via gh api --jq '.sha'
 
 ## 3. Wiederverwendbare Checks (lokal ausführbar)
 - i18n: node ~/.hermes/profiles/idun/skills/web-ui-verification-no-browser/scripts/verify-i18n.js msgraph/react

@@ -132,6 +132,17 @@ Re-Check aller 9 dokumentierten Bugs + Regressions-Screen. Alle GRÜN.
 - Deploy-Hygiene weiterhin grün. Commit 44ff593 (gepusht).
 - Nicht destruktiv: physische Dateien erhalten, nur Tracking bereinigt.
 
+## Session-Abschluss (2026-08-27)
+Bug-Hunting-Rundschlag über qapdex-maker.github.io abgeschlossen. Alle Phasen 1–6
+durch, lokal verifiziert (echte Runs, keine Behauptungen) + gepusht + live bestätigt.
+- Phase 1: Bug #10 (Portal-Kategorie-Filter) gefunden+gefxt.
+- Phase 2: Daten-Frische verifiziert, kein Fix nötig.
+- Phase 3: A11y Tabs, Radar-Scroll, NL→Graph-Coverage behoben.
+- Phase 4: AUFGESCHOBEN bis IGNITE (Live-Tenant + LLM-Bridge) — Permissions bleibt kuratiert.
+- Phase 5: deploy-hygiene.js + Versionierung etabliert.
+- Phase 6: Müll aus .gitignore, Vanilla als Archiv markiert.
+Lokaler HEAD == Remote (6456171). Deploy-Hygiene grün. Repo sauber.
+
 ## Offen / Nicht gebaut
 - Phase 7 "justbash Sandbox" in der Console: pnpm-Browser-Bundle nur auf Desktop baubar
   (Termux/Bionic blockt native Module wie node-liblzma/@mongodb-js/zstd). Deferred.
