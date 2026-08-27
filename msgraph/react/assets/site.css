@@ -116,7 +116,7 @@ html.ignite .toggle-dot{background:var(--accent-2);box-shadow:var(--glow)}
 /* cards */
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:14px}
 .card{background:var(--surface);border:3px solid var(--line);border-radius:var(--radius);
-  box-shadow:var(--shadow);padding:16px;transition:transform .14s,box-shadow .14s,border-color .14s}
+  box-shadow:var(--shadow);padding:16px;transition:transform .14s,box-shadow .14s,border-color .14s;overflow:hidden}
 .card:hover{transform:translate(-2px,-2px);box-shadow:var(--shadow-hover);border-color:var(--accent)}
 .card h3{font-size:20px;text-transform:uppercase;margin:.1rem 0 .4rem}
 .card .role{color:var(--accent);font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;text-transform:uppercase;margin-bottom:6px}
@@ -151,11 +151,13 @@ a.btn.accent{background:var(--accent);color:#fff;border-color:var(--line)}
 .virtlist{height:480px;overflow-y:auto;border:3px solid var(--line);border-radius:var(--radius);
   background:var(--surface);box-shadow:var(--shadow)}
 .virtlist > div > div{padding:8px 10px}
-.refrow{display:flex;gap:10px;align-items:center;border-bottom:3px solid var(--line)}
+.refrow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;border-bottom:3px solid var(--line)}
 .mth{font-family:"IBM Plex Mono",monospace;font-weight:700;background:var(--accent);color:#fff;
-  padding:3px 8px;border:2px solid var(--line);border-radius:var(--radius);font-size:12px;white-space:nowrap}
-.pth{font-family:"IBM Plex Mono",monospace;font-size:14px;color:var(--ink);word-break:break-all}
-.meta-row{color:var(--muted);font-size:12px;margin-left:auto;text-align:right;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  padding:3px 8px;border:2px solid var(--line);border-radius:var(--radius);font-size:12px;white-space:nowrap;flex:0 0 auto}
+.pth{font-family:"IBM Plex Mono",monospace;font-size:14px;color:var(--ink);flex:1 1 auto;min-width:0;word-break:break-all;overflow-wrap:anywhere}
+.meta-row{color:var(--muted);font-size:12px;text-align:left;max-width:100%}
+/* in der virtualisierten Liste: Summary auf eigene Zeile, eine Zeile, abgeschnitten */
+.refrow .meta-row{flex-basis:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* console */
 .console-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:14px}

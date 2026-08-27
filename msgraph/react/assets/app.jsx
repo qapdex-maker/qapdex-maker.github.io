@@ -4,7 +4,7 @@ const RAW = 'https://raw.githubusercontent.com/qapdex-maker/metadata-msgraph/mas
 const SITE = { 'v1.0': 'openapi/v1.0/openapi.yaml', beta: 'openapi/beta/openapi.yaml' };
 
 // ---------- Virtualized list (only renders visible rows) ----------
-function VirtList({ items, rowHeight = 54, height = 480, renderRow }) {
+function VirtList({ items, rowHeight = 58, height = 480, renderRow }) {
   const [scrollTop, setScrollTop] = useState(0);
   const total = items.length;
   const start = Math.max(0, Math.floor(scrollTop / rowHeight) - 4);
