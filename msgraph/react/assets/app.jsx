@@ -37,11 +37,17 @@ const I18N = {
     reference: 'API Reference', ref_hint: 'Durchsuchbare Endpoint-Liste aus den echten Metadaten (im Web Worker geladen → kein Freeze).',
     ref_ph: 'Endpoint suchen (z.B. /me, team)…', ref_open: '↗ rohe Spec öffnen',
     console: 'Semantics Console', console_hint: 'Gib natürliche Sprache oder einen Endpoint ein → curl + idun-Befehl.',
-    nl: 'Natürliche Sprache', nl_btn: 'NL → Graph', endpoint: 'Endpoint',
+    nl: 'Natürliche Sprache', nl_btn: 'NL → Graph', endpoint: 'Endpoint', nl_ph: 'z.B. alle Teams des Users',
     perm: 'Permission Intelligence', perm_hint: 'Kuratiert (OpenAPI hier hat keine strukturierten scopes). Jede Permission mit least-privilege-Empfehlung.',
     perm_ph: 'Permission suchen…',
     radar: 'Breaking-Change Radar', radar_hint: 'Echte Deprecations aus den Metadaten (x-ms-deprecation).',
     dep: 'Deprecations',
+    proj: {
+      'qapdex-maker/metadata-msgraph': { de: 'Datenquelle (CSDL/OpenAPI/Typ-Mappings)', en: 'Data source (CSDL/OpenAPI/Type-Mappings)' },
+      'qapdex-maker/idun-sdk': { de: 'Azure AI Foundry Client', en: 'Azure AI Foundry client' },
+      'qapdex-maker/idun-playground': { de: 'Multi-LLM-Console (17 Provider)', en: 'Multi-LLM console (17 providers)' },
+    },
+    status: { de: { removed: 'entfernt', soon: 'bald', planned: 'geplant' }, en: { removed: 'removed', soon: 'soon', planned: 'planned' } },
     live: '● live', ignite: 'Ignite', en: 'EN',
     footer: 'qapdex-maker.github.io · React Prototyp · Daten: metadata-msgraph',
   },
@@ -54,18 +60,24 @@ const I18N = {
     reference: 'API Reference', ref_hint: 'Searchable endpoint list from the real metadata (loaded in a Web Worker → no freeze).',
     ref_ph: 'Search endpoint (e.g. /me, team)…', ref_open: '↗ open raw spec',
     console: 'Semantics Console', console_hint: 'Enter natural language or an endpoint → curl + idun command.',
-    nl: 'Natural Language', nl_btn: 'NL → Graph', endpoint: 'Endpoint',
+    nl: 'Natural Language', nl_btn: 'NL → Graph', endpoint: 'Endpoint', nl_ph: 'e.g. all teams of the user',
     perm: 'Permission Intelligence', perm_hint: 'Curated (the OpenAPI here has no structured scopes). Least-privilege note per permission.',
     perm_ph: 'Search permission…',
     radar: 'Breaking-Change Radar', radar_hint: 'Real deprecations from the metadata (x-ms-deprecation).',
     dep: 'Deprecations',
+    proj: {
+      'qapdex-maker/metadata-msgraph': { de: 'Datenquelle (CSDL/OpenAPI/Typ-Mappings)', en: 'Data source (CSDL/OpenAPI/Type-Mappings)' },
+      'qapdex-maker/idun-sdk': { de: 'Azure AI Foundry Client', en: 'Azure AI Foundry client' },
+      'qapdex-maker/idun-playground': { de: 'Multi-LLM-Console (17 Provider)', en: 'Multi-LLM console (17 providers)' },
+    },
+    status: { de: { removed: 'entfernt', soon: 'bald', planned: 'geplant' }, en: { removed: 'removed', soon: 'soon', planned: 'planned' } },
     live: '● live', ignite: 'Ignite', en: 'EN',
     footer: 'qapdex-maker.github.io · React Prototype · Data: metadata-msgraph',
   }
 };
 
 // ---------- Hub ----------
-function Hub({ t, m }) {
+function Hub({ t, m, lang }) {
   const projects = m?.projects || [];
   const dls = [
     ['OpenAPI v1.0', SITE['v1.0']],
@@ -82,13 +94,16 @@ function Hub({ t, m }) {
       </div>
       <h2 className="sect">{t.projekte}</h2>
       <div className="cards">
-        {projects.map(p => (
-          <div className="card" key={p.name}>
-            <h3>{p.name}</h3>
-            <div className="role">{p.role}</div>
-            <a className="dl" href={'https://github.com/' + p.repo} target="_blank" rel="noopener">github.com/{p.repo} ↗</a>
-          </div>
-        ))}
+        {projects.map(p => {
+          const role = (t.proj && t.proj[p.repo] && t.proj[p.repo][lang]) || p.role;
+          return (
+            <div className="card" key={p.name}>
+              <h3>{p.name}</h3>
+              <div className="role">{role}</div>
+              <a className="dl" href={'https://github.com/' + p.repo} target="_blank" rel="noopener">github.com/{p.repo} ↗</a>
+            </div>
+          );
+        })}
       </div>
       <h2 className="sect">{t.downloads}</h2>
       <div className="cards">
@@ -108,7 +123,7 @@ function Reference({ t }) {
   const [variant, setVariant] = useState('v1.0');
   const [items, setItems] = useState([]);
   const [q, setQ] = useState('');
-  const [status, setStatus] = useState(t.ref_hint ? 'lädt…' : 'loading…');
+  const [status, setStatus] = useState('lädt…');
   // Web Worker löst relatives fetch() gegen die Worker-Skript-URL auf
   // (/msgraph/react/assets/), nicht gegen die Seite (/msgraph/react/).
   // Deshalb hier ABSOLUTE URLs bauen und an den Worker durchreichen.
@@ -173,6 +188,7 @@ function Reference({ t }) {
 function ConsolePanel({ t }) {
   const [ep, setEp] = useState({ method: 'GET', path: '/me', meta: 'Aktueller Benutzer' });
   const [nl, setNl] = useState('');
+  const [epq, setEpq] = useState('');
   const [idx, setIdx] = useState(null);
   const [sug, setSug] = useState([]);
 
@@ -204,10 +220,16 @@ function ConsolePanel({ t }) {
     const r = nlMap(nl);
     setEp({ method: r.method, path: r.path, meta: 'NL: ' + (r.reason || '') + (r.perm ? ' · ' + r.perm : '') });
   }
-  function showSuggest(val) {
+  function onEpInput(val) {
+    setEpq(val);
     if (!idx || !val.trim()) { setSug([]); return; }
     const s = val.toLowerCase();
     setSug(idx.filter(f => f.path.toLowerCase().includes(s) || f.summary.toLowerCase().includes(s)).slice(0, 12));
+  }
+  function selectEndpoint(s) {
+    setEp({ method: s.method, path: s.path, meta: s.summary });
+    setEpq(s.path);
+    setSug([]);
   }
   const c = cmd(ep.path, ep.method);
   return (
@@ -217,12 +239,12 @@ function ConsolePanel({ t }) {
       <div className="console-grid">
         <div>
           <label className="lbl">{t.nl}</label>
-          <textarea id="nlInput" value={nl} onChange={e => setNl(e.target.value)} placeholder="z.B. alle Teams des Users" />
+          <textarea id="nlInput" value={nl} onChange={e => setNl(e.target.value)} placeholder={t.nl_ph} />
           <button className="primary" onClick={runNl}>{t.nl_btn}</button>
           <label className="lbl">{t.endpoint}</label>
-          <input className="epinput" placeholder="/me" onInput={e => showSuggest(e.target.value)} onChange={e => showSuggest(e.target.value)} />
+          <input className="epinput" placeholder="/me" value={epq} onChange={e => onEpInput(e.target.value)} />
           <div className="suggest">
-            {sug.map((s, i) => <div className="s" key={i} onClick={() => { setEp({ method: s.method, path: s.path, meta: s.summary }); setSug([]); }}>{s.method} {s.path}</div>)}
+            {sug.map((s, i) => <div className="s" key={i} onClick={() => selectEndpoint(s)}>{s.method} {s.path}</div>)}
           </div>
         </div>
         <div>
@@ -236,36 +258,40 @@ function ConsolePanel({ t }) {
   );
 }
 
-// ---------- Permissions (curated) ----------
-const PERMS = [
-  { p: 'User.Read', least: 'User.Read (statt User.ReadWrite.All)', cat: 'Identity' },
-  { p: 'User.Read.All', least: 'nur wenn alle User nötig', cat: 'Identity' },
-  { p: 'Group.Read.All', least: 'Group.Read.All (statt Directory.Read.All)', cat: 'Groups' },
-  { p: 'Mail.Read', least: 'Mail.Read (statt Mail.ReadWrite)', cat: 'Outlook' },
-  { p: 'Calendars.Read', least: 'Calendars.Read', cat: 'Outlook' },
-  { p: 'Files.Read.All', least: 'Files.Read.All (statt full)', cat: 'OneDrive' },
-  { p: 'Sites.Read.All', least: 'Sites.Read.All', cat: 'SharePoint' },
-  { p: 'Team.ReadBasic.All', least: 'Team.ReadBasic.All (statt Team.ReadWrite.All)', cat: 'Teams' },
-  { p: 'Directory.Read.All', least: 'nur für Verzeichnis-Abfragen', cat: 'Entra ID' },
-  { p: 'DeviceManagementManagedDevices.Read.All', least: 'nur Intune-Devices', cat: 'Intune' }
-];
-function Permissions({ t }) {
+// ---------- Permissions (curated, localized) ----------
+const PERM_I18N = {
+  'User.Read': { de: { cat: 'Identity', least: 'User.Read (statt User.ReadWrite.All)' }, en: { cat: 'Identity', least: 'User.Read (instead of User.ReadWrite.All)' } },
+  'User.Read.All': { de: { cat: 'Identity', least: 'nur wenn alle User nötig' }, en: { cat: 'Identity', least: 'only if all users needed' } },
+  'Group.Read.All': { de: { cat: 'Groups', least: 'Group.Read.All (statt Directory.Read.All)' }, en: { cat: 'Groups', least: 'Group.Read.All (instead of Directory.Read.All)' } },
+  'Mail.Read': { de: { cat: 'Outlook', least: 'Mail.Read (statt Mail.ReadWrite)' }, en: { cat: 'Outlook', least: 'Mail.Read (instead of Mail.ReadWrite)' } },
+  'Calendars.Read': { de: { cat: 'Outlook', least: 'Calendars.Read' }, en: { cat: 'Outlook', least: 'Calendars.Read' } },
+  'Files.Read.All': { de: { cat: 'OneDrive', least: 'Files.Read.All (statt full)' }, en: { cat: 'OneDrive', least: 'Files.Read.All (instead of full)' } },
+  'Sites.Read.All': { de: { cat: 'SharePoint', least: 'Sites.Read.All' }, en: { cat: 'SharePoint', least: 'Sites.Read.All' } },
+  'Team.ReadBasic.All': { de: { cat: 'Teams', least: 'Team.ReadBasic.All (statt Team.ReadWrite.All)' }, en: { cat: 'Teams', least: 'Team.ReadBasic.All (instead of Team.ReadWrite.All)' } },
+  'Directory.Read.All': { de: { cat: 'Entra ID', least: 'nur für Verzeichnis-Abfragen' }, en: { cat: 'Entra ID', least: 'only for directory queries' } },
+  'DeviceManagementManagedDevices.Read.All': { de: { cat: 'Intune', least: 'nur Intune-Devices' }, en: { cat: 'Intune', least: 'Intune devices only' } },
+};
+const PERMS = Object.keys(PERM_I18N);
+function Permissions({ t, lang }) {
   const [q, setQ] = useState('');
-  const list = PERMS.filter(x => !q || x.p.toLowerCase().includes(q) || x.cat.toLowerCase().includes(q));
+  const list = PERMS.filter(x => !q || x.toLowerCase().includes(q) || PERM_I18N[x][lang].cat.toLowerCase().includes(q));
   return (
     <div className="panel-inner">
       <h2 className="sect">{t.perm} <span className="newtag">[2]</span></h2>
       <p className="hint">{t.perm_hint}</p>
       <input className="epinput" placeholder={t.perm_ph} value={q} onChange={e => setQ(e.target.value)} style={{ maxWidth: 360 }} />
       <div className="cards">
-        {list.map(x => <div className="card" key={x.p}><h3>{x.p}</h3><div className="role">{x.cat}</div><p>{x.least}</p></div>)}
+        {list.map(x => {
+          const info = PERM_I18N[x][lang];
+          return <div className="card" key={x}><h3>{x}</h3><div className="role">{info.cat}</div><p>{info.least}</p></div>;
+        })}
       </div>
     </div>
   );
 }
 
 // ---------- Radar (real deprecations) ----------
-function Radar({ t }) {
+function Radar({ t, lang }) {
   const [variant, setVariant] = useState('v1.0');
   const [data, setData] = useState(null);
   const fileMap = { 'v1.0': 'data/deprecations.v1.0.json', beta: 'data/deprecations.beta.json' };
@@ -290,7 +316,7 @@ function Radar({ t }) {
         {items.slice(0, 60).map((it, i) => (
           <div className={'card ' + (it.status === 'removed' ? 'removed' : it.status === 'soon' ? 'soon' : 'planned')} key={i}>
             <h3>{it.endpoint || it.path || '?'}</h3>
-            <div className="role">{it.method || ''} · {it.status}</div>
+            <div className="role">{it.method || ''} · {t.status[lang][it.status]}</div>
             {it.removalDate && <p>Entfernung: {it.removalDate}</p>}
           </div>
         ))}
@@ -349,7 +375,7 @@ function App() {
           </nav>
           <div className="themeswitch">
             <span id="liveDot" className="livedot on">{t.live}</span>
-            <button className="tbtn" data-set-theme="idun-retro" onClick={() => setTab('reference')}>React</button>
+            <button className="tbtn" onClick={() => setTab('reference')}>React</button>
             <button className="btn-ignite" id="igniteBtn" aria-pressed={ignite} onClick={() => setIgnite(v => !v)}><span className="toggle-dot"></span>{t.ignite}</button>
             <button className="tbtn" id="langBtn" aria-pressed={lang === 'en'} onClick={() => setLang(l => l === 'de' ? 'en' : 'de')}>{t.en}</button>
           </div>
@@ -357,11 +383,11 @@ function App() {
       </header>
 
       <main>
-        {tab === 'hub' && <Hub t={t} m={m} />}
+        {tab === 'hub' && <Hub t={t} m={m} lang={lang} />}
         {tab === 'reference' && <Reference t={t} />}
         {tab === 'console' && <ConsolePanel t={t} />}
-        {tab === 'permissions' && <Permissions t={t} />}
-        {tab === 'radar' && <Radar t={t} />}
+        {tab === 'permissions' && <Permissions t={t} lang={lang} />}
+        {tab === 'radar' && <Radar t={t} lang={lang} />}
       </main>
 
       <footer className="foot">{t.footer}</footer>
