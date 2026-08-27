@@ -50,6 +50,10 @@ const I18N = {
     status: { de: { removed: 'entfernt', soon: 'bald', planned: 'geplant' }, en: { removed: 'removed', soon: 'soon', planned: 'planned' } },
     live: '● live', ignite: 'Ignite', en: 'EN',
     footer: 'qapdex-maker.github.io · React Prototyp · Daten: metadata-msgraph',
+    loading: 'lädt…', loading_var: 'lädt {v}…', count_n: '{n} Endpoints', err: 'Fehler:',
+    tab_v10: 'v1.0 (stabil)', tab_beta: 'beta (Preview)', hits: 'Treffer:',
+    filter_all: 'alle', filter_soon: 'bald', filter_removed: 'entfernt', removal: 'Entfernung:',
+    nl_reasons: { teams: 'Teams', mails: 'Mails', calendar: 'Kalender', onedrive: 'OneDrive', photo: 'Profilfoto', default: 'Standard' },
   },
   en: {
     hero_h1: <>Graph Metadata <span className="hl">Hub</span></>,
@@ -73,6 +77,10 @@ const I18N = {
     status: { de: { removed: 'entfernt', soon: 'bald', planned: 'geplant' }, en: { removed: 'removed', soon: 'soon', planned: 'planned' } },
     live: '● live', ignite: 'Ignite', en: 'EN',
     footer: 'qapdex-maker.github.io · React Prototype · Data: metadata-msgraph',
+    loading: 'loading…', loading_var: 'loading {v}…', count_n: '{n} endpoints', err: 'Error:',
+    tab_v10: 'v1.0 (stable)', tab_beta: 'beta (Preview)', hits: 'Hits:',
+    filter_all: 'all', filter_soon: 'soon', filter_removed: 'removed', removal: 'Removal:',
+    nl_reasons: { teams: 'Teams', mails: 'Mails', calendar: 'Calendar', onedrive: 'OneDrive', photo: 'Profile photo', default: 'Default' },
   }
 };
 
@@ -123,7 +131,7 @@ function Reference({ t }) {
   const [variant, setVariant] = useState('v1.0');
   const [items, setItems] = useState([]);
   const [q, setQ] = useState('');
-  const [status, setStatus] = useState('lädt…');
+  const [st, setSt] = useState({ kind: 'loading' });
   // Web Worker löst relatives fetch() gegen die Worker-Skript-URL auf
   // (/msgraph/react/assets/), nicht gegen die Seite (/msgraph/react/).
   // Deshalb hier ABSOLUTE URLs bauen und an den Worker durchreichen.
@@ -141,14 +149,14 @@ function Reference({ t }) {
     workerRef.current = w;
     w.onmessage = (e) => {
       if (e.data.variant !== variantRef.current) return; // stale Antwort ignorieren
-      if (e.data.ok) { setItems(e.data.items); setStatus(e.data.count + ' Endpoints'); }
-      else setStatus('Fehler: ' + e.data.error);
+      if (e.data.ok) { setItems(e.data.items); setSt({ kind: 'ok', n: e.data.count }); }
+      else setSt({ kind: 'err', msg: String(e.data.error) });
     };
     return () => w.terminate();
   }, []);
 
   useEffect(() => {
-    setStatus('lädt ' + variant + '…');
+    setSt({ kind: 'variant', v: variant });
     setItems([]);
     workerRef.current?.postMessage({ variant, file: fileMap[variant] });
   }, [variant]);
@@ -159,19 +167,24 @@ function Reference({ t }) {
     return items.filter(f => f.path.toLowerCase().includes(s) || f.summary.toLowerCase().includes(s));
   }, [items, q]);
 
+  const status = st.kind === 'err' ? t.err + ' ' + st.msg
+    : st.kind === 'variant' ? t.loading_var.replace('{v}', st.v)
+    : st.kind === 'ok' ? t.count_n.replace('{n}', st.n)
+    : t.loading;
+
   return (
     <div className="panel-inner">
       <h2 className="sect">{t.reference}</h2>
       <p className="hint">{t.ref_hint}</p>
       <div className="ref-tabs">
-        <button className={'reftab' + (variant === 'v1.0' ? ' active' : '')} onClick={() => setVariant('v1.0')}>v1.0 (stabil)</button>
-        <button className={'reftab' + (variant === 'beta' ? ' active' : '')} onClick={() => setVariant('beta')}>beta (Preview)</button>
+        <button className={'reftab' + (variant === 'v1.0' ? ' active' : '')} onClick={() => setVariant('v1.0')}>{t.tab_v10}</button>
+        <button className={'reftab' + (variant === 'beta' ? ' active' : '')} onClick={() => setVariant('beta')}>{t.tab_beta}</button>
       </div>
       <div className="ref-controls">
         <input className="epinput" placeholder={t.ref_ph} value={q} onChange={e => setQ(e.target.value)} />
         <a className="btn" target="_blank" rel="noopener" href={RAW + SITE[variant]}>{t.ref_open}</a>
       </div>
-      <div className="badges"><span className="badge">{status}</span>{q && <span className="badge">Treffer: {filtered.length}</span>}</div>
+      <div className="badges"><span className="badge">{status}</span>{q && <span className="badge">{t.hits} {filtered.length}</span>}</div>
       {filtered.length > 0 ? (
         <VirtList items={filtered} renderRow={f => (
           <div className="refrow" style={{ width: '100%' }}>
@@ -204,12 +217,12 @@ function ConsolePanel({ t }) {
   function nlMap(s) {
     const tt = s.toLowerCase();
     const has = (...k) => k.some(x => tt.includes(x));
-    if (has('team')) return { method: 'GET', path: '/me/joinedTeams', perm: 'Team.ReadBasic.All', reason: 'Teams' };
-    if (has('mail', 'email')) return { method: 'GET', path: '/me/messages', perm: 'Mail.Read', reason: 'Mails' };
-    if (has('termin', 'event', 'calendar')) return { method: 'GET', path: '/me/events', perm: 'Calendars.Read', reason: 'Kalender' };
-    if (has('drive', 'onedrive', 'datei', 'file')) return { method: 'GET', path: '/me/drive/root/children', perm: 'Files.Read', reason: 'OneDrive' };
-    if (has('photo', 'bild', 'avatar')) return { method: 'GET', path: '/me/photo/$value', perm: 'User.Read', reason: 'Profilfoto' };
-    return { method: 'GET', path: '/me', perm: 'User.Read', reason: 'Default' };
+    if (has('team')) return { method: 'GET', path: '/me/joinedTeams', perm: 'Team.ReadBasic.All', reason: 'teams' };
+    if (has('mail', 'email')) return { method: 'GET', path: '/me/messages', perm: 'Mail.Read', reason: 'mails' };
+    if (has('termin', 'event', 'calendar')) return { method: 'GET', path: '/me/events', perm: 'Calendars.Read', reason: 'calendar' };
+    if (has('drive', 'onedrive', 'datei', 'file')) return { method: 'GET', path: '/me/drive/root/children', perm: 'Files.Read', reason: 'onedrive' };
+    if (has('photo', 'bild', 'avatar')) return { method: 'GET', path: '/me/photo/$value', perm: 'User.Read', reason: 'photo' };
+    return { method: 'GET', path: '/me', perm: 'User.Read', reason: 'default' };
   }
   function cmd(path, method) {
     const curl = `curl -X ${method} "https://graph.microsoft.com/v1.0${path}" -H "Authorization: Bearer ***"`;
@@ -218,7 +231,7 @@ function ConsolePanel({ t }) {
   }
   function runNl() {
     const r = nlMap(nl);
-    setEp({ method: r.method, path: r.path, meta: 'NL: ' + (r.reason || '') + (r.perm ? ' · ' + r.perm : '') });
+    setEp({ method: r.method, path: r.path, meta: 'NL: ' + (t.nl_reasons[r.reason] || r.reason) + (r.perm ? ' · ' + r.perm : '') });
   }
   function onEpInput(val) {
     setEpq(val);
@@ -307,9 +320,9 @@ function Radar({ t, lang }) {
       <div className="radar-controls">
         <button className={'reftab' + (variant === 'v1.0' ? ' active' : '')} onClick={() => setVariant('v1.0')}>v1.0</button>
         <button className={'reftab' + (variant === 'beta' ? ' active' : '')} onClick={() => setVariant('beta')}>beta</button>
-        <button className="reftab" onClick={() => setFilter('all')}>alle</button>
-        <button className="reftab" onClick={() => setFilter('soon')}>bald</button>
-        <button className="reftab" onClick={() => setFilter('removed')}>entfernt</button>
+        <button className="reftab" onClick={() => setFilter('all')}>{t.filter_all}</button>
+        <button className="reftab" onClick={() => setFilter('soon')}>{t.filter_soon}</button>
+        <button className="reftab" onClick={() => setFilter('removed')}>{t.filter_removed}</button>
       </div>
       <div className="badges"><span className="badge">{data?.count || 0} {t.dep} ({variant})</span></div>
       <div className="cards">
@@ -317,7 +330,7 @@ function Radar({ t, lang }) {
           <div className={'card ' + (it.status === 'removed' ? 'removed' : it.status === 'soon' ? 'soon' : 'planned')} key={i}>
             <h3>{it.endpoint || it.path || '?'}</h3>
             <div className="role">{it.method || ''} · {t.status[lang][it.status]}</div>
-            {it.removalDate && <p>Entfernung: {it.removalDate}</p>}
+            {it.removalDate && <p>{t.removal} {it.removalDate}</p>}
           </div>
         ))}
       </div>
@@ -335,7 +348,7 @@ const TABS = [
 ];
 function App() {
   const [tab, setTab] = useState('hub');
-  const [lang, setLang] = useState('de');
+  const [lang, setLang] = useState(() => { try { return localStorage.getItem('msgraph_lang') || 'de'; } catch { return 'de'; } });
   const [ignite, setIgnite] = useState(false);
   const [m, setM] = useState(null);
 
@@ -348,6 +361,7 @@ function App() {
   }, [ignite]);
 
   const t = I18N[lang];
+  useEffect(() => { document.documentElement.lang = lang; try { localStorage.setItem('msgraph_lang', lang); } catch {} }, [lang]);
 
   // micro-interactions: cursor trail + scanlines
   useEffect(() => {
