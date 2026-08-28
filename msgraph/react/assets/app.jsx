@@ -48,7 +48,7 @@ const I18N = {
       'qapdex-maker/idun-playground': { de: 'Multi-LLM-Console (17 Provider)', en: 'Multi-LLM console (17 providers)' },
     },
     status: { de: { removed: 'entfernt', soon: 'bald', planned: 'geplant' }, en: { removed: 'removed', soon: 'soon', planned: 'planned' } },
-    live: '● live', ignite: 'Ignite', en: 'EN', de: 'DE',
+    live: '● sync {d}', live_loading: '○ lade Metadaten…', live_err: '○ Sync-Stand unbekannt', ignite: 'Ignite', en: 'EN', de: 'DE',
     footer: 'qapdex-maker.github.io · React Prototyp · Daten: metadata-msgraph',
     cur_user: 'Aktueller Benutzer',
     loading: 'lädt…', loading_var: 'lädt {v}…', count_n: '{n} Endpoints', err: 'Fehler:',
@@ -76,7 +76,7 @@ const I18N = {
       'qapdex-maker/idun-playground': { de: 'Multi-LLM-Console (17 Provider)', en: 'Multi-LLM console (17 providers)' },
     },
     status: { de: { removed: 'entfernt', soon: 'bald', planned: 'geplant' }, en: { removed: 'removed', soon: 'soon', planned: 'planned' } },
-    live: '● live', ignite: 'Ignite', en: 'EN', de: 'DE',
+    live: '● sync {d}', live_loading: '○ loading metadata…', live_err: '○ sync date unknown', ignite: 'Ignite', en: 'EN', de: 'DE',
     footer: 'qapdex-maker.github.io · React Prototype · Data: metadata-msgraph',
     cur_user: 'Current user',
     loading: 'loading…', loading_var: 'loading {v}…', count_n: '{n} endpoints', err: 'Error:',
@@ -207,13 +207,17 @@ function ConsolePanel({ t }) {
   const [idx, setIdx] = useState(null);
   const [sug, setSug] = useState([]);
 
+  // Off-thread load (same strategy as Reference): reach the index JSON via an
+  // absolute URL through the worker so the 2.5 MB parse never hits the UI thread.
+  const base = window.location.href.replace(/index\.html?$/, '');
   useEffect(() => {
-    fetch('data/index.v1.0.json').then(r => r.json()).then(d => {
-      const flat = [];
-      for (const [p, ops] of Object.entries(d.paths || {}))
-        for (const o of ops) flat.push({ path: p, method: (o.method || 'get').toUpperCase(), summary: o.summary || '', opId: o.operationId });
-      setIdx(flat);
-    }).catch(() => setIdx([]));
+    const w = new Worker('assets/worker.js');
+    w.onmessage = (e) => {
+      if (e.data.ok) setIdx(e.data.items);
+      else setIdx([]); // graceful fallback if the worker fails
+    };
+    w.postMessage({ type: 'console', file: base + 'data/index.v1.0.json' });
+    return () => w.terminate();
   }, []);
 
   function nlMap(s) {
@@ -408,7 +412,7 @@ function App() {
               }}>{tt[1]}</a>)}
           </nav>
           <div className="themeswitch">
-            <span id="liveDot" className="livedot on">{t.live}</span>
+            <span id="liveDot" className={'livedot ' + (m?.syncDate ? 'on' : '')}>{m?.syncDate ? t.live.replace('{d}', m.syncDate) : (m === null ? t.live_loading : t.live_err)}</span>
             <button className="tbtn" onClick={() => setTab('reference')}>React</button>
             <button className="btn-ignite" id="igniteBtn" aria-pressed={ignite} onClick={() => setIgnite(v => !v)}><span className="toggle-dot"></span>{t.ignite}</button>
             <button className="tbtn" id="langBtn" aria-pressed={lang === 'en'} onClick={() => setLang(l => l === 'de' ? 'en' : 'de')}>{lang === 'en' ? t.de : t.en}</button>

@@ -1,7 +1,10 @@
 // Web Worker: parses the metadata index OFF the main thread.
 // This is the fix for the old RapiDoc freeze — no 8-41MB parse on the UI thread.
+// Supports two call shapes:
+//   { type: 'reference', variant, file } -> endpoint list (path/method/summary)
+//   { type: 'console',  file }           -> same list PLUS opId (Console uses operationId)
 self.onmessage = async (e) => {
-  const { variant, file } = e.data;
+  const { type, variant, file } = e.data;
   try {
     const res = await fetch(file);
     const data = await res.json();
@@ -11,12 +14,13 @@ self.onmessage = async (e) => {
         flat.push({
           path,
           method: (o.method || 'get').toUpperCase(),
-          summary: o.summary || ''
+          summary: o.summary || '',
+          opId: o.operationId,
         });
       }
     }
-    self.postMessage({ variant, ok: true, items: flat, count: flat.length });
+    self.postMessage({ type, variant, ok: true, items: flat, count: flat.length });
   } catch (err) {
-    self.postMessage({ variant, ok: false, error: String(err) });
+    self.postMessage({ type, variant, ok: false, error: String(err) });
   }
 };

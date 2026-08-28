@@ -126,10 +126,12 @@ Re-Check aller 9 dokumentierten Bugs + Regressions-Screen. Alle GRÜN.
 - .gitignore: `commitmsg*.txt` + `preview*.log` (root + subdirs) ignoriert. Die zuvor
   getrackten commitmsg-Dateien per `git rm --cached` aus dem Index genommen — Dateien
   bleiben LOKAL erhalten (nicht destruktiv). Status danach sauber.
-- msgraph/ (Vanilla) als ARCHIV markiert: `msgraph/ARCHIVE_README.md` legt fest, dass
-  msgraph/react die aktive/verlinkte Variante ist. Vanilla-Dateien bewusst NICHT gelöscht
-  (nur markiert), da ungelinkt + potenziell wiederverwendbare Logik (Worker-Parser).
-- Deploy-Hygiene weiterhin grün. Commit 44ff593 (gepusht).
+- msgraph/ (Vanilla) als ARCHIV markiert (siehe Phase 6). Am 28.08.2026 der
+  Vanilla-Ordner dann KOMPLETT geloescht (index.html, assets/, data/,
+  ARCHIVE_README.md) — die React-Variante (msgraph/react/) nutzt eigene
+  site.css + eigenen Worker, der Vanilla-Kram war ungelinkt + dupliziert.
+  Verifiziert: Portal linkt nur msgraph/react/, keine toten Referenzen.
+- Deploy-Hygiene weiterhin grün.
 - Nicht destruktiv: physische Dateien erhalten, nur Tracking bereinigt.
 
 ## Session-Abschluss (2026-08-27)

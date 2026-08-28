@@ -8,13 +8,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css" />
-<!-- React 18 UMD (CDN) + Babel standalone (in-browser transpile) -->
+<!-- React 18 UMD (CDN). app.js is precompiled from app.jsx (no in-browser Babel).
+     Regenerate after editing app.jsx: `sh build_appjs.sh` -->
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
 </head>
 <body>
 <div id="root">lade…</div>
-<script type="text/babel" src="assets/app.jsx" data-presets="react"></script>
+<script src="assets/app.js"></script>
 </body>
 </html>
