@@ -208,3 +208,8 @@ html.ignite .card:hover, html.ignite .neo:hover{box-shadow:var(--shadow-hover), 
   *{animation:none!important;transition:none!important}
   .trail{display:none}
 }
+
+/* F3: LLM mode row + error hint */
+.llm-row { display:flex; gap:6px; margin:6px 0; }
+.llm-row .epinput { flex:1; }
+.hint.err { color:#ff7b7b; }

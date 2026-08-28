@@ -38,6 +38,7 @@ const I18N = {
     ref_ph: 'Endpoint suchen (z.B. /me, team)…', ref_open: '↗ rohe Spec öffnen',
     console: 'Semantics Console', console_hint: 'Gib natürliche Sprache oder einen Endpoint ein → curl + idun-Befehl.',
     nl: 'Natürliche Sprache', nl_btn: 'NL → Graph', endpoint: 'Endpoint', nl_ph: 'z.B. alle Teams des Users',
+    llm: 'LLM-Modus (OpenRouter)', llm_key_ph: 'OpenRouter API-Key (bleibt lokal, nie an unseren Server)', llm_btn: 'NL → Graph (LLM)', llm_busy: 'LLM wird gefragt…', llm_err: 'LLM fehlgeschlagen — Heuristik genutzt', llm_hint: 'Optional: eigener OpenRouter-Key für NL→Graph via LLM. Key bleibt im Browser (sessionStorage), nie committet oder an uns gesendet. Ohne Key Fallback auf die Stichwort-Heuristik.',
     perm: 'Permission Intelligence', perm_hint: 'Kuratiert (OpenAPI hier hat keine strukturierten scopes). Jede Permission mit least-privilege-Empfehlung.',
     perm_ph: 'Permission suchen…',
     radar: 'Breaking-Change Radar', radar_hint: 'Echte Deprecations aus den Metadaten (x-ms-deprecation).',
@@ -66,6 +67,7 @@ const I18N = {
     ref_ph: 'Search endpoint (e.g. /me, team)…', ref_open: '↗ open raw spec',
     console: 'Semantics Console', console_hint: 'Enter natural language or an endpoint → curl + idun command.',
     nl: 'Natural Language', nl_btn: 'NL → Graph', endpoint: 'Endpoint', nl_ph: 'e.g. all teams of the user',
+    llm: 'LLM mode (OpenRouter)', llm_key_ph: 'OpenRouter API key (stay local, never sent to our server)', llm_btn: 'NL → Graph (LLM)', llm_busy: 'asking LLM…', llm_err: 'LLM failed — used heuristic', llm_hint: 'Optional: paste your own OpenRouter key to map NL via an LLM. Key stays in your browser (sessionStorage), never committed or sent to us. Falls back to the keyword heuristic without a key.',
     perm: 'Permission Intelligence', perm_hint: 'Curated (the OpenAPI here has no structured scopes). Least-privilege note per permission.',
     perm_ph: 'Search permission…',
     radar: 'Breaking-Change Radar', radar_hint: 'Real deprecations from the metadata (x-ms-deprecation).',
@@ -206,6 +208,9 @@ function ConsolePanel({ t }) {
   const [epq, setEpq] = useState('');
   const [idx, setIdx] = useState(null);
   const [sug, setSug] = useState([]);
+  const [llmKey, setLlmKey] = useState(() => sessionStorage.getItem('or_key') || '');
+  const [llmBusy, setLlmBusy] = useState(false);
+  const [llmErr, setLlmErr] = useState(false);
 
   // Off-thread load (same strategy as Reference): reach the index JSON via an
   // absolute URL through the worker so the 2.5 MB parse never hits the UI thread.
@@ -235,7 +240,41 @@ function ConsolePanel({ t }) {
     const idun = `idun graph call ${method} ${path}`;
     return { curl, idun };
   }
+  async function callOpenRouter(query, key) {
+    // Direct browser call (OpenRouter allows CORS for browser clients). The key
+    // never leaves the user's browser sessionStorage; it is NOT sent to our
+    // static Pages host. Falls back to the heuristic on any failure.
+    const SYSTEM = 'You map a natural-language request to a Microsoft Graph v1.0 call. ' +
+      'Respond with ONLY strict JSON: {"method":"GET|POST|...","path":"/me/...","perm":"Scope.Read","reason":"short"} ' +
+      'Pick the closest real v1.0 endpoint. If unsure, use /me.';
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'openai/gpt-4o-mini',
+        messages: [{ role: 'system', content: SYSTEM }, { role: 'user', content: query }],
+        response_format: { type: 'json_object' },
+        temperature: 0,
+      }),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const txt = data?.choices?.[0]?.message?.content || '';
+    const j = JSON.parse(txt);
+    if (!j.path) throw new Error('no path');
+    return { method: (j.method || 'GET').toUpperCase(), path: j.path, perm: j.perm || '', reason: 'llm' };
+  }
+
   function runNl() {
+    setLlmErr(false);
+    if (llmKey && nl.trim()) {
+      setLlmBusy(true);
+      callOpenRouter(nl, llmKey)
+        .then(r => { setEp({ method: r.method, path: r.path, kind: 'nl', reason: 'llm', perm: r.perm }); })
+        .catch(() => { setLlmErr(true); const r = nlMap(nl); setEp({ method: r.method, path: r.path, kind: 'nl', reason: r.reason, perm: r.perm }); })
+        .finally(() => setLlmBusy(false));
+      return;
+    }
     const r = nlMap(nl);
     setEp({ method: r.method, path: r.path, kind: 'nl', reason: r.reason, perm: r.perm });
   }
@@ -264,7 +303,14 @@ function ConsolePanel({ t }) {
         <div>
           <label className="lbl">{t.nl}</label>
           <textarea id="nlInput" value={nl} onChange={e => setNl(e.target.value)} placeholder={t.nl_ph} />
-          <button className="primary" onClick={runNl}>{t.nl_btn}</button>
+          <button className="primary" onClick={runNl} disabled={llmBusy}>{llmBusy ? t.llm_busy : t.nl_btn}</button>
+          <div className="llm-row">
+            <input type="password" className="epinput" placeholder={t.llm_key_ph} value={llmKey}
+              onChange={e => { setLlmKey(e.target.value); sessionStorage.setItem('or_key', e.target.value); }} />
+            <button className="ghost" onClick={runNl} disabled={llmBusy || !llmKey}>{t.llm_btn}</button>
+          </div>
+          {llmErr && <p className="hint err">{t.llm_err}</p>}
+          <p className="hint">{t.llm_hint}</p>
           <label className="lbl">{t.endpoint}</label>
           <input className="epinput" placeholder="/me" value={epq} onChange={e => onEpInput(e.target.value)} />
           <div className="suggest">
