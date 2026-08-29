@@ -55,7 +55,7 @@ const I18N = {
     loading: 'lädt…', loading_var: 'lädt {v}…', count_n: '{n} Endpoints', err: 'Fehler:',
     tab_v10: 'v1.0 (stabil)', tab_beta: 'beta (Preview)', hits: 'Treffer:',
     filter_all: 'alle', filter_soon: 'bald', filter_removed: 'entfernt', removal: 'Entfernung:',
-    nl_reasons: { teams: 'Teams', mails: 'Mails', calendar: 'Kalender', onedrive: 'OneDrive', photo: 'Profilfoto', default: 'Standard' },
+    nl_reasons: { teams: 'Teams', mails: 'Mails', calendar: 'Kalender', onedrive: 'OneDrive', photo: 'Profilfoto', default: 'Standard', llm: 'LLM-Zuordnung' },
   },
   en: {
     hero_h1: <>Graph Metadata <span className="hl">Hub</span></>,
@@ -84,7 +84,7 @@ const I18N = {
     loading: 'loading…', loading_var: 'loading {v}…', count_n: '{n} endpoints', err: 'Error:',
     tab_v10: 'v1.0 (stable)', tab_beta: 'beta (Preview)', hits: 'Hits:',
     filter_all: 'all', filter_soon: 'soon', filter_removed: 'removed', removal: 'Removal:',
-    nl_reasons: { teams: 'Teams', mails: 'Mails', calendar: 'Calendar', onedrive: 'OneDrive', photo: 'Profile photo', default: 'Default' },
+    nl_reasons: { teams: 'Teams', mails: 'Mails', calendar: 'Calendar', onedrive: 'OneDrive', photo: 'Profile photo', default: 'Default', llm: 'LLM mapping' },
   }
 };
 

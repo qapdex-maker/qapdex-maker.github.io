@@ -136,7 +136,8 @@ const I18N = {
       calendar: 'Kalender',
       onedrive: 'OneDrive',
       photo: 'Profilfoto',
-      default: 'Standard'
+      default: 'Standard',
+      llm: 'LLM-Zuordnung'
     }
   },
   en: {
@@ -222,7 +223,8 @@ const I18N = {
       calendar: 'Calendar',
       onedrive: 'OneDrive',
       photo: 'Profile photo',
-      default: 'Default'
+      default: 'Default',
+      llm: 'LLM mapping'
     }
   }
 };

@@ -3,8 +3,8 @@
   "title": "Graph Metadata Hub + Semantics Console",
   "schemaVersion": "1.4.711.0",
   "syncDate": "2026-08-26",
-  "siteVersion": "2026.08.27-3",
-  "buildDate": "2026-08-27",
+  "siteVersion": "2026.08.29-1",
+  "buildDate": "2026-08-29",
   "projects": [
     { "name": "metadata-msgraph", "role": "Datenquelle (CSDL/OpenAPI/Typ-Mappings)", "repo": "qapdex-maker/metadata-msgraph" },
     { "name": "idun-sdk", "role": "Azure AI Foundry Client", "repo": "qapdex-maker/idun-sdk" },

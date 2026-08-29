@@ -1,6 +1,6 @@
 # PROJECT_NOTES — qapdex-maker.github.io (Portal + msgraph/react)
 
-Stand: 2026-08-27 (Session mit Hermes/idun). Wissensstand, nicht push-pflichtig.
+Stand: 2026-08-29 (Session mit Hermes/idun). Wissensstand, nicht push-pflichtig.
 Letztes Push-Tip: af610d0. Lokaler HEAD: c5e6f40 (9 ungepushte Commits seit af610d0).
 Detaillierter Fahrplan + tiefe Bereiche: siehe ROADMAP.md (im Repo-Root).
 
@@ -8,13 +8,18 @@ Detaillierter Fahrplan + tiefe Bereiche: siehe ROADMAP.md (im Repo-Root).
 - User-Page: Repo `qapdex-maker/qapdex-maker.github.io`, Branch `main`, Root-Veröffentlichung.
 - Portal-Root `index.html` = neo-brutalist (Kobalt #2547ff + Gelb #ffd400, Space Grotesk/IBM Plex,
   harte 3px-Borders + 4px-Schlagschatten, IGNITE-Toggle, Cursor-Trail, Scanlines, DE/EN-Toggle).
-- `msgraph/` = VANILLA-Prototyp (veraltet, NICHT mehr verlinkt — nur noch als Datei vorhanden).
-- `msgraph/react/` = AKTIVE, portal-designige Version (React 18 UMD + @babel/standalone im Browser,
-  KEIN schwerer Build). Das ist die Karte "Graph Metadata Hub" im Portal.
+- `msgraph/index.html` = nur noch eine Redirect-/Hinweisseite auf `react/` (DE/EN,
+  `noindex`, canonical auf react/). Der Vanilla-Prototyp selbst ist am 28.08. gelöscht
+  worden; ohne diese Seite lieferte `https://qapdex-maker.github.io/msgraph/` live
+  einen 404 (am 29.08.2026 per curl verifiziert, danach behoben).
+- `msgraph/react/` = AKTIVE, portal-designige Version (React 18 UMD von unpkg + aus
+  `app.jsx` VORKOMPILIERTES `assets/app.js`, KEIN Babel im Browser, KEIN schwerer Build).
+  Das ist die Karte "Graph Metadata Hub" im Portal.
 
 ## msgraph/react — Komponenten
-- `index.html`: lädt Portal-Fonts + `assets/site.css`, React/ReactDOM/Babel von unpkg, JSX als
-  externes `assets/app.jsx` (type="text/babel"). Babel transpiliert das sauber (verifiziert).
+- `index.html`: lädt Portal-Fonts + `assets/site.css`, React/ReactDOM (UMD) von unpkg und
+  `assets/app.js`. KEIN Babel-Tag mehr (F4): `app.jsx` ist die Quelle und wird per
+  `sh build_appjs.sh` zu `assets/app.js` vorkompiliert. `app.js` NIE von Hand editieren.
 - `assets/app.jsx`: React-App. Tabs: Hub / Reference / Console / Permissions / Breaking Radar.
   - i18n DE/EN über `I18N`-Objekt. Default DE. Sprache persistiert in `localStorage('msgraph_lang')`
     (Lazy-Init im useState + useEffect schreibt zurück) und setzt `<html lang>`.
@@ -162,4 +167,36 @@ Lokaler HEAD == Remote (6456171). Deploy-Hygiene grün. Repo sauber.
   alter Sprache hängen bleiben (Stale-Closure-Risiko → ableitend aus `t` rendern, nicht speichern).
 - **Mobile:** `.nav` darf niemals `display:none` sein.
 - **selfhost.os:** keine "Neo-brutalist"-Wortmarke in Beschreibungen.
-- Babel-Transpile-Check: `node -e 'require("@babel/standalone").transform(fs.readFileSync("assets/app.jsx","utf8"),{presets:["react"]})'`
+- Nach jeder `app.jsx`-Änderung: `sh build_appjs.sh` (schreibt `assets/app.js`, cached
+  @babel/standalone unter `$HOME`). Prüfen, dass `assets/app.js` sich wirklich geändert hat.
+- Verify-Suite ohne Browser (Rezept im Skill `msgraph-react-evolution`,
+  `references/termux-verify.md`): JSX-Transform, Worker-Parse gegen echte JSON,
+  App-Mount-Smoke mit React-Mock, HTTP-Checks per http.server.
+
+## Pflege-Lauf 2026-08-29 (verifiziert, lokal, nicht gepusht)
+Alles unten ist echter Tool-Output, keine Annahme:
+- `build_appjs.sh` neu ausgeführt → `assets/app.js` byte-identisch, d.h. es lag KEIN
+  veraltetes Kompilat im Repo (112 React.createElement-Calls, SYNTAX OK).
+- Worker-Parse gegen die echten Daten: `index.v1.0.json` 17.531 Endpoints / 0 malformed,
+  `index.beta.json` 29.554 Endpoints / 0 malformed.
+- App-Mount-Smoke (node vm + React-Mock): `mounted: true`, keine Exception.
+- Anti-Regression F1: kein Main-Thread-`fetch('data/index...` in `app.jsx`.
+  Anti-Regression F4: kein `<script>`-Babel-Tag in `index.html` (nur ein Kommentar
+  erwähnt Babel — `grep -c babel` liefert daher 1, das ist kein Script-Tag).
+- Externe Links live geprüft: beide `openapi.yaml` (v1.0/beta) 200, React-UMD 200.
+  `openrouter.ai/api/v1/chat/completions` antwortet auf HEAD mit 404 — erwartbar,
+  es ist ein POST-Endpoint, kein toter Link.
+- **Gefunden und behoben:** `https://qapdex-maker.github.io/msgraph/` war live 404
+  (Vanilla-Ordner am 28.08. gelöscht, aber kein Ersatz-Index). Jetzt liegt dort eine
+  DE/EN-Redirect-Seite auf `react/`. Lokal 200 verifiziert.
+- **Gefunden und behoben (echter Bug, nicht kosmetisch):** `node deploy-hygiene.js` war
+  ROT — 2 FAILURES: `nl_reasons[de][llm]` und `nl_reasons[en][llm]` fehlten, obwohl
+  `nlMap`/der LLM-Pfad `reason: 'llm'` ausgibt (eingeschleppt mit F3, Commit 39d3c11).
+  Folge in der UI: im LLM-Modus stand unter dem Endpoint das rohe Schlüsselwort
+  `NL: llm` statt eines übersetzten Textes. Fix: `llm: 'LLM-Zuordnung'` (de) /
+  `llm: 'LLM mapping'` (en), `app.js` neu gebaut. Danach: "i18n clean ✅",
+  "Deploy-Hygiene sauber ✅". LEHRE: nach jedem neuen `reason:`-Wert MUSS ein
+  `nl_reasons`-Eintrag in BEIDEN Sprachen dazu.
+- `manifest.json`: siteVersion 2026.08.27-3 → 2026.08.29-1, buildDate 2026-08-29
+  (JSON-Parse geprüft). `schemaVersion`/`syncDate` unverändert — die Daten selbst
+  wurden in diesem Lauf nicht neu gesynct.
