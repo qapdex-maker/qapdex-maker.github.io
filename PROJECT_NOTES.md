@@ -1,7 +1,7 @@
 # PROJECT_NOTES — qapdex-maker.github.io (Portal + msgraph/react)
 
 Stand: 2026-08-29 (Session mit Hermes/idun). Wissensstand, nicht push-pflichtig.
-Letztes Push-Tip: af610d0. Lokaler HEAD: c5e6f40 (9 ungepushte Commits seit af610d0).
+Letztes Push-Tip == lokaler HEAD == 6021cb3 (nichts Ungepushtes offen).
 Detaillierter Fahrplan + tiefe Bereiche: siehe ROADMAP.md (im Repo-Root).
 
 ## Architektur
@@ -173,7 +173,15 @@ Lokaler HEAD == Remote (6456171). Deploy-Hygiene grün. Repo sauber.
   `references/termux-verify.md`): JSX-Transform, Worker-Parse gegen echte JSON,
   App-Mount-Smoke mit React-Mock, HTTP-Checks per http.server.
 
-## Pflege-Lauf 2026-08-29 (verifiziert, lokal, nicht gepusht)
+## Pflege-Lauf 2026-08-29 (verifiziert UND deployed)
+GEPUSHT als Commit 6021cb3 (main). Nach dem Push unabhängig geprüft:
+Pages-Build via `gh api .../pages/builds/latest` von "building" auf "built"
+verfolgt (kein error), danach live per curl:
+`/msgraph/` **200 (vorher 404)**, `/msgraph/react/` 200,
+`/msgraph/react/assets/app.js` 200 und enthält `LLM-Zuordnung` — der i18n-Fix
+ist also wirklich ausgeliefert, nicht nur committet. Redirect-Seite enthält
+`href="react/"` + `location.replace`.
+
 Alles unten ist echter Tool-Output, keine Annahme:
 - `build_appjs.sh` neu ausgeführt → `assets/app.js` byte-identisch, d.h. es lag KEIN
   veraltetes Kompilat im Repo (112 React.createElement-Calls, SYNTAX OK).
