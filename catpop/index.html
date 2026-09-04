@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;background:#f1ede3;color:#1a1c1c;}body{overscroll-behavior:none;font-family:"IBM Plex Sans",sans-serif;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}@keyframes marquee{0%{transform:translateX(0%);}100%{transform:translateX(-50%);}}.border-3{border-width:3px;}.shadow-hard{box-shadow:4px 4px 0px #000000;}.shadow-hard-lg{box-shadow:8px 8px 0px #000000;}:root{--primary-fixed:#2547ff;--primary:#2547ff;--primary-container:#2547ff;--surface-container-low:#f1ede3;--surface:#f1ede3;--surface-bright:#f1ede3;--surface-container-high:#e8e4d8;--surface-container-lowest:#ffffff;--surface-variant:#e8e4d8;--surface-container:#eeeeee;--on-primary:#ffffff;--on-primary-fixed:#ffffff;--on-primary-container:#000000;--on-primary-fixed-variant:#000000;--on-tertiary:#000000;--on-tertiary-container:#000000;--on-tertiary-fixed:#ffffff;--tertiary:#b3a300;--tertiary-container:#ffd400;--tertiary-fixed:#ffd400;--tertiary-fixed-dim:#ffd400;--inverse-primary:#ffd400;--on-secondary:#000000;--on-secondary-fixed:#000000;--on-secondary-container:#000000;--on-secondary-fixed-variant:#000000;--secondary:#2547ff;--secondary-container:#d5e3ff;--secondary-fixed:#d5e3ff;--secondary-fixed-dim:#d5e3ff;--surface-tint:#2547ff;--inverse-surface:#1a1a1a;--inverse-on-surface:#f1ede3;--on-surface:#1a1c1c;--on-surface-variant:#3f3f3f;--on-background:#1a1c1c;--on-error:#ffffff;--error:#ba1a1a;--error-container:#ffdad6;--on-error-container:#93000a;--outline:#3f3f3f;--outline-variant:#dadada;--background:#f1ede3;}html.green{--primary-fixed:#00a86b !important;--primary:#00a86b !important;--primary-container:#00a86b !important;--surface-container-low:#e8f5e9 !important;--surface:#e8f5e9 !important;--surface-bright:#e8f5e9 !important;--surface-container-high:#c8e6c9 !important;--surface-container-lowest:#ffffff !important;--surface-variant:#c8e6c9 !important;--surface-container:#eeeeee !important;--on-primary:#ffffff !important;--on-primary-fixed:#ffffff !important;--on-primary-container:#003300 !important;--on-primary-fixed-variant:#003300 !important;--on-tertiary:#003300 !important;--on-tertiary-container:#003300 !important;--on-tertiary-fixed:#003300 !important;--tertiary:#1b5e20 !important;--tertiary-container:#1b5e20 !important;--tertiary-fixed:#4caf50 !important;--tertiary-fixed-dim:#4caf50 !important;--inverse-primary:#1b5e20 !important;--on-secondary:#003300 !important;--on-secondary-fixed:#003300 !important;--on-secondary-container:#003300 !important;--on-secondary-fixed-variant:#003300 !important;--secondary:#1b5e20 !important;--secondary-container:#c8e6c9 !important;--secondary-fixed:#c8e6c9 !important;--secondary-fixed-dim:#a5d6a7 !important;--surface-tint:#00a86b !important;--inverse-surface:#1b5e20 !important;--inverse-on-surface:#e8f5e9 !important;--on-surface:#1b5e20 !important;--on-surface-variant:#2e7d32 !important;--on-background:#1b5e20 !important;--on-error:#ffffff !important;--error:#ba1a1a !important;--error-container:#ffdad6 !important;--on-error-container:#93000a !important;--outline:#2e7d32 !important;--outline-variant:#a5d6a7 !important;--background:#e8f5e9 !important;}html.ignite{--primary-fixed:#ff9100 !important;--primary:#ff9100 !important;--primary-container:#ff9100 !important;--surface-container-low:#fff3e0 !important;--surface:#fff3e0 !important;--surface-bright:#fff3e0 !important;--surface-container-high:#ffe0b2 !important;--surface-container-lowest:#ffffff !important;--surface-variant:#ffe0b2 !important;--surface-container:#eeeeee !important;--on-primary:#ffffff !important;--on-primary-fixed:#ffffff !important;--on-primary-container:#3e2700 !important;--on-primary-fixed-variant:#3e2700 !important;--on-tertiary:#3e2700 !important;--on-tertiary-container:#3e2700 !important;--on-tertiary-fixed:#3e2700 !important;--tertiary:#e65100 !important;--tertiary-container:#e65100 !important;--tertiary-fixed:#ffab40 !important;--tertiary-fixed-dim:#ffab40 !important;--inverse-primary:#ffab40 !important;--on-secondary:#3e2700 !important;--on-secondary-fixed:#3e2700 !important;--on-secondary-container:#3e2700 !important;--on-secondary-fixed-variant:#3e2700 !important;--secondary:#e65100 !important;--secondary-container:#ffe0b2 !important;--secondary-fixed:#ffe0b2 !important;--secondary-fixed-dim:#ffcc80 !important;--surface-tint:#ff9100 !important;--inverse-surface:#3e2700 !important;--inverse-on-surface:#fff3e0 !important;--on-surface:#3e2700 !important;--on-surface-variant:#bf360c !important;--on-background:#3e2700 !important;--on-error:#ffffff !important;--error:#ba1a1a !important;--error-container:#ffdad6 !important;--on-error-container:#93000a !important;--outline:#bf360c !important;--outline-variant:#ffcc80 !important;--background:#fff3e0 !important;}html.ignite .scanlines{opacity:1 !important}html.ignite .shadow-hard,html.ignite .shadow-hard-lg{box-shadow:4px 4px 0px #000000,0 0 20px rgba(255,145,0,0.25) !important}html.ignite body{background-image:radial-gradient(rgba(255,145,0,0.08) 1px,transparent 1px) !important;background-size:24px 24px !important}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"media",theme:{extend:{"colors":{"surface-container-low":"var(--surface-container-low)","primary-fixed":"var(--primary-fixed)","on-error-container":"var(--on-error-container)","surface":"var(--surface)","surface-container-highest":"var(--surface-container-highest)","on-tertiary-fixed-variant":"var(--on-tertiary-fixed-variant)","inverse-surface":"var(--inverse-surface)","on-secondary":"var(--on-secondary)","on-tertiary-container":"var(--on-tertiary-container)","on-secondary-fixed-variant":"var(--on-secondary-fixed-variant)","surface-bright":"var(--surface-bright)","surface-tint":"var(--surface-tint)","tertiary-fixed":"var(--tertiary-fixed)","tertiary-container":"var(--tertiary-container)","inverse-on-surface":"var(--inverse-on-surface)","secondary":"var(--secondary)","surface-container-high":"var(--surface-container-high)","surface-variant":"var(--surface-variant)","on-surface-variant":"var(--on-surface-variant)","tertiary":"var(--tertiary)","on-tertiary":"var(--on-tertiary)","inverse-primary":"var(--inverse-primary)","on-primary-container":"var(--on-primary-container)","on-primary-fixed-variant":"var(--on-primary-fixed-variant)","primary-container":"var(--primary-container)","tertiary-fixed-dim":"var(--tertiary-fixed-dim)","on-tertiary-fixed":"var(--on-tertiary-fixed)","surface-container-lowest":"var(--surface-container-lowest)","error":"var(--error)","on-background":"var(--on-background)","on-surface":"var(--on-surface)","error-container":"var(--error-container)","surface-dim":"var(--surface-dim)","secondary-container":"var(--secondary-container)","on-primary-fixed":"var(--on-primary-fixed)","surface-container":"var(--surface-container)","background":"var(--background)","on-secondary-fixed":"var(--on-secondary-fixed)","secondary-fixed":"var(--secondary-fixed)","primary":"var(--primary)"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-lg":"1.5rem","space-sm":"0.75rem","gutter-mobile":"1rem","space-xl":"2rem","margin-mobile":"1rem","space-md":"1rem","gutter-desktop":"1.5rem","space-xxs":"0.25rem","space-2xl":"3rem","margin-desktop":"2.5rem","space-3xl":"4rem","space-xs":"0.5rem"},"fontFamily":{"display":["Space Grotesk","sans-serif"],"body":["IBM Plex Sans","sans-serif"],"mono":["IBM Plex Mono","monospace"],"label":["Space Grotesk","sans-serif"],"headline":["Space Grotesk","sans-serif"]},"fontSize":{"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.06em","fontWeight":"700"}],"body-sm":["14px",{"lineHeight":"20px","fontWeight":"400"}],"display-hero-mobile":["36px",{"lineHeight":"40px","letterSpacing":"-0.02em","fontWeight":"900"}],"body-lg":["18px",{"lineHeight":"26px","fontWeight":"500"}],"headline-lg":["36px",{"lineHeight":"42px","letterSpacing":"-0.02em","fontWeight":"800"}],"label-sm":["10px",{"lineHeight":"14px","letterSpacing":"0.08em","fontWeight":"700"}],"headline-lg-mobile":["28px",{"lineHeight":"34px","letterSpacing":"-0.01em","fontWeight":"800"}],"body-md":["16px",{"lineHeight":"24px","fontWeight":"400"}],"label-lg":["14px",{"lineHeight":"18px","letterSpacing":"0.04em","fontWeight":"700"}],"headline-md":["24px",{"lineHeight":"30px","letterSpacing":"-0.01em","fontWeight":"800"}],"display-hero":["56px",{"lineHeight":"60px","letterSpacing":"-0.03em","fontWeight":"900"}],"headline-sm":["20px",{"lineHeight":"26px","fontWeight":"700"}]}}}}</script></head><body class="bg-surface text-on-surface antialiased"><header class="fixed top-0 left-0 w-full z-50 bg-surface-container-lowest border-b-[3px] border-black"><div class="h-20 w-full px-space-md lg:px-margin-desktop flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-sm"><img alt="CatPop Meme Logo" class="h-10 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAa_-XiIS4jqb6VfdaUocGvIQMPnOyD1mOnrIU2BFr0zs9jOLF7nhHjFV-gKKbp7DP4_Cs5BH4vusoFUb2sNrJAUVfe41cgma-lc5SADKBGVHTDkDhwWn7RcpWWae5ED-glaFI8DToJd2STKAucLzExGdfZMHaBGpkot9JVEYvDGtm5Latp_fIWkUnURRmbfDjNpzI-fnTs1voipVvZgnQ1OVxxUnhaTez0HkIih8Tkz31tVLyz4NGfVA"/><div class="flex items-center gap-space-xs"><span class="font-headline-md text-headline-md tracking-tight uppercase text-on-surface">$CATPOP</span><span class="hidden sm:inline-flex items-center px-space-xs py-0.5 bg-primary-fixed text-on-primary-fixed border-2 border-black rounded shadow-[2px_2px_0px_#000000] font-label-sm text-label-sm uppercase">LIVE ON SOLANA</span></div></div><nav class="hidden xl:flex items-center gap-space-xs" data-active-classes="bg-primary-container text-on-primary rounded border-2 border-black shadow-[2px_2px_0px_#000000]"><a aria-current="page" class="px-space-sm py-space-xs font-label-md uppercase transition-colors bg-primary-container text-on-primary rounded border-2 border-black shadow-[2px_2px_0px_#000000]" data-path="home" href="#">About / Meme</a><a class="px-space-sm py-space-xs font-label-md text-label-md uppercase text-on-surface-variant hover:text-on-surface transition-colors" data-path="tokenomics" href="#">Tokenomics</a><a class="px-space-sm py-space-xs font-label-md text-label-md uppercase text-on-surface-variant hover:text-on-surface transition-colors" data-path="how-to-buy" href="#">How to Buy</a><a class="px-space-sm py-space-xs font-label-md text-label-md uppercase text-on-surface-variant hover:text-on-surface transition-colors" data-path="live-chart" href="#">Live Chart</a><a class="px-space-sm py-space-xs font-label-md text-label-md uppercase text-on-surface-variant hover:text-on-surface transition-colors" data-path="meme-generator" href="#">Meme Generator</a></nav><div class="flex items-center gap-space-sm"><a class="inline-flex items-center justify-center px-space-md py-space-xs bg-primary text-on-primary font-headline-sm text-headline-sm uppercase border-[2.5px] border-black shadow-[3px_3px_0px_#000000] hover:bg-tertiary-fixed hover:text-on-tertiary-fixed active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all rounded" data-path="how-to-buy" href="#">Buy $CATPOP</a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center border-2 border-black shadow-[2px_2px_0px_#000000]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div><button id="themeToggle" class="ml-2 px-space-xs py-space-xs bg-surface-container border-2 border-black rounded shadow-[2px_2px_0px_#000000] font-label-sm text-label-sm uppercase text-on-surface hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors" aria-pressed="false">Theme</button></div></div></header><main class="w-full pt-20 bg-surface"><div class="flex flex-col w-full overflow-hidden">
+<!-- Live Ticker Ribbon -->
+<div class="w-full bg-tertiary-fixed text-on-tertiary-fixed border-y-[3px] border-black py-space-xs overflow-hidden relative select-none z-20">
+<div class="flex whitespace-nowrap animate-[marquee_20s_linear_infinite] gap-space-lg font-label-md text-label-md uppercase tracking-wider items-center">
+<span class="flex items-center gap-1 font-bold">🚀 $CATPOP $0.0420 <span class="bg-primary text-on-primary px-1.5 py-0.5 rounded border border-black text-[11px]">+69.42%</span></span>
+<span>•</span>
+<span>24H VOL: $14,289,400</span>
+<span>•</span>
+<span>HOLDERS: 34,210 APES</span>
+<span>•</span>
+<span>MARKET CAP: $42,069,000</span>
+<span>•</span>
+<span class="bg-surface-container-lowest text-on-surface px-1.5 py-0.5 rounded border border-black text-[11px] font-bold">MINT REVOKED</span>
+<span>•</span>
+<span>100% LP BURNED</span>
+<span>•</span>
+<span class="flex items-center gap-1 font-bold">🚀 $CATPOP $0.0420 <span class="bg-primary text-on-primary px-1.5 py-0.5 rounded border border-black text-[11px]">+69.42%</span></span>
+<span>•</span>
+<span>24H VOL: $14,289,400</span>
+<span>•</span>
+<span>HOLDERS: 34,210 APES</span>
+<span>•</span>
+<span>MARKET CAP: $42,069,000</span>
+<span>•</span>
+<span class="bg-surface-container-lowest text-on-surface px-1.5 py-0.5 rounded border border-black text-[11px] font-bold">MINT REVOKED</span>
+<span>•</span>
+<span>100% LP BURNED</span>
+</div>
+</div>
+<style>
+    @keyframes marquee {
+      0% { transform: translateX(0%); }
+      100% { transform: translateX(-50%); }
+    }
+  </style>
+<!-- Hero Section -->
+<section class="w-full px-space-md lg:px-margin-desktop py-space-xl lg:py-space-2xl relative bg-surface">
+<!-- Halftone comic background accent layer -->
+<div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(#000000 15%, transparent 16%); background-size: 16px 16px;"></div>
+<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-center relative z-10">
+<!-- Left Column: Copy & CTAs -->
+<div class="lg:col-span-6 flex flex-col items-start gap-space-md">
+<!-- Comic speech badge -->
+<div class="relative inline-flex items-center bg-secondary-container text-on-secondary-fixed border-[2.5px] border-black px-space-sm py-1 rounded shadow-[3px_3px_0px_#000000] rotate-[-2deg]">
+<span class="material-symbols-outlined text-[18px] mr-1 text-primary">campaign</span>
+<span class="font-label-md text-label-md uppercase tracking-wider">WALL STREET TRADING PIT PROTOCOL</span>
+</div>
+<!-- Main Headline with Comic Pop -->
+<div class="flex flex-col">
+<h1 class="font-display-hero text-display-hero uppercase tracking-tighter text-on-surface leading-none">
+            DROWNING <br/>
+<span class="bg-primary-fixed text-on-primary-fixed px-2 py-0.5 inline-block border-[3px] border-black shadow-[4px_4px_0px_#000000] rotate-[1.5deg] mt-1">
+              IN GAINS!
+            </span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-space-sm max-w-xl">
+            Put down the landline, sell the yacht, and scream directly into the order book. The unhinged desk trader cat hyper-fueling Solana degens to valhalla.
+          </p>
+</div>
+<!-- Feature Pill Badges -->
+<div class="flex flex-wrap gap-space-xs mt-1">
+<span class="px-space-sm py-1 bg-surface-container-lowest text-on-surface font-label-md text-label-md uppercase border-2 border-black rounded shadow-[2px_2px_0px_#000000] flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-[16px]">verified</span> 0% TAX
+          </span>
+<span class="px-space-sm py-1 bg-surface-container-lowest text-on-surface font-label-md text-label-md uppercase border-2 border-black rounded shadow-[2px_2px_0px_#000000] flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-[16px]">local_fire_department</span> LP BURNED
+          </span>
+<span class="px-space-sm py-1 bg-surface-container-lowest text-on-surface font-label-md text-label-md uppercase border-2 border-black rounded shadow-[2px_2px_0px_#000000] flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-[16px]">group</span> 100% COMMUNITY
+          </span>
+</div>
+<!-- Call to Action Buttons -->
+<div class="flex flex-col sm:flex-row gap-space-sm w-full sm:w-auto mt-space-sm">
+<a class="inline-flex items-center justify-center gap-2 px-space-lg py-space-sm bg-primary-container text-on-primary font-headline-sm text-headline-sm uppercase border-[3px] border-black rounded shadow-[5px_5px_0px_#000000] hover:bg-tertiary-fixed hover:text-on-tertiary-fixed active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#000000] transition-all text-center" href="https://four.meme/en/token/0x10e750a746dbb6f67ca4a38dc04a31676f9e4444" rel="noopener noreferrer" target="_blank">
+<span>BUY ON RAYDIUM</span>
+<span class="material-symbols-outlined text-[20px]">bolt</span>
+</a>
+<a class="inline-flex items-center justify-center gap-2 px-space-lg py-space-sm bg-surface-container-lowest text-on-surface font-headline-sm text-headline-sm uppercase border-[3px] border-black rounded shadow-[5px_5px_0px_#000000] hover:bg-surface-container-high active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#000000] transition-all text-center" href="https://four.meme/en/token/0x10e750a746dbb6f67ca4a38dc04a31676f9e4444" rel="noopener noreferrer" target="_blank">
+<span>TOKEN PAGE</span>
+<span class="material-symbols-outlined text-[20px]">trending_up</span>
+</a>
+</div>
+<!-- Quick CA Bar -->
+<div class="w-full max-w-lg mt-space-xs bg-surface-container-low border-[2.5px] border-black rounded p-space-xs flex items-center justify-between shadow-[3px_3px_0px_#000000]">
+<div class="flex items-center gap-2 overflow-hidden mr-2">
+<span class="font-label-sm text-label-sm uppercase bg-black text-white px-1.5 py-0.5 rounded">CA</span>
+<span class="font-body-sm text-body-sm font-mono truncate text-on-surface" id="caText">CatPop7xK9sW8qZ21LpMv5Qn39YxBrT6b2SolanaCA</span>
+</div>
+<button class="shrink-0 px-space-sm py-1 bg-primary text-on-primary border-2 border-black rounded font-label-md text-label-md uppercase hover:bg-tertiary-fixed hover:text-on-tertiary-fixed active:scale-95 transition-all shadow-[2px_2px_0px_#000000]" id="copyBtn" onclick="copyCA()">
+            COPY
+          </button>
+</div>
+</div>
+<!-- Right Column: Illustrated Comic Art Frame -->
+<div class="lg:col-span-6 relative mt-space-md lg:mt-0">
+<!-- Floating Screaming Speech Bubble -->
+<div class="absolute -top-6 -right-2 sm:-top-8 sm:right-6 z-20 bg-surface-container-lowest border-[3px] border-black rounded px-space-sm py-space-xs shadow-[4px_4px_0px_#000000] rotate-[6deg] animate-bounce">
+<p class="font-headline-sm text-headline-sm text-error uppercase leading-none text-center">
+            SELL NOTHING!<br/><span class="text-on-surface text-[14px]">BUY THE DIP!</span>
+</p>
+</div>
+<!-- Floating Dollar Badge -->
+<div class="absolute -bottom-4 -left-4 z-20 bg-primary-fixed text-on-primary-fixed border-[2.5px] border-black rounded px-space-sm py-1 shadow-[3px_3px_0px_#000000] rotate-[-8deg] flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-[20px]">monetization_on</span>
+<span class="font-headline-sm text-headline-sm">OVER $42M MCAP</span>
+</div>
+<!-- Neo-Brutalist Comic Card Container -->
+<div class="bg-surface-container-lowest border-[4px] border-black rounded-lg shadow-[8px_8px_0px_#000000] overflow-hidden p-space-xs bg-gradient-to-b from-surface-container-low to-surface-container-lowest">
+<div class="bg-secondary-fixed text-on-secondary-fixed border-[2px] border-black px-space-sm py-1 mb-space-xs flex items-center justify-between">
+<span class="font-label-md text-label-md uppercase tracking-wider">ISSUE #01 : THE WALL STREET SCREAM</span>
+<span class="flex items-center gap-1 font-label-sm text-label-sm uppercase bg-black text-white px-2 py-0.5 rounded">SOLANA DEX</span>
+</div>
+<div class="border-[2.5px] border-black overflow-hidden bg-black flex items-center justify-center relative">
+<img alt="CatPop Wall Street Panic Meme" class="w-full h-auto object-cover max-h-[460px] hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBd87ugzdXIcVbdLe5unsGDFCDmfZcjVsfCrquE90tbjlxv5d5XR99A02uGhpY10x7DJiai0h_LT8bvXGL_cT7rmxkUTBdxjAtdI8TH2k6DTjg-PhA8ELH7Lk-C0isB0Nf5GpyfxAUzFTJYo5Fmw7Jq6ECqkXQbtglcjueASSsDzfFXGioIvomSsnliXpcsdX2CPlqu3M_LqkafMq8ldZlQnccOV_q2-IhQiNohjAeLqcHk-41vAvU2_Q8qQ67gFAredTY"/>
+</div>
+<div class="mt-space-xs px-space-xs py-1 flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm uppercase">
+<span>FIG 1.1: BROKERS IN UTTER SHOCK</span>
+<span>STATUS: DROWNING IN CASH</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- The Lore / Comic Strip Story Section -->
+<section class="w-full px-space-md lg:px-margin-desktop py-space-2xl bg-surface-container-low border-y-[3px] border-black relative">
+<div class="max-w-7xl mx-auto flex flex-col gap-space-xl">
+<!-- Section Header -->
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-space-sm border-b-[3px] border-black pb-space-md">
+<div>
+<span class="font-label-md text-label-md uppercase text-primary font-bold tracking-widest">// CHRONICLES OF VOLATILITY</span>
+<h2 class="font-headline-lg text-headline-lg uppercase text-on-surface tracking-tight mt-1">THE LORE OF CATPOP</h2>
+</div>
+<div class="bg-primary-fixed text-on-primary-fixed px-space-sm py-1 border-[2.5px] border-black rounded shadow-[3px_3px_0px_#000000] font-label-md text-label-md uppercase inline-block">
+          3-PANEL TRADING DISASTER
+        </div>
+</div>
+<!-- Comic Grid Panels -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
+<!-- Panel 1 -->
+<div class="bg-surface-container-lowest border-[3px] border-black rounded shadow-[6px_6px_0px_#000000] flex flex-col overflow-hidden">
+<div class="bg-secondary text-on-secondary px-space-sm py-1 border-b-[3px] border-black flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm uppercase">PANEL 1: 09:30 AM</span>
+<span class="font-label-sm text-label-sm uppercase bg-error text-white px-1.5 py-0.5 rounded">RED CANDLE</span>
+</div>
+<div class="p-space-md flex-1 flex flex-col justify-between gap-space-md">
+<div class="w-full h-44 bg-surface-container border-[2px] border-black rounded flex flex-col items-center justify-center p-space-sm text-center relative overflow-hidden bg-gradient-to-br from-error-container to-surface-container">
+<span class="material-symbols-outlined text-[64px] text-error mb-1">call</span>
+<div class="bg-surface-container-lowest border-2 border-black rounded px-space-xs py-1 shadow-[2px_2px_0px_#000000] rotate-[-3deg]">
+<span class="font-headline-sm text-headline-sm uppercase text-on-surface">"SELL EVERYTHING BOB!"</span>
+</div>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md uppercase text-on-surface">THE PANIC CALL</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs">
+                Traditional hedge fund cats clutch their beige landlines as the chart dips 0.4%. Margins liquidated, coffee spilled across trading desks.
+              </p>
+</div>
+</div>
+</div>
+<!-- Panel 2 -->
+<div class="bg-surface-container-lowest border-[3px] border-black rounded shadow-[6px_6px_0px_#000000] flex flex-col overflow-hidden">
+<div class="bg-primary-container text-on-primary px-space-sm py-1 border-b-[3px] border-black flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm uppercase">PANEL 2: 10:15 AM</span>
+<span class="font-label-sm text-label-sm uppercase bg-primary-fixed text-on-primary-fixed px-1.5 py-0.5 rounded">APE ENTRY</span>
+</div>
+<div class="p-space-md flex-1 flex flex-col justify-between gap-space-md">
+<div class="w-full h-44 bg-surface-container border-[2px] border-black rounded flex flex-col items-center justify-center p-space-sm text-center relative overflow-hidden bg-gradient-to-br from-primary-fixed to-surface-container">
+<span class="material-symbols-outlined text-[64px] text-primary mb-1">sentiment_very_satisfied</span>
+<div class="bg-surface-container-lowest border-2 border-black rounded px-space-xs py-1 shadow-[2px_2px_0px_#000000] rotate-[3deg]">
+<span class="font-headline-sm text-headline-sm uppercase text-on-surface">"SWAP SOL FOR POP!"</span>
+</div>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md uppercase text-on-surface">THE DIP BUY</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs">
+                CatPop ignores risk models, launches Jupiter swap, and dives mouth-wide-open directly into the red wicks with life savings and zero regrets.
+              </p>
+</div>
+</div>
+</div>
+<!-- Panel 3 -->
+<div class="bg-surface-container-lowest border-[3px] border-black rounded shadow-[6px_6px_0px_#000000] flex flex-col overflow-hidden">
+<div class="bg-secondary-fixed text-on-secondary-fixed border-b-[3px] border-black px-space-sm py-1 flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm uppercase">PANEL 3: 04:00 PM</span>
+<span class="font-label-sm text-label-sm uppercase bg-tertiary-fixed text-on-tertiary-fixed px-1.5 py-0.5 rounded">NEW ATH</span>
+</div>
+<div class="p-space-md flex-1 flex flex-col justify-between gap-space-md">
+<div class="w-full h-44 bg-surface-container border-[2px] border-black rounded flex flex-col items-center justify-center p-space-sm text-center relative overflow-hidden bg-gradient-to-br from-secondary-container to-surface-container">
+<span class="material-symbols-outlined text-[64px] text-secondary mb-1">payments</span>
+<div class="bg-surface-container-lowest border-2 border-black rounded px-space-xs py-1 shadow-[2px_2px_0px_#000000] rotate-[-2deg]">
+<span class="font-headline-sm text-headline-sm uppercase text-error">"WE ARE DROWNING!"</span>
+</div>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md uppercase text-on-surface">FINANCIAL CHAOS</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs">
+                Billions printed. The room fills up with green cash stacks up to the ceiling. Phones still ringing, cats still screaming, bags overflowing.
+              </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Tokenomics Section: Comic Infographic Style -->
+<section class="w-full px-space-md lg:px-margin-desktop py-space-2xl bg-surface relative">
+<div class="max-w-7xl mx-auto flex flex-col gap-space-xl">
+<!-- Section Header -->
+<div class="text-center flex flex-col items-center gap-space-xs">
+<div class="bg-primary-container text-on-primary border-[2.5px] border-black px-space-sm py-1 rounded shadow-[3px_3px_0px_#000000] font-label-md text-label-md uppercase">
+          HARDCORE MATH • ZERO SCAM
+        </div>
+<h2 class="font-display-hero text-display-hero uppercase tracking-tight text-on-surface mt-1">
+          POPNOMICS
+        </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
+          Clean as a freshly laundered dollar note. No secret venture capital unlocks, no developer extortion, 100% degens.
+        </p>
+</div>
+<!-- 4 Stat Cards Bento -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Stat 1 -->
+<div class="bg-surface-container-lowest border-[3px] border-black rounded p-space-md shadow-[5px_5px_0px_#000000] flex flex-col gap-space-xs hover:-translate-y-1 transition-transform">
+<div class="w-10 h-10 rounded bg-primary-fixed flex items-center justify-center border-2 border-black shadow-[2px_2px_0px_#000000]">
+<span class="material-symbols-outlined text-on-primary-fixed text-[24px]">savings</span>
+</div>
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant tracking-wider">TOTAL SUPPLY</span>
+<span class="font-headline-lg text-headline-lg tracking-tight text-on-surface">1,000,000,000</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Fixed supply forever. Not one token more.</span>
+</div>
+<!-- Stat 2 -->
+<div class="bg-surface-container-lowest border-[3px] border-black rounded p-space-md shadow-[5px_5px_0px_#000000] flex flex-col gap-space-xs hover:-translate-y-1 transition-transform">
+<div class="w-10 h-10 rounded bg-tertiary-fixed flex items-center justify-center border-2 border-black shadow-[2px_2px_0px_#000000]">
+<span class="material-symbols-outlined text-on-tertiary-fixed text-[24px]">percent</span>
+</div>
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant tracking-wider">BUY / SELL TAX</span>
+<span class="font-headline-lg text-headline-lg tracking-tight text-primary">0% / 0%</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Trade without hidden fees taking your profits.</span>
+</div>
+<!-- Stat 3 -->
+<div class="bg-surface-container-lowest border-[3px] border-black rounded p-space-md shadow-[5px_5px_0px_#000000] flex flex-col gap-space-xs hover:-translate-y-1 transition-transform">
+<div class="w-10 h-10 rounded bg-secondary-container flex items-center justify-center border-2 border-black shadow-[2px_2px_0px_#000000]">
+<span class="material-symbols-outlined text-secondary text-[24px]">local_fire_department</span>
+</div>
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant tracking-wider">LIQUIDITY POOL</span>
+<span class="font-headline-lg text-headline-lg tracking-tight text-on-surface">100% BURNED</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">LP tokens dispatched to Solana dead wallet.</span>
+</div>
+<!-- Stat 4 -->
+<div class="bg-surface-container-lowest border-[3px] border-black rounded p-space-md shadow-[5px_5px_0px_#000000] flex flex-col gap-space-xs hover:-translate-y-1 transition-transform">
+<div class="w-10 h-10 rounded bg-surface-container-high flex items-center justify-center border-2 border-black shadow-[2px_2px_0px_#000000]">
+<span class="material-symbols-outlined text-on-surface text-[24px]">lock</span>
+</div>
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant tracking-wider">MINT CONTRACT</span>
+<span class="font-headline-lg text-headline-lg tracking-tight text-on-surface">REVOKED</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Immutable code. Fully decentralized forever.</span>
+</div>
+</div>
+<!-- Token Distribution Visual Bar -->
+<div class="bg-surface-container-lowest border-[3px] border-black rounded p-space-md shadow-[6px_6px_0px_#000000] flex flex-col gap-space-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<span class="font-headline-sm text-headline-sm uppercase text-on-surface">DISTRIBUTION ALLOCATION</span>
+<span class="font-label-md text-label-md uppercase text-primary font-bold">100% FAIR LAUNCH VIA RAYDIUM</span>
+</div>
+<div class="w-full h-8 bg-surface-container border-[2px] border-black rounded overflow-hidden flex">
+<div class="h-full bg-primary flex items-center justify-center text-on-primary font-label-md text-label-md uppercase px-2" style="width: 90%;">
+            90% PUBLIC LIQUIDITY (BURNED)
+          </div>
+<div class="h-full bg-primary-fixed border-l-2 border-black flex items-center justify-center text-on-primary-fixed font-label-md text-label-md uppercase px-2" style="width: 10%;">
+            10% AIRDROPS &amp; MEMES
+          </div>
+</div>
+<div class="flex flex-wrap items-center gap-space-md font-body-sm text-body-sm text-on-surface-variant pt-space-xs">
+<span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-primary border border-black inline-block"></span> 90% Raydium Automated Liquidity Pool</span>
+<span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-primary-fixed border border-black inline-block"></span> 10% Screaming Contests &amp; Community Raids</span>
+</div>
+</div>
+</div>
+</section>
+<!-- How to Buy Guide: 4-Step Comic Tape -->
+<section class="w-full px-space-md lg:px-margin-desktop py-space-2xl bg-surface-container-low border-t-[3px] border-black relative">
+<div class="max-w-7xl mx-auto flex flex-col gap-space-xl">
+<div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-space-sm">
+<div>
+<span class="font-label-md text-label-md uppercase text-secondary font-bold tracking-widest">// QUICK START MANUAL</span>
+<h2 class="font-headline-lg text-headline-lg uppercase text-on-surface tracking-tight mt-1">HOW TO ACQUIRE $CATPOP</h2>
+</div>
+<span class="font-body-md text-body-md text-on-surface-variant max-w-sm">
+          Follow these 4 simple trading desk instructions before the candle hits the roof.
+        </span>
+</div>
+<!-- 4-Step Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Step 1 -->
+<div class="bg-surface-container-lowest border-[3px] border-black rounded p-space-md shadow-[5px_5px_0px_#000000] flex flex-col justify-between gap-space-md relative">
+<div class="flex items-center justify-between">
+<span class="font-display-hero text-[32px] text-outline font-black leading-none">01</span>
+<span class="material-symbols-outlined text-secondary text-[32px]">account_balance_wallet</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm uppercase text-on-surface">CREATE WALLET</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Download Phantom or Solflare browser extension or mobile app. Store your 12-word seed phrase in safe steel.
+            </p>
+</div>
+<div class="pt-2 border-t border-black/10">
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant font-bold">RECOMMENDED: PHANTOM</span>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="bg-surface-container-lowest border-[3px] border-black rounded p-space-md shadow-[5px_5px_0px_#000000] flex flex-col justify-between gap-space-md relative">
+<div class="flex items-center justify-between">
+<span class="font-display-hero text-[32px] text-outline font-black leading-none">02</span>
+<span class="material-symbols-outlined text-primary text-[32px]">token</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm uppercase text-on-surface">GET SOME SOL</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Purchase Solana ($SOL) on Coinbase, Binance, or Kraken, and transfer it over to your private wallet address.
+            </p>
+</div>
+<div class="pt-2 border-t border-black/10">
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant font-bold">KEEP $2 FOR GAS</span>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="bg-surface-container-lowest border-[3px] border-black rounded p-space-md shadow-[5px_5px_0px_#000000] flex flex-col justify-between gap-space-md relative">
+<div class="flex items-center justify-between">
+<span class="font-display-hero text-[32px] text-outline font-black leading-none">03</span>
+<span class="material-symbols-outlined text-tertiary-container text-[32px]">swap_calls</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm uppercase text-on-surface">CONNECT DEX</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Visit Raydium.io or Jupiter (jup.ag). Connect wallet and paste our verified $CATPOP mint address into the input field.
+            </p>
+</div>
+<div class="pt-2 border-t border-black/10">
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant font-bold">DOUBLE CHECK MINT CA</span>
+</div>
+</div>
+<!-- Step 4 -->
+<div class="bg-surface-container-lowest border-[3px] border-black rounded p-space-md shadow-[5px_5px_0px_#000000] flex flex-col justify-between gap-space-md relative">
+<div class="flex items-center justify-between">
+<span class="font-display-hero text-[32px] text-outline font-black leading-none">04</span>
+<span class="material-symbols-outlined text-error text-[32px]">campaign</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm uppercase text-on-surface">SWAP &amp; SCREAM</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Swap SOL for $CATPOP with 0.5% slippage. Confirm transaction in wallet and start roaring with 34k degens!
+            </p>
+</div>
+<div class="pt-2 border-t border-black/10">
+<span class="font-label-sm text-label-sm uppercase text-error font-bold">NO SLIPPAGE HIKES NEEDED</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Community / Telegram & X Cult CTA Banner -->
+<section class="w-full px-space-md lg:px-margin-desktop py-space-3xl bg-secondary-fixed border-t-[3px] border-black relative overflow-hidden">
+<!-- Halftone backdrop -->
+<div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(#000000 15%, transparent 16%); background-size: 20px 20px;"></div>
+<div class="max-w-5xl mx-auto bg-surface-container-lowest border-[4px] border-black rounded-lg p-space-lg lg:p-space-2xl shadow-[10px_10px_0px_#000000] relative z-10 flex flex-col items-center text-center gap-space-lg">
+<div class="bg-error text-on-error border-2 border-black px-space-sm py-1 rounded shadow-[2px_2px_0px_#000000] font-headline-sm text-headline-sm uppercase rotate-[-2deg]">
+        WEEKLY $10,000 MEME COMPETITION ACTIVE!
+      </div>
+<div class="flex flex-col gap-space-xs max-w-2xl">
+<h2 class="font-display-hero text-display-hero uppercase tracking-tight text-on-surface leading-none">
+          JOIN THE SCREAMING CULT
+        </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+          Don't yell into your phone alone. Raid X comments, share customized CatPop reaction templates, and drown in the green candles with our 24/7 hyperactive community.
+        </p>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-wrap items-center justify-center gap-space-md w-full max-w-md">
+<a class="flex-1 min-w-[180px] inline-flex items-center justify-center gap-2 px-space-md py-space-sm bg-primary text-on-primary font-headline-sm text-headline-sm uppercase border-[3px] border-black rounded shadow-[4px_4px_0px_#000000] hover:bg-tertiary-fixed hover:text-on-tertiary-fixed active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#000000] transition-all" href="https://t.me" rel="noopener noreferrer" target="_blank">
+<span>TELEGRAM</span>
+<span class="font-label-sm text-label-sm bg-black text-white px-1.5 py-0.5 rounded">22.4K</span>
+</a>
+<a class="flex-1 min-w-[180px] inline-flex items-center justify-center gap-2 px-space-md py-space-sm bg-surface-container-lowest text-on-surface font-headline-sm text-headline-sm uppercase border-[3px] border-black rounded shadow-[4px_4px_0px_#000000] hover:bg-surface-container-high active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#000000] transition-all" href="https://twitter.com" rel="noopener noreferrer" target="_blank">
+<span>X / TWITTER</span>
+<span class="font-label-sm text-label-sm bg-primary-fixed text-on-primary-fixed px-1.5 py-0.5 rounded border border-black">48.9K</span>
+</a>
+</div>
+<!-- Live User Disclaimer Note -->
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm uppercase">
+<span class="w-2.5 h-2.5 rounded-full bg-primary animate-ping"></span>
+<span>OVER 1,420 DEGENS CURRENTLY ACTIVE IN VOICE CHAT</span>
+</div>
+</div>
+</section>
+<!-- Interactive JavaScript for CA Copy -->
+<script>
+    function copyCA() {
+      const caText = document.getElementById('caText').innerText;
+      const btn = document.getElementById('copyBtn');
+      navigator.clipboard.writeText(caText).then(() => {
+        const originalText = btn.innerText;
+        btn.innerText = 'COPIED! 🔥';
+        btn.classList.remove('bg-primary');
+        btn.classList.add('bg-tertiary-fixed', 'text-on-tertiary-fixed');
+        setTimeout(() => {
+          btn.innerText = originalText;
+          btn.classList.remove('bg-tertiary-fixed', 'text-on-tertiary-fixed');
+          btn.classList.add('bg-primary');
+        }, 2000);
+      });
+    }
+  </script>
+</div></main><footer class="w-full bg-surface-container-lowest border-t-[3px] border-black py-space-xl"><div class="w-full px-space-md lg:px-margin-desktop flex flex-col md:flex-row items-center justify-between gap-space-lg"><div class="flex items-center gap-space-sm"><img alt="CatPop Meme Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAa_-XiIS4jqb6VfdaUocGvIQMPnOyD1mOnrIU2BFr0zs9jOLF7nhHjFV-gKKbp7DP4_Cs5BH4vusoFUb2sNrJAUVfe41cgma-lc5SADKBGVHTDkDhwWn7RcpWWae5ED-glaFI8DToJd2STKAucLzExGdfZMHaBGpkot9JVEYvDGtm5Latp_fIWkUnURRmbfDjNpzI-fnTs1voipVvZgnQ1OVxxUnhaTez0HkIih8Tkz31tVLyz4NGfVA"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm uppercase text-on-surface">$CATPOP CORE</span><span class="font-label-sm text-label-sm uppercase text-on-surface-variant">The Ultimate Solana Meme Frenzy</span></div></div><div class="flex flex-wrap items-center justify-center gap-space-md"><a class="px-space-sm py-space-xs bg-surface-container border-2 border-black rounded shadow-[2px_2px_0px_#000000] font-label-md text-label-md uppercase text-on-surface hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors" href="https://twitter.com" rel="noopener noreferrer" target="_blank">X / Twitter</a><a class="px-space-sm py-space-xs bg-surface-container border-2 border-black rounded shadow-[2px_2px_0px_#000000] font-label-md text-label-md uppercase text-on-surface hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors" href="https://t.me" rel="noopener noreferrer" target="_blank">Telegram</a><a class="px-space-sm py-space-xs bg-surface-container border-2 border-black rounded shadow-[2px_2px_0px_#000000] font-label-md text-label-md uppercase text-on-surface hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors" href="https://four.meme/en/token/0x10e750a746dbb6f67ca4a38dc04a31676f9e4444" rel="noopener noreferrer" target="_blank">Token Page</a></div><div class="font-body-sm text-body-sm text-on-surface-variant text-center md:text-right">© 2025 $CATPOP MEME TOKEN. BARK LESS, POP MORE.</div></div></footer></body></html>
+  <script>
+    (function(){
+      var btn=document.getElementById('themeToggle');
+      var greenOn=localStorage.getItem('catpop_green')==='1';
+      var igniteOn=localStorage.getItem('catpop_ignite')==='1';
+      function apply(){
+        document.documentElement.classList.toggle('green',greenOn);
+        document.documentElement.classList.toggle('ignite',igniteOn);
+        btn.setAttribute('aria-pressed',(greenOn||igniteOn)?'true':'false');
+        btn.textContent=igniteOn?'Ignite':greenOn?'Green':'Theme';
+      }
+      apply();
+      btn.addEventListener('click',function(){
+        if(igniteOn){igniteOn=false;greenOn=true;}
+        else if(greenOn){greenOn=false;}
+        else{greenOn=true;}
+        apply();
+        try{localStorage.setItem('catpop_green',greenOn?'1':'0');localStorage.setItem('catpop_ignite',igniteOn?'1':'0');}catch(e){}
+      });
+    })();
+  </script>
+</div></main></body></html>
