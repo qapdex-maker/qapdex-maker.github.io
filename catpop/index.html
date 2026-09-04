@@ -438,13 +438,23 @@
   <script>
     (function(){
       var badge=document.getElementById('dexBadge');
-      if(!badge) return;
-      var labels=['BNB DEX','SOL DEX'];
-      var i=0;
-      setInterval(function(){
-        i=(i+1)%labels.length;
-        badge.textContent=labels[i];
-      }, 3000);
+      if(badge){
+        var labels=['BNB DEX','SOL DEX'];
+        var i=0;
+        setInterval(function(){
+          i=(i+1)%labels.length;
+          badge.textContent=labels[i];
+        }, 3000);
+      }
+      var caEl=document.getElementById('caText');
+      if(caEl){
+        var cas=['0x10e750a746dbb6f67ca4a38dc04a31676f9e4444','CatPop7xK9sW8qZ21LpMv5Qn39YxBrT6b2SolanaCA'];
+        var j=0;
+        setInterval(function(){
+          j=(j+1)%cas.length;
+          caEl.textContent=cas[j];
+        }, 3000);
+      }
     })();
   </script>
 </div></main></body></html>
