@@ -205,6 +205,16 @@ Alles unten ist echter Tool-Output, keine Annahme:
   `llm: 'LLM mapping'` (en), `app.js` neu gebaut. Danach: "i18n clean ✅",
   "Deploy-Hygiene sauber ✅". LEHRE: nach jedem neuen `reason:`-Wert MUSS ein
   `nl_reasons`-Eintrag in BEIDEN Sprachen dazu.
-- `manifest.json`: siteVersion 2026.08.27-3 → 2026.08.29-1, buildDate 2026-08-29
+|- `manifest.json`: siteVersion 2026.08.27-3 → 2026.08.29-1, buildDate 2026-08-29
   (JSON-Parse geprüft). `schemaVersion`/`syncDate` unverändert — die Daten selbst
   wurden in diesem Lauf nicht neu gesynct.
+
+## catpop — CatPop Announcement Seite
+- Pfad: `catpop/index.html`, Bild: `catpop/popnomics.jpg`
+- Badge: `WALL STREET TRADING PIT ANNOUNCEMENT`
+- Theme-Palette: `default`, `green`, `ink`, `sunset`, `mono`, `paper`, `berry`, `frost`
+- Theme-Toggle per Klick, gespeichert in `localStorage('catpop_theme')`
+- Telegram entfernt; CTA-Link: `https://linktr.ee/hereismytelegram`
+- Buy-CTA + User-Button entfernt; Header = Nav + Theme-Button
+- Comic-Panel-Blöcke auf Uhrzeit-Header reduziert
+- RAYDIUM-Nennungen ersetzt durch `four.meme`
