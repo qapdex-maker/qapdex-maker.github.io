@@ -2,7 +2,7 @@
 https://docs.github.com/de/pages/quickstart
 
 ## Seiten
-- Portal-Root `index.html` = neo-brutalist Portal
+- Portal-Root `index.html` = Portal
 - `idun/` = idun console
 - `msgraph/react/` = Graph Metadata Hub
-- `catpop/` = CatPop Meme/Announcement Seite
+- `catpop/` = CatPop Meme/Announcement Site
