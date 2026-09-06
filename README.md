@@ -5,4 +5,4 @@ https://docs.github.com/de/pages/quickstart
 - Portal-Root `index.html` = Portal
 - `idun/` = idun console
 - `msgraph/react/` = Graph Metadata Hub
-- `catpop/` = CatPop Meme/Announcement Site
+- `catpop/` = CatPop Meme/Announcement
