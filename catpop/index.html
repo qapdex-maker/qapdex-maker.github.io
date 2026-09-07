@@ -607,20 +607,19 @@ html.theme-sunset{--primary-fixed:#b45309 !important;--primary:#b45309 !importan
         var issueLabel = root.getAttribute('data-issue-label') || 'ISSUE #01';
         var heroTitle = document.getElementById('heroRightTitle');
         if (!heroTitle) return;
-        var section = document.querySelector('section:has(h2):not(section:has(h2):first-of-type)');
-        if (!section) return;
+        var issueSection = document.querySelector('section:has(h2)');
+        if (!issueSection) return;
         var observer = new IntersectionObserver(function(entries) {
           entries.forEach(function(entry) {
             if (!entry.isIntersecting) return;
-            var ratio = entry.intersectionRatio;
-            if (ratio > 0.45) {
-              heroTitle.textContent = popLabel;
-            } else if (ratio < 0.18) {
+            if (entry.intersectionRatio > 0.45) {
               heroTitle.textContent = issueLabel;
+            } else if (entry.intersectionRatio < 0.18) {
+              heroTitle.textContent = popLabel;
             }
           });
         }, { threshold: [0.18, 0.45] });
-        observer.observe(section);
+        observer.observe(issueSection);
       })();
     </script>
 </div></main></body></html>
