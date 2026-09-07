@@ -393,6 +393,24 @@ html.theme-sunset{--primary-fixed:#b45309 !important;--primary:#b45309 !importan
 </div>
 </div>
 </section>
+<!-- Issue 01 Insert -->
+<section id="issue01Section" class="w-full px-space-md lg:px-margin-desktop py-space-2xl bg-surface border-t-[3px] border-black relative">
+<div class="max-w-7xl mx-auto flex flex-col items-center gap-space-md">
+<div class="bg-surface-container-lowest border-[4px] border-black rounded-lg shadow-[8px_8px_0px_#000000] overflow-hidden p-space-xs bg-gradient-to-b from-surface-container-low to-surface-container-lowest">
+<div class="bg-secondary-fixed text-on-secondary-fixed border-[2px] border-black px-space-sm py-1 mb-space-xs flex items-center justify-between">
+<span class="font-label-md text-label-md uppercase tracking-wider">ISSUE #01 : THE WALL STREET SCREAM</span>
+<span class="flex items-center gap-1 font-label-sm text-label-sm uppercase bg-black text-white px-2 py-0.5 rounded">BNB DEX</span>
+</div>
+<div class="border-[2.5px] border-black overflow-hidden bg-black flex items-center justify-center relative">
+<img alt="CatPop Wall Street Panic Meme" class="w-full h-auto object-cover max-h-[460px]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBd87ugzdXIcVbdLe5unsGDFCDmfZcjVsfCrquE90tbjlxv5d5XR99A02uGhpY10x7DJiai0h_LT8bvXGL_cT7rmxkUTBdxjAtdI8TH2k6DTjg-PhA8ELH7Lk-C0isB0Nf5GpyfxAUzFTJYo5Fmw7Jq6ECqkXQbtglcjueASSsDzfFXGioIvomSsnliXpcsdX2CPlqu3M_LqkafMq8ldZlQnccOV_q2-IhQiNohjAeLqcHk-41vAvU2_Q8qQ67gFAredTY"/>
+</div>
+<div class="mt-space-xs px-space-xs py-1 flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm uppercase">
+<span>FIG 1.1: BROKERS IN UTTER SHOCK</span>
+<span>STATUS: DROWNING IN CASH</span>
+</div>
+</div>
+</div>
+</section>
 <!-- Interactive JavaScript for CA Copy -->
 <script>
     function copyCA() {
@@ -607,7 +625,7 @@ html.theme-sunset{--primary-fixed:#b45309 !important;--primary:#b45309 !importan
         var issueLabel = root.getAttribute('data-issue-label') || 'ISSUE #01';
         var heroTitle = document.getElementById('heroRightTitle');
         if (!heroTitle) return;
-        var issueSection = document.querySelector('section:has(h2)');
+        var issueSection = document.getElementById('issue01Section');
         if (!issueSection) return;
         var observer = new IntersectionObserver(function(entries) {
           entries.forEach(function(entry) {
