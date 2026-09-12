@@ -1,7 +1,7 @@
 # PROJECT_NOTES — qapdex-maker.github.io (Portal + msgraph/react)
 
 Stand: 2026-08-29 (Session mit Hermes/idun). Wissensstand, nicht push-pflichtig.
-Letztes Push-Tip == lokaler HEAD == 6021cb3 (nichts Ungepushtes offen).
+Letztes Push-Tip != lokaler HEAD (ungepushte Commits inkl. catpop-Entwicklungs-Commits bis 194c641).
 Detaillierter Fahrplan + tiefe Bereiche: siehe ROADMAP.md (im Repo-Root).
 
 ## Architektur
@@ -209,12 +209,21 @@ Alles unten ist echter Tool-Output, keine Annahme:
   (JSON-Parse geprüft). `schemaVersion`/`syncDate` unverändert — die Daten selbst
   wurden in diesem Lauf nicht neu gesynct.
 
-## catpop — CatPop Announcement Seite
+## catpop — CatPop Announcement Seite (Stand: 2026-09-12)
 - Pfad: `catpop/index.html`, Bild: `catpop/popnomics.jpg`
+- README: `catpop/README.md` (aktuell)
+- Ticker: `$CATPOP` (gewollter Platzhalter für Meme-Coin-Symbol, wie $DOGE/$PEPE)
+- Titel: `<title>$CATPOP — CatPop Meme Token</title>` (Ticker + Name, korrekt)
 - Badge: `WALL STREET TRADING PIT ANNOUNCEMENT`
-- Theme-Palette: `default`, `green`, `ink`, `sunset`, `mono`, `paper`, `berry`, `frost`
+- Theme-Palette: `default`, `green`, `ink`, `sunset`, `mono`, `paper`, `berry`, `frost` (8 Themes)
 - Theme-Toggle per Klick, gespeichert in `localStorage('catpop_theme')`
-- Telegram entfernt; CTA-Link: `https://linktr.ee/hereismytelegram`
+- Telegram entfernt. CTA-Link: `https://linktr.ee/hereismytelegram`
 - Buy-CTA + User-Button entfernt; Header = Nav + Theme-Button
 - Comic-Panel-Blöcke auf Uhrzeit-Header reduziert
 - RAYDIUM-Nennungen ersetzt durch `four.meme`
+- CA-Toggle: echter CA (`0x10e750a746dbb6f67ca4a38dc04a31676f9e4444`) + Solana Gag
+- DEX-Badge-Toggle: BNB DEX / SOL DEX
+- Bitget-Affiliate-Link in Wallet-Schritt 1
+- Interne Nav-Links (About/Tokenomics/How-to-Buy/Live-Chart/Meme-Generator) sind Platzhalter (`#`) — Same-Page-Sektionen noch nicht angelegt
+- Linktr-Subseite: `/catpop/linktr/` → `$CATPOP — Kapow Linktree`
+- Letzter Commit: `194c641 docs(catpop): add catpop README` (READMEDatei hinzugefügt)

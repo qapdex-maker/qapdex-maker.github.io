@@ -1,7 +1,10 @@
 # ROADMAP — qapdex-maker.github.io (Portal + msgraph/react)
 
-Stand: 2026-08-27. Arbeitsstand, NICHT push-pflichtig.
-Lokaler HEAD: c5e6f40. Letztes Push: af610d0 (9 ungepushte Commits).
+catpop-Announcement-Seite (catpop/index.html) deployed und funktional: 8 Themes, CA-Toggle, DEX-Badge-Toggle, four.meme-Buy-Link, Bitget-Affiliate. Interne Nav-Links sind Platzhalter (#). README aktualisiert (catpop/README.md).
+Deploy-Hygiene: sauber (Babel OK, i18n clean, relative Pfade OK, Spec-URL absolut OK, manifest korrekt).
+Lokale dirty files vor Push: index.html (javascript:void(0) Fix für Platzhalter-Karten) + catpop/index.html (Titel-Platzhalter $CATPOP — gewollt).
+
+Lokaler HEAD: 194c641. Ungepushte Commits: alle Commits seit dem letzten Push vorhanden.
 Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 
 ## 0. Status-Querschnitt (verifiziert, 2026-08-27)
