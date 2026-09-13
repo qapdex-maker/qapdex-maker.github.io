@@ -368,10 +368,10 @@
       desc:{de:'Google Antigravity CLI für Termux — glibc-Launcher über PRoot.', en:'Google Antigravity CLI for Termux — glibc launcher via PRoot.'},
       href:'https://github.com/qapdex-maker/antigravity-cli-termux'},
     {name:'$CATPOP', cat:'Meme / Token', catLabel:{de:'Meme / Token',en:'Meme / Token'}, status:'live',
-      desc:{de:'CatPop Meme Token Seite mit Green/Ignite Theme.', en:'CatPop meme token page with Green/Ignite theme.'},
+      desc:{de:'',en:''},
       href:'catpop/'},
     {name:'PEPEMEME', cat:'Meme / Token', catLabel:{de:'Meme / Token',en:'Meme / Token'}, status:'live',
-      desc:{de:'PEPEMEME Linktree-Backup (GODPEPE).', en:'PEPEMEME linktree backup (GODPEPE).'},
+      desc:{de:'',en:''},
       href:'https://linktr.ee/PEPEMEM'},
     {name:'Neues Deployment', cat:'soon', catLabel:{de:'Demnächst',en:'Soon'}, status:'soon',
       desc:{de:'Platz für das nächste Self-hosted-Projekt dieser Art.', en:'Room for the next self-hosted project of this kind.'},
@@ -403,7 +403,7 @@
         '<div class="top"><div class="ico">'+ini(p.name)+'</div>'+
         '<div class="cat">'+catLabel+'</div></div>'+
         '<h3>'+p.name+'</h3>'+
-        '<p>'+p.desc[lang]+'</p>'+
+        (p.desc[lang]?'<p>'+p.desc[lang]+'</p>':'')+
         '<div class="foot"><span class="'+(soon?'status-soon':'status-live')+'">'+I18N[soon?'soon':'live'][lang]+'</span>'+
         '<span>↗</span></div>';
       scroller.appendChild(a);
