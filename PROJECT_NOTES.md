@@ -63,8 +63,8 @@ Detaillierter Fahrplan + tiefe Bereiche: siehe ROADMAP.md (im Repo-Root).
     `undefined` → Klick auf "Self-hosted App"/"Dev Tools" zeigte 0 Karten (nur All/Soon
     funktionierten). Bewiesen per Node-Sim (vor Fix: 0/0 Karten, nach Fix: 3/3).
     Fix: `cat:'Self-hosted App'` bzw. `cat:'Dev Tools'` bzw. `cat:'soon'` zu jeder Karte.
-    Noch NICHT gepusht (lokaler HEAD c5e6f40 + Fix). Verifiziert lokal: alle Chips OK,
-    github.com-Hrefs via gh api 200, lokale Subpages (idun/, msgraph/react/) HTTP 200.
+    Commit: c5e6f40. Verifiziert lokal: alle Chips OK,
+    github.com-Hrefs via gh api 200, lokale Subpages (idun/, msgraph/react/, pepemem/, pepememe/) HTTP 200.
 
 ## Verifikation (echte Calls, nicht behauptet)
 - Tip local==remote nach jedem Push via `gh api ... --jq '.sha'`.
@@ -205,11 +205,33 @@ Alles unten ist echter Tool-Output, keine Annahme:
   `llm: 'LLM mapping'` (en), `app.js` neu gebaut. Danach: "i18n clean ✅",
   "Deploy-Hygiene sauber ✅". LEHRE: nach jedem neuen `reason:`-Wert MUSS ein
   `nl_reasons`-Eintrag in BEIDEN Sprachen dazu.
-|- `manifest.json`: siteVersion 2026.08.27-3 → 2026.08.29-1, buildDate 2026-08-29
+|- `manifest.json`: siteVersion 2026.08.29-2, buildDate 2026-09-09
   (JSON-Parse geprüft). `schemaVersion`/`syncDate` unverändert — die Daten selbst
   wurden in diesem Lauf nicht neu gesynct.
 
+<<<<<<< Updated upstream
 ## catpop — CatPop Announcement Seite (Stand: 2026-09-12)
+=======
+## PEPE Pages — `pepemem/` + `pepememe/`
+- `pepemem/` = MEMEPEPE Linktree-Backup
+- `pepememe/` = PEPEMEME Linktree-Backup
+- Portal-Karte `PEPEMEME` verlinkt direkt auf `https://linktr.ee/PEPEMEM`
+- `pepemem/` Änderungen Stand 2026-09-09:
+  - Header geleert: MEMEPEPE-Branding, DexScreener-Button, Personen-Icon, Nav-Tabs entfernt
+  - Section „Liquidity & Tithes“ inklusive „Sacred Interactive Contract Altar“ entfernt
+  - Hero-Fresco-Slideshow mit 3 lokalen Bildern unter `pepemem/images/`
+  - Bento-Cards nutzen lokale Bilder statt Icons
+  - Abschnitt „Pontiff Original“ unten über Footer mit `images/PepeTheFrog_PEPE_Dollars_1.jpg`
+  - Book-of-Degens-Avatar zurück auf Original-Bild von `lh3.googleusercontent.com`
+  - Button-Reihe im Base-Card-Bereich:
+    - `GODPEPE Chart` → `https://app.uniswap.org/swap?outputCurrency=0x40A5808B104cE2A4E1b95E2E497d8E8a847CEE26&chain=base`
+    - `or`
+    - `PEPEGOD` → `https://app.uniswap.org/swap?outputCurrency=0x08985d3198E84633B8E2B40c5EF54A095db2f9D2&chain=base`
+    - `GAGA Chart` → `https://dexscreener.com/base/0x27d8744e5208c1580ca296af239e5720f6bba363`
+  - Footer „Divine Council & Citadel“: `https://pepecoin.com/` ergänzt
+
+## catpop — CatPop Announcement Seite
+>>>>>>> Stashed changes
 - Pfad: `catpop/index.html`, Bild: `catpop/popnomics.jpg`
 - README: `catpop/README.md` (aktuell)
 - Ticker: `$CATPOP` (gewollter Platzhalter für Meme-Coin-Symbol, wie $DOGE/$PEPE)

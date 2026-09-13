@@ -6,3 +6,5 @@ https://docs.github.com/de/pages/quickstart
 - `idun/` = idun console
 - `msgraph/react/` = Graph Metadata Hub
 - `catpop/` = CatPop Meme/Announcement
+- `pepemem/` = MEMEPEPE Linktree-Backup
+- `pepememe/` = PEPEMEME Linktree-Backup
