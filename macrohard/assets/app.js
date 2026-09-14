@@ -408,7 +408,7 @@
       it.addEventListener('click',function(){openApp(a.id);document.getElementById('startMenu').classList.remove('open');});
       sm.appendChild(it);
     });
-    buildMusic();buildBrowser();buildSettings();
+    buildMusic();buildBrowser();buildLinks();buildSettings();
     document.getElementById('lock').addEventListener('click',function(){this.classList.add('hide');});
   });
 
