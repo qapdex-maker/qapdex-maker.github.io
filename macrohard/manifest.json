@@ -7,8 +7,10 @@
   "background_color": "#f1ede3",
   "theme_color": "#2547ff",
   "icons": [],
-  "version": "2.6",
+  "version": "2.8",
   "changelog": {
+    "v2.8": "Service Worker v2 — stale-while-revalidate, network-first AMI BIOS, offline fallback, quota check",
+    "v2.7": "AMIBIOS Setup app",
     "v2.6": "Bugfix per Videoanalyse: Browser '://settings' URL-Fix, Shortcuts ohne https://, Settings 'canceled-verse' → qapdex-maker.github.io, docs/about updated",
     "v2.5": "Phase 1+2+3+4: localStorage, Tastatur, SCI-Modus, Shape-Tools, Audio, Tabs, ContentEditable, Kontakte, Session Restore, Wallpaper, Snapping, a11y",
     "v2.4": "Full-window resize, taskbar fix, drag, dark mode",

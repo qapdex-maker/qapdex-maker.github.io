@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;background-color:#0d0e0f;}body{overscroll-behavior:none;font-family:'Space Mono',monospace;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.crt-overlay{background:linear-gradient(rgba(18,20,20,0) 50%,rgba(0,0,0,0.35) 50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03));background-size:100% 3px,6px 100%;pointer-events:none;}.crt-vignette{box-shadow:inset 0 0 80px rgba(0,0,0,0.85);pointer-events:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-primary":"#003737","on-tertiary-container":"#c51e12","outline-variant":"#3b4949","primary-container":"#4df9f9","on-background":"#e3e2e2","on-primary-fixed":"#002020","on-tertiary":"#690000","surface-container-low":"#1a1c1c","on-error-container":"#ffdad6","on-primary-container":"#007070","surface-tint":"#0edcdd","surface-variant":"#343535","on-secondary-fixed":"#1d1d00","primary-fixed":"#4df9f9","surface-container-lowest":"#0d0e0f","error-container":"#93000a","on-surface":"#e3e2e2","secondary-fixed":"#e9e941","surface-dim":"#121414","error":"#ffb4ab","outline":"#849493","secondary":"#d8d82f","tertiary":"#ffffff","tertiary-fixed":"#ffdad4","on-surface-variant":"#bacac9","secondary-container":"#bcbc01","on-error":"#690005","surface-container-high":"#292a2a","primary-fixed-dim":"#0edcdd","tertiary-container":"#ffdad4","inverse-primary":"#006a6a","secondary-fixed-dim":"#cdcd21","on-tertiary-fixed-variant":"#930000","on-primary-fixed-variant":"#004f50","on-secondary-container":"#4a4a00","surface-bright":"#38393a","background":"#121414","tertiary-fixed-dim":"#ffb4a8","on-secondary-fixed-variant":"#494900","surface":"#121414","surface-container":"#1e2020","surface-container-highest":"#343535","on-secondary":"#323200","inverse-surface":"#e3e2e2","primary":"#ffffff","inverse-on-surface":"#2f3131","on-tertiary-fixed":"#410000"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-xl":"2rem","space-md":"1rem","gutter":"1rem","space-xs":"0.25rem","space-lg":"1.5rem","margin":"1rem","space-sm":"0.5rem"},"fontFamily":{"label-md":["Space Mono"],"headline-lg":["Space Mono"],"body-md":["Space Mono"],"label-sm":["Space Mono"],"label-lg":["Space Mono"],"headline-xl":["Space Mono"],"headline-md":["Space Mono"],"body-sm":["Space Mono"],"body-lg":["Space Mono"]},"fontSize":{"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.04em","fontWeight":"700"}],"headline-lg":["16px",{"lineHeight":"20px","letterSpacing":"0.08em","fontWeight":"700"}],"body-md":["13px",{"lineHeight":"18px","letterSpacing":"0.02em","fontWeight":"400"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"700"}],"label-lg":["13px",{"lineHeight":"16px","letterSpacing":"0.06em","fontWeight":"700"}],"headline-xl":["20px",{"lineHeight":"24px","letterSpacing":"0.1em","fontWeight":"700"}],"headline-md":["14px",{"lineHeight":"18px","letterSpacing":"0.05em","fontWeight":"700"}],"body-sm":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"400"}],"body-lg":["14px",{"lineHeight":"20px","letterSpacing":"0.02em","fontWeight":"400"}]}}}};</script></head><body class="bg-surface-container-lowest text-on-surface select-none overflow-x-hidden min-h-screen flex flex-col items-center justify-center p-space-xs"><div class="fixed inset-0 cr-chassis z-50 pointer-events-none crt-overlay crt-vignette"></div><div class="w-full max-w-[1024px] aspect-[4/3] bg-surface-container-low border border-outline-variant flex flex-col justify-between relative shadow-2xl overflow-hidden"><header class="w-full bg-surface-container-lowest z-20"><div class="flex justify-between items-center px-space-md py-space-xs text-on-surface-variant font-label-sm text-label-sm border-b border-outline-variant"><span>ROM PCI/ISA BIOS (2A59CF0C)</span><span>AWARD SOFTWARE, INC. (C) 1994</span><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div><div class="bg-surface-container px-space-md py-space-xs text-center border-b border-outline-variant"><span class="font-headline-lg text-headline-lg text-secondary uppercase tracking-widest">CMOS SETUP UTILITY</span></div><nav class="flex items-center justify-center gap-space-md py-space-xs px-space-md bg-surface-container-high border-b border-outline-variant" data-active-classes="bg-secondary text-on-secondary font-bold"><a aria-current="page" class="uppercase bg-secondary text-on-secondary font-bold" data-path="standard-cmos-setup" href="#">[Standard Setup]</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface uppercase" data-path="bios-features-setup" href="#">[BIOS Features]</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface uppercase" data-path="chipset-features-setup" href="#">[Chipset Setup]</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface uppercase" data-path="power-management-setup" href="#">[Power Mgmt]</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface uppercase" data-path="pnp-pci-configuration" href="#">[PnP/PCI]</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface uppercase" data-path="integrated-peripherals" href="#">[Peripherals]</a></nav></header><main class="flex-1 w-full bg-surface-container-low px-space-md py-space-sm relative overflow-y-auto font-body-md text-body-md text-on-surface"><div class="flex flex-col w-full text-on-surface select-none relative font-body-md text-body-md leading-none">
+<!-- Subtle CRT Scanline / Raster Bar Effect Overlay -->
+<div class="absolute inset-0 pointer-events-none opacity-25 z-40 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]"></div>
+<!-- Main Background Container Emulating Full 80x25 VGA Workspace in Token-Matched Deep Palette -->
+<div class="w-full bg-surface-container-lowest p-space-xs flex flex-col gap-space-xs relative">
+<!-- TOP STATUS TAPE (Simulated Award BIOS Identity Ribbon) -->
+<div class="w-full bg-surface-container-high text-on-surface-variant flex items-center justify-between px-space-sm py-space-xs text-label-sm font-label-sm uppercase tracking-wider">
+<div class="flex items-center gap-space-sm">
+<span class="text-secondary font-headline-md text-headline-md animate-pulse">■</span>
+<span class="text-primary font-bold">ROM PCI/ISA BIOS (2A59CF0C)</span>
+</div>
+<div class="text-secondary font-headline-md text-headline-md tracking-widest bg-surface-container-lowest px-space-sm py-0.5">
+        CMOS SETUP UTILITY
+      </div>
+<div class="text-on-surface-variant">
+        AWARD SOFTWARE, INC.
+      </div>
+</div>
+<!-- MAIN TWO-COLUMN MENU (Underlay Frame) -->
+<div class="w-full grid grid-cols-1 md:grid-cols-2 gap-space-xs relative">
+<!-- LEFT COLUMN -->
+<div class="bg-surface-container p-space-xs flex flex-col gap-1 shadow-2xl relative">
+<div class="text-primary-fixed-dim font-label-sm text-label-sm px-space-xs py-0.5 uppercase tracking-widest flex justify-between bg-surface-container-high">
+<span>╔═ SYSTEM CORE ARCHITECTURE ═╗</span>
+<span>[MENU 1/2]</span>
+</div>
+<div class="flex flex-col gap-0.5 mt-space-xs font-label-md text-label-md">
+<!-- Active Highlighted Element -->
+<div class="flex items-center justify-between px-space-sm py-1 bg-secondary text-on-secondary cursor-pointer" id="item-std-cmos">
+<span class="tracking-wide">► STANDARD CMOS SETUP</span>
+<span class="font-headline-md text-headline-md">◄</span>
+</div>
+<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors">
+<span class="tracking-wide">  BIOS FEATURES SETUP</span>
+<span class="text-on-surface-variant text-label-sm font-label-sm">[CPU/CACHE]</span>
+</div>
+<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors">
+<span class="tracking-wide">  CHIPSET FEATURES SETUP</span>
+<span class="text-on-surface-variant text-label-sm font-label-sm">[DRAM/TIMING]</span>
+</div>
+<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors">
+<span class="tracking-wide">  POWER MANAGEMENT SETUP</span>
+<span class="text-on-surface-variant text-label-sm font-label-sm">[APM/ACPI]</span>
+</div>
+<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors">
+<span class="tracking-wide">  PNP/PCI CONFIGURATION</span>
+<span class="text-on-surface-variant text-label-sm font-label-sm">[IRQ/DMA]</span>
+</div>
+<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-on-surface-variant cursor-pointer transition-colors">
+<span class="tracking-wide">  LOAD BIOS DEFAULTS</span>
+<span class="text-secondary font-bold text-label-sm font-label-sm">[F6]</span>
+</div>
+<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-on-surface-variant cursor-pointer transition-colors">
+<span class="tracking-wide">  LOAD SETUP DEFAULTS</span>
+<span class="text-secondary font-bold text-label-sm font-label-sm">[F7]</span>
+</div>
+</div>
+<div class="mt-space-xs text-outline font-label-sm text-label-sm px-space-xs">
+          ╚════════════════════════════════════╝
+        </div>
+</div>
+<!-- RIGHT COLUMN -->
+<div class="bg-surface-container p-space-xs flex flex-col gap-1 shadow-2xl relative">
+<div class="text-primary-fixed-dim font-label-sm text-label-sm px-space-xs py-0.5 uppercase tracking-widest flex justify-between bg-surface-container-high">
+<span>╔═ SECURITY &amp; STORAGE UTILS ═╗</span>
+<span>[MENU 2/2]</span>
+</div>
+<div class="flex flex-col gap-0.5 mt-space-xs font-label-md text-label-md">
+<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors">
+<span class="tracking-wide">  SUPERVISOR PASSWORD</span>
+<span class="text-error font-bold text-label-sm font-label-sm">[SET]</span>
+</div>
+<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors">
+<span class="tracking-wide">  USER PASSWORD</span>
+<span class="text-outline font-bold text-label-sm font-label-sm">[NONE]</span>
+</div>
+<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors">
+<span class="tracking-wide">  IDE HDD AUTO DETECTION</span>
+<span class="text-primary-fixed-dim text-label-sm font-label-sm">[AUTO]</span>
+</div>
+<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors">
+<span class="tracking-wide">  HDD LOW LEVEL FORMAT</span>
+<span class="text-error font-bold text-label-sm font-label-sm">[UTIL]</span>
+</div>
+<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-secondary-fixed cursor-pointer transition-colors">
+<span class="tracking-wide">  SAVE &amp; EXIT SETUP</span>
+<span class="text-secondary font-bold text-label-sm font-label-sm">[F10]</span>
+</div>
+<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-on-tertiary-container cursor-pointer transition-colors">
+<span class="tracking-wide">  EXIT WITHOUT SAVING</span>
+<span class="text-error font-bold text-label-sm font-label-sm">[ESC]</span>
+</div>
+<div class="flex items-center justify-between px-space-sm py-1 opacity-50">
+<span class="text-outline">  FLASH MEMORY UPGRADE</span>
+<span class="text-outline text-label-sm font-label-sm">[REV 1.04]</span>
+</div>
+</div>
+<div class="mt-space-xs text-outline font-label-sm text-label-sm px-space-xs">
+          ╚════════════════════════════════════╝
+        </div>
+</div>
+</div>
+<!-- INSET FOREGROUND MODAL / SUB-WINDOW (Standard CMOS Setup Detail Window) -->
+<!-- Authentic Hard-Shadow Layering (8px solid drop offset using negative margins & positioning) -->
+<div class="w-full bg-surface-container-lowest p-space-xs shadow-2xl relative z-30">
+<!-- Modal Header Bar with Retro Box ASCII Title -->
+<div class="bg-surface-container-highest text-primary-fixed-dim px-space-sm py-1 flex items-center justify-between font-label-md text-label-md">
+<span class="tracking-wider">╔════ STANDARD CMOS SETUP (AWARD SOFTWARE INC.) ════╗</span>
+<span class="text-secondary font-bold text-label-sm font-label-sm">[ESC: BACK]</span>
+</div>
+<!-- Detail Body Grid -->
+<div class="bg-surface-container-low p-space-sm flex flex-col gap-space-xs">
+<!-- ROW 1: Date & Time Readouts -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md bg-surface-container px-space-sm py-space-xs">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-primary-fixed-dim font-bold">Date (mm:dd:yy) :</span>
+<span class="bg-surface-container-lowest px-space-xs py-0.5 text-secondary font-headline-md text-headline-md tracking-wider">
+              Fri, Oct 21 1994
+            </span>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-primary-fixed-dim font-bold">Time (hh:mm:ss) :</span>
+<span class="bg-surface-container-lowest px-space-xs py-0.5 text-secondary font-headline-md text-headline-md tracking-widest" id="bios-clock">
+              14 : 32 : 08
+            </span>
+</div>
+</div>
+<!-- HARD DISK CONTROLLER MATRIX TABLE -->
+<div class="flex flex-col bg-surface-container-lowest p-space-xs overflow-x-auto">
+<div class="text-primary font-headline-md text-headline-md px-space-xs py-0.5 bg-surface-container-high flex items-center justify-between">
+<span>HARD DISKS</span>
+<span class="text-label-sm font-label-sm text-secondary">CYLS HEAD SECTOR SIZE MODE</span>
+</div>
+<!-- Table Header -->
+<div class="grid grid-cols-12 text-label-sm font-label-sm text-on-surface-variant px-space-xs py-1 bg-surface-container">
+<div class="col-span-3">DRIVE</div>
+<div class="col-span-2">TYPE</div>
+<div class="col-span-2">SIZE</div>
+<div class="col-span-1">CYLS</div>
+<div class="col-span-1">HEAD</div>
+<div class="col-span-1">SECT</div>
+<div class="col-span-2 text-right">MODE</div>
+</div>
+<!-- Master 1 -->
+<div class="grid grid-cols-12 text-label-sm font-label-sm px-space-xs py-1 text-primary hover:bg-surface-container-high transition-colors">
+<div class="col-span-3 text-primary-fixed-dim font-bold">Pri Master :</div>
+<div class="col-span-2 text-secondary">USER</div>
+<div class="col-span-2 text-primary font-bold">540 MB</div>
+<div class="col-span-1">1048</div>
+<div class="col-span-1">16</div>
+<div class="col-span-1">63</div>
+<div class="col-span-2 text-right text-secondary-fixed">LBA</div>
+</div>
+<!-- Slave 1 -->
+<div class="grid grid-cols-12 text-label-sm font-label-sm px-space-xs py-1 text-outline hover:bg-surface-container-high transition-colors">
+<div class="col-span-3 text-on-surface-variant font-bold">Pri Slave  :</div>
+<div class="col-span-2">None</div>
+<div class="col-span-2">0 MB</div>
+<div class="col-span-1">0</div>
+<div class="col-span-1">0</div>
+<div class="col-span-1">0</div>
+<div class="col-span-2 text-right">----</div>
+</div>
+<!-- Master 2 -->
+<div class="grid grid-cols-12 text-label-sm font-label-sm px-space-xs py-1 text-primary hover:bg-surface-container-high transition-colors">
+<div class="col-span-3 text-primary-fixed-dim font-bold">Sec Master :</div>
+<div class="col-span-4 text-primary font-bold">CD-ROM ATAPI</div>
+<div class="col-span-3 text-outline">4x SPEED</div>
+<div class="col-span-2 text-right text-secondary-fixed">AUTO</div>
+</div>
+<!-- Slave 2 -->
+<div class="grid grid-cols-12 text-label-sm font-label-sm px-space-xs py-1 text-outline hover:bg-surface-container-high transition-colors">
+<div class="col-span-3 text-on-surface-variant font-bold">Sec Slave  :</div>
+<div class="col-span-2">None</div>
+<div class="col-span-2">0 MB</div>
+<div class="col-span-1">0</div>
+<div class="col-span-1">0</div>
+<div class="col-span-1">0</div>
+<div class="col-span-2 text-right">----</div>
+</div>
+</div>
+<!-- DRIVE CONFIGURATION & HARDWARE DIAGNOSTICS SPLIT -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-xs">
+<!-- Floppy & Display Diagnostics -->
+<div class="bg-surface-container p-space-xs flex flex-col gap-1 font-label-sm text-label-sm">
+<div class="flex items-center justify-between py-0.5 px-space-xs hover:bg-surface-container-high">
+<span class="text-primary-fixed-dim">Drive A :</span>
+<span class="text-primary font-bold bg-surface-container-lowest px-1">[1.44M, 3.5 in.]</span>
+</div>
+<div class="flex items-center justify-between py-0.5 px-space-xs hover:bg-surface-container-high">
+<span class="text-primary-fixed-dim">Drive B :</span>
+<span class="text-primary font-bold bg-surface-container-lowest px-1">[1.2M, 5.25 in.]</span>
+</div>
+<div class="flex items-center justify-between py-0.5 px-space-xs hover:bg-surface-container-high">
+<span class="text-primary-fixed-dim">Floppy 3 Mode :</span>
+<span class="text-outline bg-surface-container-lowest px-1">[Disabled]</span>
+</div>
+<div class="flex items-center justify-between py-0.5 px-space-xs hover:bg-surface-container-high">
+<span class="text-primary-fixed-dim">Video Graphics :</span>
+<span class="text-secondary font-bold bg-surface-container-lowest px-1">[EGA / VGA]</span>
+</div>
+<div class="flex items-center justify-between py-0.5 px-space-xs hover:bg-surface-container-high">
+<span class="text-primary-fixed-dim">Halt On Errors :</span>
+<span class="text-error font-bold bg-surface-container-lowest px-1">[All Errors]</span>
+</div>
+</div>
+<!-- Base / Extended Memory Hardware Diagnostic Counters -->
+<div class="bg-surface-container p-space-xs flex flex-col justify-between font-label-sm text-label-sm">
+<div class="text-secondary font-headline-md text-headline-md tracking-wider bg-surface-container-highest px-space-xs py-0.5">
+              MEMORY DIAGNOSTICS
+            </div>
+<div class="flex flex-col gap-1 mt-1">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span>Base Memory .........</span>
+<span class="text-primary font-bold">640 KB</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant">
+<span>Extended Memory .....</span>
+<span class="text-primary font-bold">15,360 KB</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant">
+<span>Other Memory ........</span>
+<span class="text-primary font-bold">384 KB</span>
+</div>
+<div class="flex items-center justify-between text-secondary-fixed bg-surface-container-lowest px-space-xs py-1 mt-0.5 font-bold">
+<span>TOTAL SYSTEM MEMORY :</span>
+<span class="text-secondary text-headline-md font-headline-md">16,384 KB</span>
+</div>
+</div>
+<!-- ASCII Physical Allocation Visual Gauge -->
+<div class="flex flex-col gap-0.5 mt-2">
+<div class="flex justify-between text-outline text-label-sm font-label-sm">
+<span>POST RAM MAP</span>
+<span>[640K / 16M]</span>
+</div>
+<div class="bg-surface-container-lowest text-secondary tracking-widest text-label-sm font-label-sm py-0.5 overflow-hidden">
+                ████████████████████░░░░░░░░░░░░
+              </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Sub-Window Bottom ASCII Frame -->
+<div class="bg-surface-container-highest text-primary-fixed-dim px-space-sm py-0.5 font-label-sm text-label-sm flex justify-between">
+<span>╚═════════════════════════════════════════════════════════╝</span>
+<span class="text-on-surface-variant">PAGE 1 OF 1</span>
+</div>
+</div>
+<!-- SITUATIONAL HELP / ACTION HINT TAPE -->
+<div class="w-full bg-surface-container text-primary-fixed-dim px-space-sm py-1 flex items-center justify-between font-label-md text-label-md">
+<div class="flex items-center gap-space-xs">
+<span class="text-secondary font-bold">ITEM SPEC :</span>
+<span>Set Day, Month, Year &amp; System RTC Clock via Number Keys</span>
+</div>
+<div class="text-outline text-label-sm font-label-sm">
+        CMOS ADDR: [0x0E-0x3F]
+      </div>
+</div>
+<!-- BOTTOM CONTROL LEGEND KEY MATRIX (DOS 1-Line Density Recreation) -->
+<div class="w-full bg-surface-container-high p-space-xs grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-1 font-label-sm text-label-sm">
+<div class="bg-surface-container-lowest px-space-xs py-1 flex flex-col items-center">
+<span class="text-primary font-bold">ESC</span>
+<span class="text-on-surface-variant">Quit</span>
+</div>
+<div class="bg-surface-container-lowest px-space-xs py-1 flex flex-col items-center">
+<span class="text-primary font-bold">↑ ↓ → ←</span>
+<span class="text-on-surface-variant">Select Item</span>
+</div>
+<div class="bg-surface-container-lowest px-space-xs py-1 flex flex-col items-center">
+<span class="text-secondary font-bold">PU/PD/+/-</span>
+<span class="text-on-surface-variant">Modify</span>
+</div>
+<div class="bg-surface-container-lowest px-space-xs py-1 flex flex-col items-center">
+<span class="text-secondary font-bold">F1 / (Sh)F2</span>
+<span class="text-on-surface-variant">Help/Color</span>
+</div>
+<div class="bg-surface-container-lowest px-space-xs py-1 flex flex-col items-center">
+<span class="text-secondary font-bold">F5 / F6</span>
+<span class="text-on-surface-variant">Old/BIOS Def</span>
+</div>
+<div class="bg-surface-container-lowest px-space-xs py-1 flex flex-col items-center">
+<span class="text-secondary font-bold">F7</span>
+<span class="text-on-surface-variant">Setup Def</span>
+</div>
+<div class="bg-surface-container-lowest px-space-xs py-1 flex flex-col items-center col-span-2 sm:col-span-1">
+<span class="text-primary-fixed font-bold">F10</span>
+<span class="text-secondary font-bold">Save &amp; Exit</span>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Dynamic retro clock increment simulating continuous BIOS hardware RTC tick
+  (function() {
+    let h = 14;
+    let m = 32;
+    let s = 8;
+    const clockEl = document.getElementById('bios-clock');
+    
+    if (clockEl) {
+      setInterval(() => {
+        s++;
+        if (s >= 60) { s = 0; m++; }
+        if (m >= 60) { m = 0; h++; }
+        if (h >= 24) { h = 0; }
+        const pad = (n) => String(n).padStart(2, '0');
+        clockEl.textContent = `${pad(h)} : ${pad(m)} : ${pad(s)}`;
+      }, 1000);
+    }
+  })();
+</script></main><footer class="w-full bg-surface-container-lowest border-t border-outline-variant z-20"><div class="px-space-md py-space-xs flex flex-wrap items-center justify-between font-label-sm text-label-sm text-on-surface-variant"><div class="flex items-center gap-space-md"><span><span class="text-primary font-bold">ESC</span> : Quit</span><span><span class="text-primary font-bold">↑ ↓ → ←</span> : Select Item</span><span><span class="text-primary font-bold">PU/PD/+/-</span> : Modify</span></div><div class="flex items-center gap-space-md"><span><span class="text-secondary font-bold">(Shift)F2</span> : Color</span><span><span class="text-secondary font-bold">F5</span> : Old Values</span><span><span class="text-secondary font-bold">F7</span> : Load Defaults</span><span><span class="text-primary-fixed font-bold">F10</span> : Save &amp; Exit Setup</span></div></div></footer></div></body></html>
