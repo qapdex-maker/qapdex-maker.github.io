@@ -1,18 +1,19 @@
 # Macrohard Doors OS — Build Detail
 
-Session 2026-09-14 · v2.5 (2026-09-15). Standalone subpage in `qapdex-maker.github.io`.
+Session 2026-09-14 · v2.9 (2026-09-15). Standalone subpage in `qapdex-maker.github.io`.
 
 ## Structure
 - `macrohard/index.html` — standalone, neo-brutalist, self-contained
 - `macrohard/assets/site.css` — portal tokens mapped to OS components + dark mode
-- `macrohard/assets/app.js` — boot→lock→desktop, 11 apps + extensions, i18n, PWA, drag/resize, taskbar icons
-- `macrohard/manifest.json` — PWA manifest
-- `macrohard/sw.js` — service worker (offline cache)
+- `macrohard/assets/app.js` — boot→lock→desktop, 13 apps + extensions, i18n, PWA, drag/resize, taskbar icons
+- `macrohard/manifest.json` — PWA manifest (siteVersion + buildDate)
+- `macrohard/sw.js` — service worker v2 (stale-while-revalidate, network-first AMI BIOS, quota check, offline fallback)
+- `macrohard/assets/ami-bios-setup.html` — AMIBIOS Setup utility (Award BIOS simulation, CRT-style, Tailwind)
 - Portal `pages`-Array entry: `{name:'Macrohard Doors OS', cat:'Microsoft', catLabel:{de:'Microsoft',en:'Microsoft'}, status:'live', desc:{de:'…',en:'…'}, href:'macrohard/'}`
 - `Microsoft` chip in portal filter
 
-## Apps (v2.5 — 11 Kern-Apps + Extension-Pack)
-### Phase 1 — Foundation
+## Apps (v2.9 — 13 Apps)
+### Phase 1 — Foundation (11 apps)
 1. Notepad — textarea + Zeichen/Wortzähler, Ctrl+F Suche, localStorage auto-save (300ms debounce), Font-Größe (11/13/16), Export .txt
 2. Calculator — eval-based, Tastatur (0-9,+-*/(). ,Enter,Esc,Backspace), klickbare History (max 12), SCI-Modus (sin/cos/tan/sqrt/pow/log/abs/π/e)
 3. Terminal — mock shell: pwd/ls(cat)/touch/rm/mkdir/cp/mv/find/grep/echo/date/clear/whoami/help + colored output + Tab-Completion
@@ -45,23 +46,17 @@ Session 2026-09-14 · v2.5 (2026-09-15). Standalone subpage in `qapdex-maker.git
 ## PWA
 - `manifest.json` + `sw.js` (offline cache of core assets)
 - SW registers on load + manual register via Settings button
+- SW v2: stale-while-revalidate, network-first for AMI BIOS, quota check, offline fallback
 
-## Pitfalls discovered & fixed
-- Paint touch: mouse events alone don't fire on Android/Termux → add touchstart/touchmove/touchend with getBoundingClientRect offset, passive:false
-- Desktop design: user corrected from dark Windows style to neo-brustalist (paper bg, 3px borders, accent shadows)
-- Lock screen: dark gradient → paper bg + ink text to match portal tokens
-- Boot screen: black bg → paper bg + Space Grotesk logo + accent dots
-- Taskbar: translucent dark → portal tokens (`--tb`, 3px `--line` border)
-- Start menu: glass dark → surface bg + 3px border
-- Window accent dot: rgba white → `--accent`
-- Calculator: added parentheses, comma, history panel
-- Terminal: added pwd, ls (real dir listing), cat, cd (with ..), mkdir, echo, date, clear, whoami, help
-- Taskbar hidden: `--tb` missing fallback → `var(--tb, #1a1a1e)` in :root + `[data-theme="dark"]`
-- Taskbar icons missing: t(id) called after DOM creation → moved before taskbar icon creation
-- Minimize not visible: no taskbar icon → taskbar icons for all apps + toggle behavior
-- Phase 2+3: all new features tested with node --check + live curl verify
+## AMIBIOS Setup
+- iframe integration with `sandbox="allow-scripts allow-same-origin"`
+- CSS isolation via iframe (no style leakage into OS shell)
+- Interactive keyboard navigation: Arrow keys, Enter, ESC, F5, F7, F10, F2
+- 6 tabs with dynamic header switching
+- Toast notifications for user feedback
+- RTC clock with live tick
 
 ## Version History
-- v2.5 (2026-09-15): All Phase 1+2+3+4 features, README + HOMENOTES update, manifest.json changelog
-- v2.4 (2026-09-14): Full-window resize, taskbar duplicate listener fix, drag, dark mode, 11 apps
-- v2.3: Initial stable build
+- v2.9 (2026-09-15): AMIBIOS interactive — tab navigation, keyboard shortcuts, toast notifications, state management
+- v2.8 (2026-09-15): Service Worker v2 + AMI BIOS Setup app — SW v2 strategies, manifest siteVersion/buildDate, deploy-hygiene extended
+- v2.7 (2026-09-15): AMIBIOS Setup app initial
