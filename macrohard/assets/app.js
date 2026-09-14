@@ -394,6 +394,20 @@
     document.querySelectorAll('.wtxt').forEach(function(el){var id=el.closest('.wnd');if(id)el.textContent=t(id.id.replace('w-',''));});
   }
 
+  /* Links */
+  function buildLinks(){
+    var pane=document.getElementById('clPane');if(!pane) return;
+    var links=[
+      {n:'Macrohard Doors OS',u:'https://qapdex-maker.github.io/macrohard/'},{n:'GitHub',u:'https://github.com/qapdex-maker'},{n:'Perchance',u:'https://perchance.org'},{n:'IDUN',u:'https://idun.app'},{n:'Docs',u:'https://qapdex-maker.github.io/msgraph/'},{n:'Catpop',u:'https://qapdex-maker.github.io/catpop/'},{n:'Nous Research',u:'https://nousresearch.com'}
+    ];
+    pane.innerHTML='';
+    links.forEach(function(l){
+      var a=document.createElement('a');a.className='clLink';a.href=l.u;a.target='_blank';a.rel='noopener';
+      a.innerHTML='<span class="clIco">🔗</span><span>'+l.n+'</span>';
+      pane.appendChild(a);
+    });
+  }
+
   /* Init */
   window.addEventListener('DOMContentLoaded',function(){
     var desk=document.getElementById('deskIcons');
