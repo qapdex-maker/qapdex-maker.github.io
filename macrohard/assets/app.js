@@ -178,8 +178,8 @@
         delete mk.dataset.origWidth;delete mk.dataset.origHeight;
         if(tbIcon)tbIcon.classList.add('running');
       } else {
-        mk.dataset.origLeft=mk.style.left;mk.dataset.origTop=mk.style.top;
-        mk.dataset.origWidth=mk.style.width;mk.dataset.origHeight=mk.style.height;
+        mk.dataset.origLeft=mk.style.left||'';mk.dataset.origTop=mk.style.top||'';
+        mk.dataset.origWidth=mk.style.width||'';mk.dataset.origHeight=mk.style.height||'';
         mk.style.left='0';mk.style.top='0';mk.style.width='100vw';mk.style.height='100vh';
         mk.dataset.max='true';
         if(tbIcon)tbIcon.classList.add('running');
