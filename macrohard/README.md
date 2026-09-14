@@ -1,11 +1,11 @@
 # Macrohard Doors OS — Build Detail
 
-Session 2026-09-14 · v2 (2026-09-xx). Standalone subpage in `qapdex-maker.github.io`.
+Session 2026-09-14 · v2.3 (2026-09-xx). Standalone subpage in `qapdex-maker.github.io`.
 
 ## Structure
 - `macrohard/index.html` — standalone, neo-brutalist, self-contained
-- `macrohard/assets/site.css` — portal tokens mapped to OS components
-- `macrohard/assets/app.js` — boot→lock→desktop, 11 apps, i18n, PWA
+- `macrohard/assets/site.css` — portal tokens mapped to OS components + dark mode
+- `macrohard/assets/app.js` — boot→lock→desktop, 11 apps, i18n, PWA, drag/resize, taskbar icons
 - `macrohard/manifest.json` — PWA manifest
 - `macrohard/sw.js` — service worker (offline cache)
 - Portal `pages`-Array entry: `{name:'Macrohard Doors OS', cat:'Microsoft', catLabel:{de:'Microsoft',en:'Microsoft'}, status:'live', desc:{de:'…',en:'…'}, href:'macrohard/'}`
@@ -14,7 +14,7 @@ Session 2026-09-14 · v2 (2026-09-xx). Standalone subpage in `qapdex-maker.githu
 ## Apps (functional)
 1. Notepad — textarea + char counter + localStorage
 2. Calculator — eval-based, operators × ÷ − +, ± % (,), Klammern, Historie
-3. Terminal — mock shell: help/ls/cd/pwd/mkdir/echo/cat/date/clear/whoami + arrow history
+3. Terminal — mock shell: pwd/ls/cat/cd/cd.. /mkdir/echo/date/clear/whoami + arrow history
 4. Explorer — virtual FS with navigation + file icons + path bar
 5. Paint — canvas draw + 12-color palette + touch events (Android)
 6. Browser — iframe + URL bar + 3 shortcut buttons (Macrohard, GitHub, Perchance)
@@ -23,6 +23,13 @@ Session 2026-09-14 · v2 (2026-09-xx). Standalone subpage in `qapdex-maker.githu
 9. Docs — static doc view
 10. Settings — Dark Mode, Scanlines, Sprache, PWA SW register
 11. Links — GitHub, Perchance, Docs
+
+## Window features
+- Drag via titlebar (cursor: move)
+- Resize via bottom-right handle (cursor: nwse-resize, min 280×180)
+- Minimize via _ button or taskbar icon toggle
+- Close via × button
+- Taskbar icons for all 11 apps with running indicator
 
 ## PWA
 - `manifest.json` + `sw.js` (offline cache of core assets)
@@ -38,6 +45,9 @@ Session 2026-09-14 · v2 (2026-09-xx). Standalone subpage in `qapdex-maker.githu
 - Window accent dot: rgba white → `--accent`
 - Calculator: added parentheses, comma, history panel
 - Terminal: added pwd, ls (real dir listing), cat, cd (with ..), mkdir, echo, date, clear, whoami, help
+- Taskbar hidden: `--tb` missing fallback → `var(--tb, #1a1a1e)` in :root + `[data-theme="dark"]`
+- Taskbar icons missing: t(id) called after DOM creation → moved before taskbar icon creation
+- Minimize not visible: no taskbar icon → taskbar icons for all apps + toggle behavior
 
 ## Deploy
 - Commit on `main`, push confirmed
