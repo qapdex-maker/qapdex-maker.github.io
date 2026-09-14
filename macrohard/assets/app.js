@@ -748,6 +748,25 @@
     {n:'Docs',u:'https://qapdex-maker.github.io/msgraph/',cat:'dev'},{n:'Catpop',u:'https://qapdex-maker.github.io/catpop/',cat:'dev'},
     {n:'Nous Research',u:'https://nousresearch.com',cat:'info'}
   ];
+  /* Omarchy links (from omarchy-linux quattro repo) */
+  var omarchyLinks=[
+    {n:'Omarchy',u:'https://omarchy.org/',cat:'os'},{n:'Omarchy Manual',u:'https://learn.omacom.io/2/the-omarchy-manual',cat:'os'},
+    {n:'Basecamp',u:'https://launchpad.37signals.com',cat:'work'},{n:'Discord',u:'https://discord.com/channels/@me',cat:'comm'},
+    {n:'Google Contacts',u:'https://contacts.google.com/',cat:'work'},{n:'Google Maps',u:'https://maps.google.com',cat:'nav'},
+    {n:'Google Messages',u:'https://messages.google.com/web/conversations',cat:'comm'},{n:'Google Photos',u:'https://photos.google.com/',cat:'media'},
+    {n:'WhatsApp',u:'https://web.whatsapp.com/',cat:'comm'},{n:'X',u:'https://x.com/',cat:'social'},{n:'YouTube',u:'https://youtube.com/',cat:'media'},
+    {n:'Zoom',u:'https://zoom.us/',cat:'work'}
+  ];
+  function buildOmarchyLinks(){
+    var pane=document.getElementById('clPane');if(!pane) return;
+    var hdr=document.createElement('div');hdr.style.cssText='padding:6px 8px;font-weight:bold;color:var(--accent)';hdr.textContent='Omarchy · Quattro';
+    pane.appendChild(hdr);
+    omarchyLinks.forEach(function(l){
+      var a=document.createElement('a');a.className='clLink';a.href=l.u;a.target='_blank';a.rel='noopener';
+      a.innerHTML='<span class="clIco">🐧</span><span>'+l.n+' <span style="font-size:9px;opacity:.6">'+l.cat+'</span></span>';
+      pane.appendChild(a);
+    });
+  }
   function buildLinks(){
     var pane=document.getElementById('clPane');if(!pane) return;
     pane.innerHTML='';
@@ -804,6 +823,7 @@
       sm.appendChild(it);
     });
     buildMusic();buildBrowser();buildLinks();buildSettings();
+    buildOmarchyLinks();
     document.getElementById('lock').addEventListener('click',function(){this.classList.add('hide');});
   });
 
