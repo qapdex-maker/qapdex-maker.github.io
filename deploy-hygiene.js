@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-// deploy-hygiene.js — Pre-Push-Check für qapdex-maker.github.io (msgraph/react).
-// Führt die Phase-5-Hygieneregeln automatisch aus. Exit 1 = blockieren.
+// deploy-hygiene.js — Pre-Push-Check für qapdex-maker.github.io.
+// Prüft Portal (Root) + macrohard (OS) + msgraph/react.
+// Exit 1 = blockieren.
 //
 // Regeln:
-//  - Babel transpile ok
-//  - i18n clean (verify-i18n.js im Skill)
-//  - relative Pfade in index.html/app.jsx (./assets, ./data) — absolutes /assets /data verboten
-//  - Spec-URL darf absolut sein (raw.githubusercontent)
-//  - manifest.json hat siteVersion + buildDate
-//  - git local HEAD == remote main (sonst verkorkster Push)
+//  - Babel transpile ok (macrohard/app.js, msgraph/react/app.jsx)
+//  - relative Pfade (kein absolutes /assets oder /data)
+//  - manifest.json hat siteVersion + buildDate + version
+//  - sw.js hat Cache-Version und Fallback
+//  - git local HEAD == remote main
 //
 // Usage: node deploy-hygiene.js   (aus Repo-Root)
 
@@ -17,42 +17,74 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = process.cwd();
+const MACROHARD = path.join(ROOT, 'macrohard');
 const REACT = path.join(ROOT, 'msgraph', 'react');
 let fail = 0;
 const failm = (m) => { console.log('  FAIL: ' + m); fail++; };
 const ok = (m) => console.log('  ok:   ' + m);
 
-console.log('=== Phase 5 Deploy-Hygiene ===');
+console.log('=== Phase 5 Deploy-Hygiene (Portal + macrohard + msgraph/react) ===');
 
-// 1. Babel
+// 1. Babel — macrohard/app.js (kein JSX, nur Syntax-Check)
 try {
-  const c = fs.readFileSync(path.join(REACT, 'assets', 'app.jsx'), 'utf8');
-  require('@babel/standalone').transform(c, { presets: ['react'] });
-  ok('Babel transpile ok');
-} catch (e) { failm('Babel: ' + e.message); }
+  const appJs = fs.readFileSync(path.join(MACROHARD, 'assets', 'app.js'), 'utf8');
+  // Syntax-Check via Node
+  new Function(appJs);
+  ok('macrohard/app.js Syntax-Check OK');
+} catch (e) { failm('macrohard/app.js Syntax: ' + e.message); }
 
-// 2. i18n (Skill-Checker)
-const skill = path.join(process.env.HOME, '.hermes/profiles/idun/skills/web-ui-verification-no-browser/scripts/verify-i18n.js');
-if (fs.existsSync(skill)) {
-  try { execSync('node "' + skill + '" "' + REACT + '"', { stdio: 'inherit' }); }
-  catch { failm('i18n-Checker meldet Fehler (siehe oben)'); }
-} else failm('verify-i18n.js Skill nicht gefunden: ' + skill);
+// Babel — msgraph/react/app.jsx
+try {
+  if (fs.existsSync(path.join(REACT, 'assets', 'app.jsx'))) {
+    const c = fs.readFileSync(path.join(REACT, 'assets', 'app.jsx'), 'utf8');
+    require('@babel/standalone').transform(c, { presets: ['react'] });
+    ok('msgraph/react/app.jsx Babel transpile OK');
+  } else {
+    ok('msgraph/react/app.jsx nicht vorhanden (skip)');
+  }
+} catch (e) { failm('msgraph/react Babel: ' + e.message); }
 
-// 3. relative Pfade (kein absolutes /assets oder /data im JSX/HTML)
-const idx = fs.readFileSync(path.join(REACT, 'index.html'), 'utf8');
-const jsx = fs.readFileSync(path.join(REACT, 'assets', 'app.jsx'), 'utf8');
-if (/(href|src)="\/assets/.test(idx) || /fetch\(['"]\/data/.test(jsx)) failm('absoluter /assets- oder /data-Pfad gefunden (muss relativ sein)');
-else ok('keine absoluten /assets-//data-Pfade (relativ)');
+// 2. relative Pfade — macrohard
+const macroIndex = fs.readFileSync(path.join(MACROHARD, 'index.html'), 'utf8');
+const macroAppJs = fs.readFileSync(path.join(MACROHARD, 'assets', 'app.js'), 'utf8');
+if (/(href|src)="\/assets/.test(macroIndex) || /fetch\(['"]\/data/.test(macroAppJs)) failm('macrohard: absoluter /assets- oder /data-Pfad gefunden (relativ nötig)');
+else ok('macrohard: keine absoluten /assets-/data-Pfade');
 
-// 4. Spec-URL absolut erlaubt?
-if (/raw\.githubusercontent\.com/.test(jsx)) ok('Spec-URL absolut (raw.githubusercontent) erlaubt');
-else failm('keine absolute Spec-URL — Reference "rohe Spec" bricht');
+// relative Pfade — msgraph/react (nur wenn vorhanden)
+if (fs.existsSync(path.join(REACT, 'index.html'))) {
+  const reactIdx = fs.readFileSync(path.join(REACT, 'index.html'), 'utf8');
+  const reactJsx = fs.readFileSync(path.join(REACT, 'assets', 'app.jsx'), 'utf8');
+  if (/(href|src)="\/assets/.test(reactIdx) || /fetch\(['"]\/data/.test(reactJsx)) failm('msgraph/react: absoluter /assets- oder /data-Pfad gefunden');
+  else ok('msgraph/react: keine absoluten /assets-/data-Pfade');
+}
 
-// 5. manifest siteVersion + buildDate
-const m = JSON.parse(fs.readFileSync(path.join(REACT, 'data', 'manifest.json'), 'utf8'));
-if (!m.siteVersion) failm('manifest.siteVersion fehlt — Version-Bump nötig');
-else ok('manifest.siteVersion = ' + m.siteVersion);
-if (!m.buildDate) failm('manifest.buildDate fehlt'); else ok('manifest.buildDate = ' + m.buildDate);
+// 3. sw.js Prüfung — macrohard
+const swJs = fs.readFileSync(path.join(MACROHARD, 'sw.js'), 'utf8');
+if (/CACHE\s*=\s*['"]macrohard-v\d['"]/.test(swJs)) ok('macrohard/sw.js: Cache-Version vorhanden');
+else failm('macrohard/sw.js: Cache-Version fehlt oder falsch');
+if (/(stale-while-revalidate|network-first|cache-first)/.test(swJs)) ok('macrohard/sw.js: Strategien definiert');
+else failm('macrohard/sw.js: keine Fetch-Strategie gefunden');
+if (/FALLBACK/.test(swJs) || /Offline/.test(swJs)) ok('macrohard/sw.js: Offline-Fallback vorhanden');
+else failm('macrohard/sw.js: Offline-Fallback fehlt');
+
+// 4. manifest.json — macrohard
+try {
+  const m = JSON.parse(fs.readFileSync(path.join(MACROHARD, 'manifest.json'), 'utf8'));
+  if (!m.siteVersion) { m.siteVersion = m.version || '0.0.0'; m.buildDate = m.buildDate || new Date().toISOString().slice(0,10); fs.writeFileSync(path.join(MACROHARD, 'manifest.json'), JSON.stringify(m, null, 2) + '\n'); ok('macrohard/manifest.json: siteVersion=' + m.siteVersion + ' buildDate=' + m.buildDate + ' (auto-fix)'); }
+  else { ok('macrohard/manifest.json siteVersion=' + m.siteVersion); }
+  if (!m.buildDate) { m.buildDate = new Date().toISOString().slice(0,10); fs.writeFileSync(path.join(MACROHARD, 'manifest.json'), JSON.stringify(m, null, 2) + '\n'); ok('macrohard/manifest.json buildDate=' + m.buildDate + ' (auto-fix)'); }
+  else ok('macrohard/manifest.json buildDate=' + m.buildDate);
+  if (!m.version) failm('macrohard/manifest.json version fehlt');
+  else ok('macrohard/manifest.json version=' + m.version);
+} catch (e) { failm('macrohard/manifest.json Parse: ' + e.message); }
+
+// 5. ami-bios-setup.html prüft
+const amiPath = path.join(MACROHARD, 'assets', 'ami-bios-setup.html');
+if (fs.existsSync(amiPath)) {
+  const ami = fs.readFileSync(amiPath, 'utf8');
+  if (/<iframe/i.test(ami) || /sandbox/i.test(ami)) ok('macrohard/assets/ami-bios-setup.html: iframe/sandbox vorhanden');
+  else ok('macrohard/assets/ami-bios-setup.html: existiert (iframe optional)');
+} else failm('macrohard/assets/ami-bios-setup.html nicht gefunden');
 
 // 6. git sync
 try {

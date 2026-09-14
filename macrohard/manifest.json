@@ -15,5 +15,7 @@
     "v2.5": "Phase 1+2+3+4: localStorage, Tastatur, SCI-Modus, Shape-Tools, Audio, Tabs, ContentEditable, Kontakte, Session Restore, Wallpaper, Snapping, a11y",
     "v2.4": "Full-window resize, taskbar fix, drag, dark mode",
     "v2.3": "Initial stable build"
-  }
+  },
+  "siteVersion": "2.8.0",
+  "buildDate": "2026-09-14"
 }
