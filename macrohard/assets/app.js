@@ -134,10 +134,10 @@
     mk.style.left=(80+(zIdx%5)*30)+'px';mk.style.top=(40+(zIdx%5)*20)+'px';
     mk.style.width='640px';mk.style.height='420px';
     mk.style.zIndex=++zIdx;mk.setAttribute('data-app',id);
+    var title=t(id);
     /* taskbar icon */
     var tb=document.getElementById('tbCenter');
     if(tb){var icon=document.createElement('div');icon.className='tbIcon running';icon.id='tb-'+id;icon.innerHTML='<div class="tbRun"></div><span style="font-size:10px;font-family:IBM Plex Mono,monospace;color:rgba(255,255,255,.8);padding:0 4px">'+title+'</span>';icon.addEventListener('click',function(){var w=document.getElementById('w-'+id);if(!w){openApp(id);}else{if(w.style.display==='none'){w.style.display='';this.classList.add('running');}else{w.style.display='none';this.classList.remove('running');}}updateFocus();});tb.appendChild(icon);}
-    var title=t(id);
     var body='';
     switch(id){
       case 'notepad': body='<textarea class="npArea" id="npArea" placeholder="Notepad — tippe hier..."></textarea><div class="npStats" id="npStats">0 Zeichen</div>';break;
