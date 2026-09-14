@@ -272,6 +272,10 @@
     canvas.addEventListener('mousemove',function(e){if(!painting)return;pCtx.strokeStyle=paintColor;pCtx.lineTo(e.offsetX,e.offsetY);pCtx.stroke();});
     canvas.addEventListener('mouseup',function(){painting=false;});
     canvas.addEventListener('mouseleave',function(){painting=false;});
+    /* touch support for Android/Termux */
+    canvas.addEventListener('touchstart',function(e){e.preventDefault();painting=true;pCtx.beginPath();var t=e.touches[0];var r=canvas.getBoundingClientRect();pCtx.moveTo(t.clientX-r.left,t.clientY-r.top);},{passive:false});
+    canvas.addEventListener('touchmove',function(e){e.preventDefault();if(!painting)return;var t=e.touches[0];var r=canvas.getBoundingClientRect();pCtx.strokeStyle=paintColor;pCtx.lineTo(t.clientX-r.left,t.clientY-r.top);pCtx.stroke();},{passive:false});
+    canvas.addEventListener('touchend',function(){painting=false;});
   }
 
   /* Music */
