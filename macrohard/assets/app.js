@@ -88,7 +88,7 @@
     var div=document.createElement('div');
     div.className='dskApp';
     div.setAttribute('data-app',a.id);
-    div.innerHTML=a.iconSvg+'<span class="lbl">'+a.label+'</span>';
+    div.innerHTML='<span class="ico">'+a.iconSvg+'</span><span class="lbl">'+a.label+'</span>';
     div.addEventListener('click',function(){openApp(a.id);});
     return div;
   }
