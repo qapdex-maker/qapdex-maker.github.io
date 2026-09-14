@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>MakerOS — qapdex-maker.github.io</title>
-<meta name="description" content="Windows-style desktop OS — canceled-verse edition. Boot screen, taskbar, start menu, 11 apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links."/>
+<meta name="description" content="Windows-style desktop OS — qapdex-maker.github.io. Boot screen, taskbar, start menu, 11 apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links."/>
 <link rel="manifest" href="./manifest.json"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -63,7 +63,7 @@
     <section class="os-hero">
       <span class="os-tag">Self-hosted App</span>
       <h1>MakerOS</h1>
-      <p data-de="Windows-Style Desktop OS — canceled-verse Edition. Boot-Screen, Taskbar, Start-Menü, 5 Apps: Notepad, Calculator, Terminal, Explorer, Paint." data-en="Windows-style desktop OS — canceled-verse edition. Boot screen, taskbar, start menu, 5 apps: Notepad, Calculator, Terminal, Explorer, Paint.">Windows-Style Desktop OS — canceled-verse Edition. Boot-Screen, Taskbar, Start-Menü, 5 Apps.</p>
+      <p data-de="Windows-Style Desktop OS — qapdex-maker.github.io. Boot-Screen, Taskbar, Start-Menü, 5 Apps: Notepad, Calculator, Terminal, Explorer, Paint." data-en="Windows-style desktop OS — qapdex-maker.github.io. Boot screen, taskbar, start menu, 5 apps: Notepad, Calculator, Terminal, Explorer, Paint.">Windows-Style Desktop OS — qapdex-maker.github.io. Boot-Screen, Taskbar, Start-Menü, 5 Apps.</p>
       <a class="btn-ghost" href="#apps" data-de="Apps öffnen" data-en="Open apps">Apps öffnen</a>
     </section>
 
@@ -124,7 +124,7 @@
   </main>
 
   <footer class="os-footer">
-    <span data-de="MakerOS · qapdex-maker.github.io · canceled-verse" data-en="MakerOS · qapdex-maker.github.io · canceled-verse">MakerOS · qapdex-maker.github.io · canceled-verse</span>
+    <span data-de="MakerOS · qapdex-maker.github.io · qapdex-maker.github.io" data-en="MakerOS · qapdex-maker.github.io · qapdex-maker.github.io">MakerOS · qapdex-maker.github.io · qapdex-maker.github.io</span>
   </footer>
 </div>
 
@@ -133,7 +133,7 @@
 <div id="taskbar"><div id="tbLeft"><div id="tbStart">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="8" x2="21" y2="8"/><line x1="3" y1="16" x2="21" y2="16"/></svg>
 </div></div><div id="tbCenter"></div><div id="tbRight"><div class="tbClock" id="tbClock"></div></div></div>
-<div id="startMenu"><div id="smHeader">MakerOS</div><div id="smList"></div><div id="smFooter">canceled-verse · v1.0</div></div>
+<div id="startMenu"><div id="smHeader">MakerOS</div><div id="smList"></div><div id="smFooter">qapdex-maker.github.io · v1.0</div></div>
 <div id="boot">
   <svg id="bootLogo" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#fff" stroke-width="4"/><circle cx="50" cy="50" r="30" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="6 4" style="animation:bspin 2s linear infinite"/><text x="50" y="56" text-anchor="middle" fill="#fff" font-family="monospace" font-size="14" font-weight="bold">MD</text></svg>
   <div id="bootDots"><i></i><i></i><i></i></div>
@@ -144,7 +144,7 @@
 <script>
   /* i18n + IGNITE + lang toggle */
   (function(){
-    var I18N={de:{lockHint:'Click to unlock',bootSub:'canceled-verse · v1.0',start:'Start',search:'Suche...',notepad:'Notepad',calculator:'Calculator',terminal:'Terminal',explorer:'Explorer',paint:'Paint',desktop:'Desktop',ready:'bereit',files:'Dateien',folders:'Ordner',canvas:'Leinwand',colors:'Farben',docs:'Docs',music:'Music',chat:'Chat',links:'Links',perchance:'Perchance',settings:'Settings',noproc:'Kein Prozess',welcome:'Willkommen bei MakerOS',cancel:'canceled',os:'OS'},en:{lockHint:'Click to unlock',bootSub:'canceled-verse · v1.0',start:'Start',search:'Search...',notepad:'Notepad',calculator:'Calculator',terminal:'Terminal',explorer:'Explorer',paint:'Paint',desktop:'Desktop',ready:'ready',files:'Files',folders:'Folders',canvas:'Canvas',colors:'Colors',docs:'Docs',music:'Music',chat:'Chat',links:'Links',perchance:'Perchance',settings:'Settings',noproc:'No process',welcome:'Welcome to MakerOS',cancel:'canceled',os:'OS'}};
+    var I18N={de:{lockHint:'Click to unlock',bootSub:'qapdex-maker.github.io · v1.0',start:'Start',search:'Suche...',notepad:'Notepad',calculator:'Calculator',terminal:'Terminal',explorer:'Explorer',paint:'Paint',desktop:'Desktop',ready:'bereit',files:'Dateien',folders:'Ordner',canvas:'Leinwand',colors:'Farben',docs:'Docs',music:'Music',chat:'Chat',links:'Links',perchance:'Perchance',settings:'Settings',noproc:'Kein Prozess',welcome:'Willkommen bei MakerOS',cancel:'canceled',os:'OS'},en:{lockHint:'Click to unlock',bootSub:'qapdex-maker.github.io · v1.0',start:'Start',search:'Search...',notepad:'Notepad',calculator:'Calculator',terminal:'Terminal',explorer:'Explorer',paint:'Paint',desktop:'Desktop',ready:'ready',files:'Files',folders:'Folders',canvas:'Canvas',colors:'Colors',docs:'Docs',music:'Music',chat:'Chat',links:'Links',perchance:'Perchance',settings:'Settings',noproc:'No process',welcome:'Welcome to MakerOS',cancel:'canceled',os:'OS'}};
     function curLang(){return document.documentElement.classList.contains('lang-en')?'en':'de';}
     function t(k){var l=I18N[curLang()];return l&&l[k]||k;}
 

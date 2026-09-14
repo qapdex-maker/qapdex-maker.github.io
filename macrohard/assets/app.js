@@ -1,4 +1,4 @@
-/* MakerOS — App Logic v2.4 */
+/* MakerOS — App Logic v2.6 */
 (function(){
   'use strict';
   var lang='de';
@@ -216,7 +216,7 @@
       case 'browser': body='<div class="fePath"><span>🔍</span><input id="brAddr" value="https://" placeholder="URL eingeben..."></div><div style="display:flex;gap:4px;padding:4px 8px;flex-wrap:wrap" id="brNav"></div><iframe id="brFrame" src="about:blank" style="width:100%;flex:1;border:none;background:#fff" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>';break;
       case 'music': body='<div class="musList" id="musList"></div>';break;
       case 'chat': body='<div class="cpMsgs" id="cpMsgs"></div><div class="cpSugs" id="cpSugs"></div><div class="cpIn"><input id="cpIn" placeholder="Nachricht..."><button id="cpSend">Send</button></div>';break;
-      case 'docs': body='<div class="mdBody" id="mdBody"><h3>MakerOS</h3><p>Neo-brutalist desktop OS — canceled-verse edition.</p><p>Apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links.</p></div>';break;
+      case 'docs': body='<div class="mdBody" id="mdBody"><h3>MakerOS</h3><p>Neo-brutalist desktop OS — qapdex-maker.github.io edition.</p><p>Apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links.</p></div>';break;
       case 'settings': body='<div class="stGrid" id="stGrid"><label><input type="checkbox" id="stDark"> Dark Mode</label><label><input type="checkbox" id="stScan" checked> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div>';break;
       case 'links': body='<div class="clPane" id="clPane"></div>';break;
     }
@@ -714,7 +714,7 @@
     pane.appendChild(resetBtn);
     /* About */
     var about=document.createElement('div');about.style.cssText='margin-top:8px;padding:6px 8px;border:2px solid var(--line);background:var(--paper);font-size:10px';
-    about.textContent='MakerOS v2.5 · canceled-verse · Built '+new Date().toISOString().slice(0,10);
+    about.textContent='MakerOS v2.6 · qapdex-maker.github.io · Built '+new Date().toISOString().slice(0,10);
     pane.appendChild(about);
     /* Wallpaper URL */
     var wpLabel=document.createElement('label');wpLabel.innerHTML='Wallpaper URL: <input id="stWall" placeholder="https://..." style="flex:1;font-family:IBM Plex Mono;font-size:10px;padding:2px;border:2px solid var(--line);background:var(--paper);color:var(--ink)">';
@@ -821,14 +821,14 @@
     tabBar.appendChild(addTabBtn);
     addr.parentNode.insertBefore(tabBar,addr);
     /* Shortcuts */
-    var shortcuts=['https://qapdex-maker.github.io/macrohard/','https://github.com/qapdex-maker','https://perchance.org'];
+    var shortcuts=['qapdex-maker.github.io/macrohard/','github.com/qapdex-maker','perchance.org'];
     shortcuts.forEach(function(u){
-      var b=document.createElement('button');b.textContent=u.replace('https://','').split('/')[0];b.style.cssText='font-family:IBM Plex Mono,monospace;font-size:10px;padding:3px 6px;border:2px solid var(--line);background:var(--surface);cursor:pointer;box-shadow:var(--shadow)';
+      var b=document.createElement('button');b.textContent=u.split('/')[0];b.style.cssText='font-family:IBM Plex Mono,monospace;font-size:10px;padding:3px 6px;border:2px solid var(--line);background:var(--surface);cursor:pointer;box-shadow:var(--shadow)';
       b.addEventListener('click',function(){addr.value=u;navigate();});
       nav.appendChild(b);
     });
     addr.addEventListener('keydown',function(e){if(e.key==='Enter')navigate();});
-    function navigate(){try{var u=addr.value;if(!u.startsWith('http'))u='https://'+u;addr.value=u;var idx=brTabIdx[addr]||0;brHistory[addr][idx]=u;frame.src=u;}catch(e){addr.value='Error';}}
+    function navigate(){try{var u=addr.value.trim();if(!u)return;if(!u.startsWith('http'))u='https://'+u;if(u.startsWith('://'))u='https://'+u.slice(3);addr.value=u;var idx=brTabIdx[addr]||0;brHistory[addr][idx]=u;frame.src=u;}catch(e){addr.value='Error';}}
     /* Keyboard shortcuts in browser window */
     var wb=document.getElementById('w-browser');if(wb){wb.setAttribute('tabindex','-1');
       wb.addEventListener('keydown',function(e){

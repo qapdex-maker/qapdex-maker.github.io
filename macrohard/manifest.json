@@ -1,14 +1,15 @@
 {
   "name": "Macrohard Doors OS",
   "short_name": "Macrohard OS",
-  "description": "Windows-style desktop OS — canceled-verse edition",
+  "description": "Windows-style desktop OS — qapdex-maker.github.io",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#f1ede3",
   "theme_color": "#2547ff",
   "icons": [],
-  "version": "2.5",
+  "version": "2.6",
   "changelog": {
+    "v2.6": "Bugfix per Videoanalyse: Browser '://settings' URL-Fix, Shortcuts ohne https://, Settings 'canceled-verse' → qapdex-maker.github.io, docs/about updated",
     "v2.5": "Phase 1+2+3+4: localStorage, Tastatur, SCI-Modus, Shape-Tools, Audio, Tabs, ContentEditable, Kontakte, Session Restore, Wallpaper, Snapping, a11y",
     "v2.4": "Full-window resize, taskbar fix, drag, dark mode",
     "v2.3": "Initial stable build"
