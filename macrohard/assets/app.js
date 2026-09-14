@@ -134,6 +134,9 @@
     mk.style.left=(80+(zIdx%5)*30)+'px';mk.style.top=(40+(zIdx%5)*20)+'px';
     mk.style.width='640px';mk.style.height='420px';
     mk.style.zIndex=++zIdx;mk.setAttribute('data-app',id);
+    /* taskbar icon */
+    var tb=document.getElementById('tbCenter');
+    if(tb){var icon=document.createElement('div');icon.className='tbIcon running';icon.id='tb-'+id;icon.innerHTML='<div class="tbRun"></div><span style="font-size:10px;font-family:IBM Plex Mono,monospace;color:rgba(255,255,255,.8);padding:0 4px">'+title+'</span>';icon.addEventListener('click',function(){var w=document.getElementById('w-'+id);if(!w){openApp(id);}else{if(w.style.display==='none'){w.style.display='';this.classList.add('running');}else{w.style.display='none';this.classList.remove('running');}}updateFocus();});tb.appendChild(icon);}
     var title=t(id);
     var body='';
     switch(id){
@@ -163,8 +166,11 @@
     if(id==='settings') buildSettings();
     if(id==='links') buildLinks();
     mk.addEventListener('mousedown',function(e){if(e.target.closest('.wclose')||e.target.closest('.wmin'))return;this.classList.add('focused');this.style.zIndex=++zIdx;focused=id;updateFocus();});
-    mk.querySelector('.wclose').addEventListener('click',function(e){e.stopPropagation();mk.remove();});
-    mk.querySelector('.wmin').addEventListener('click',function(e){e.stopPropagation();mk.style.display='none';setTimeout(function(){mk.style.display='';},2000);});
+    mk.querySelector('.wclose').addEventListener('click',function(e){e.stopPropagation();mk.remove();var tb=document.getElementById('tb-'+id);if(tb)tb.remove();});
+    mk.querySelector('.wmin').addEventListener('click',function(e){e.stopPropagation();
+      if(mk.style.display==='none'){mk.style.display='';tb.classList.add('running');}
+      else{mk.style.display='none';tb.classList.remove('running');}
+    });
     /* titlebar drag */
     var titlebar=mk.querySelector('.wtitle');
     if(titlebar){titlebar.addEventListener('mousedown',function(e){if(e.target.closest('button'))return;dragStart(e,mk);});}
