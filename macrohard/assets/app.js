@@ -109,12 +109,11 @@
     e.preventDefault();
     var m=document.getElementById('deskCtx');
     if(!m){m=document.createElement('div');m.id='deskCtx';
-      m.innerHTML='<div class="ctxItem" data-a="notepad">Notepad</div><div class="ctxItem" data-a="calculator">Calculator</div><div class="ctxItem" data-a="terminal">Terminal</div><div class="ctxItem" data-a="explorer">Explorer</div><div class="ctxItem" data-a="paint">Paint</div><div class="ctxSep"></div><div class="ctxItem" id="ctxSettings">Settings</div>';
+      m.innerHTML='<div class="ctxItem" data-a="notepad">Notepad</div><div class="ctxItem" data-a="calculator">Calculator</div><div class="ctxItem" data-a="terminal">Terminal</div><div class="ctxItem" data-a="explorer">Explorer</div><div class="ctxItem" data-a="paint">Paint</div><div class="ctxSep"></div><div class="ctxItem" data-a="settings">Settings</div><div class="ctxItem" data-a="amibios">AMIBIOS</div>';
       document.body.appendChild(m);
       m.querySelectorAll('.ctxItem').forEach(function(it){
         it.addEventListener('click',function(){var a=it.dataset.a;if(a)openApp(a);m.classList.remove('open');});
       });
-      document.getElementById('ctxSettings').addEventListener('click',function(){openApp('settings');m.classList.remove('open');});
     }
     m.style.left=e.clientX+'px';m.style.top=e.clientY+'px';
     m.classList.add('open');
@@ -134,6 +133,7 @@
     {id:'docs',label:'Docs',icon:'docs'},
     {id:'settings',label:'Settings',icon:'settings'},
     {id:'links',label:'Links',icon:'links'},
+    {id:'amibios',label:'AMIBIOS',icon:'amibios'},
   ];
 
   function makeIcon(a){
@@ -217,7 +217,7 @@
       case 'browser': body='<div class="fePath"><span>🔍</span><input id="brAddr" value="https://" placeholder="URL eingeben..."></div><div style="display:flex;gap:4px;padding:4px 8px;flex-wrap:wrap" id="brNav"></div><iframe id="brFrame" src="about:blank" style="width:100%;flex:1;border:none;background:#fff" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>';break;
       case 'music': body='<div class="musList" id="musList"></div>';break;
       case 'chat': body='<div class="cpMsgs" id="cpMsgs"></div><div class="cpSugs" id="cpSugs"></div><div class="cpIn"><input id="cpIn" placeholder="Nachricht..."><button id="cpSend">Send</button></div>';break;
-      case 'docs': body='<div class="mdBody" id="mdBody"><h3>MakerOS</h3><p>Neo-brutalist desktop OS — qapdex-maker.github.io edition.</p><p>Apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links.</p></div>';break;
+      case 'docs': body='<div class="mdBody" id="mdBody"><h3>MakerOS Docs</h3><p>Neo-brutalist desktop OS — qapdex-maker.github.io edition.</p><p>13 Apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links, AMIBIOS.</p></div>';break;
       case 'settings': body='<div class="stGrid" id="stGrid"><label><input type="checkbox" id="stDark"> Dark Mode</label><label><input type="checkbox" id="stScan" checked> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div>';break;
       case 'links': body='<div class="clPane" id="clPane"></div>';break;
       case 'amibios': body='<div style="width:100%;height:100%" id="w-amibios"></div>';break;
@@ -717,8 +717,12 @@
     pane.appendChild(resetBtn);
     /* About */
     var about=document.createElement('div');about.style.cssText='margin-top:8px;padding:6px 8px;border:2px solid var(--line);background:var(--paper);font-size:10px';
-    about.textContent='MakerOS v2.6 · qapdex-maker.github.io · Built '+new Date().toISOString().slice(0,10);
+    about.textContent='MakerOS v2.9 · qapdex-maker.github.io · Built '+new Date().toISOString().slice(0,10);
     pane.appendChild(about);
+    /* AMIBIOS quick launch */
+    var bioBtn=document.createElement('button');bioBtn.className='cBtn';bioBtn.textContent='⚙ Launch AMIBIOS';
+    bioBtn.addEventListener('click',function(){openApp('amibios');});
+    pane.appendChild(bioBtn);
     /* Wallpaper URL */
     var wpLabel=document.createElement('label');wpLabel.innerHTML='Wallpaper URL: <input id="stWall" placeholder="https://..." style="flex:1;font-family:IBM Plex Mono;font-size:10px;padding:2px;border:2px solid var(--line);background:var(--paper);color:var(--ink)">';
     var wpBtn=document.createElement('button');wpBtn.className='cBtn';wpBtn.textContent='Apply';wpBtn.addEventListener('click',function(){var u=document.getElementById('stWall').value;if(u)setWallpaper(u);});
