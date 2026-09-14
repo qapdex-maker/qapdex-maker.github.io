@@ -5,7 +5,7 @@ Session 2026-09-14 · v2.9 (2026-09-15). Standalone subpage in `qapdex-maker.git
 ## Structure
 - `macrohard/index.html` — standalone, neo-brutalist, self-contained
 - `macrohard/assets/site.css` — portal tokens mapped to OS components + dark mode
-- `macrohard/assets/app.js` — boot→lock→desktop, 13 apps + extensions, i18n, PWA, drag/resize, taskbar icons
+- `macrohard/assets/app.js` — boot→lock→desktop, 13 apps + extensions, i18n, PWA, drag/resize, taskbar icons, snapWindow, Fisher-Yates shuffle
 - `macrohard/manifest.json` — PWA manifest (siteVersion + buildDate)
 - `macrohard/sw.js` — service worker v2 (stale-while-revalidate, network-first AMI BIOS, quota check, offline fallback)
 - `macrohard/assets/ami-bios-setup.html` — AMIBIOS Setup utility (Award BIOS simulation, CRT-style, Tailwind)
