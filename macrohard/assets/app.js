@@ -96,6 +96,7 @@
     if(direction==='left'){w.style.left='0';w.style.top='0';w.style.width=(wW/2-4)+'px';w.style.height=wH+'px';}
     else if(direction==='right'){w.style.left=(wW/2+4)+'px';w.style.top='0';w.style.width=(wW/2-4)+'px';w.style.height=wH+'px';}
     else if(direction==='max'){w.style.left='0';w.style.top='0';w.style.width='100vw';w.style.height='100vh';}
+    else if(direction==='restore'){w.style.left=w.dataset.origLeft||'';w.style.top=w.dataset.origTop||'';w.style.width=w.dataset.origWidth||'';w.style.height=w.dataset.origHeight||'';}
     saveSession();
   }
   /* Accessibility: reduced motion */
@@ -177,6 +178,13 @@
     this.classList.add('hide');
   });
 
+  /* Fisher-Yates shuffle helper */
+  function shuffleArray(arr){
+    var a=arr.slice();
+    for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=a[i];a[i]=a[j];a[j]=tmp;}
+    return a;
+  }
+
   /* Window management — toast helper */
   function toast(msg){
     var t=document.getElementById('osToast');if(t){t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},2200);return;}
@@ -195,7 +203,20 @@
     else if(key==='b'){e.preventDefault();openApp('browser');toast('Browser');}
     else if(key==='m'){e.preventDefault();openApp('music');toast('Music');}
     else if(key==='c'&&!e.shiftKey){e.preventDefault();openApp('chat');toast('Chat');}
+    else if(key==='a'&&!e.shiftKey){e.preventDefault();openApp('amibios');toast('AMIBIOS');}
+    else if(key==='d'){e.preventDefault();openApp('docs');toast('Docs');}
+    else if(key==='l'){e.preventDefault();openApp('links');toast('Links');}
+    else if(key==='s'){e.preventDefault();snapActive();}
   });
+
+  function snapActive(){
+    var w=document.querySelector('.wnd.focused');
+    if(!w) return;
+    var curLeft=w.style.left||'0';
+    var wW=window.innerWidth;
+    if(curLeft==='0'){snapWindow(w,'right');toast('Right snap');}
+    else{snapWindow(w,'left');toast('Left snap');}
+  }
 
   function openApp(id){
     var w=document.getElementById('w-'+id);
@@ -254,7 +275,7 @@
       } else {
         mk.dataset.origLeft=mk.style.left||'';mk.dataset.origTop=mk.style.top||'';
         mk.dataset.origWidth=mk.style.width||'';mk.dataset.origHeight=mk.style.height||'';
-        mk.style.left='0';mk.style.top='0';mk.style.width='100vw';mk.style.height='100vh';
+        snapWindow(mk,'max');
         mk.dataset.max='true';
         if(tbIcon)tbIcon.classList.add('running');
       }
@@ -614,7 +635,7 @@
     var audio=new Audio();audio.volume=0.7;var curIdx=0;var playing=false;var shuffled=[0,1,2,3];var repeat=false;
     document.getElementById('musVol').addEventListener('input',function(){var v=parseFloat(this.value);audio.volume=v;document.getElementById('musVolL').textContent=Math.round(v*100);});
     document.getElementById('musProg').addEventListener('input',function(){if(audio.duration){audio.currentTime=(this.value/100)*audio.duration;}});
-    document.getElementById('musShuffle').addEventListener('click',function(){shuffled=[0,1,2,3].sort(function(){return Math.random()-.5;});document.getElementById('musShuffle').style.background=shuffled?'var(--accent)':'';});
+    document.getElementById('musShuffle').addEventListener('click',function(){shuffled=shuffleArray([0,1,2,3]);document.getElementById('musShuffle').style.background=shuffled?'var(--accent)':'';});
     document.getElementById('musRepeat').addEventListener('click',function(){repeat=!repeat;this.style.background=repeat?'var(--accent)':'';});
     songs.forEach(function(s,i){
       var item=document.createElement('div');item.className='musItem';
@@ -653,6 +674,7 @@
     sug.parentNode.insertBefore(cb,sug);
     /* Emoji bar */
     var eb=document.createElement('div');eb.style.cssText='display:flex;gap:2px;padding:4px 8px;border-bottom:2px solid var(--line);flex-wrap:wrap';
+    var extraEmoji=['😂','😎','🔥','💡','✅','🎉','👍','🚀','🙃','🤔','👀','🎵','📸','💻','🔑','⭐','🌟','🎯','💪','🏆'];
     var allEmoji=['🙂','😀','😂','😎','🔥','💡','✅','🎉','👍','🚀'].concat(extraEmoji);
     allEmoji.forEach(function(e){
       var b=document.createElement('button');b.textContent=e;b.style.cssText='font-size:16px;border:none;background:transparent;cursor:pointer;padding:2px';
