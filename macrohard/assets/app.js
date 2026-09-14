@@ -74,6 +74,7 @@
     {id:'terminal',label:'Terminal',icon:'term'},
     {id:'explorer',label:'Explorer',icon:'fe'},
     {id:'paint',label:'Paint',icon:'paint'},
+    {id:'browser',label:'Edge',icon:'browser'},
   ];
 
   function makeIcon(a){
@@ -98,7 +99,8 @@
       perchance:'<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><polygon points=\"10,8 16,12 10,16\"/></svg>',
       docs:'<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"><path d=\"M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z\"/><polyline points=\"14,2 14,8 20,8\"/></svg>',
       chat:'<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"><path d=\"M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z\"/></svg>',
-      camera:'<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"><path d=\"M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z\"/><circle cx=\"12\" cy=\"13\" r=\"4\"/></svg>'
+      camera:'<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"><path d=\"M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z\"/><circle cx=\"12\" cy=\"13\" r=\"4\"/></svg>',
+      browser:'<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><circle cx=\"12\" cy=\"12\" r=\"4\"/><line x1=\"21\" y1=\"12\" x2=\"16\" y2=\"12\"/><line x1=\"8\" y1=\"12\" x2=\"3\" y2=\"12\"/><line x1=\"12\" y1=\"21\" x2=\"12\" y2=\"16\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"3\"/></svg>'
     };
     return s[name]||'';
   }
@@ -131,7 +133,8 @@
       case 'calculator': body='<div class=\"calHead\"><input class=\"cExpr\" id=\"cExpr\" readonly value=\"0\"><span class=\"cCur\" id=\"cCur\">0</span></div><div class=\"calGrid\" id=\"calGrid\"></div>';break;
       case 'terminal': body='<div class=\"termOut\" id=\"termOut\"></div><div class=\"termIn\"><span class=\"prompt\">user@macrohard:~$</span><input id=\"termIn\" autofocus></div>';break;
       case 'explorer': body='<div class=\"fePath\"><span>📁</span><input id=\"fePath\" value=\"C:\\Users\\macrohard\\Desktop\"></div><div class=\"feSide\" id=\"feSide\"></div><div class=\"feGrid\" id=\"feGrid\"></div>';break;
-      case 'paint': body='<div class=\"ptColors\" id=\"ptColors\"></div><canvas class=\"ptCanvas\" id=\"ptCanvas\" width=\"400\" height=\"260\"></canvas>';break;
+      case 'paint': body='<div class="ptColors" id="ptColors"></div><canvas class="ptCanvas" id="ptCanvas" width="400" height="260"></canvas>';break;
+      case 'browser': body='<div class="fePath"><span>🔍</span><input id="brAddr" value="https://" placeholder="URL eingeben..."></div><div style="display:flex;gap:4px;padding:4px 8px;flex-wrap:wrap" id="brNav"></div><iframe id="brFrame" src="about:blank" style="width:100%;flex:1;border:none;background:#fff" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>';break;
     }
     mk.innerHTML='<div class=\"wtitle\"><span class=\"wact\"></span><span class=\"wtxt\">'+title+'</span><button class=\"wmin\">_</button><button class=\"wclose\">×</button></div><div class=\"wbody\">'+body+'</div><div class=\"wnd-resize\"></div>';
     document.getElementById('desktop').appendChild(mk);
@@ -140,6 +143,7 @@
     if(id==='paint') buildPaint();
     if(id==='terminal') buildTerminal();
     if(id==='notepad') setupNotepad();
+    if(id==='browser') buildBrowser();
     mk.addEventListener('mousedown',function(){this.classList.add('focused');this.style.zIndex=++zIdx;focused=id;updateFocus();});
     mk.querySelector('.wclose').addEventListener('click',function(){mk.remove();});
     mk.querySelector('.wmin').addEventListener('click',function(){mk.style.display='none';setTimeout(function(){mk.style.display='';},2000);});
@@ -333,6 +337,20 @@
     /* lock click */
     document.getElementById('lock').addEventListener('click',function(){this.classList.add('hide');});
   });
+
+  /* Browser */
+  function buildBrowser(){
+    var addr=document.getElementById('brAddr');var frame=document.getElementById('brFrame');var nav=document.getElementById('brNav');
+    if(!addr||!frame) return;
+    var shortcuts=['https://qapdex-maker.github.io/macrohard/','https://github.com/qapdex-maker','https://perchance.org'];
+    shortcuts.forEach(function(u){
+      var b=document.createElement('button');b.textContent=u.replace('https://','').split('/')[0];b.style.cssText='font-family:IBM Plex Mono,monospace;font-size:10px;padding:3px 6px;border:2px solid var(--line);background:var(--surface);cursor:pointer;box-shadow:var(--shadow)';
+      b.addEventListener('click',function(){addr.value=u;navigate();});
+      nav.appendChild(b);
+    });
+    addr.addEventListener('keydown',function(e){if(e.key==='Enter')navigate();});
+    function navigate(){try{var u=addr.value;if(!u.startsWith('http'))u='https://'+u;addr.value=u;frame.src=u;}catch(e){addr.value='Error';}}
+  }
 
   window.addEventListener('DOMContentLoaded',function(){
     setTimeout(startOS,1500);
