@@ -172,8 +172,8 @@
     mk.querySelector('.wmax').addEventListener('click',function(e){e.stopPropagation();
       var tbIcon=document.getElementById('tb-'+id);
       if(mk.dataset.max==='true'){
-        mk.style.left=mk.dataset.origLeft+'px';mk.style.top=mk.dataset.origTop+'px';
-        mk.style.width=mk.dataset.origWidth+'px';mk.style.height=mk.dataset.origHeight+'px';
+        mk.style.left=mk.dataset.origLeft;mk.style.top=mk.dataset.origTop;
+        mk.style.width=mk.dataset.origWidth;mk.style.height=mk.dataset.origHeight;
         delete mk.dataset.max;delete mk.dataset.origLeft;delete mk.dataset.origTop;
         delete mk.dataset.origWidth;delete mk.dataset.origHeight;
         if(tbIcon)tbIcon.classList.add('running');
