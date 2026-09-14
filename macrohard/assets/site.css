@@ -80,6 +80,9 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
 /* ===== notepad ===== */
 .npArea{width:100%;height:100%;border:none;resize:none;padding:8px;font-family:"IBM Plex Mono",monospace;font-size:13px;background:var(--paper);color:var(--ink);outline:none}
 .npStats{font-size:10px;font-family:"IBM Plex Mono",monospace;padding:2px 8px;background:var(--accent-2);color:var(--ink);text-align:right}
+.npSearch{display:flex;gap:4px;padding:4px 8px;background:var(--surface);border:2px solid var(--line);box-shadow:var(--shadow)}
+.npSearch input{flex:1;border:none;background:var(--paper);font-family:"IBM Plex Mono",monospace;font-size:12px;outline:none;color:var(--ink);padding:4px 8px}
+.npSearch button{padding:4px 10px}
 
 /* ===== calculator ===== */
 .calHead{display:flex;padding:8px;gap:4px}
@@ -93,6 +96,8 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
 .cBtn.op{background:var(--accent);color:#fff}
 .cBtn.eq{background:var(--accent-2);color:var(--ink)}
 .cBtn.z{grid-column:span 2}
+.calcHist .chItem{padding:2px 6px;font-size:11px;cursor:pointer;border-bottom:1px solid var(--line)}
+.calcHist .chItem:hover{background:var(--accent);color:#fff}
 
 /* ===== terminal ===== */
 .termOut{width:100%;height:100%;padding:8px;font-family:"IBM Plex Mono",monospace;font-size:12px;background:#0a0a0a;color:#0f0;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
@@ -111,12 +116,16 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
 .feFile .fn{font-size:10px;text-align:center;word-break:break-all;font-family:"IBM Plex Mono",monospace}
 .fePath{padding:4px 10px;border-bottom:2px solid var(--line);font-family:"IBM Plex Mono",monospace;font-size:11px;background:var(--paper);display:flex;align-items:center;gap:6px}
 .fePath input{flex:1;border:none;background:transparent;font-family:"IBM Plex Mono",monospace;font-size:11px;outline:none;color:var(--ink)}
+.feToolbar{display:flex;gap:4px;padding:4px 10px;border-bottom:2px solid var(--line);background:var(--paper)}
 
 /* ===== paint ===== */
 .ptCanvas{border:2px solid var(--line);cursor:crosshair;display:block;background:#fff}
 .ptColors{display:flex;gap:4px;padding:6px;flex-wrap:wrap}
 .ptColors button{width:22px;height:22px;border:2px solid var(--line);cursor:pointer;padding:0}
 .ptColors button.active{border-color:var(--ink);box-shadow:var(--shadow)}
+.ptTools{display:flex;gap:3px;padding:4px 6px;flex-wrap:wrap}
+.ptTools button{padding:3px 7px;font-family:"IBM Plex Mono",monospace;font-size:11px;border:2px solid var(--line);background:var(--surface);cursor:pointer;box-shadow:var(--shadow)}
+.ptTools button.active{background:var(--accent);color:#fff}
 
 /* ===== webcam ===== */
 .camVideo{width:100%;height:100%;background:#000;display:block}
@@ -134,7 +143,8 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
 .musItem:hover{background:var(--paper)}
 .musPlay{width:28px;height:28px;border:2px solid var(--line);background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold}
 .musInfo{flex:1;font-size:12px;font-family:"IBM Plex Mono",monospace}
-.musVol{padding:8px 10px;display:flex;align-items:center;gap:8px}
+.musVol{display:flex;align-items:center;gap:6px;padding:4px 10px}
+.musVol input[type=range]{flex:1}
 
 /* ===== settings ===== */
 .stGrid{padding:10px;display:flex;flex-direction:column;gap:8px}
@@ -167,6 +177,17 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
 
 /* ===== mock status ===== */
 .mock{display:flex;align-items:center;justify-content:center;height:100%;font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted);padding:20px;text-align:center}
+
+/* ===== desktop context menu ===== */
+#deskCtx{position:fixed;z-index:100001;background:var(--surface);border:3px solid var(--line);box-shadow:var(--shadow);display:none;flex-direction:column;min-width:160px;padding:4px 0}
+#deskCtx.open{display:flex}
+#deskCtx .ctxItem{padding:6px 14px;font-family:"IBM Plex Mono",monospace;font-size:11px;cursor:pointer;background:var(--surface);color:var(--ink)}
+#deskCtx .ctxItem:hover{background:var(--accent);color:#fff}
+#deskCtx .ctxSep{height:2px;background:var(--line);margin:2px 0}
+
+/* ===== toast ===== */
+.osToast{position:fixed;bottom:56px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);font-family:"IBM Plex Mono",monospace;font-size:12px;padding:6px 18px;border:2px solid var(--line);box-shadow:var(--shadow);z-index:100002;opacity:0;transition:opacity .3s;pointer-events:none}
+.osToast.show{opacity:1}
 
 /* ===== resize handles ===== */
 .wnd-resize{position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize;z-index:5}
