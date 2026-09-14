@@ -1,4 +1,4 @@
-/* Macrohard Doors OS — App Logic v2.4 */
+/* MakerOS — App Logic v2.4 */
 (function(){
   'use strict';
   var lang='de';
@@ -15,7 +15,7 @@
       music:'Music',chat:'Chat',docs:'Docs',settings:'Settings',links:'Links',
       start:'Start',search:'Suche...',
       noproc:'Kein Prozess',
-      welcome:'Willkommen bei Macrohard Doors OS',
+      welcome:'Willkommen bei MakerOS',
       cancel:'canceled',
       ready:'bereit',
       files:'Dateien',folders:'Ordner',
@@ -30,7 +30,7 @@
       music:'Music',chat:'Chat',docs:'Docs',settings:'Settings',links:'Links',
       start:'Start',search:'Search...',
       noproc:'No process',
-      welcome:'Welcome to Macrohard Doors OS',
+      welcome:'Welcome to MakerOS',
       cancel:'canceled',
       ready:'ready',
       files:'Files',folders:'Folders',
@@ -145,7 +145,7 @@
       case 'browser': body='<div class="fePath"><span>🔍</span><input id="brAddr" value="https://" placeholder="URL eingeben..."></div><div style="display:flex;gap:4px;padding:4px 8px;flex-wrap:wrap" id="brNav"></div><iframe id="brFrame" src="about:blank" style="width:100%;flex:1;border:none;background:#fff" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>';break;
       case 'music': body='<div class="musList" id="musList"></div>';break;
       case 'chat': body='<div class="cpMsgs" id="cpMsgs"></div><div class="cpSugs" id="cpSugs"></div><div class="cpIn"><input id="cpIn" placeholder="Nachricht..."><button id="cpSend">Send</button></div>';break;
-      case 'docs': body='<div class="mdBody" id="mdBody"><h3>Macrohard Doors OS</h3><p>Neo-brutalist desktop OS — canceled-verse edition.</p><p>Apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links.</p></div>';break;
+      case 'docs': body='<div class="mdBody" id="mdBody"><h3>MakerOS</h3><p>Neo-brutalist desktop OS — canceled-verse edition.</p><p>Apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links.</p></div>';break;
       case 'settings': body='<div class="stGrid" id="stGrid"><label><input type="checkbox" id="stDark"> Dark Mode</label><label><input type="checkbox" id="stScan" checked> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div>';break;
       case 'links': body='<div class="clPane" id="clPane"></div>';break;
     }
@@ -233,7 +233,7 @@
   function buildTerminal(){
     var out=document.getElementById('termOut');var inp=document.getElementById('termIn');if(!out||!inp) return;
     function w(text){var d=document.createElement('div');d.textContent=text;out.appendChild(d);out.scrollTop=out.scrollHeight;}
-    w('Macrohard Doors OS — Terminal');w('Typse "help" für Befehle.');
+    w('MakerOS — Terminal');w('Typse "help" für Befehle.');
     inp.addEventListener('keydown',function(e){
       if(e.key==='Enter'){
         var cmd=inp.value.trim();if(!cmd){return;}
@@ -352,7 +352,7 @@
   /* Music */
   function buildMusic(){
     var list=document.getElementById('musList');if(!list) return;
-    var songs=[{n:'Macrohard Anthems',a:'IDUN Studio'},{n:'Doors of Cancellation',a:'Perchance Sound'},{n:'Neo-Brutalist Beat',a:'qapdex-maker'}];
+    var songs=[{n:'Macrohard Anthems',a:'IDUN Studio'},{n:'Maker of Cancellation',a:'Perchance Sound'},{n:'Neo-Brutalist Beat',a:'qapdex-maker'}];
     songs.forEach(function(s){
       var item=document.createElement('div');item.className='musItem';
       item.innerHTML='<button class="musPlay">▶</button><span class="musInfo"><b>'+s.n+'</b><br><span style="font-size:10px;color:var(--muted)">'+s.a+'</span></span>';
@@ -382,7 +382,7 @@
   /* Docs */
   function buildDocs(){
     var body=document.getElementById('mdBody');if(!body) return;
-    body.innerHTML+='<h3>Dokumentation</h3><p>Macrohard Doors OS — neo-brutalist Desktop.</p><ul><li>Notepad: textarea + Char-Counter + localStorage</li><li>Calculator: eval, ± % (, ), Historie</li><li>Terminal: pwd, ls, cat, cd, mkdir, echo, date, clear, whoami, help</li><li>Explorer: virtuelles FS, Tree-Navigation</li><li>Paint: canvas + 12 Farben + Touch</li><li>Browser: iframe + URL + Shortcuts</li><li>Music / Chat / Docs / Settings / Links</li></ul>';
+    body.innerHTML+='<h3>Dokumentation</h3><p>MakerOS — neo-brutalist Desktop.</p><ul><li>Notepad: textarea + Char-Counter + localStorage</li><li>Calculator: eval, ± % (, ), Historie</li><li>Terminal: pwd, ls, cat, cd, mkdir, echo, date, clear, whoami, help</li><li>Explorer: virtuelles FS, Tree-Navigation</li><li>Paint: canvas + 12 Farben + Touch</li><li>Browser: iframe + URL + Shortcuts</li><li>Music / Chat / Docs / Settings / Links</li></ul>';
   }
 
   /* Settings */
@@ -414,7 +414,7 @@
   function buildLinks(){
     var pane=document.getElementById('clPane');if(!pane) return;
     var links=[
-      {n:'Macrohard Doors OS',u:'https://qapdex-maker.github.io/macrohard/'},{n:'GitHub',u:'https://github.com/qapdex-maker'},{n:'Perchance',u:'https://perchance.org'},{n:'IDUN',u:'https://idun.app'},{n:'Docs',u:'https://qapdex-maker.github.io/msgraph/'},{n:'Catpop',u:'https://qapdex-maker.github.io/catpop/'},{n:'Nous Research',u:'https://nousresearch.com'}
+      {n:'MakerOS',u:'https://qapdex-maker.github.io/macrohard/'},{n:'GitHub',u:'https://github.com/qapdex-maker'},{n:'Perchance',u:'https://perchance.org'},{n:'IDUN',u:'https://idun.app'},{n:'Docs',u:'https://qapdex-maker.github.io/msgraph/'},{n:'Catpop',u:'https://qapdex-maker.github.io/catpop/'},{n:'Nous Research',u:'https://nousresearch.com'}
     ];
     pane.innerHTML='';
     links.forEach(function(l){
