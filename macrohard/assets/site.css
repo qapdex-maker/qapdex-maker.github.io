@@ -72,6 +72,8 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
 .wbody{flex:1;overflow:hidden;position:relative}
 .wmin{width:28px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;background:transparent;color:#fff;font-size:16px;font-weight:bold}
 .wmin:hover{background:rgba(255,255,255,.15)}
+.wmax{width:28px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;background:transparent;color:#fff;font-size:14px;font-weight:bold}
+.wmax:hover{background:rgba(255,255,255,.15)}
 .wclose{width:28px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;background:transparent;color:#fff;font-size:14px;font-weight:bold}
 .wclose:hover{background:#ff3b3b}
 

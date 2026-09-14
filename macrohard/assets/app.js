@@ -149,7 +149,7 @@
       case 'settings': body='<div class="stGrid" id="stGrid"><label><input type="checkbox" id="stDark"> Dark Mode</label><label><input type="checkbox" id="stScan" checked> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div>';break;
       case 'links': body='<div class="clPane" id="clPane"></div>';break;
     }
-    mk.innerHTML='<div class="wtitle"><span class="wact"></span><span class="wtxt">'+title+'</span><button class="wmin">_</button><button class="wclose">×</button></div><div class="wbody">'+body+'</div><div class="wnd-resize" data-dot="⬢"></div>';
+    mk.innerHTML='<div class="wtitle"><span class="wact"></span><span class="wtxt">'+title+'</span><button class="wmin" title="Minimize">_</button><button class="wmax" title="Maximize">□</button><button class="wclose" title="Close">×</button></div><div class="wbody">'+body+'</div><div class="wnd-resize" data-dot="⬢"></div>';
     document.getElementById('desktop').appendChild(mk);
     if(id==='calculator') buildCalc();
     if(id==='explorer') buildExplorer();
@@ -168,6 +168,22 @@
       var tbIcon=document.getElementById('tb-'+id);
       if(mk.style.display==='none'){mk.style.display='';if(tbIcon)tbIcon.classList.add('running');}
       else{mk.style.display='none';if(tbIcon)tbIcon.classList.remove('running');}
+    });
+    mk.querySelector('.wmax').addEventListener('click',function(e){e.stopPropagation();
+      var tbIcon=document.getElementById('tb-'+id);
+      if(mk.dataset.max==='true'){
+        mk.style.left=mk.dataset.origLeft+'px';mk.style.top=mk.dataset.origTop+'px';
+        mk.style.width=mk.dataset.origWidth+'px';mk.style.height=mk.dataset.origHeight+'px';
+        delete mk.dataset.max;delete mk.dataset.origLeft;delete mk.dataset.origTop;
+        delete mk.dataset.origWidth;delete mk.dataset.origHeight;
+        if(tbIcon)tbIcon.classList.add('running');
+      } else {
+        mk.dataset.origLeft=mk.style.left;mk.dataset.origTop=mk.style.top;
+        mk.dataset.origWidth=mk.style.width;mk.dataset.origHeight=mk.style.height;
+        mk.style.left='0';mk.style.top='0';mk.style.width='100vw';mk.style.height='100vh';
+        mk.dataset.max='true';
+        if(tbIcon)tbIcon.classList.add('running');
+      }
     });
     /* titlebar drag */
     var titlebar=mk.querySelector('.wtitle');
