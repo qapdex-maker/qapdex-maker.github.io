@@ -1,4 +1,4 @@
-/* Macrohard Doors OS — App Logic v2 */
+/* Macrohard Doors OS — App Logic v2.4 */
 (function(){
   'use strict';
   var lang='de';
@@ -135,9 +135,6 @@
     mk.style.width='640px';mk.style.height='420px';
     mk.style.zIndex=++zIdx;mk.setAttribute('data-app',id);
     var title=t(id);
-    /* taskbar icon */
-    var tb=document.getElementById('tbCenter');
-    if(tb){var icon=document.createElement('div');icon.className='tbIcon running';icon.id='tb-'+id;icon.innerHTML='<div class="tbRun"></div><span style="font-size:10px;font-family:IBM Plex Mono,monospace;color:rgba(255,255,255,.8);padding:0 4px">'+title+'</span>';icon.addEventListener('click',function(){var w=document.getElementById('w-'+id);if(!w){openApp(id);}else{if(w.style.display==='none'){w.style.display='';this.classList.add('running');}else{w.style.display='none';this.classList.remove('running');}}updateFocus();});tb.appendChild(icon);}
     var body='';
     switch(id){
       case 'notepad': body='<textarea class="npArea" id="npArea" placeholder="Notepad — tippe hier..."></textarea><div class="npStats" id="npStats">0 Zeichen</div>';break;
@@ -172,7 +169,6 @@
       if(mk.style.display==='none'){mk.style.display='';if(tbIcon)tbIcon.classList.add('running');}
       else{mk.style.display='none';if(tbIcon)tbIcon.classList.remove('running');}
     });
-    mk.querySelector('.wclose').addEventListener('click',function(e){e.stopPropagation();mk.remove();var tbIcon=document.getElementById('tb-'+id);if(tbIcon)tbIcon.remove();});
     /* titlebar drag */
     var titlebar=mk.querySelector('.wtitle');
     if(titlebar){titlebar.addEventListener('mousedown',function(e){if(e.target.closest('button'))return;dragStart(e,mk);});}
@@ -441,7 +437,7 @@
     });
   }
 
-  /* Window resize — full window bottom-right corner + sides */
+  /* Window resize — bottom-right corner */
   document.addEventListener('mousedown',function(e){
     var w=e.target.closest('.wnd');if(!w)return;
     var rect=w.getBoundingClientRect();
@@ -454,10 +450,14 @@
     function onup(){document.removeEventListener('mousemove',onmove);document.removeEventListener('mouseup',onup);}
     document.addEventListener('mousemove',onmove);document.addEventListener('mouseup',onup);
   });
+
   /* touch resize */
   document.addEventListener('touchstart',function(e){
-    var r=e.target.closest('.wnd-resize');if(!r)return;
-    var w=r.closest('.wnd');if(!w)return;
+    var w=e.target.closest('.wnd');if(!w)return;
+    var rect=w.getBoundingClientRect();
+    var mr=rect.right-e.touches[0].clientX,mb=rect.bottom-e.touches[0].clientY;
+    var edge=mr<8&&mb<8;
+    if(!edge)return;
     var sx=e.touches[0].clientX,sy=e.touches[0].clientY,ow=w.offsetWidth,oh=w.offsetHeight;
     function onmove(ev){var t=ev.touches[0];w.style.width=Math.max(280,ow+(t.clientX-sx))+'px';w.style.height=Math.max(180,oh+(t.clientY-sy))+'px';}
     function onup(){document.removeEventListener('touchmove',onmove);document.removeEventListener('touchend',onup);}
