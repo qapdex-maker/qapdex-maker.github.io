@@ -149,7 +149,7 @@
       case 'settings': body='<div class="stGrid" id="stGrid"><label><input type="checkbox" id="stDark"> Dark Mode</label><label><input type="checkbox" id="stScan" checked> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div>';break;
       case 'links': body='<div class="clPane" id="clPane"></div>';break;
     }
-    mk.innerHTML='<div class="wtitle"><span class="wact"></span><span class="wtxt">'+title+'</span><button class="wmin">_</button><button class="wclose">×</button></div><div class="wbody">'+body+'</div><div class="wnd-resize"></div>';
+    mk.innerHTML='<div class="wtitle"><span class="wact"></span><span class="wtxt">'+title+'</span><button class="wmin">_</button><button class="wclose">×</button></div><div class="wbody">'+body+'</div><div class="wnd-resize" data-dot="⬢"></div>';
     document.getElementById('desktop').appendChild(mk);
     if(id==='calculator') buildCalc();
     if(id==='explorer') buildExplorer();
