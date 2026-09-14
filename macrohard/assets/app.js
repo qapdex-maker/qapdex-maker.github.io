@@ -166,11 +166,13 @@
     if(id==='settings') buildSettings();
     if(id==='links') buildLinks();
     mk.addEventListener('mousedown',function(e){if(e.target.closest('.wclose')||e.target.closest('.wmin'))return;this.classList.add('focused');this.style.zIndex=++zIdx;focused=id;updateFocus();});
-    mk.querySelector('.wclose').addEventListener('click',function(e){e.stopPropagation();mk.remove();var tb=document.getElementById('tb-'+id);if(tb)tb.remove();});
+    mk.querySelector('.wclose').addEventListener('click',function(e){e.stopPropagation();mk.remove();var tbIcon=document.getElementById('tb-'+id);if(tbIcon)tbIcon.remove();});
     mk.querySelector('.wmin').addEventListener('click',function(e){e.stopPropagation();
-      if(mk.style.display==='none'){mk.style.display='';tb.classList.add('running');}
-      else{mk.style.display='none';tb.classList.remove('running');}
+      var tbIcon=document.getElementById('tb-'+id);
+      if(mk.style.display==='none'){mk.style.display='';if(tbIcon)tbIcon.classList.add('running');}
+      else{mk.style.display='none';if(tbIcon)tbIcon.classList.remove('running');}
     });
+    mk.querySelector('.wclose').addEventListener('click',function(e){e.stopPropagation();mk.remove();var tbIcon=document.getElementById('tb-'+id);if(tbIcon)tbIcon.remove();});
     /* titlebar drag */
     var titlebar=mk.querySelector('.wtitle');
     if(titlebar){titlebar.addEventListener('mousedown',function(e){if(e.target.closest('button'))return;dragStart(e,mk);});}
@@ -439,11 +441,14 @@
     });
   }
 
-  /* Window resize */
+  /* Window resize — full window bottom-right corner + sides */
   document.addEventListener('mousedown',function(e){
-    var r=e.target.closest('.wnd-resize');if(!r)return;
-    var w=r.closest('.wnd');if(!w)return;
-    e.preventDefault();
+    var w=e.target.closest('.wnd');if(!w)return;
+    var rect=w.getBoundingClientRect();
+    var mr=rect.right-e.clientX,mb=rect.bottom-e.clientY;
+    var edge=mr<8&&mb<8;
+    if(!edge)return;
+    e.preventDefault();e.stopPropagation();
     var sx=e.clientX,sy=e.clientY,ow=w.offsetWidth,oh=w.offsetHeight;
     function onmove(ev){w.style.width=Math.max(280,ow+(ev.clientX-sx))+'px';w.style.height=Math.max(180,oh+(ev.clientY-sy))+'px';}
     function onup(){document.removeEventListener('mousemove',onmove);document.removeEventListener('mouseup',onup);}
