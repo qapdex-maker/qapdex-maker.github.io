@@ -4,7 +4,8 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Macrohard Doors OS — qapdex-maker.github.io</title>
-<meta name="description" content="Windows-style desktop OS — canceled-verse edition. Boot screen, lock screen, taskbar, start menu, apps: Notepad, Calculator, Terminal, Explorer, Paint."/>
+<meta name="description" content="Windows-style desktop OS — canceled-verse edition. Boot screen, taskbar, start menu, 11 apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links."/>
+<link rel="manifest" href="./manifest.json"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -69,8 +70,8 @@
     <section class="os-live" id="apps">
       <div>
         <span class="kicker" data-de="★ Live im Browser" data-en="★ Live in browser">★ Live im Browser</span>
-        <h2 data-de="5 Kern-Apps" data-en="5 core apps">5 Kern-Apps</h2>
-        <p data-de="Notepad · Calculator · Terminal · Explorer · Paint — alle offline-fähig, kein iframe, kein externer Call." data-en="Notepad · Calculator · Terminal · Explorer · Paint — all offline, no iframe, no external calls.">Notepad · Calculator · Terminal · Explorer · Paint — alle offline-fähig.</p>
+        <h2 data-de="11 Kern-Apps" data-en="11 core apps">11 Kern-Apps</h2>
+        <p data-de="Notepad · Calculator · Terminal · Explorer · Paint · Browser · Music · Chat · Docs · Settings · Links — alle offline-fähig, kein iframe, kein externer Call." data-en="Notepad · Calculator · Terminal · Explorer · Paint · Browser · Music · Chat · Docs · Settings · Links — all offline, no iframe, no external calls.">Notepad · Calculator · Terminal · Explorer · Paint · Browser · Music · Chat · Docs · Settings · Links — alle offline-fähig.</p>
       </div>
     </section>
 
@@ -94,6 +95,30 @@
       <div class="os-app-card" data-app="paint">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
         <span class="lbl">Paint</span>
+      </div>
+      <div class="os-app-card" data-app="browser">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21" y1="12" x2="16" y2="12"/><line x1="8" y1="12" x2="3" y2="12"/><line x1="12" y1="21" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="3"/></svg>
+        <span class="lbl">Browser</span>
+      </div>
+      <div class="os-app-card" data-app="music">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        <span class="lbl">Music</span>
+      </div>
+      <div class="os-app-card" data-app="chat">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <span class="lbl">Chat</span>
+      </div>
+      <div class="os-app-card" data-app="docs">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+        <span class="lbl">Docs</span>
+      </div>
+      <div class="os-app-card" data-app="settings">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06A1.65 1.65 0 0015 19.4a1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span class="lbl">Settings</span>
+      </div>
+      <div class="os-app-card" data-app="links">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        <span class="lbl">Links</span>
       </div>
     </div>
   </main>

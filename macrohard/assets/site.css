@@ -81,6 +81,7 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
 .calHead{display:flex;padding:8px;gap:4px}
 .cExpr{flex:1;font-family:"IBM Plex Mono",monospace;font-size:14px;text-align:right;padding:4px 8px;background:var(--paper);border:2px solid var(--line);color:var(--ink)}
 .cCur{width:60px;font-family:"IBM Plex Mono",monospace;font-size:20px;text-align:right;padding:4px 8px;background:var(--ink);color:var(--accent-2);border:2px solid var(--line)}
+.calcHist{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);padding:4px 8px;max-height:40px;overflow-y:auto;background:var(--paper);border:2px solid var(--line);text-align:right}
 .calGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:6px}
 .cBtn{font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:600;border:2px solid var(--line);background:var(--surface);padding:10px 4px;cursor:pointer;text-align:center;box-shadow:var(--shadow);transition:transform .08s}
 .cBtn:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow-hover);border-color:var(--accent)}

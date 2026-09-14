@@ -1,0 +1,10 @@
+{
+  "name": "Macrohard Doors OS",
+  "short_name": "Macrohard OS",
+  "description": "Windows-style desktop OS — canceled-verse edition",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f1ede3",
+  "theme_color": "#2547ff",
+  "icons": []
+}
