@@ -54,7 +54,10 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
   border-top:3px solid var(--line);
   transition:opacity .6s ease,transform .6s ease,backdrop-filter .6s ease;
   transform:scale(1);
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
 }
+#lock:active,#lock:focus{outline:none;background:var(--paper);box-shadow:none;border-color:var(--line)}
 #lock.hide{
   opacity:0;pointer-events:none;
   transform:scale(1.05);
