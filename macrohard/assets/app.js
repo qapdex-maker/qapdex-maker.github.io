@@ -223,6 +223,17 @@
     return s[name]||'';
   }
 
+  /* Notifikationen-System */
+  var notifQueue=[];
+  function showNotif(title,body,icon){
+    var n=document.createElement('div');n.className='osNotif';
+    n.innerHTML='<span class="notifIcon">'+(icon||'🔔')+'</span><div class="notifBody"><b>'+title+'</b><span>'+body+'</span></div><button class="notifClose">×</button>';
+    document.body.appendChild(n);
+    n.querySelector('.notifClose').addEventListener('click',function(){n.remove();});
+    setTimeout(function(){n.classList.add('show');},10);
+    setTimeout(function(){n.classList.remove('show');setTimeout(function(){n.remove();},300);},4000);
+  }
+
   /* Start menu — mit Fix für z-index und Click-Blockade durch Boot/Lock */
   document.addEventListener('DOMContentLoaded',function(){
     var tbStart=document.getElementById('tbStart');
