@@ -301,7 +301,13 @@
     if(id==='viewer') buildViewer();
     if(id==='game') buildGame();
     mk.addEventListener('mousedown',function(e){if(e.target.closest('.wclose')||e.target.closest('.wmin'))return;this.classList.add('focused');this.style.zIndex=++zIdx;focused=id;updateFocus();saveSession();});
-    mk.querySelector('.wclose').addEventListener('click',function(e){e.stopPropagation();mk.remove();var tbIcon=document.getElementById('tb-'+id);if(tbIcon)tbIcon.remove();});
+    mk.querySelector('.wclose').addEventListener('click',function(e){
+      e.stopPropagation();
+      var wnd=this.closest('.wnd');
+      if(wnd) wnd.remove();
+      var tbIcon=document.getElementById('tb-'+id);
+      if(tbIcon) tbIcon.remove();
+    });
     mk.querySelector('.wmin').addEventListener('click',function(e){e.stopPropagation();
       var tbIcon=document.getElementById('tb-'+id);
       if(mk.style.display==='none'){mk.style.display='';if(tbIcon)tbIcon.classList.add('running');}
