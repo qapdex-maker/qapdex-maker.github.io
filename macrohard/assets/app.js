@@ -304,7 +304,7 @@
       case 'explorer': body='<div class="fePath"><span>📁</span><input id="fePath" value="C:\Users\macrohard\Desktop"></div><div class="feSide" id="feSide"></div><div class="feGrid" id="feGrid"></div>';break;
       case 'paint': body='<div class="ptColors" id="ptColors"></div><canvas class="ptCanvas" id="ptCanvas" width="400" height="260"></canvas>';break;
       case 'browser': body='<div class="fePath"><span>🔍</span><input id="brAddr" value="https://" placeholder="URL eingeben..."></div><div style="display:flex;gap:4px;padding:4px 8px;flex-wrap:wrap" id="brNav"></div><div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:IBM Plex Mono,monospace;font-size:12px;text-align:center;padding:20px"><div><div style="font-size:48px;margin-bottom:12px">🌐</div><div>Web-Browser</div><div style="font-size:10px;opacity:.6;margin-top:8px">URLs werden im externen Browser geöffnet</div></div></div>';break;
-      case 'music': body='<div class="musList" id="musList"></div>';break;
+      case 'music': body='<div class="musPlayer"><div class="musList" id="musList"></div><div class="musExtra"><div class="musPadSection"><div class="musSectionTitle">🥁 Beatpad</div><div class="musBeatpad" id="musBeatpad"></div></div><div class="musEqSection"><div class="musSectionTitle">🎛 Equalizer</div><canvas id="musVisualizer" width="280" height="60"></canvas><div class="musEq" id="musEq"></div></div></div></div>';break;
       case 'chat': body='<div class="cpMsgs" id="cpMsgs"></div><div class="cpSugs" id="cpSugs"></div><div class="cpIn"><input id="cpIn" placeholder="Nachricht..."><button id="cpSend">Send</button></div>';break;
       case 'docs': body='<div class="mdBody" id="mdBody"><h3>MakerOS Docs</h3><p>Neo-brutalist desktop OS — qapdex-maker.github.io edition.</p><p>13 Apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links, AMIBIOS.</p></div>';break;
       case 'settings': body='<div class="stGrid" id="stGrid"><div class="stNav"><button data-tab="general" class="active" data-de="Allgemein" data-en="General">Allgemein</button><button data-tab="appearance" data-de="Aussehen" data-en="Appearance">Aussehen</button><button data-tab="shortcuts" data-de="Tastenkürzel" data-en="Shortcuts">Tastenkürzel</button><button data-tab="privacy" data-de="Datenschutz" data-en="Privacy">Datenschutz</button></div><div class="stPane active" data-pane="general"><label><input type="checkbox" id="stDark"> Dark Mode</label><label><input type="checkbox" id="stScan" checked> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div><div class="stPane" data-pane="appearance" id="stAppearance"></div><div class="stPane" data-pane="shortcuts" id="stShortcuts"></div><div class="stPane" data-pane="privacy" id="stPrivacy"></div></div>';break;
@@ -837,6 +837,100 @@
       {n:'Neo-Brutalist Beat',a:'qapdex-maker',u:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
       {n:'IDUN Tone',a:'IDUN Studio',u:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'}
     ];
+    /* Equalizer sliders */
+    var eqBands=[60,150,400,1000,3000,8000];
+    var eqValues={60:0,150:0,400:0,1000:0,3000:0,8000:0};
+    var biquadFilters=[];
+    var audioCtx=null,sourceNode=null,analyser=null;
+    function initAudioGraph(){
+      if(audioCtx)return;
+      audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+      sourceNode=audioCtx.createMediaElementSource(audio);
+      analyser=audioCtx.createAnalyser();
+      analyser.fftSize=128;
+      biquadFilters=eqBands.map(function(freq,i){
+        var f=audioCtx.createBiquadFilter();
+        f.type=i===0?'lowshelf':i===eqBands.length-1?'highshelf':'peaking';
+        f.frequency.value=freq;
+        f.gain.value=0;
+        return f;
+      });
+      var node=sourceNode;
+      biquadFilters.forEach(function(f){node.connect(f);node=f;});
+      node.connect(analyser);
+      analyser.connect(audioCtx.destination);
+    }
+    function initVisualizer(){
+      var canvas=document.getElementById('musVisualizer');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      var buf=new Uint8Array(analyser.frequencyBinCount);
+      function draw(){
+        requestAnimationFrame(draw);
+        analyser.getByteFrequencyData(buf);
+        ctx.fillStyle='#0b0b0c';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        var bw=canvas.width/buf.length;
+        for(var i=0;i<buf.length;i++){
+          var h=(buf[i]/255)*canvas.height;
+          var g=ctx.createLinearGradient(0,canvas.height,0,canvas.height-h);
+          g.addColorStop(0,'#ffd400');g.addColorStop(1,'#2547ff');
+          ctx.fillStyle=g;
+          ctx.fillRect(i*bw,canvas.height-h,bw-1,h);
+        }
+      }
+      if(analyser)draw();
+    }
+    function initBeatpad(){
+      var pad=document.getElementById('musBeatpad');if(!pad)return;
+      var samples=[
+        {n:'Kick',f:60,d:0.4,c:'#ff4000'},
+        {n:'Snare',f:200,d:0.2,c:'#2547ff'},
+        {n:'HiHat',f:8000,d:0.05,c:'#ffd400'},
+        {n:'Clap',f:1200,d:0.15,c:'#0f0'},
+        {n:'Tom',f:100,d:0.3,c:'#f0f'},
+        {n:'Rim',f:600,d:0.1,c:'#0ff'},
+        {n:'Bass',f:80,d:0.4,c:'#ff8000'},
+        {n:'Stab',f:440,d:0.2,c:'#800'},
+        {n:'Crash',f:5000,d:0.5,c:'#666'}
+      ];
+      samples.forEach(function(s,i){
+        var b=document.createElement('button');
+        b.className='beatpad-btn';
+        b.textContent=s.n;
+        b.style.background=s.c;
+        b.addEventListener('click',function(){
+          if(!audioCtx)initAudioGraph();
+          if(audioCtx.state==='suspended')audioCtx.resume();
+          var osc=audioCtx.createOscillator();
+          var gain=audioCtx.createGain();
+          osc.type=i===2?'square':i===7?'sawtooth':'sine';
+          osc.frequency.setValueAtTime(s.f,audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(s.f*0.5,audioCtx.currentTime+s.d);
+          gain.gain.setValueAtTime(0.5,audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+s.d);
+          osc.connect(gain);gain.connect(audioCtx.destination);
+          osc.start();osc.stop(audioCtx.currentTime+s.d);
+          b.style.transform='scale(.92)';
+          setTimeout(function(){b.style.transform='';},100);
+        });
+        pad.appendChild(b);
+      });
+    }
+    function initEqualizer(){
+      var eq=document.getElementById('musEq');if(!eq)return;
+      eqBands.forEach(function(freq,i){
+        var wrap=document.createElement('div');wrap.className='eq-slider';
+        var label=document.createElement('span');label.textContent=freq>=1000?(freq/1000)+'k':freq;
+        var slider=document.createElement('input');slider.type='range';slider.min=-12;slider.max=12;slider.value=0;slider.className='eq-range';
+        slider.addEventListener('input',function(){
+          var v=parseFloat(this.value);
+          eqValues[freq]=v;
+          if(biquadFilters[i]){biquadFilters[i].gain.setValueAtTime(v,audioCtx.currentTime);}
+        });
+        wrap.appendChild(slider);wrap.appendChild(label);
+        eq.appendChild(wrap);
+      });
+    }
     list.innerHTML='';
     var volBar=document.createElement('div');volBar.className='musVol';
     volBar.innerHTML='🔊 <input type="range" id="musVol" min="0" max="1" step="0.05" value="0.7" style="flex:1"> <span id="musVolL">70</span>%';
@@ -850,11 +944,12 @@
     document.getElementById('musProg').addEventListener('input',function(){if(audio.duration){audio.currentTime=(this.value/100)*audio.duration;}});
     document.getElementById('musShuffle').addEventListener('click',function(){shuffled=shuffleArray([0,1,2,3]);document.getElementById('musShuffle').style.background=shuffled?'var(--accent)':'';});
     document.getElementById('musRepeat').addEventListener('click',function(){repeat=!repeat;this.style.background=repeat?'var(--accent)':'';});
-    songs.forEach(function(s,i){
+    initBeatpad();initEqualizer();
+songs.forEach(function(s,i){
       var item=document.createElement('div');item.className='musItem';
       item.innerHTML='<button class="musPlay" data-i="'+i+'">▶</button><span class="musInfo"><b>'+s.n+'</b><br><span style="font-size:10px;color:var(--muted)">'+s.a+'</span></span>';
       item.querySelector('.musPlay').addEventListener('click',function(){
-        curIdx=i;audio.src=s.u;audio.play();playing=true;this.textContent='⏸';
+        curIdx=i;audio.src=s.u;initAudioGraph();initVisualizer();audio.play();playing=true;this.textContent='⏸';
         audio.addEventListener('timeupdate',function(){
           var prog=document.getElementById('musProg');var l=document.getElementById('musProgL');
           if(audio.duration&&prog){prog.value=(audio.currentTime/audio.duration)*100;var m=Math.floor(audio.currentTime/60);var sec=Math.floor(audio.currentTime%60);l.textContent=m+':'+(sec<10?'0':'')+sec;}
