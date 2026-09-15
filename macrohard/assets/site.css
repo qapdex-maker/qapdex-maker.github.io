@@ -22,6 +22,9 @@
   --font-display:"Space Grotesk",system-ui,sans-serif;
 }
 html.ignite{--accent:#ff4d00;--accent-2:#ffb000;--shadow-hover:8px 8px 0 var(--accent);}
+html.ocean{--accent:#0066cc;--accent-2:#00ccff;--shadow-hover:8px 8px 0 var(--accent);--ink:#001122;--paper:#e6f0ff;--surface:#fff;--muted:#5d7a99;--line:#001122;}
+html.forest{--accent:#2d6a4f;--accent-2:#95d5b2;--shadow-hover:8px 8px 0 var(--accent);--ink:#1b4332;--paper:#d8f3dc;--surface:#fff;--muted:#52796f;--line:#1b4332;}
+html.mono{--accent:#333;--accent-2:#666;--shadow-hover:8px 8px 0 var(--accent);--ink:#000;--paper:#fff;--surface:#f5f5f5;--muted:#666;--line:#000;}
 [data-theme="dark"]{
   --ink:#e0e0e0;--paper:#1a1a1e;--surface:#2a2a2e;--muted:#999;
   --accent:#4a8aff;--accent-2:#ffd400;--line:#555;--tb:#111;
@@ -406,8 +409,19 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .vwPlaceholder{color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:12px;text-align:center;padding:20px}
 #vwCanvas{max-width:100%;max-height:100%;border:3px solid var(--line);display:none;image-rendering:auto}
 
-/* ===== game ===== */
-.gmBody{padding:10px;display:flex;flex-direction:column;align-items:center;gap:10px}
+/* ===== components (reusable) ===== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 14px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font-family:var(--font-sans);font-size:12px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .1s,box-shadow .1s}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow)}
+.btn:active{transform:translate(1px,1px);box-shadow:none}
+.btn-accent{background:var(--accent);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.input{width:100%;padding:6px 10px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font-family:var(--font-mono);font-size:12px;outline:none}
+.input:focus{border-color:var(--accent)}
+.card{padding:12px;border:2px solid var(--line);background:var(--surface);box-shadow:var(--shadow)}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border:2px solid var(--line);background:var(--surface);font-size:10px;font-weight:600}
+
+/* ===== taskmanager ===== */
+.tmBody{padding:10px;display:flex;flex-direction:column;gap:6px}
 .gmStatus{font-weight:700;font-size:14px;text-align:center}
 .gmGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:180px}
 .gmCell{width:56px;height:56px;border:3px solid var(--line);background:var(--surface);font-size:24px;font-weight:700;cursor:pointer;box-shadow:var(--shadow);transition:transform .1s}

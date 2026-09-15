@@ -924,18 +924,34 @@
         galGrid.appendChild(b);
       });
       grid.appendChild(galGrid);
+      /* Theme Presets */
+      var themeLabel=document.createElement('div');themeLabel.style.cssText='font-weight:bold;margin-top:10px';themeLabel.textContent='Themes:';
+      grid.appendChild(themeLabel);
+      var themeBtns=document.createElement('div');themeBtns.style.cssText='display:flex;gap:6px;margin-top:4px';
+      [{n:'Ignite',c:'ignite',bg:'#ff4d00'},{n:'Ocean',c:'ocean',bg:'#0066cc'},{n:'Forest',c:'forest',bg:'#2d6a4f'},{n:'Mono',c:'mono',bg:'#333'}].forEach(function(t){
+        var b=document.createElement('button');b.className='cBtn';b.innerHTML='<span style="width:10px;height:10px;background:'+t.bg+';display:inline-block;margin-right:4px;border:1px solid #000"></span>'+t.n;
+        b.addEventListener('click',function(){
+          document.documentElement.className=t.c;
+          try{localStorage.setItem('os_theme',t.c);}catch(e){}
+          toast('Theme: '+t.n);
+        });
+        themeBtns.appendChild(b);
+      });
+      grid.appendChild(themeBtns);
       /* AMIBIOS quick launch */
       var bioBtn=document.createElement('button');bioBtn.className='cBtn';bioBtn.textContent='⚙ Launch AMIBIOS';
       bioBtn.addEventListener('click',function(){openApp('amibios');});
       grid.appendChild(bioBtn);
       /* Reset */
       var resetBtn=document.createElement('button');resetBtn.className='cBtn op';resetBtn.textContent='Reset Defaults';
-      resetBtn.addEventListener('click',function(){document.documentElement.style.removeProperty('--accent');document.documentElement.style.removeProperty('--fs');document.documentElement.dataset.theme='';document.documentElement.classList.remove('scanlines');try{localStorage.removeItem('os_accent');localStorage.removeItem('os_fs');localStorage.removeItem('os_dark');localStorage.removeItem('os_scan');}catch(e){}location.reload();});
+      resetBtn.addEventListener('click',function(){document.documentElement.className='';document.documentElement.style.removeProperty('--accent');document.documentElement.style.removeProperty('--fs');document.documentElement.dataset.theme='';document.documentElement.classList.remove('scanlines');try{localStorage.removeItem('os_accent');localStorage.removeItem('os_fs');localStorage.removeItem('os_dark');localStorage.removeItem('os_scan');localStorage.removeItem('os_theme');}catch(e){}location.reload();});
       grid.appendChild(resetBtn);
       appearance.appendChild(grid);
       /* Restore saved accent/fs */
       try{var sv=localStorage.getItem('os_accent');if(sv){document.documentElement.style.setProperty('--accent',sv);var acc=document.getElementById('stAccent');if(acc)acc.value=sv;}}catch(e){}
       try{var sv2=localStorage.getItem('os_fs');if(sv2){document.documentElement.style.setProperty('--fs',sv2+'px');}}catch(e){}
+      /* Restore saved theme */
+      try{var th=localStorage.getItem('os_theme');if(th){document.documentElement.className=th;}}catch(e){}
     }
     /* Shortcuts */
     var shortcuts=document.getElementById('stShortcuts');if(shortcuts){
