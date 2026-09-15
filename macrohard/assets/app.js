@@ -14,6 +14,12 @@
   window.osTimeouts = window.osTimeouts || {};
 
   /* localStorage Wrapper with quota check + fallback to sessionStorage */
+  /**
+   * Speichert einen Wert in localStorage mit Fallback auf sessionStorage
+   * @param {string} k - Schlüssel
+   * @param {string} v - Wert
+   * @returns {boolean} Erfolg
+   */
   function storeSet(k,v){
     try{localStorage.setItem(k,v);return true;}catch(e){}
     try{sessionStorage.setItem(k,v);return true;}catch(e){}
@@ -62,6 +68,10 @@
   function t(k){return I18N[lang]?I18N[lang][k]||k:k;}
 
   /* Clock */
+  /**
+   * Aktualisiert die Uhrzeit auf Lock-Screen und Taskbar
+   * Wird jede Sekunde aufgerufen (setInterval)
+   */
   function tickClock(){
     var d=new Date();
     var el=document.getElementById('lockTime');
@@ -111,6 +121,11 @@
   var savedWall=localStorage.getItem('os_wall');
   if(savedWall)setWallpaper(savedWall);
   /* Snapping */
+  /**
+   * Snapped ein Fenster an eine Bildschirmkante
+   * @param {HTMLElement} w - Fenster-Element
+   * @param {string} direction - 'left'|'right'|'max'|'restore'
+   */
   function snapWindow(w,direction){
     var wW=window.innerWidth;var wH=window.innerHeight;
     if(direction==='left'){w.style.left='0';w.style.top='0';w.style.width=(wW/2-4)+'px';w.style.height=wH+'px';}
@@ -225,6 +240,12 @@
 
   /* Notifikationen-System */
   var notifQueue=[];
+  /**
+   * Zeigt eine Desktop-Benachrichtigung
+   * @param {string} title - Überschrift
+   * @param {string} body - Nachricht
+   * @param {string} icon - Emoji (optional)
+   */
   function showNotif(title,body,icon){
     var n=document.createElement('div');n.className='osNotif';
     n.innerHTML='<span class="notifIcon">'+(icon||'🔔')+'</span><div class="notifBody"><b>'+title+'</b><span>'+body+'</span></div><button class="notifClose">×</button>';
@@ -311,6 +332,10 @@
     else{snapWindow(w,'left');toast('Left snap');}
   }
 
+  /**
+   * Öffnet eine App im Desktop-Fenster
+   * @param {string} id - App-ID (z.B. 'notepad', 'calculator')
+   */
   function openApp(id){
     var w=document.getElementById('w-'+id);
     if(w){w.classList.add('focused');w.style.zIndex=++zIdx;focused=id;updateFocus();return;}
@@ -661,6 +686,10 @@
 
   /* Explorer — S1: New Folder / New File */
   /* Globale Suche */
+  /**
+   * Öffnet die globale Suche (Apps, Dateien, Einstellungen)
+   * Keyboard-Shortcut: Ctrl+K
+   */
   function globaleSuche(){
     var ov=document.getElementById('globalSearch');
     if(!ov){
@@ -773,6 +802,10 @@
   };
   var trashPath='C:\\Papierkorb';
   var curPath='C:\\Users\\macrohard\\Desktop';
+  /**
+   * Rendert die Explorer-Ansicht
+   * @param {string} filter - Suchfilter für Dateien (optional)
+   */
   function renderExplorer(filter){
     var side=document.getElementById('feSide');var grid=document.getElementById('feGrid');var inp=document.getElementById('fePath');
     if(!side||!grid) return;

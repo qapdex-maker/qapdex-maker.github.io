@@ -1,0 +1,19 @@
+{
+  "name": "macrohard-doors-os",
+  "version": "2.11.16",
+  "description": "Windows-stil Desktop OS im Browser — Neo-Brutalist, 22 Apps, PWA",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/",
+    "lint": "eslint assets/app.js --fix",
+    "format": "prettier --write assets/app.js assets/site.css",
+    "verify": "node --check assets/app.js && echo 'JS OK'"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

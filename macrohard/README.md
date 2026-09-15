@@ -90,6 +90,12 @@ Session 2026-09-14 · v2.11.9 (2026-09-15). Standalone subpage in `qapdex-maker.
 - v2.8 (2026-09-15): Service Worker v2
 - v2.7 (2026-09-15): AMIBIOS Setup app initial
 
+## Code-Qualität
+- ESLint + Prettier konfiguriert
+- Unit-Tests (Node.js Test Runner)
+- CI/CD Pipeline (GitHub Actions)
+- JSDoc-Kommentare für public Funktionen
+
 ## Known Issues / Pitfalls
 - Start-Button: Muss in DOMContentLoaded initialisiert werden
 - Calculator: calcPress muss global erreichbar sein (window.calcPress)
