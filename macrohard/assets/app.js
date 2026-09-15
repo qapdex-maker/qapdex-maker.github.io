@@ -333,7 +333,8 @@
         clearInterval(window.osIntervals[wId]);
         delete window.osIntervals[wId];
       }
-      if(wnd) wnd.remove();
+      wnd.classList.add('closing');
+      setTimeout(function(){wnd.remove();},200);
       var tbIcon=document.getElementById('tb-'+id);
       if(tbIcon) tbIcon.remove();
     });
