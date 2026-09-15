@@ -1,6 +1,10 @@
 /* MakerOS — App Logic v2.6 */
 (function(){
   'use strict';
+  window.onerror=function(msg,url,line){
+    console.error('MakerOS Error:',msg,'at',url+':'+line);
+    return true;
+  };
   var lang='de';
   var apps={};
   var focused=null;
@@ -186,7 +190,16 @@
     div.className='dskApp';
     div.setAttribute('data-app',a.id);
     div.innerHTML='<span class="ico">'+a.iconSvg+'</span><span class="lbl">'+a.label+'</span>';
-    div.addEventListener('click',function(){openApp(a.id);});
+    div.addEventListener('click',function(e){
+      if(e.shiftKey||e.ctrlKey||e.metaKey){
+        this.classList.toggle('selected');
+        e.stopPropagation();
+        return;
+      }
+      document.querySelectorAll('.dskApp.selected').forEach(function(x){x.classList.remove('selected');});
+      this.classList.add('selected');
+      openApp(a.id);
+    });
     return div;
   }
 
@@ -1087,7 +1100,7 @@ songs.forEach(function(s,i){
       var galleryLabel=document.createElement('div');galleryLabel.style.cssText='font-weight:bold;margin-top:6px';galleryLabel.textContent='Galerie:';
       grid.appendChild(galleryLabel);
       var galGrid=document.createElement('div');galGrid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:4px';
-      ['linear-gradient(135deg,#2547ff,#ff4d00)','linear-gradient(135deg,#0b0b0c,#5d584e)','radial-gradient(circle at 30% 30%,#ffd400,#2547ff)','linear-gradient(180deg,#1a1a1e,#2a2a2e)','linear-gradient(135deg,#0f4c75,#3282b8)','linear-gradient(135deg,#3a0066,#9d00ff)'].forEach(function(g){
+      ['linear-gradient(135deg,#2547ff,#ff4d00)','linear-gradient(135deg,#0b0b0c,#5d584e)','radial-gradient(circle at 30% 30%,#ffd400,#2547ff)','linear-gradient(180deg,#1a1a1e,#2a2a2e)','linear-gradient(135deg,#0f4c75,#3282b8)','linear-gradient(135deg,#3a0066,#9d00ff)','linear-gradient(135deg,#ff6b6b,#feca57)','linear-gradient(135deg,#48dbfb,#0abde3)','linear-gradient(135deg,#1dd1a1,#10ac84)','linear-gradient(135deg,#5f27cd,#341f97)','linear-gradient(135deg,#ff9ff3,#f368e0)','linear-gradient(135deg,#00d2d3,#54a0ff)'].forEach(function(g){
         var b=document.createElement('button');b.style.cssText='height:36px;border:2px solid var(--line);background:'+g+';cursor:pointer;box-shadow:var(--shadow)';
         b.title=g;b.addEventListener('click',function(){var desk=document.getElementById('desktop');if(desk){desk.style.backgroundImage=g;desk.style.backgroundSize='cover';try{localStorage.setItem('os_wall',g);}catch(e){}toast('Wallpaper gesetzt');}});
         galGrid.appendChild(b);
