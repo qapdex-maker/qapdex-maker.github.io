@@ -296,6 +296,51 @@
     var titlebar=mk.querySelector('.wtitle');
     if(titlebar){titlebar.addEventListener('mousedown',function(e){if(e.target.closest('button'))return;dragStart(e,mk);});}
     focused=id; updateFocus();
+
+    /* Taskbar-Icon erstellen wenn nicht vorhanden */
+    if(!document.getElementById('tb-'+id)){
+      var tbIcon=document.createElement('div');
+      tbIcon.className='tbIcon running focused';
+      tbIcon.id='tb-'+id;
+      tbIcon.title=t(id);
+      tbIcon.dataset.app=id;
+      tbIcon.innerHTML='<span>'+t(id)+'</span><span class="tbRun"></span>';
+      tbIcon.addEventListener('click',function(e){
+        var w=document.getElementById('w-'+id);
+        if(!w) return;
+        if(w.style.display==='none'){
+          w.style.display='';
+          this.classList.add('running');
+          w.classList.add('focused');
+          w.style.zIndex=++zIdx;
+          focused=id;
+          updateFocus();
+        } else if(focused===id){
+          w.style.display='none';
+          this.classList.remove('running');
+        } else {
+          w.classList.add('focused');
+          w.style.zIndex=++zIdx;
+          focused=id;
+          updateFocus();
+        }
+      });
+      document.getElementById('tbCenter').appendChild(tbIcon);
+    } else {
+      var existingIcon=document.getElementById('tb-'+id);
+      if(existingIcon){
+        existingIcon.classList.add('running','focused');
+      }
+    }
+    updateTaskbarFocus();
+  }
+
+  function updateTaskbarFocus(){
+    document.querySelectorAll('.tbIcon').forEach(function(t){t.classList.remove('focused');});
+    if(focused){
+      var f=document.getElementById('tb-'+focused);
+      if(f) f.classList.add('focused');
+    }
   }
 
   function updateFocus(){
