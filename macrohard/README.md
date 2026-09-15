@@ -62,6 +62,8 @@ Session 2026-09-14 · v2.11 (2026-09-15). Standalone subpage in `qapdex-maker.gi
 - SW v2: stale-while-revalidate, network-first AMI BIOS
 
 ## Version History
+- v2.11.2 (2026-09-15): Memory-Leak Fixes, Interval-Management (osIntervals)
+- v2.11.1 (2026-09-15): Notepad-Close repariert, Taskbar-Cleanup
 - v2.11 (2026-09-15): Extension-Pack — 10 neue Apps, v2.10.3 (Browser-Fix, iframe → window.open)
 - v2.10.2 (2026-09-15): Lock-Animation sanft, v2.10.1 (Taskbar, Close-Button, Cache-Bust)
 - v2.10 (2026-09-15): Start-Button-Fix, Calculator+Explorer-Reparatur, Settings-Tabs, Scrollbars, ASTRA-Discipline

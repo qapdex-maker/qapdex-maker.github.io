@@ -6,6 +6,22 @@
   var focused=null;
   var zIdx=100;
   var bootDone=false;
+  window.osIntervals = window.osIntervals || {};
+  window.osTimeouts = window.osTimeouts || {};
+
+  /* localStorage Wrapper with quota check + fallback to sessionStorage */
+  function storeSet(k,v){
+    try{localStorage.setItem(k,v);return true;}catch(e){}
+    try{sessionStorage.setItem(k,v);return true;}catch(e){}
+    return false;
+  }
+  function storeGet(k){
+    return localStorage.getItem(k)||sessionStorage.getItem(k);
+  }
+  function storeDel(k){
+    try{localStorage.removeItem(k);}catch(e){}
+    try{sessionStorage.removeItem(k);}catch(e){}
+  }
 
   var I18N={
     de:{
