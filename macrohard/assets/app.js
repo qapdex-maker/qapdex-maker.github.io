@@ -1646,25 +1646,65 @@ function buildTaskmgr(){
 /* Systeminfo */
 function buildSysinfo(){
   var body=document.getElementById('siBody');if(!body) return;
-  var info=[
-    ['OS','MakerOS v2.11'],
-    ['Browser',navigator.userAgent.split(' ').pop()],
-    ['Plattform',navigator.platform],
-    ['Sprache',navigator.language],
-    ['Bildschirm',screen.width+'x'+screen.height],
-    ['Farbtiefe',screen.colorDepth+' Bit'],
-    ['Cookies',navigator.cookieEnabled?'Ja':'Nein'],
-    ['Online',navigator.onLine?'Ja':'Nein'],
-    ['localStorage',!!window.localStorage?'Ja':'Nein'],
-    ['Service Worker','serviceWorker' in navigator?'Ja':'Nein']
-  ];
   body.innerHTML='';
-  info.forEach(function(row){
+  
+  /* OS */
+  addSection('Betriebssystem');
+  addRow('OS','MakerOS v2.11.20 (Neo-Brutalist)');
+  addRow('Benutzer','macrohard');
+  addRow('Plattform',navigator.platform);
+  addRow('Sprache',navigator.language);
+  addRow('Zeitzone',Intl.DateTimeFormat().resolvedOptions().timeZone);
+  
+  /* Hardware */
+  addSection('Hardware');
+  addRow('CPU-Kerne',navigator.hardwareConcurrency?'~'+navigator.hardwareConcurrency+' logische Kerne':'Unbekannt');
+  addRow('Arbeitsspeicher',navigator.deviceMemory?navigator.deviceMemory+' GB':'Unbekannt');
+  addRow('Bildschirm',screen.width+' x '+screen.height+' px');
+  addRow('Farbtiefe',screen.colorDepth+' Bit');
+  addRow('Pixelverhältnis',window.devicePixelRatio.toFixed(2)+'x');
+  addRow('Touch-Unterstützung',navigator.maxTouchPoints>0?'Ja ('+navigator.maxTouchPoints+' Punkte)':'Nein');
+  
+  /* Browser */
+  addSection('Browser');
+  addRow('User Agent',navigator.userAgent);
+  addRow('Cookies',navigator.cookieEnabled?'Aktiviert':'Deaktiviert');
+  addRow('Online-Status',navigator.onLine?'Online':'Offline');
+  addRow('Aktive Sprache',navigator.languages?navigator.languages.join(', '):navigator.language);
+  addRow('PDF-Viewer',navigator.pdfViewerEnabled?'Aktiviert':'Deaktiviert');
+  
+  /* Netzwerk */
+  addSection('Netzwerk');
+  addRow('Verbindung',navigator.connection?navigator.connection.effectiveType:'Unbekannt');
+  addRow('Download',navigator.connection?navigator.connection.downlink+' Mbit/s':'Unbekannt');
+  addRow('RTT',navigator.connection?navigator.connection.rtt+' ms':'Unbekannt');
+  
+  /* Storage */
+  addSection('Speicher');
+  addRow('localStorage',!!window.localStorage?'Verfügbar':'Nicht verfügbar');
+  addRow('sessionStorage',!!window.sessionStorage?'Verfügbar':'Nicht verfügbar');
+  addRow('Service Worker','serviceWorker' in navigator?'Unterstützt':'Nicht unterstützt');
+  addRow('Cache API','caches' in window?'Verfügbar':'Nicht verfügbar');
+  
+  /* Fenster */
+  addSection('Sitzung');
+  addRow('Offene Fenster',document.querySelectorAll('.wnd').length);
+  addRow('Aktive App',document.querySelector('.wnd.focused .wtxt')?document.querySelector('.wnd.focused .wtxt').textContent:'Keine');
+  addRow('Laufzeit seit Boot',Math.floor(performance.now()/1000)+' Sekunden');
+  addRow('Seitengröße',document.documentElement.scrollWidth+' x '+document.documentElement.scrollHeight+' px');
+  
+  function addSection(title){
+    var sec=document.createElement('div');
+    sec.className='siSection';
+    sec.textContent=title;
+    body.appendChild(sec);
+  }
+  function addRow(key,val){
     var el=document.createElement('div');
     el.className='siRow';
-    el.innerHTML='<span class="siKey">'+row[0]+'</span><span class="siVal">'+row[1]+'</span>';
+    el.innerHTML='<span class="siKey">'+key+'</span><span class="siVal">'+val+'</span>';
     body.appendChild(el);
-  });
+  }
 }
 
 /* Kalender */

@@ -369,9 +369,11 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 
 /* ===== sysinfo ===== */
 .siBody{padding:10px;display:flex;flex-direction:column;gap:4px}
+.siSection{padding:8px 0 4px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);border-bottom:1px solid var(--line);margin-top:6px}
+.siSection:first-child{margin-top:0}
 .siRow{display:flex;justify-content:space-between;padding:6px 10px;border:2px solid var(--line);background:var(--surface);box-shadow:var(--shadow);font-size:11px}
-.siKey{font-weight:600}
-.siVal{color:var(--muted);font-family:"IBM Plex Mono",monospace}
+.siKey{font-weight:600;flex-shrink:0;max-width:50%}
+.siVal{color:var(--muted);font-family:"IBM Plex Mono",monospace;text-align:right;overflow-wrap:anywhere}
 
 /* ===== calendar ===== */
 .calBody{padding:10px}
