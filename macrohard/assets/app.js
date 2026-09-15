@@ -187,7 +187,11 @@
 
   /* Lock → Desktop */
   document.getElementById('lock').addEventListener('click',function(){
-    this.classList.add('hide');
+    this.classList.add('unlocking');
+    setTimeout(function(){
+      document.getElementById('lock').classList.add('hide');
+      document.getElementById('lock').classList.remove('unlocking');
+    },700);
   });
 
   /* Fisher-Yates shuffle helper */

@@ -22,8 +22,28 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
 @keyframes bspin{to{transform:rotate(360deg)}}
 
 /* ===== lock ===== */
-#lock{position:fixed;inset:0;background:var(--paper);z-index:99990;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;opacity:1;transition:opacity .6s;border-top:3px solid var(--line)}
-#lock.hide{opacity:0;pointer-events:none}
+#lock{
+  position:fixed;inset:0;background:var(--paper);z-index:99990;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;cursor:pointer;opacity:1;
+  backdrop-filter:blur(0px) brightness(1);
+  border-top:3px solid var(--line);
+  transition:opacity .6s ease,transform .6s ease,backdrop-filter .6s ease;
+  transform:scale(1);
+}
+#lock.hide{
+  opacity:0;pointer-events:none;
+  transform:scale(1.05);
+  backdrop-filter:blur(8px) brightness(.7);
+}
+#lock.unlocking{
+  animation:lockUnlock .7s ease-in forwards;
+}
+@keyframes lockUnlock{
+  0%{opacity:1;transform:scale(1) translateY(0);filter:blur(0)}
+  40%{opacity:.8;transform:scale(.98) translateY(-10px);filter:blur(2px)}
+  100%{opacity:0;transform:scale(.92) translateY(-40px);filter:blur(6px)}
+}
 #lockTime{font-size:90px;font-weight:200;color:var(--ink);text-shadow:0 2px 24px rgba(0,0,0,.15);line-height:1;font-family:"IBM Plex Mono",monospace}
 #lockDate{font-size:18px;color:var(--muted);font-family:"IBM Plex Mono",monospace}
 #lockHint{margin-top:20px;color:var(--muted);font-size:12px;border:3px solid var(--line);padding:6px 16px;border-radius:14px;font-family:"IBM Plex Mono",monospace;background:var(--surface)}
