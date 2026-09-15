@@ -68,7 +68,7 @@
     var tc=document.getElementById('tbClock');
     if(tc) tc.textContent=d.toLocaleTimeString(lang==='de'?'de-DE':'en-US',{hour:'2-digit',minute:'2-digit'});
   }
-  setInterval(tickClock,1000); tickClock();
+  window.osIntervals['clock']=setInterval(tickClock,1000); tickClock();
 
   /* Boot → Lock → Desktop */
   window.startOS=function(){
@@ -206,6 +206,14 @@
       var sm=document.getElementById('startMenu');
       if(sm&&sm.classList.contains('open')&&!e.target.closest('#startMenu')&&!e.target.closest('#tbStart')){
         sm.classList.remove('open');
+      }
+    });
+    /* Esc-Close */
+    document.addEventListener('keydown',function(e){
+      if(e.key==='Escape'){
+        var sm=document.getElementById('startMenu');
+        if(sm&&sm.classList.contains('open')){sm.classList.remove('open');return;}
+        if(focused&&focused._escClose) focused._escClose();
       }
     });
   });
@@ -933,8 +941,14 @@
         }
       });
     }
-    /* Restore dark/scan */
-    try{var sd=localStorage.getItem('os_dark');if(sd==='1'){document.documentElement.dataset.theme='dark';var dk=document.getElementById('stDark');if(dk)dk.checked=true;}}catch(e){}
+    /* Restore dark/scan — auto-detect if no stored preference */
+    try{
+      var sd=localStorage.getItem('os_dark');
+      if(sd==='1'){document.documentElement.dataset.theme='dark';var dk=document.getElementById('stDark');if(dk)dk.checked=true;}
+      else if(sd===null&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches){
+        document.documentElement.dataset.theme='dark';var dk2=document.getElementById('stDark');if(dk2)dk2.checked=true;
+      }
+    }catch(e){}
     try{var sc=localStorage.getItem('os_scan');if(sc!=='0'){document.documentElement.classList.add('scanlines');}else{var scEl=document.getElementById('stScan');if(scEl)scEl.checked=false;}}catch(e){}
   }
 

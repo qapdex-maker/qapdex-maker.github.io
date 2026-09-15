@@ -286,9 +286,14 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .stPane{display:none}
 .stPane.active{display:block}
 
-/* ===== toast slide ===== */
-@keyframes toastIn{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
-.osToast.show{animation:toastIn .25s ease-out}
+/* ===== prefers-reduced-motion ===== */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  #boot{transition:opacity .01ms}
+  #lock{transition:opacity .01ms}
+  .wnd{animation:none!important}
+  .osToast{animation:none!important}
+}
 
 /* ===== taskmanager ===== */
 .tmBody{padding:10px;display:flex;flex-direction:column;gap:6px}
