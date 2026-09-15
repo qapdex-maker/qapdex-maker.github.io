@@ -122,6 +122,7 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
   cursor:pointer;transition:transform .12s ease,box-shadow .12s ease;
   font-size:11px;color:var(--ink);font-weight:600;
   text-align:center;line-height:1.2;
+  overflow:hidden;
 }
 .tbIcon:hover{
   transform:translate(-1px,-1px);
@@ -495,6 +496,28 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
   0% { width: 0; }
   100% { width: 100%; }
 }
+
+/* ===== taskmanager (Windows-Stil) ===== */
+.tmTabs{display:flex;gap:0;border-bottom:2px solid var(--line);background:var(--paper);position:sticky;top:0;z-index:5}
+.tmTab{padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer;border:2px solid transparent;border-bottom:none;margin-bottom:-2px;color:var(--muted);transition:all .15s}
+.tmTab:hover{color:var(--ink);background:var(--surface)}
+.tmTab.active{color:var(--ink);background:var(--surface);border-color:var(--line);border-bottom:2px solid var(--surface);font-weight:700}
+.tmContent{flex:1;overflow-y:auto;padding:0}
+.tmTable{display:flex;flex-direction:column}
+.tmHeader{display:grid;grid-template-columns:2fr 80px 100px 140px 90px;gap:8px;padding:6px 10px;background:var(--paper);border-bottom:2px solid var(--line);font-size:10px;font-weight:700;text-transform:uppercase;color:var(--muted)}
+.tmProc{display:grid;grid-template-columns:2fr 80px 100px 140px 90px;gap:8px;padding:6px 10px;border-bottom:1px solid var(--line);font-size:11px;align-items:center;transition:background .1s}
+.tmProc:hover{background:rgba(37,71,255,.06)}
+.tmProc .col-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tmProc .col-cpu,.tmProc .col-ram{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--muted)}
+.tmProc .col-status{display:flex;align-items:center;gap:4px;font-size:10px}
+.dot-green{width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block}
+.tmProc .col-action{text-align:right}
+.tmSummary{display:flex;gap:16px;padding:6px 10px;border-top:2px solid var(--line);font-size:10px;color:var(--muted);background:var(--paper);position:sticky;bottom:0}
+
+/* ===== taskbar overflow fix ===== */
+#tbCenter{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:0 4px;overflow-x:auto;overflow-y:hidden}
+#tbCenter::-webkit-scrollbar{height:2px}
+#tbCenter::-webkit-scrollbar-thumb{background:var(--line)}
 
 /* ===== taskmanager ===== */
 .tmBody{padding:10px;display:flex;flex-direction:column;gap:6px}

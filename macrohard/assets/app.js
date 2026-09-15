@@ -1574,29 +1574,73 @@ function buildAMIBIOS(){
 /* Taskmanager */
 function buildTaskmgr(){
   var body=document.getElementById('tmBody');if(!body) return;
+  var tabs=['Prozesse','Leistung','App-Verlauf','Start','Benutzer'];
+  var activeTab='Prozesse';
   function render(){
     body.innerHTML='';
-    var wins=document.querySelectorAll('.wnd');
-    if(!wins.length){
-      body.innerHTML='<div class="mock">Keine offenen Fenster</div>';
-      return;
-    }
-    wins.forEach(function(w){
-      var row=document.createElement('div');
-      row.className='tmRow';
-      row.innerHTML='<span class="tmName">'+w.querySelector('.wtxt').textContent+'</span><span class="tmId">'+w.id+'</span><button class="cBtn op tmKill">Beenden</button>';
-      row.querySelector('.tmKill').addEventListener('click',function(){
-        w.remove();
-        var tbIcon=document.getElementById('tb-'+w.getAttribute('data-app'));
-        if(tbIcon) tbIcon.remove();
-        render();
-      });
-      body.appendChild(row);
+    /* Tab-Bar */
+    var tabBar=document.createElement('div');
+    tabBar.className='tmTabs';
+    tabs.forEach(function(t){
+      var tab=document.createElement('div');
+      tab.className='tmTab'+(t===activeTab?' active':'');
+      tab.textContent=t;
+      tab.addEventListener('click',function(){activeTab=t;render()});
+      tabBar.appendChild(tab);
     });
+    body.appendChild(tabBar);
+    /* Tab-Content */
+    var content=document.createElement('div');
+    content.className='tmContent';
+    if(activeTab==='Prozesse'){
+      var wins=document.querySelectorAll('.wnd');
+      if(!wins.length){
+        content.innerHTML='<div class="mock">Keine offenen Fenster</div>';
+      } else {
+        var table=document.createElement('div');
+        table.className='tmTable';
+        /* Header */
+        var header=document.createElement('div');
+        header.className='tmHeader';
+        header.innerHTML='<span class="col-name">Name</span><span class="col-cpu">CPU</span><span class="col-ram">Arbeitsspeicher</span><span class="col-status">Status</span><span class="col-action"></span>';
+        table.appendChild(header);
+        wins.forEach(function(w){
+          var name=w.querySelector('.wtxt').textContent;
+          var id=w.getAttribute('data-app')||'';
+          var row=document.createElement('div');
+          row.className='tmProc';
+          row.innerHTML='<span class="col-name">'+name+'</span><span class="col-cpu">'+(Math.random()*15).toFixed(1)+'%</span><span class="col-ram">'+(20+Math.floor(Math.random()*80))+' MB</span><span class="col-status"><span class="dot-green"></span> Wird ausgeführt</span><span class="col-action"><button class="cBtn op tmKill">Beenden</button></span>';
+          row.querySelector('.tmKill').addEventListener('click',function(){
+            playSound('close');
+            w.classList.add('closing');
+            setTimeout(function(){w.remove()},200);
+            var tbIcon=document.getElementById('tb-'+w.getAttribute('data-app'));
+            if(tbIcon) tbIcon.remove();
+            render();
+          });
+          table.appendChild(row);
+        });
+        content.appendChild(table);
+        /* Summary */
+        var sum=document.createElement('div');
+        sum.className='tmSummary';
+        sum.innerHTML='<span>'+wins.length+' Prozesse</span><span>CPU: '+(Math.random()*30).toFixed(0)+'%</span><span>RAM: '+(Math.random()*40+20).toFixed(0)+'%</span>';
+        content.appendChild(sum);
+      }
+    } else if(activeTab==='Leistung'){
+      content.innerHTML='<div class="mock">Leistungsdaten werden geladen...</div>';
+    } else if(activeTab==='App-Verlauf'){
+      content.innerHTML='<div class="mock">App-Verlauf ist leer</div>';
+    } else if(activeTab==='Start'){
+      content.innerHTML='<div class="mock">Keine Start-Apps konfiguriert</div>';
+    } else {
+      content.innerHTML='<div class="mock">Benutzer: macrohard</div>';
+    }
+    body.appendChild(content);
   }
   render();
   if(!window.osIntervals) window.osIntervals = {};
-  window.osIntervals['taskmgr'] = setInterval(render,1000);
+  window.osIntervals['taskmgr'] = setInterval(render,2000);
 }
 
 /* Systeminfo */
