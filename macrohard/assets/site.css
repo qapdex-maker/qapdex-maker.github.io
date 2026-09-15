@@ -1,12 +1,33 @@
 /* ============ MakerOS — neo-brutalist theme ============ */
 :root{
+  /* colors */
   --ink:#0b0b0c;--paper:#f1ede3;--surface:#fff;--muted:#5d584e;
   --accent:#2547ff;--accent-2:#ffd400;--line:#0b0b0c;
+  --danger:#ff4000;--success:#00cc44;--info:#0099ff;
+  /* shadow */
   --shadow:4px 4px 0 var(--ink);--shadow-hover:8px 8px 0 var(--accent);
-  --radius:2px;--maxw:960px;--tb:#1a1a1e;
+  --shadow-sm:2px 2px 0 var(--ink);--shadow-lg:12px 12px 0 var(--ink);
+  /* spacing */
+  --sp:16px;--sp-sm:8px;--sp-lg:24px;
+  /* radius */
+  --radius:2px;--radius-sm:1px;--radius-lg:4px;
+  /* animation */
+  --ease:cubic-bezier(.16,1,.3,1);--ease-bounce:cubic-bezier(.68,-.55,.27,1.55);
+  --dur-fast:150ms;--dur-normal:300ms;--dur-slow:500ms;
+  /* layout */
+  --maxw:960px;--tb:#1a1a1e;--tb-h:52px;--wnd-min-w:280px;--wnd-min-h:180px;
+  /* fonts */
+  --font-sans:"IBM Plex Sans",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",monospace;
+  --font-display:"Space Grotesk",system-ui,sans-serif;
 }
 html.ignite{--accent:#ff4d00;--accent-2:#ffb000;--shadow-hover:8px 8px 0 var(--accent);}
-[data-theme="dark"]{--ink:#e0e0e0;--paper:#1a1a1e;--surface:#2a2a2e;--muted:#999;--accent:#4a8aff;--accent-2:#ffd400;--line:#555;--tb:#111;--shadow:4px 4px 0 #000;--shadow-hover:8px 8px 0 var(--accent);}
+[data-theme="dark"]{
+  --ink:#e0e0e0;--paper:#1a1a1e;--surface:#2a2a2e;--muted:#999;
+  --accent:#4a8aff;--accent-2:#ffd400;--line:#555;--tb:#111;
+  --shadow:4px 4px 0 #000;--shadow-hover:8px 8px 0 var(--accent);
+  --shadow-sm:2px 2px 0 #000;--shadow-lg:12px 12px 0 #000;
+}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);background:var(--paper);height:100vh;overflow:hidden;user-select:none}
 
@@ -130,6 +151,14 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
 #smFooter{padding:8px 14px;border-top:2px solid rgba(255,255,255,.08);font-family:"IBM Plex Mono",monospace;font-size:10px;color:rgba(255,255,255,.4)}
 
 /* ===== windows ===== */
+#snapHint{position:fixed;z-index:99999;pointer-events:none;border:3px dashed var(--accent);background:rgba(37,71,255,.08);transition:opacity .15s;opacity:0}
+#snapHint.snap-left{left:0;top:0;width:50%;height:100%}
+#snapHint.snap-right{right:0;top:0;width:50%;height:100%}
+#snapHint.snap-max{left:0;top:0;width:100%;height:100%}
+#snapHint{display:none}
+#snapHint.snap-left{display:block}
+#snapHint.snap-right{display:block}
+#snapHint.snap-max{display:block}
 .wnd{position:absolute;background:var(--surface);border:3px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;min-width:280px;min-height:180px;z-index:100;animation:wndOpen .18s ease-out}
 .wnd.focused{box-shadow:var(--shadow-hover);border-color:var(--accent)}
 .wnd.closing{animation:wndClose .2s ease-in forwards}

@@ -1117,10 +1117,30 @@
   function dragStart(e,w){
     e.preventDefault();
     dragging=w;dx=e.clientX-w.offsetLeft;dy=e.clientY-w.offsetTop;
-    function onmove(ev){dragging.style.left=(ev.clientX-dx)+'px';dragging.style.top=(ev.clientY-dy)+'px';}
-    function onup(){document.removeEventListener('mousemove',onmove);document.removeEventListener('mouseup',onup);dragging=null;}
+    function onmove(ev){
+      var nx=ev.clientX-dx,ny=ev.clientY-dy;
+      dragging.style.left=nx+'px';dragging.style.top=ny+'px';
+      showSnapHint(nx,ny);
+    }
+    function onup(ev){
+      document.removeEventListener('mousemove',onmove);document.removeEventListener('mouseup',onup);
+      hideSnapHint();dragging=null;
+      var nx=ev.clientX-dx,ny=ev.clientY-dy,wW=window.innerWidth,wH=window.innerHeight;
+      if(nx<60){snapWindow(w,'left');}
+      else if(nx>wW-w.offsetWidth-60){snapWindow(w,'right');}
+      else if(ny<60){snapWindow(w,'max');}
+    }
     document.addEventListener('mousemove',onmove);document.addEventListener('mouseup',onup);
   }
+  function showSnapHint(x,y){var wW=window.innerWidth;
+    var hint=document.getElementById('snapHint');
+    if(!hint){hint=document.createElement('div');hint.id='snapHint';document.body.appendChild(hint);}
+    if(x<60){hint.className='snap-left';hint.style.display='block';}
+    else if(x>wW-w.offsetWidth-60){hint.className='snap-right';hint.style.display='block';}
+    else if(y<60){hint.className='snap-max';hint.style.display='block';}
+    else{hint.style.display='none';}
+  }
+  function hideSnapHint(){var h=document.getElementById('snapHint');if(h)h.style.display='none';}
 })();
 
 /* AMIBIOS Setup — iframe window */
