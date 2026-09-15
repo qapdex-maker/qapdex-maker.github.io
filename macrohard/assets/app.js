@@ -251,7 +251,7 @@
       case 'terminal': body='<div class="termOut" id="termOut"></div><div class="termIn"><span class="prompt">user@macrohard:~$</span><input id="termIn" autofocus></div>';break;
       case 'explorer': body='<div class="fePath"><span>📁</span><input id="fePath" value="C:\Users\macrohard\Desktop"></div><div class="feSide" id="feSide"></div><div class="feGrid" id="feGrid"></div>';break;
       case 'paint': body='<div class="ptColors" id="ptColors"></div><canvas class="ptCanvas" id="ptCanvas" width="400" height="260"></canvas>';break;
-      case 'browser': body='<div class="fePath"><span>🔍</span><input id="brAddr" value="https://" placeholder="URL eingeben..."></div><div style="display:flex;gap:4px;padding:4px 8px;flex-wrap:wrap" id="brNav"></div><iframe id="brFrame" src="about:blank" style="width:100%;flex:1;border:none;background:#fff" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>';break;
+      case 'browser': body='<div class="fePath"><span>🔍</span><input id="brAddr" value="https://" placeholder="URL eingeben..."></div><div style="display:flex;gap:4px;padding:4px 8px;flex-wrap:wrap" id="brNav"></div><div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:IBM Plex Mono,monospace;font-size:12px;text-align:center;padding:20px"><div><div style="font-size:48px;margin-bottom:12px">🌐</div><div>Web-Browser</div><div style="font-size:10px;opacity:.6;margin-top:8px">URLs werden im externen Browser geöffnet</div></div></div>';break;
       case 'music': body='<div class="musList" id="musList"></div>';break;
       case 'chat': body='<div class="cpMsgs" id="cpMsgs"></div><div class="cpSugs" id="cpSugs"></div><div class="cpIn"><input id="cpIn" placeholder="Nachricht..."><button id="cpSend">Send</button></div>';break;
       case 'docs': body='<div class="mdBody" id="mdBody"><h3>MakerOS Docs</h3><p>Neo-brutalist desktop OS — qapdex-maker.github.io edition.</p><p>13 Apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links, AMIBIOS.</p></div>';break;
@@ -974,44 +974,35 @@
     document.getElementById('lock').addEventListener('click',function(){this.classList.add('hide');});
   });
 
-  /* Browser — S1+S2: Back/Forward/Refresh + Tabs */
-  var brHistory={};var brTabIdx={};
+  /* Browser — S1+S2: Tabs + Shortcuts */
   function buildBrowser(){
     var wrap=document.getElementById('w-browser');
-    var addr=document.getElementById('brAddr');var frame=document.getElementById('brFrame');var nav=document.getElementById('brNav');
-    if(!addr||!frame) return;
-    if(!brHistory[addr])brHistory[addr]=[];if(!brTabIdx.hasOwnProperty(addr))brTabIdx[addr]=-1;
-    /* Tab bar */
-    var tabBar=document.createElement('div');tabBar.id='brTabs';tabBar.style.cssText='display:flex;gap:2px;padding:4px 8px;border-bottom:2px solid var(--line);background:var(--paper);flex-wrap:wrap';
-    var addTabBtn=document.createElement('button');addTabBtn.textContent='+';addTabBtn.style.cssText='font-family:IBM Plex Mono,monospace;font-size:11px;padding:2px 6px;border:2px solid var(--line);background:var(--surface);cursor:pointer';
-    addTabBtn.addEventListener('click',function(){addBrowserTab(addr,frame,nav,'https://');});
-    tabBar.appendChild(addTabBtn);
-    addr.parentNode.insertBefore(tabBar,addr);
-    /* Shortcuts */
-    var shortcuts=['qapdex-maker.github.io/macrohard/','github.com/qapdex-maker','perchance.org'];
+    var addr=document.getElementById('brAddr');
+    if(!addr) return;
+
+    // Clean URL
+    function navigate(){
+      try{
+        var u=addr.value.trim();
+        if(!u) return;
+        if(!u.startsWith('http')) u='https://'+u;
+        window.open(u,'_blank');
+        addr.value='https://';
+      }catch(e){addr.value='Error';}
+    }
+
+    // Shortcuts
+    var shortcuts=['perchance.org','wikipedia.org','github.com'];
+    var nav=document.getElementById('brNav');
     shortcuts.forEach(function(u){
-      var b=document.createElement('button');b.textContent=u.split('/')[0];b.style.cssText='font-family:IBM Plex Mono,monospace;font-size:10px;padding:3px 6px;border:2px solid var(--line);background:var(--surface);cursor:pointer;box-shadow:var(--shadow)';
-      b.addEventListener('click',function(){addr.value=u;navigate();});
+      var b=document.createElement('button');
+      b.textContent=u.split('.')[0];
+      b.style.cssText='font-family:IBM Plex Mono,monospace;font-size:10px;padding:3px 6px;border:2px solid var(--line);background:var(--surface);cursor:pointer;box-shadow:var(--shadow)';
+      b.addEventListener('click',function(){window.open('https://'+u,'_blank');});
       nav.appendChild(b);
     });
+
     addr.addEventListener('keydown',function(e){if(e.key==='Enter')navigate();});
-    function navigate(){try{var u=addr.value.trim();if(!u)return;if(!u.startsWith('http'))u='https://'+u;if(u.startsWith('://'))u='https://'+u.slice(3);addr.value=u;var idx=brTabIdx[addr]||0;brHistory[addr][idx]=u;frame.src=u;}catch(e){addr.value='Error';}}
-    /* Keyboard shortcuts in browser window */
-    var wb=document.getElementById('w-browser');if(wb){wb.setAttribute('tabindex','-1');
-      wb.addEventListener('keydown',function(e){
-        if(e.ctrlKey&&e.key==='l'){e.preventDefault();addr.focus();}
-        if(e.ctrlKey&&e.key==='r'){e.preventDefault();navigate();}
-        if(e.ctrlKey&&e.key==='w'){e.preventDefault();addBrowserTab(addr,frame,nav,'https://');}
-      });
-    }
-    window._brNavigate=navigate;window._brAddr=addr;window._brFrame=frame;window._brNav=nav;window._brTabIdx=brTabIdx;window._brHistory=brHistory;window._brTabBar=tabBar;window._brAddTab=addBrowserTab;
-  }
-  function addBrowserTab(addr,frame,nav,url){
-    var tb=window._brTabBar;if(!tb)return;
-    var idx=Object.keys(window._brHistory||{}).length;
-    var tab=document.createElement('button');tab.textContent='Tab '+(tb.querySelectorAll('[data-tab]').length+1);tab.dataset.tab=Date.now();tab.style.cssText='font-family:IBM Plex Mono,monospace;font-size:10px;padding:2px 6px;border:2px solid var(--line);background:var(--surface);cursor:pointer';
-    tab.addEventListener('click',function(){addr.value=url||'https://';if(window._brNavigate)window._brNavigate();tb.querySelectorAll('[data-tab]').forEach(function(t){t.style.background='var(--surface)';t.style.color='var(--ink)';});tab.style.background='var(--accent)';tab.style.color='#fff';});
-    tb.appendChild(tab);addr.value=url||'https://';if(window._brNavigate)window._brNavigate();tab.click();
   }
 
   window.addEventListener('DOMContentLoaded',function(){
