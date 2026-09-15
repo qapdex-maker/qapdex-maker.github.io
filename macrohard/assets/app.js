@@ -288,6 +288,7 @@
     else if(key==='d'){e.preventDefault();openApp('docs');toast('Docs');}
     else if(key==='l'){e.preventDefault();openApp('links');toast('Links');}
     else if(key==='s'){e.preventDefault();snapActive();}
+    else if(key==='k'){e.preventDefault();globaleSuche();}
   });
 
   function snapActive(){
@@ -648,6 +649,60 @@
   }
 
   /* Explorer — S1: New Folder / New File */
+  /* Globale Suche */
+  function globaleSuche(){
+    var ov=document.getElementById('globalSearch');
+    if(!ov){
+      ov=document.createElement('div');ov.id='globalSearch';
+      ov.innerHTML='<div class="gsOverlay"></div><div class="gsBox"><input type="text" id="gsInput" placeholder="Suche..."><div id="gsResults"></div></div>';
+      document.body.appendChild(ov);
+      ov.querySelector('.gsOverlay').addEventListener('click',function(){ov.remove();});
+      var inp=ov.querySelector('#gsInput');
+      inp.addEventListener('input',function(){
+        var q=this.value.toLowerCase();
+        var results=[];
+        if(q.length<2){ov.querySelector('#gsResults').innerHTML='<div class="gsEmpty">Mindestens 2 Zeichen</div>';return;}
+        /* Apps */
+        desktopApps.forEach(function(a){
+          if(a.label.toLowerCase().indexOf(q)!==-1){
+            results.push({type:'app',label:a.label,icon:'📦',action:function(){openApp(a.id);ov.remove();}});
+          }
+        });
+        /* Dateien */
+        Object.keys(fsData).forEach(function(path){
+          var d=fsData[path];
+          d.dirs.forEach(function(dir){
+            if(dir.toLowerCase().indexOf(q)!==-1){
+              results.push({type:'folder',label:dir,path:path,icon:'📁',action:function(){curPath=path==='C:\\'?'C:\\'+dir:path+'\\'+dir;renderExplorer();openApp('explorer');ov.remove();}});
+            }
+          });
+          d.files.forEach(function(f){
+            if(f.toLowerCase().indexOf(q)!==-1){
+              results.push({type:'file',label:f,path:path,icon:'📄',action:function(){curPath=path;renderExplorer();openApp('explorer');ov.remove();}});
+            }
+          });
+        });
+        /* Einstellungen-Icons */
+        if('einstellungen'.indexOf(q)!==-1||'settings'.indexOf(q)!==-1){
+          results.push({type:'app',label:'Settings',icon:'⚙️',action:function(){openApp('settings');ov.remove();}});
+        }
+        if(!results.length){ov.querySelector('#gsResults').innerHTML='<div class="gsEmpty">Keine Treffer</div>';return;}
+        var html=results.map(function(r,i){
+          return '<div class="gsResult" data-i="'+i+'"><span class="gsIcon">'+r.icon+'</span><span class="gsLabel">'+r.label+'</span><span class="gsType">'+r.type+'</span></div>';
+        }).join('');
+        var resDiv=ov.querySelector('#gsResults');
+        resDiv.innerHTML=html;
+        resDiv.querySelectorAll('.gsResult').forEach(function(el){
+          el.addEventListener('click',function(){
+            var idx=parseInt(el.dataset.i);
+            if(results[idx])results[idx].action();
+          });
+        });
+      });
+      inp.focus();
+    }
+  }
+
   function buildExplorer(){
     renderExplorer();
     var inp=document.getElementById('fePath');if(!inp) return;
@@ -703,7 +758,9 @@
     'C:\\Users\\macrohard\\Downloads':{dirs:[],files:['macrohard.zip','theme.exe','readme.md']},
     'C:\\Program Files':{dirs:['Macrohard','Editor'],files:[]},
     'C:\\Windows':{dirs:['System32'],files:['system.ini']},
+    'C:\\Papierkorb':{dirs:[],files:[]},
   };
+  var trashPath='C:\\Papierkorb';
   var curPath='C:\\Users\\macrohard\\Desktop';
   function renderExplorer(filter){
     var side=document.getElementById('feSide');var grid=document.getElementById('feGrid');var inp=document.getElementById('fePath');
@@ -721,6 +778,9 @@
     var acc='C:\\';
     side.innerHTML+='<div class="feDir">📁 Root</div>';
     side.innerHTML+='<div class="feItem" data-path="C:\\">C:\\</div>';
+    if(trashPath&&fsData[trashPath]){
+      side.innerHTML+='<div class="feItem" data-path="'+trashPath+'">🗑 Papierkorb</div>';
+    }
     parts.forEach(function(p){acc+=p+'\\';side.innerHTML+='<div class="feItem" data-path="'+acc+'">📁 '+p+'</div>';});
     side.querySelectorAll('.feItem').forEach(function(el){el.addEventListener('click',function(){curPath=el.dataset.path;renderExplorer();});});
     grid.innerHTML='';
@@ -730,7 +790,19 @@
     dirs.forEach(function(dir){
       var el=document.createElement('div');el.className='feFile feFolder';
       el.innerHTML='<span class="ico">📁</span><span class="fn">'+dir+'</span><span class="meta">Ordner</span>';
-      el.addEventListener('click',function(){curPath=curPath==='C:\\'?'C:\\'+dir:curPath+dir+'\\';renderExplorer();});
+      el.addEventListener('click',function(e){
+        if(e.shiftKey||e.ctrlKey||e.metaKey){
+          this.classList.toggle('selected');
+          return;
+        }
+        document.querySelectorAll('.feFile.selected').forEach(function(x){x.classList.remove('selected');});
+        this.classList.add('selected');
+        curPath=curPath==='C:\\'?'C:\\'+dir:curPath+dir+'\\';renderExplorer();
+      });
+      el.addEventListener('contextmenu',function(e){
+        e.preventDefault();
+        showFolderContextMenu(e,dir,curPath,dirs);
+      });
       grid.appendChild(el);
     });
     files.forEach(function(f){
@@ -738,9 +810,87 @@
       var ext=f.split('.').pop().toLowerCase();
       var icon={txt:'📄',html:'🌐',css:'🎨',js:'⚡',png:'🖼',jpg:'🖼',csv:'📊',docx:'📝',zip:'📦',exe:'⚙',md:'📝'}[ext]||'📄';
       el.innerHTML='<span class="ico">'+icon+'</span><span class="fn">'+f+'</span><span class="meta">'+ext.toUpperCase()+'</span>';
-      el.addEventListener('click',function(){alert(f+' — (mock, keine echte Datei)');});
+      el.addEventListener('click',function(e){
+        if(e.shiftKey||e.ctrlKey||e.metaKey){
+          this.classList.toggle('selected');
+          return;
+        }
+        document.querySelectorAll('.feFile.selected').forEach(function(x){x.classList.remove('selected');});
+        this.classList.add('selected');
+      });
+      el.addEventListener('contextmenu',function(e){
+        e.preventDefault();
+        showFileContextMenu(e,f,curPath,files);
+      });
       grid.appendChild(el);
     });
+  }
+
+  /* Kontextmenü für Dateien */
+  function showFileContextMenu(e,f,path,files){
+    var ctx=document.getElementById('fileCtx');
+    if(ctx)ctx.remove();
+    ctx=document.createElement('div');ctx.id='fileCtx';
+    ctx.style.left=e.clientX+'px';ctx.style.top=e.clientY+'px';
+    ctx.innerHTML='<div class="ctxItem" data-act="open">Öffnen</div><div class="ctxItem" data-act="rename">Umbenennen</div><div class="ctxItem" data-act="copy">Kopieren</div><div class="ctxItem" data-act="move">Verschieben</div><div class="ctxSep"></div><div class="ctxItem" data-act="delete">Löschen</div>';
+    document.body.appendChild(ctx);
+    ctx.querySelectorAll('.ctxItem').forEach(function(item){
+      item.addEventListener('click',function(){
+        var act=item.dataset.act;
+        if(act==='open'){alert(f+' — (mock)');}
+        else if(act==='rename'){
+          var nn=prompt('Neuer Name:',f);
+          if(nn&&nn!==f){
+            var idx=files.indexOf(f);
+            if(idx!==-1)files[idx]=nn;
+            renderExplorer();
+          }
+        }else if(act==='delete'){
+          var idx=files.indexOf(f);
+          if(idx!==-1){
+            files.splice(idx,1);
+            var tp=fsData[trashPath];
+            if(tp)tp.files.push(f);
+            renderExplorer();
+          }
+        }
+        ctx.remove();
+      });
+    });
+    setTimeout(function(){document.addEventListener('click',function close(){ctx.remove();document.removeEventListener('click',close);});},100);
+  }
+  function showFolderContextMenu(e,dir,path,dirs){
+    var ctx=document.getElementById('fileCtx');
+    if(ctx)ctx.remove();
+    ctx=document.createElement('div');ctx.id='fileCtx';
+    ctx.style.left=e.clientX+'px';ctx.style.top=e.clientY+'px';
+    ctx.innerHTML='<div class="ctxItem" data-act="open">Öffnen</div><div class="ctxItem" data-act="rename">Umbenennen</div><div class="ctxItem" data-act="delete">Löschen</div>';
+    document.body.appendChild(ctx);
+    ctx.querySelectorAll('.ctxItem').forEach(function(item){
+      item.addEventListener('click',function(){
+        var act=item.dataset.act;
+        if(act==='open'){
+          curPath=path==='C:\\'?'C:\\'+dir:path+'\\'+dir;renderExplorer();
+        }else if(act==='rename'){
+          var nn=prompt('Neuer Name:',dir);
+          if(nn&&nn!==dir){
+            var idx=dirs.indexOf(dir);
+            if(idx!==-1)dirs[idx]=nn;
+            renderExplorer();
+          }
+        }else if(act==='delete'){
+          var idx=dirs.indexOf(dir);
+          if(idx!==-1){
+            dirs.splice(idx,1);
+            var delPath=path==='C:\\'?'C:\\'+dir:path+'\\'+dir;
+            delete fsData[delPath];
+            renderExplorer();
+          }
+        }
+        ctx.remove();
+      });
+    });
+    setTimeout(function(){document.addEventListener('click',function close(){ctx.remove();document.removeEventListener('click',close);});},100);
   }
 
   /* Paint — S4: Undo/Redo + Radiergummi + Linienbreite + Fill + Clear */
