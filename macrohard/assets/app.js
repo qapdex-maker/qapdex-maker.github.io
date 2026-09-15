@@ -639,11 +639,17 @@
     renderExplorer();
     var inp=document.getElementById('fePath');if(!inp) return;
     inp.addEventListener('keydown',function(e){if(e.key==='Enter'){curPath=inp.value;renderExplorer();}});
-    /* Toolbar buttons */
-    var tb=document.createElement('div');tb.style.cssText='padding:4px 10px;display:flex;gap:4px;border-bottom:2px solid var(--line);background:var(--paper)';
-    var nfBtn=document.createElement('button');nfBtn.className='cBtn';nfBtn.textContent='New Folder';nfBtn.addEventListener('click',function(){newExplorerItem('folder');});
-    var nfileBtn=document.createElement('button');nfileBtn.className='cBtn';nfileBtn.textContent='New File';nfileBtn.addEventListener('click',function(){newExplorerItem('file');});
-    tb.appendChild(nfBtn);tb.appendChild(nfileBtn);
+    /* Toolbar */
+    var tb=document.createElement('div');tb.className='feToolbar';
+    [{n:'Neu',a:'new-folder'},{n:'Datei',a:'new-file'},{n:'Suche',a:'search'}].forEach(function(t){
+      var b=document.createElement('button');b.className='cBtn';b.textContent=t.n;
+      b.addEventListener('click',function(){
+        if(t.a==='new-folder')newExplorerItem('folder');
+        else if(t.a==='new-file')newExplorerItem('file');
+        else if(t.a==='search')toggleSearch();
+      });
+      tb.appendChild(b);
+    });
     var sideEl=document.getElementById('feSide');
     if(sideEl) sideEl.parentNode.insertBefore(tb,sideEl);
   }
@@ -661,6 +667,21 @@
       c.files.push(name);renderExplorer();
     }
   }
+  function toggleSearch(){
+    var bar=document.getElementById('feSearchBar');
+    if(!bar){
+      bar=document.createElement('div');bar.id='feSearchBar';
+      bar.innerHTML='<input type="text" id="feSearchInput" placeholder="Dateien suchen..."><button class="cBtn" id="feSearchClose">×</button>';
+      var side=document.getElementById('feSide');
+      if(side) side.parentNode.insertBefore(bar,side);
+      document.getElementById('feSearchInput').addEventListener('input',function(e){
+        renderExplorer(e.target.value);
+      });
+      document.getElementById('feSearchClose').addEventListener('click',function(){bar.remove();renderExplorer();});
+    } else {
+      bar.remove();renderExplorer();
+    }
+  }
   var fsData={
     'C:\\Users':{dirs:['macrohard','Public'],files:[]},
     'C:\\Users\\macrohard':{dirs:['Desktop','Dokumente','Downloads'],files:['notes.txt']},
@@ -671,11 +692,17 @@
     'C:\\Windows':{dirs:['System32'],files:['system.ini']},
   };
   var curPath='C:\\Users\\macrohard\\Desktop';
-  function renderExplorer(){
+  function renderExplorer(filter){
     var side=document.getElementById('feSide');var grid=document.getElementById('feGrid');var inp=document.getElementById('fePath');
     if(!side||!grid) return;
     if(inp) inp.value=curPath;
     var d=fsData[curPath]||{dirs:[],files:[]};
+    var dirs=d.dirs,files=d.files;
+    if(filter){
+      var fl=filter.toLowerCase();
+      dirs=dirs.filter(function(x){return x.toLowerCase().indexOf(fl)!==-1;});
+      files=files.filter(function(x){return x.toLowerCase().indexOf(fl)!==-1;});
+    }
     side.innerHTML='';
     var parts=curPath.split('\\').filter(Boolean);
     var acc='C:\\';
@@ -684,17 +711,20 @@
     parts.forEach(function(p){acc+=p+'\\';side.innerHTML+='<div class="feItem" data-path="'+acc+'">📁 '+p+'</div>';});
     side.querySelectorAll('.feItem').forEach(function(el){el.addEventListener('click',function(){curPath=el.dataset.path;renderExplorer();});});
     grid.innerHTML='';
-    d.dirs.forEach(function(dir){
-      var el=document.createElement('div');el.className='feFile';
-      el.innerHTML='<span style="font-size:22px">📁</span><span class="fn">'+dir+'</span>';
+    if(!dirs.length&&!files.length){
+      grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-family:var(--font-mono);font-size:11px">'+(filter?'Keine Treffer':'Leer')+'</div>';
+    }
+    dirs.forEach(function(dir){
+      var el=document.createElement('div');el.className='feFile feFolder';
+      el.innerHTML='<span class="ico">📁</span><span class="fn">'+dir+'</span><span class="meta">Ordner</span>';
       el.addEventListener('click',function(){curPath=curPath==='C:\\'?'C:\\'+dir:curPath+dir+'\\';renderExplorer();});
       grid.appendChild(el);
     });
-    d.files.forEach(function(f){
-      var el=document.createElement('div');el.className='feFile';
+    files.forEach(function(f){
+      var el=document.createElement('div');el.className='feFile feDocument';
       var ext=f.split('.').pop().toLowerCase();
       var icon={txt:'📄',html:'🌐',css:'🎨',js:'⚡',png:'🖼',jpg:'🖼',csv:'📊',docx:'📝',zip:'📦',exe:'⚙',md:'📝'}[ext]||'📄';
-      el.innerHTML=icon+'<span class="fn">'+f+'</span>';
+      el.innerHTML='<span class="ico">'+icon+'</span><span class="fn">'+f+'</span><span class="meta">'+ext.toUpperCase()+'</span>';
       el.addEventListener('click',function(){alert(f+' — (mock, keine echte Datei)');});
       grid.appendChild(el);
     });
