@@ -126,15 +126,34 @@
     e.preventDefault();
     var m=document.getElementById('deskCtx');
     if(!m){m=document.createElement('div');m.id='deskCtx';
-      m.innerHTML='<div class="ctxItem" data-a="notepad">Notepad</div><div class="ctxItem" data-a="calculator">Calculator</div><div class="ctxItem" data-a="terminal">Terminal</div><div class="ctxItem" data-a="explorer">Explorer</div><div class="ctxItem" data-a="paint">Paint</div><div class="ctxSep"></div><div class="ctxItem" data-a="settings">Settings</div><div class="ctxItem" data-a="amibios">AMIBIOS</div>';
+      m.innerHTML='<div class="ctxItem" data-a="notepad">Notepad</div><div class="ctxItem" data-a="calculator">Calculator</div><div class="ctxItem" data-a="terminal">Terminal</div><div class="ctxItem" data-a="explorer">Explorer</div><div class="ctxItem" data-a="paint">Paint</div><div class="ctxSep"></div><div class="ctxItem" data-action="view-large"><span style="flex:1">Ansicht: Groß</span>  <span style="font-size:10px;color:var(--muted)">Icons</span></div><div class="ctxItem" data-action="view-medium"><span style="flex:1">Ansicht: Mittel</span>  <span style="font-size:10px;color:var(--muted)">Icons</span></div><div class="ctxItem" data-action="sort-name"><span style="flex:1">Sortieren: Name</span>  <span style="font-size:10px;color:var(--muted)">A-Z</span></div><div class="ctxSep"></div><div class="ctxItem" data-a="settings">Settings</div><div class="ctxItem" data-a="amibios">AMIBIOS</div>';
       document.body.appendChild(m);
       m.querySelectorAll('.ctxItem').forEach(function(it){
-        it.addEventListener('click',function(){var a=it.dataset.a;if(a)openApp(a);m.classList.remove('open');});
+        it.addEventListener('click',function(){
+          var a=it.dataset.a;
+          var act=it.dataset.action;
+          if(a)openApp(a);
+          if(act==='view-large'){document.getElementById('deskIcons').dataset.view='large';}
+          else if(act==='view-medium'){document.getElementById('deskIcons').dataset.view='medium';}
+          else if(act==='sort-name'){sortDeskIcons('name');}
+          m.classList.remove('open');
+        });
       });
     }
     m.style.left=e.clientX+'px';m.style.top=e.clientY+'px';
     m.classList.add('open');
   });
+
+  function sortDeskIcons(by){
+    var c=document.getElementById('deskIcons');
+    var items=Array.from(c.children);
+    items.sort(function(a,b){
+      var la=a.querySelector('.lbl').textContent.toLowerCase();
+      var lb=b.querySelector('.lbl').textContent.toLowerCase();
+      return la.localeCompare(lb);
+    });
+    items.forEach(function(i){c.appendChild(i);});
+  }
   document.addEventListener('click',function(e){
     var m=document.getElementById('deskCtx');if(m&&!m.contains(e.target))m.classList.remove('open');
   });
@@ -1116,21 +1135,31 @@
   var dragging=null,dx=0,dy=0;
   function dragStart(e,w){
     e.preventDefault();
-    dragging=w;dx=e.clientX-w.offsetLeft;dy=e.clientY-w.offsetTop;
+    var clientX=e.clientX||e.touches[0].clientX;
+    var clientY=e.clientY||e.touches[0].clientY;
+    dragging=w;dx=clientX-w.offsetLeft;dy=clientY-w.offsetTop;
     function onmove(ev){
-      var nx=ev.clientX-dx,ny=ev.clientY-dy;
+      var mx=ev.clientX||ev.touches[0].clientX;
+      var my=ev.clientY||ev.touches[0].clientY;
+      var nx=mx-dx,ny=my-dy;
       dragging.style.left=nx+'px';dragging.style.top=ny+'px';
       showSnapHint(nx,ny);
     }
     function onup(ev){
       document.removeEventListener('mousemove',onmove);document.removeEventListener('mouseup',onup);
+      document.removeEventListener('touchmove',onmove);document.removeEventListener('touchend',onup);
       hideSnapHint();dragging=null;
-      var nx=ev.clientX-dx,ny=ev.clientY-dy,wW=window.innerWidth,wH=window.innerHeight;
-      if(nx<60){snapWindow(w,'left');}
-      else if(nx>wW-w.offsetWidth-60){snapWindow(w,'right');}
-      else if(ny<60){snapWindow(w,'max');}
+      var mx=(ev.clientX||ev.changedTouches[0].clientX)-dx;
+      var my=(ev.clientY||ev.changedTouches[0].clientY)-dy;
+      var wW=window.innerWidth;
+      if(mx<60){snapWindow(w,'left');}
+      else if(mx>wW-w.offsetWidth-60){snapWindow(w,'right');}
+      else if(my<60){snapWindow(w,'max');}
     }
-    document.addEventListener('mousemove',onmove);document.addEventListener('mouseup',onup);
+    document.addEventListener('mousemove',onmove);
+    document.addEventListener('mouseup',onup);
+    document.addEventListener('touchmove',onmove,{passive:false});
+    document.addEventListener('touchend',onup);
   }
   function showSnapHint(x,y){var wW=window.innerWidth;
     var hint=document.getElementById('snapHint');

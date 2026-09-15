@@ -319,6 +319,15 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .stPane.active{display:block}
 
 /* ===== prefers-reduced-motion ===== */
+@media (hover: none) and (pointer: coarse){
+  .tbStart{height:40px;min-width:60px;padding:0 18px;font-size:14px}
+  .tbIcon{min-width:50px;height:40px}
+  .dskApp{min-width:64px;min-height:76px}
+  .wclose,.wmin,.wmax{width:28px;height:28px;font-size:14px}
+  .wnd-resize{width:24px;height:24px}
+}
+
+/* ===== prefers-reduced-motion ===== */
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
   #boot{transition:opacity .01ms}
@@ -328,7 +337,23 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
   .osToast{animation:none!important}
 }
 
-/* ===== taskmanager ===== */
+/* ===== desktop context menu ===== */
+#deskCtx{position:fixed;z-index:100000;background:var(--surface);border:3px solid var(--line);box-shadow:var(--shadow);min-width:180px;display:none}
+#deskCtx.open{display:block}
+.ctxItem{display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:12px;cursor:pointer;white-space:nowrap}
+.ctxItem:hover{background:var(--accent);color:#fff}
+.ctxSep{height:2px;background:var(--line);margin:2px 0}
+/* ===== desktop view modes ===== */
+#deskIcons[data-view="large"]{gap:12px}
+#deskIcons[data-view="large"] .dskApp{width:90px;height:100px}
+#deskIcons[data-view="large"] .dskApp .lbl{font-size:13px}
+#deskIcons[data-view="large"] .dskApp .ico{width:40px;height:40px}
+#deskIcons[data-view="large"] .dskApp .ico svg{width:34px;height:34px}
+#deskIcons[data-view="medium"]{gap:6px}
+#deskIcons[data-view="medium"] .dskApp{width:72px;height:80px}
+#deskIcons[data-view="medium"] .dskApp .lbl{font-size:10.5px}
+#deskIcons[data-view="medium"] .dskApp .ico{width:30px;height:30px}
+#deskIcons[data-view="medium"] .dskApp .ico svg{width:24px;height:24px}
 .tmBody{padding:10px;display:flex;flex-direction:column;gap:6px}
 .tmRow{display:flex;align-items:center;gap:8px;padding:6px 10px;border:2px solid var(--line);background:var(--surface);box-shadow:var(--shadow)}
 .tmName{flex:1;font-weight:600;font-size:12px}
