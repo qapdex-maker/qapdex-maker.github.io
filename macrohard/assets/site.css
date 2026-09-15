@@ -499,6 +499,34 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
   100% { width: 100%; }
 }
 
+/* ===== browser ===== */
+.brTabs{display:flex;gap:0;background:var(--paper);border-bottom:2px solid var(--line);overflow-x:auto;flex-shrink:0}
+.brTab{display:flex;align-items:center;gap:6px;padding:4px 12px;font-size:10px;font-weight:600;cursor:pointer;border-right:1px solid var(--line);max-width:120px;min-width:60px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brTab:hover{background:var(--surface)}
+.brTab.active{background:var(--surface);color:var(--accent)}
+.brTab .brTabX{margin-left:auto;font-size:12px;opacity:.5;padding:0 2px;border-radius:2px}
+.brTab .brTabX:hover{opacity:1;background:var(--line);color:#fff}
+.brBar{display:flex;gap:4px;padding:6px 8px;background:var(--paper);border-bottom:2px solid var(--line);align-items:center;flex-shrink:0}
+.brBtn{min-width:30px;height:28px;border:2px solid var(--line);background:var(--surface);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 var(--line);border-radius:3px;transition:all .1s}
+.brBtn:hover{box-shadow:3px 3px 0 var(--accent);border-color:var(--accent)}
+.brBtn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--line)}
+#brAddr{flex:1;height:28px;padding:0 8px;border:2px solid var(--line);background:var(--surface);font-family:"IBM Plex Mono",monospace;font-size:11px;border-radius:3px;box-shadow:inset 2px 2px 0 rgba(0,0,0,.05)}
+#brAddr:focus{outline:none;border-color:var(--accent);box-shadow:inset 2px 2px 0 rgba(37,71,255,.1)}
+.brContent{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.brHome{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;padding:20px}
+.brLogo{font-size:48px}
+.brTitle{font-size:18px;font-weight:700;color:var(--ink)}
+.brSub{font-size:11px;color:var(--muted)}
+.brSearch{display:flex;gap:4px;width:100%;max-width:320px}
+.brSearch input{flex:1;height:30px;padding:0 10px;border:2px solid var(--line);background:var(--surface);font-size:11px;border-radius:3px}
+.brSearch input:focus{outline:none;border-color:var(--accent)}
+.brSearch button{height:30px;padding:0 12px;border:2px solid var(--line);background:var(--accent);color:#fff;font-size:12px;cursor:pointer;border-radius:3px}
+.brSearch button:hover{filter:brightness(1.1)}
+.brQuick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%;max-width:320px}
+.brQItem{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px;border:2px solid var(--line);background:var(--surface);cursor:pointer;border-radius:4px;box-shadow:2px 2px 0 var(--line);transition:all .15s}
+.brQItem:hover{box-shadow:3px 3px 0 var(--accent);border-color:var(--accent);transform:translate(-1px,-1px)}
+.brQIco{font-size:20px}
+
 /* ===== taskmanager (Windows-Stil) ===== */
 .tmTabs{display:flex;gap:0;border-bottom:2px solid var(--line);background:var(--paper);position:sticky;top:0;z-index:5}
 .tmTab{padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer;border:2px solid transparent;border-bottom:none;margin-bottom:-2px;color:var(--muted);transition:all .15s}

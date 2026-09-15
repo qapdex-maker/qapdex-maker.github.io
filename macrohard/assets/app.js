@@ -353,7 +353,7 @@
       case 'terminal': body='<div class="termOut" id="termOut"></div><div class="termIn"><span class="prompt">user@macrohard:~$</span><input id="termIn" autofocus></div>';break;
       case 'explorer': body='<div class="fePath"><span>📁</span><input id="fePath" value="C:\Users\macrohard\Desktop"></div><div class="feSide" id="feSide"></div><div class="feGrid" id="feGrid"></div>';break;
       case 'paint': body='<div class="ptColors" id="ptColors"></div><canvas class="ptCanvas" id="ptCanvas" width="400" height="260"></canvas>';break;
-      case 'browser': body='<div class="fePath"><span>🔍</span><input id="brAddr" value="https://" placeholder="URL eingeben..."></div><div style="display:flex;gap:4px;padding:4px 8px;flex-wrap:wrap" id="brNav"></div><div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:IBM Plex Mono,monospace;font-size:12px;text-align:center;padding:20px"><div><div style="font-size:48px;margin-bottom:12px">🌐</div><div>Web-Browser</div><div style="font-size:10px;opacity:.6;margin-top:8px">URLs werden im externen Browser geöffnet</div></div></div>';break;
+      case 'browser': body='<div class="brTabs" id="brTabs"></div><div class="brBar"><button class="brBtn" id="brBack" title="Zurück">←</button><button class="brBtn" id="brFwd" title="Vor">→</button><button class="brBtn" id="brRefresh" title="Aktualisieren">↻</button><button class="brBtn" id="brHome" title="Startseite">⌂</button><input id="brAddr" value="https://duckduckgo.com" placeholder="URL oder Suche..."><button class="brBtn" id="brGo" title="Los">➜</button><button class="brBtn" id="brBm" title="Lesezeichen">☆</button><button class="brBtn" id="brNewTab" title="Neuer Tab">+</button></div><div class="brContent" id="brContent"></div>';break;
       case 'music': body='<div class="musPlayer"><div class="musList" id="musList"></div><div class="musExtra"><div class="musPadSection"><div class="musSectionTitle">🥁 Beatpad</div><div class="musBeatpad" id="musBeatpad"></div></div><div class="musEqSection"><div class="musSectionTitle">🎛 Equalizer</div><canvas id="musVisualizer" width="280" height="60"></canvas><div class="musEq" id="musEq"></div></div></div></div>';break;
       case 'chat': body='<div class="cpMsgs" id="cpMsgs"></div><div class="cpSugs" id="cpSugs"></div><div class="cpIn"><input id="cpIn" placeholder="Nachricht..."><button id="cpSend">Send</button></div>';break;
       case 'docs': body='<div class="mdBody" id="mdBody"><h3>MakerOS Docs</h3><p>Neo-brutalist desktop OS — qapdex-maker.github.io edition.</p><p>13 Apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links, AMIBIOS.</p></div>';break;
@@ -1456,33 +1456,126 @@ songs.forEach(function(s,i){
 
   /* Browser — S1+S2: Tabs + Shortcuts */
   function buildBrowser(){
-    var wrap=document.getElementById('w-browser');
+    var content=document.getElementById('brContent');
     var addr=document.getElementById('brAddr');
-    if(!addr) return;
+    var tabsEl=document.getElementById('brTabs');
+    if(!content) return;
 
-    // Clean URL
-    function navigate(){
-      try{
-        var u=addr.value.trim();
-        if(!u) return;
-        if(!u.startsWith('http')) u='https://'+u;
-        window.open(u,'_blank');
-        addr.value='https://';
-      }catch(e){addr.value='Error';}
+    var tabs=[];
+    var activeTab=0;
+    var history=[];
+    var histIdx=-1;
+
+    function uid(){return 'br'+Math.random().toString(36).slice(2,8)}
+
+    function renderTabs(){
+      tabsEl.innerHTML='';
+      tabs.forEach(function(t,i){
+        var tab=document.createElement('div');
+        tab.className='brTab'+(i===activeTab?' active':'');
+        tab.innerHTML='<span class="brTabTit">'+(t.title||t.url)+'</span><span class="brTabX">×</span>';
+        tab.querySelector('.brTabTit').addEventListener('click',function(){activeTab=i;showTab(i)});
+        tab.querySelector('.brTabX').addEventListener('click',function(){closeTab(i)});
+        tabsEl.appendChild(tab);
+      });
     }
 
-    // Shortcuts
-    var shortcuts=['perchance.org','wikipedia.org','github.com'];
-    var nav=document.getElementById('brNav');
-    shortcuts.forEach(function(u){
-      var b=document.createElement('button');
-      b.textContent=u.split('.')[0];
-      b.style.cssText='font-family:IBM Plex Mono,monospace;font-size:10px;padding:3px 6px;border:2px solid var(--line);background:var(--surface);cursor:pointer;box-shadow:var(--shadow)';
-      b.addEventListener('click',function(){window.open('https://'+u,'_blank');});
-      nav.appendChild(b);
-    });
+    function showTab(i){
+      if(i<0||i>=tabs.length) return;
+      activeTab=i;
+      var t=tabs[i];
+      addr.value=t.url;
+      renderTabs();
+      content.innerHTML='';
+      if(t.url==='home'){
+        showHome();
+        return;
+      }
+      var iframe=document.createElement('iframe');
+      iframe.id='brFrame';
+      iframe.style.cssText='width:100%;height:100%;border:none;background:#fff';
+      iframe.sandbox='allow-scripts allow-same-origin allow-forms allow-popups allow-presentation';
+      iframe.src=t.url;
+      var err=document.createElement('div');
+      err.className='brErr';
+      err.style.cssText='display:none;height:100%;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center';
+      err.innerHTML='<div style="font-size:48px">🔒</div><div style="font-weight:700;font-size:13px">Diese Seite kann nicht in einem iframe geladen werden.</div><div style="font-size:11px;color:var(--muted);max-width:280px">Viele Webseiten blockieren iframes aus Sicherheitsgründen.</div><button class="cBtn" id="brOpenExt" style="margin-top:8px">Im externen Browser öffnen</button>';
+      content.appendChild(iframe);
+      content.appendChild(err);
+      iframe.onload=function(){err.style.display='none'};
+      iframe.onerror=function(){err.style.display='flex';iframe.style.display='none'};
+      setTimeout(function(){if(iframe.contentDocument===null)err.style.display='flex'},4000);
+      err.querySelector('#brOpenExt').addEventListener('click',function(){window.open(t.url,'_blank')});
+    }
 
-    addr.addEventListener('keydown',function(e){if(e.key==='Enter')navigate();});
+    function showHome(){
+      addr.value='home';
+      renderTabs();
+      content.innerHTML='';
+      var home=document.createElement('div');
+      home.className='brHome';
+      home.innerHTML='<div class="brLogo">🌐</div><div class="brTitle">Web-Browser</div><div class="brSub">DuckDuckGo-Suche</div><div class="brSearch"><input id="brSearchIn" placeholder="Suchbegriff eingeben..."><button id="brSearchBtn">🔍</button></div><div class="brQuick" id="brQuick"></div>';
+      content.appendChild(home);
+      /* Quick Links */
+      var quick=document.getElementById('brQuick');
+      var links=[
+        ['Wikipedia','https://wikipedia.org','📚'],
+        ['GitHub','https://github.com','💻'],
+        ['Reddit','https://reddit.com','📰'],
+        ['YouTube','https://youtube.com','📺'],
+        ['Twitter','https://twitter.com','🐦'],
+        ['MDN','https://developer.mozilla.org','📖']
+      ];
+      links.forEach(function(l){
+        var a=document.createElement('div');
+        a.className='brQItem';
+        a.innerHTML='<span class="brQIco">'+l[2]+'</span><span>'+l[0]+'</span>';
+        a.addEventListener('click',function(){openUrl(l[1])});
+        quick.appendChild(a);
+      });
+      /* Search */
+      var si=document.getElementById('brSearchIn');
+      var sb=document.getElementById('brSearchBtn');
+      function doSearch(){
+        var q=si.value.trim();
+        if(q) openUrl('https://duckduckgo.com/?q='+encodeURIComponent(q));
+      }
+      si.addEventListener('keydown',function(e){if(e.key==='Enter')doSearch()});
+      sb.addEventListener('click',doSearch);
+    }
+
+    function openUrl(u){
+      if(!u) return;
+      if(!u.startsWith('http')&&u!=='home') u='https://'+u;
+      tabs.push({id:uid(),url:u,title:u});
+      activeTab=tabs.length-1;
+      showTab(activeTab);
+      history.push(u);histIdx=history.length-1;
+      saveBookmarks();
+    }
+
+    function closeTab(i){
+      if(tabs.length===1){tabs=[{id:uid(),url:'home',title:'Startseite'}];activeTab=0;showHome();return}
+      tabs.splice(i,1);
+      if(activeTab>=tabs.length)activeTab=tabs.length-1;
+      showTab(activeTab);
+    }
+
+    function saveBookmarks(){}
+
+    /* Events */
+    addr.addEventListener('keydown',function(e){if(e.key==='Enter')openUrl(addr.value)});
+    document.getElementById('brGo').addEventListener('click',function(){openUrl(addr.value)});
+    document.getElementById('brBack').addEventListener('click',function(){if(histIdx>0){histIdx--;addr.value=history[histIdx];openUrl(history[histIdx])}});
+    document.getElementById('brFwd').addEventListener('click',function(){if(histIdx<history.length-1){histIdx++;addr.value=history[histIdx];openUrl(history[histIdx])}});
+    document.getElementById('brRefresh').addEventListener('click',function(){showTab(activeTab)});
+    document.getElementById('brHome').addEventListener('click',function(){openUrl('home')});
+    document.getElementById('brBm').addEventListener('click',function(){var u=prompt('Lesezeichen hinzufügen (URL):');if(u)openUrl(u)});
+    document.getElementById('brNewTab').addEventListener('click',function(){openUrl('home')});
+
+    /* Init */
+    tabs.push({id:uid(),url:'home',title:'Startseite'});
+    showHome();
   }
 
   window.addEventListener('DOMContentLoaded',function(){
