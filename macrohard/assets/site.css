@@ -69,7 +69,16 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
 .wnd.focused{box-shadow:var(--shadow-hover);border-color:var(--accent)}
 .wtitle{display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--accent);color:#fff;font-size:12px;font-weight:600;cursor:move;flex:0 0 auto}
 .wnd .wact{width:10px;height:10px;border-radius:50%;background:var(--accent);flex:0 0 auto}
-.wbody{flex:1;overflow:hidden;position:relative}
+/* ===== window body ===== */
+.wbody{flex:1;overflow:auto;position:relative}
+
+/* ===== scrollbar (neo-brutalist) ===== */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--paper);border:2px solid var(--line);margin:2px}
+::-webkit-scrollbar-thumb{background:var(--accent);border:2px solid var(--line);border-radius:0}
+::-webkit-scrollbar-thumb:hover{background:var(--accent-2)}
+::-webkit-scrollbar-corner{background:var(--paper)}
+*{scrollbar-width:thin;scrollbar-color:var(--accent) var(--paper)}
 .wmin{width:28px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;background:transparent;color:#fff;font-size:16px;font-weight:bold}
 .wmin:hover{background:rgba(255,255,255,.15)}
 .wmax{width:28px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;background:transparent;color:#fff;font-size:14px;font-weight:bold}
@@ -78,7 +87,7 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
 .wclose:hover{background:#ff3b3b}
 
 /* ===== notepad ===== */
-.npArea{width:100%;height:100%;border:none;resize:none;padding:8px;font-family:"IBM Plex Mono",monospace;font-size:13px;background:var(--paper);color:var(--ink);outline:none}
+npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8px;font-family:IBM Plex Mono,monospace;font-size:13px;background:var(--paper);color:var(--ink);outline:none;box-sizing:border-box}
 .npStats{font-size:10px;font-family:"IBM Plex Mono",monospace;padding:2px 8px;background:var(--accent-2);color:var(--ink);text-align:right}
 .npSearch{display:flex;gap:4px;padding:4px 8px;background:var(--surface);border:2px solid var(--line);box-shadow:var(--shadow)}
 .npSearch input{flex:1;border:none;background:var(--paper);font-family:"IBM Plex Mono",monospace;font-size:12px;outline:none;color:var(--ink);padding:4px 8px}
@@ -147,7 +156,7 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
 .musVol input[type=range]{flex:1}
 
 /* ===== settings ===== */
-.stGrid{padding:10px;display:flex;flex-direction:column;gap:8px}
+.stGrid{padding:10px;display:flex;flex-direction:column;gap:8px;max-height:100%;overflow-y:auto}
 .stNav{display:flex;gap:2px;padding:4px 10px;border-bottom:2px solid var(--line)}
 .stNav button{flex:1;padding:6px;font-family:"IBM Plex Mono",monospace;font-size:10px;border:2px solid var(--line);background:var(--surface);cursor:pointer;box-shadow:var(--shadow)}
 .stNav button.active{background:var(--accent);color:#fff}
@@ -199,4 +208,20 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
   .dskApp{width:58px;height:64px}
   #startMenu{width:240px;max-height:300px}
   .wnd{min-width:220px;min-height:140px}
+}
+
+/* ===== window open animation ===== */
+@keyframes wndOpen{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
+.wnd{animation:wndOpen .18s ease-out}
+
+/* ===== scanlines ===== */
+.scanlines::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.04) 0,rgba(0,0,0,.04) 1px,transparent 1px,transparent 3px);pointer-events:none;z-index:0}
+
+/* ===== settings tab panes ===== */
+.stPane{display:none}
+.stPane.active{display:block}
+
+/* ===== toast slide ===== */
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+.osToast.show{animation:toastIn .25s ease-out}
 }

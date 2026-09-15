@@ -166,12 +166,24 @@
     return s[name]||'';
   }
 
-  /* Start menu */
-  document.getElementById('tbStart').addEventListener('click',function(e){
-    e.stopPropagation();
-    document.getElementById('startMenu').classList.toggle('open');
+  /* Start menu — mit Fix für z-index und Click-Blockade durch Boot/Lock */
+  document.addEventListener('DOMContentLoaded',function(){
+    var tbStart=document.getElementById('tbStart');
+    var startMenu=document.getElementById('startMenu');
+    if(tbStart&&startMenu){
+      tbStart.style.zIndex='100003';
+      tbStart.addEventListener('click',function(e){
+        e.stopPropagation();
+        startMenu.classList.toggle('open');
+      });
+    }
+    document.addEventListener('click',function(e){
+      var sm=document.getElementById('startMenu');
+      if(sm&&sm.classList.contains('open')&&!e.target.closest('#startMenu')&&!e.target.closest('#tbStart')){
+        sm.classList.remove('open');
+      }
+    });
   });
-  document.addEventListener('click',function(){document.getElementById('startMenu').classList.remove('open');});
 
   /* Lock → Desktop */
   document.getElementById('lock').addEventListener('click',function(){
@@ -239,7 +251,7 @@
       case 'music': body='<div class="musList" id="musList"></div>';break;
       case 'chat': body='<div class="cpMsgs" id="cpMsgs"></div><div class="cpSugs" id="cpSugs"></div><div class="cpIn"><input id="cpIn" placeholder="Nachricht..."><button id="cpSend">Send</button></div>';break;
       case 'docs': body='<div class="mdBody" id="mdBody"><h3>MakerOS Docs</h3><p>Neo-brutalist desktop OS — qapdex-maker.github.io edition.</p><p>13 Apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links, AMIBIOS.</p></div>';break;
-      case 'settings': body='<div class="stGrid" id="stGrid"><label><input type="checkbox" id="stDark"> Dark Mode</label><label><input type="checkbox" id="stScan" checked> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div>';break;
+      case 'settings': body='<div class="stGrid" id="stGrid"><div class="stNav"><button data-tab="general" class="active" data-de="Allgemein" data-en="General">Allgemein</button><button data-tab="appearance" data-de="Aussehen" data-en="Appearance">Aussehen</button><button data-tab="shortcuts" data-de="Tastenkürzel" data-en="Shortcuts">Tastenkürzel</button><button data-tab="privacy" data-de="Datenschutz" data-en="Privacy">Datenschutz</button></div><div class="stPane active" data-pane="general"><label><input type="checkbox" id="stDark"> Dark Mode</label><label><input type="checkbox" id="stScan" checked> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div><div class="stPane" data-pane="appearance" id="stAppearance"></div><div class="stPane" data-pane="shortcuts" id="stShortcuts"></div><div class="stPane" data-pane="privacy" id="stPrivacy"></div></div>';break;
       case 'links': body='<div class="clPane" id="clPane"></div>';break;
       case 'amibios': body='<div style="width:100%;height:100%" id="w-amibios"></div>';break;
     }
@@ -349,7 +361,7 @@
     var tb=document.createElement('div');tb.style.cssText='padding:4px 6px;display:flex;gap:2px;flex-wrap:wrap;border-bottom:2px solid var(--line)';
     var sciBtn=document.createElement('button');sciBtn.textContent='SCI';sciBtn.className='cBtn op';sciBtn.style.fontSize='10px';sciBtn.addEventListener('click',function(){sciMode=!sciMode;buildCalc();});
     tb.appendChild(sciBtn);
-    if(sciMode){sci.forEach(function(b){var btn=document.createElement('button');btn.textContent=b;btn.className='cBtn';btn.addEventListener('click',function(){sciPress(b);});tb.appendChild(btn);});}
+    if(sciMode){sci.forEach(function(b){var btn=document.createElement('button');btn.textContent=b;btn.className='cBtn';btn.addEventListener('click',function(){calcPress(b);});tb.appendChild(btn);});}
     grid.parentNode.insertBefore(tb,grid);
     var btns=sciMode?['C','±','%','÷','(',')','7','8','9','×','4','5','6','−','1','2','3','+','0','.','=']:['C','±','%','÷','(',')','7','8','9','×','4','5','6','−','1','2','3','+','0','.','='];
     var opClasses={'\u00f7':'op','\u00d7':'op','\u2212':'op','+':'op','=':'eq','C':'op','\u00b1':'op','%':'op'};
@@ -364,7 +376,7 @@
     });
     wnd.setAttribute('tabindex','-1');
   }
-  function sciPress(b){
+  function calcPress(b){
     var expr=document.getElementById('cExpr');if(!expr) return;
     var map={'sin':'Math.sin','cos':'Math.cos','tan':'Math.tan','sqrt':'Math.sqrt','pow':'Math.pow','log':'Math.log','abs':'Math.abs','π':'Math.PI','e':'Math.E'};
     if(map[b]){expr.value+=map[b]+'(';}
@@ -374,6 +386,7 @@
     else if(b==='='){try{var r=eval(expr.value.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-'));calcHist.unshift(expr.value+' = '+r);if(calcHist.length>12)calcHist.pop();document.getElementById('cCur').textContent='';expr.value=r;renderHist();}catch(e){expr.value='Error';}}
     else{if(expr.value==='0')expr.value=b;else expr.value+=b;}
   }
+  window.calcPress=calcPress;
   function renderHist(){
     var hist=document.getElementById('calcHist');if(!hist) return;
     hist.innerHTML=calcHist.map(function(h){return '<div class="chItem">'+h+'</div>';}).join('');
@@ -526,12 +539,7 @@
     'C:\\Program Files':{dirs:['Macrohard','Editor'],files:[]},
     'C:\\Windows':{dirs:['System32'],files:['system.ini']},
   };
-  var curPath='C:\\';
-  function buildExplorer(){
-    renderExplorer();
-    var inp=document.getElementById('fePath');if(!inp) return;
-    inp.addEventListener('keydown',function(e){if(e.key==='Enter'){curPath=inp.value;renderExplorer();}});
-  }
+  var curPath='C:\\Users\\macrohard\\Desktop';
   function renderExplorer(){
     var side=document.getElementById('feSide');var grid=document.getElementById('feGrid');var inp=document.getElementById('fePath');
     if(!side||!grid) return;
@@ -722,39 +730,32 @@
     tb.appendChild(expBtn);tb.appendChild(prevBtn);body.appendChild(tb);body.appendChild(preview);
   }
 
-  /* Settings — S1+S2: Accent + Font-Größe + Reset + About */
+  /* Settings — S1+S2: 4 Tabs (Allgemein, Aussehen, Tastenkürzel, Datenschutz) */
   function buildSettings(){
     var pane=document.getElementById('stGrid');if(!pane) return;
-    /* Accent color */
-    var accentLabel=document.createElement('label');accentLabel.innerHTML='Accent: <input type="color" id="stAccent" value="#2547ff" style="width:40px;height:24px;border:2px solid var(--line)">';
-    var accentBtn=document.createElement('button');accentBtn.className='cBtn';accentBtn.textContent='Apply Accent';accentBtn.addEventListener('click',function(){var v=document.getElementById('stAccent').value;document.documentElement.style.setProperty('--accent',v);try{localStorage.setItem('os_accent',v);}catch(e){}});
-    accentLabel.appendChild(accentBtn);pane.appendChild(accentLabel);
-    /* Font size */
-    var fsLabel=document.createElement('label');fsLabel.innerHTML='Font-Größe: <select id="stFS"><option value="13">Normal</option><option value="15">Groß</option><option value="11">Klein</option></select>';
-    var fsApply=document.createElement('button');fsApply.className='cBtn';fsApply.textContent='Apply';fsApply.addEventListener('click',function(){var v=document.getElementById('stFS').value;document.documentElement.style.setProperty('--fs',v+'px');try{localStorage.setItem('os_fs',v);}catch(e){}});
-    fsLabel.appendChild(fsApply);pane.appendChild(fsLabel);
-    /* Reset */
-    var resetBtn=document.createElement('button');resetBtn.className='cBtn op';resetBtn.textContent='Reset Defaults';
-    resetBtn.addEventListener('click',function(){document.documentElement.style.removeProperty('--accent');document.documentElement.style.removeProperty('--fs');document.documentElement.dataset.theme='';try{localStorage.removeItem('os_accent');localStorage.removeItem('os_fs');}catch(e){}location.reload();});
-    pane.appendChild(resetBtn);
-    /* About */
-    var about=document.createElement('div');about.style.cssText='margin-top:8px;padding:6px 8px;border:2px solid var(--line);background:var(--paper);font-size:10px';
-    about.textContent='MakerOS v2.9 · qapdex-maker.github.io · Built '+new Date().toISOString().slice(0,10);
-    pane.appendChild(about);
-    /* AMIBIOS quick launch */
-    var bioBtn=document.createElement('button');bioBtn.className='cBtn';bioBtn.textContent='⚙ Launch AMIBIOS';
-    bioBtn.addEventListener('click',function(){openApp('amibios');});
-    pane.appendChild(bioBtn);
-    /* Wallpaper URL */
-    var wpLabel=document.createElement('label');wpLabel.innerHTML='Wallpaper URL: <input id="stWall" placeholder="https://..." style="flex:1;font-family:IBM Plex Mono;font-size:10px;padding:2px;border:2px solid var(--line);background:var(--paper);color:var(--ink)">';
-    var wpBtn=document.createElement('button');wpBtn.className='cBtn';wpBtn.textContent='Apply';wpBtn.addEventListener('click',function(){var u=document.getElementById('stWall').value;if(u)setWallpaper(u);});
-    wpLabel.appendChild(wpBtn);pane.appendChild(wpLabel);
-    var resetBtn=document.createElement('button');resetBtn.className='cBtn op';resetBtn.textContent='Reset Defaults';resetBtn.addEventListener('click',function(){document.documentElement.style.removeProperty('--accent');document.documentElement.style.removeProperty('--fs');document.documentElement.dataset.theme='';try{localStorage.removeItem('os_accent');localStorage.removeItem('os_fs');}catch(e){}location.reload();});
-    pane.appendChild(resetBtn);
-    /* Restore saved accent/fs */
-    try{var sv=localStorage.getItem('os_accent');if(sv)document.documentElement.style.setProperty('--accent',sv);}catch(e){}
-    try{var sv2=localStorage.getItem('os_fs');if(sv2)document.documentElement.style.setProperty('--fs',sv2+'px');}catch(e){}
-    document.getElementById('stDark').addEventListener('change',function(){document.documentElement.dataset.theme=this.checked?'dark':'';});
+    /* Tab Navigation */
+    var nav=pane.querySelector('.stNav');
+    if(nav){
+      nav.querySelectorAll('button').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          nav.querySelectorAll('button').forEach(function(b){b.classList.remove('active');});
+          this.classList.add('active');
+          pane.querySelectorAll('.stPane').forEach(function(p){p.classList.remove('active');});
+          var target=pane.querySelector('.stPane[data-pane="'+btn.dataset.tab+'"]');
+          if(target) target.classList.add('active');
+        });
+      });
+    }
+    /* General */
+    document.getElementById('stDark').addEventListener('change',function(){
+      document.documentElement.dataset.theme=this.checked?'dark':'';
+      try{localStorage.setItem('os_dark',this.checked?'1':'0');}catch(e){}
+    });
+    var stScan=document.getElementById('stScan');
+    if(stScan) stScan.addEventListener('change',function(){
+      document.documentElement.classList.toggle('scanlines',this.checked);
+      try{localStorage.setItem('os_scan',this.checked?'1':'0');}catch(e){}
+    });
     document.getElementById('stLang').addEventListener('change',function(){lang=this.value;refreshUI();});
     var regBtn=document.getElementById('stRegisterSW');
     if(regBtn){
@@ -764,6 +765,74 @@
         }else{regBtn.textContent='⚠️ SW nicht supported';}
       });
     }
+    /* Appearance */
+    var appearance=document.getElementById('stAppearance');if(appearance){
+      var grid=document.createElement('div');grid.className='stGrid';
+      /* Accent color */
+      var accentLabel=document.createElement('label');accentLabel.innerHTML='Accent: <input type="color" id="stAccent" value="#2547ff" style="width:40px;height:24px;border:2px solid var(--line)">';
+      var accentBtn=document.createElement('button');accentBtn.className='cBtn';accentBtn.textContent='Apply Accent';
+      accentBtn.addEventListener('click',function(){var v=document.getElementById('stAccent').value;document.documentElement.style.setProperty('--accent',v);try{localStorage.setItem('os_accent',v);}catch(e){}});
+      accentLabel.appendChild(accentBtn);grid.appendChild(accentLabel);
+      /* Font size */
+      var fsLabel=document.createElement('label');fsLabel.innerHTML='Font-Größe: <select id="stFS"><option value="13">Normal</option><option value="15">Groß</option><option value="11">Klein</option></select>';
+      var fsApply=document.createElement('button');fsApply.className='cBtn';fsApply.textContent='Apply';
+      fsApply.addEventListener('click',function(){var v=document.getElementById('stFS').value;document.documentElement.style.setProperty('--fs',v+'px');try{localStorage.setItem('os_fs',v);}catch(e){}});
+      fsLabel.appendChild(fsApply);grid.appendChild(fsLabel);
+      /* Wallpaper URL */
+      var wpLabel=document.createElement('label');wpLabel.innerHTML='Wallpaper URL: <input id="stWall" placeholder="https://..." style="flex:1;font-family:IBM Plex Mono;font-size:10px;padding:2px;border:2px solid var(--line);background:var(--paper);color:var(--ink)">';
+      var wpBtn=document.createElement('button');wpBtn.className='cBtn';wpBtn.textContent='Apply';
+      wpBtn.addEventListener('click',function(){var u=document.getElementById('stWall').value;if(u)setWallpaper(u);toast('Wallpaper gesetzt');});
+      wpLabel.appendChild(wpBtn);grid.appendChild(wpLabel);
+      /* Wallpaper Gallery */
+      var galleryLabel=document.createElement('div');galleryLabel.style.cssText='font-weight:bold;margin-top:6px';galleryLabel.textContent='Galerie:';
+      grid.appendChild(galleryLabel);
+      var galGrid=document.createElement('div');galGrid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:4px';
+      ['linear-gradient(135deg,#2547ff,#ff4d00)','linear-gradient(135deg,#0b0b0c,#5d584e)','radial-gradient(circle at 30% 30%,#ffd400,#2547ff)','linear-gradient(180deg,#1a1a1e,#2a2a2e)','linear-gradient(135deg,#0f4c75,#3282b8)','linear-gradient(135deg,#3a0066,#9d00ff)'].forEach(function(g){
+        var b=document.createElement('button');b.style.cssText='height:36px;border:2px solid var(--line);background:'+g+';cursor:pointer;box-shadow:var(--shadow)';
+        b.title=g;b.addEventListener('click',function(){var desk=document.getElementById('desktop');if(desk){desk.style.backgroundImage=g;desk.style.backgroundSize='cover';try{localStorage.setItem('os_wall',g);}catch(e){}toast('Wallpaper gesetzt');}});
+        galGrid.appendChild(b);
+      });
+      grid.appendChild(galGrid);
+      /* AMIBIOS quick launch */
+      var bioBtn=document.createElement('button');bioBtn.className='cBtn';bioBtn.textContent='⚙ Launch AMIBIOS';
+      bioBtn.addEventListener('click',function(){openApp('amibios');});
+      grid.appendChild(bioBtn);
+      /* Reset */
+      var resetBtn=document.createElement('button');resetBtn.className='cBtn op';resetBtn.textContent='Reset Defaults';
+      resetBtn.addEventListener('click',function(){document.documentElement.style.removeProperty('--accent');document.documentElement.style.removeProperty('--fs');document.documentElement.dataset.theme='';document.documentElement.classList.remove('scanlines');try{localStorage.removeItem('os_accent');localStorage.removeItem('os_fs');localStorage.removeItem('os_dark');localStorage.removeItem('os_scan');}catch(e){}location.reload();});
+      grid.appendChild(resetBtn);
+      appearance.appendChild(grid);
+      /* Restore saved accent/fs */
+      try{var sv=localStorage.getItem('os_accent');if(sv){document.documentElement.style.setProperty('--accent',sv);var acc=document.getElementById('stAccent');if(acc)acc.value=sv;}}catch(e){}
+      try{var sv2=localStorage.getItem('os_fs');if(sv2){document.documentElement.style.setProperty('--fs',sv2+'px');}}catch(e){}
+    }
+    /* Shortcuts */
+    var shortcuts=document.getElementById('stShortcuts');if(shortcuts){
+      var data=[['Ctrl+N','Notepad'],['Ctrl+T','Terminal'],['Ctrl+E','Explorer'],['Ctrl+P','Paint'],['Ctrl+B','Browser'],['Ctrl+M','Music'],['Ctrl+C','Chat'],['Ctrl+D','Docs'],['L','Links'],['S','Snap Left/Right'],['A','AMIBIOS'],['?','Help']];
+      var tbl=document.createElement('div');tbl.style.cssText='display:grid;grid-template-columns:auto 1fr;gap:4px';
+      data.forEach(function(row){
+        var k=document.createElement('span');k.textContent=row[0];k.style.cssText='font-weight:bold;padding:4px 8px;border:2px solid var(--line);background:var(--accent-2)';
+        var d=document.createElement('span');d.textContent=row[1];d.style.cssText='padding:4px 8px;border:2px solid var(--line);background:var(--paper)';
+        tbl.appendChild(k);tbl.appendChild(d);
+      });
+      shortcuts.appendChild(tbl);
+    }
+    /* Privacy */
+    var privacy=document.getElementById('stPrivacy');if(privacy){
+      var info=document.createElement('div');info.style.cssText='font-size:11px;line-height:1.6';
+      info.innerHTML='<p>MakerOS speichert Daten ausschließlich in deinem Browser (localStorage):</p><ul style="margin:6px 0 12px 20px"><li>Akzentfarbe & Schriftgröße</li><li>Dark Mode & Scanlines</li><li>Wallpaper</li><li>Chat-Nachrichten</li><li>Notepad-Inhalt</li><li>Links</li><li>Sitzungsobjekte</li></ul><p>Kein Tracker, kein Analytics, keine externen Calls.</p><p style="margin-top:10px"><button class="cBtn op" id="stClearData">Alle lokalen Daten löschen</button></p>';
+      privacy.appendChild(info);
+      var clearBtn=info.querySelector('#stClearData');
+      if(clearBtn) clearBtn.addEventListener('click',function(){
+        if(confirm('Alle lokalen Daten löschen?')){
+          try{localStorage.clear();}catch(e){}
+          location.reload();
+        }
+      });
+    }
+    /* Restore dark/scan */
+    try{var sd=localStorage.getItem('os_dark');if(sd==='1'){document.documentElement.dataset.theme='dark';var dk=document.getElementById('stDark');if(dk)dk.checked=true;}}catch(e){}
+    try{var sc=localStorage.getItem('os_scan');if(sc!=='0'){document.documentElement.classList.add('scanlines');}else{var scEl=document.getElementById('stScan');if(scEl)scEl.checked=false;}}catch(e){}
   }
 
   function refreshUI(){
