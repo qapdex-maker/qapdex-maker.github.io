@@ -433,6 +433,12 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .feFile .fn{flex:1;font-size:12px;font-weight:500}
 .feFile .meta{font-size:9px;color:var(--muted);font-family:var(--font-mono);text-transform:uppercase}
 
+/* ===== paint ===== */
+.ptToolbar{display:flex;gap:4px;padding:4px 6px;flex-wrap:wrap;border-bottom:2px solid var(--line);background:var(--paper)}
+.ptToolbar button{width:28px;height:28px;border:2px solid var(--line);background:var(--surface);font-size:14px;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .1s}
+.ptToolbar button:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow);border-color:var(--accent)}
+.ptToolbar button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
 /* ===== taskmanager ===== */
 .tmBody{padding:10px;display:flex;flex-direction:column;gap:6px}
 .gmStatus{font-weight:700;font-size:14px;text-align:center}
