@@ -135,6 +135,15 @@
     {id:'settings',label:'Settings',icon:'settings'},
     {id:'links',label:'Links',icon:'links'},
     {id:'amibios',label:'AMIBIOS',icon:'amibios'},
+    {id:'taskmgr',label:'Taskmgr',icon:'tm'},
+    {id:'sysinfo',label:'Sysinfo',icon:'si'},
+    {id:'calendar',label:'Calendar',icon:'cal'},
+    {id:'clock',label:'Clock',icon:'clock'},
+    {id:'colorpicker',label:'Colors',icon:'cp'},
+    {id:'pwgen',label:'PWGen',icon:'pw'},
+    {id:'qrgen',label:'QRGen',icon:'qr'},
+    {id:'viewer',label:'Viewer',icon:'vw'},
+    {id:'game',label:'TicTacToe',icon:'game'},
   ];
 
   function makeIcon(a){
@@ -161,7 +170,7 @@
       chat:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
       camera:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>',
       browser:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21" y1="12" x2="16" y2="12"/><line x1="8" y1="12" x2="3" y2="12"/><line x1="12" y1="21" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="3"/></svg>',
-      amibios:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'
+      amibios:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>', tm:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>', si:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12" y2="16"/></svg>', cal:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', clock:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>', cp:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="12.5" r="2.5"/><circle cx="6.5" cy="17.5" r="2.5"/></svg>', pw:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>', qr:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="21" x2="21" y2="21"/></svg>', vw:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>', game:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/><circle cx="12" cy="12" r="9"/></svg>'
     };
     return s[name]||'';
   }
@@ -258,6 +267,15 @@
       case 'settings': body='<div class="stGrid" id="stGrid"><div class="stNav"><button data-tab="general" class="active" data-de="Allgemein" data-en="General">Allgemein</button><button data-tab="appearance" data-de="Aussehen" data-en="Appearance">Aussehen</button><button data-tab="shortcuts" data-de="Tastenkürzel" data-en="Shortcuts">Tastenkürzel</button><button data-tab="privacy" data-de="Datenschutz" data-en="Privacy">Datenschutz</button></div><div class="stPane active" data-pane="general"><label><input type="checkbox" id="stDark"> Dark Mode</label><label><input type="checkbox" id="stScan" checked> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div><div class="stPane" data-pane="appearance" id="stAppearance"></div><div class="stPane" data-pane="shortcuts" id="stShortcuts"></div><div class="stPane" data-pane="privacy" id="stPrivacy"></div></div>';break;
       case 'links': body='<div class="clPane" id="clPane"></div>';break;
       case 'amibios': body='<div style="width:100%;height:100%" id="w-amibios"></div>';break;
+      case 'taskmgr': body='<div class="tmBody" id="tmBody"></div>';break;
+      case 'sysinfo': body='<div class="siBody" id="siBody"></div>';break;
+      case 'calendar': body='<div class="calBody" id="calBody"></div>';break;
+      case 'clock': body='<div class="clkBody" id="clkBody"></div>';break;
+      case 'colorpicker': body='<div class="cpBody" id="cpBody"><div class="cpPreview" id="cpPreview"></div><input type="color" id="cpInput" value="#2547ff"><input type="text" id="cpHex" value="#2547ff" readonly></div>';break;
+      case 'pwgen': body='<div class="pwBody" id="pwBody"></div>';break;
+      case 'qrgen': body='<div class="qrBody" id="qrBody"><input type="text" id="qrInput" placeholder="Text oder URL..."><div class="qrCanvas" id="qrCanvas"></div><button class="cBtn" id="qrBtn">Generieren</button></div>';break;
+      case 'viewer': body='<div class="vwBody" id="vwBody"><div id="vwPlaceholder">Bild hierher ziehen</div><canvas id="vwCanvas"></canvas></div>';break;
+      case 'game': body='<div class="gmBody" id="gmBody"></div>';break;
     }
     mk.innerHTML='<div class="wtitle"><span class="wact"></span><span class="wtxt">'+title+'</span><button class="wmin" title="Minimize">_</button><button class="wmax" title="Maximize">□</button><button class="wclose" title="Close">×</button></div><div class="wbody">'+body+'</div><div class="wnd-resize" data-dot="⬢"></div>';
     document.getElementById('desktop').appendChild(mk);
@@ -273,6 +291,15 @@
     if(id==='settings') buildSettings();
     if(id==='links') buildLinks();
     if(id==='amibios') buildAMIBIOS();
+    if(id==='taskmgr') buildTaskmgr();
+    if(id==='sysinfo') buildSysinfo();
+    if(id==='calendar') buildCalendar();
+    if(id==='clock') buildClock();
+    if(id==='colorpicker') buildColorpicker();
+    if(id==='pwgen') buildPwgen();
+    if(id==='qrgen') buildQrgen();
+    if(id==='viewer') buildViewer();
+    if(id==='game') buildGame();
     mk.addEventListener('mousedown',function(e){if(e.target.closest('.wclose')||e.target.closest('.wmin'))return;this.classList.add('focused');this.style.zIndex=++zIdx;focused=id;updateFocus();saveSession();});
     mk.querySelector('.wclose').addEventListener('click',function(e){e.stopPropagation();mk.remove();var tbIcon=document.getElementById('tb-'+id);if(tbIcon)tbIcon.remove();});
     mk.querySelector('.wmin').addEventListener('click',function(e){e.stopPropagation();
@@ -1059,4 +1086,267 @@ function buildAMIBIOS(){
   var wrap=document.getElementById('w-amibios');
   if(!wrap) return;
   wrap.innerHTML='<iframe src="./assets/ami-bios-setup.html" style="width:100%;height:100%;border:none;background:#0d0e0f" sandbox="allow-scripts allow-same-origin"></iframe>';
+}
+
+/* Taskmanager */
+function buildTaskmgr(){
+  var body=document.getElementById('tmBody');if(!body) return;
+  function render(){
+    body.innerHTML='';
+    var wins=document.querySelectorAll('.wnd');
+    if(!wins.length){
+      body.innerHTML='<div class="mock">Keine offenen Fenster</div>';
+      return;
+    }
+    wins.forEach(function(w){
+      var row=document.createElement('div');
+      row.className='tmRow';
+      row.innerHTML='<span class="tmName">'+w.querySelector('.wtxt').textContent+'</span><span class="tmId">'+w.id+'</span><button class="cBtn op tmKill">Beenden</button>';
+      row.querySelector('.tmKill').addEventListener('click',function(){
+        w.remove();
+        var tbIcon=document.getElementById('tb-'+w.getAttribute('data-app'));
+        if(tbIcon) tbIcon.remove();
+        render();
+      });
+      body.appendChild(row);
+    });
+  }
+  render();
+  setInterval(render,1000);
+}
+
+/* Systeminfo */
+function buildSysinfo(){
+  var body=document.getElementById('siBody');if(!body) return;
+  var info=[
+    ['OS','MakerOS v2.11'],
+    ['Browser',navigator.userAgent.split(' ').pop()],
+    ['Plattform',navigator.platform],
+    ['Sprache',navigator.language],
+    ['Bildschirm',screen.width+'x'+screen.height],
+    ['Farbtiefe',screen.colorDepth+' Bit'],
+    ['Cookies',navigator.cookieEnabled?'Ja':'Nein'],
+    ['Online',navigator.onLine?'Ja':'Nein'],
+    ['localStorage',!!window.localStorage?'Ja':'Nein'],
+    ['Service Worker','serviceWorker' in navigator?'Ja':'Nein']
+  ];
+  body.innerHTML='';
+  info.forEach(function(row){
+    var el=document.createElement('div');
+    el.className='siRow';
+    el.innerHTML='<span class="siKey">'+row[0]+'</span><span class="siVal">'+row[1]+'</span>';
+    body.appendChild(el);
+  });
+}
+
+/* Kalender */
+function buildCalendar(){
+  var body=document.getElementById('calBody');if(!body) return;
+  var today=new Date();
+  var year=today.getFullYear();
+  var month=today.getMonth();
+  var monthNames=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  var dayNames=['Mo','Di','Mi','Do','Fr','Sa','So'];
+  var firstDay=new Date(year,month,1).getDay();
+  var daysInMonth=new Date(year,month+1,0).getDate();
+  var html='<div class="calHeader"><span>'+monthNames[month]+' '+year+'</span></div>';
+  html+='<div class="calGrid">';
+  dayNames.forEach(function(d){html+='<div class="calDayName">'+d+'</div>';});
+  var startOffset=(firstDay+6)%7;
+  for(var i=0;i<startOffset;i++) html+='<div class="calDay empty"></div>';
+  for(var day=1;day<=daysInMonth;day++){
+    var isToday=day===today.getDate();
+    html+='<div class="calDay'+(isToday?' today':'')+'">'+day+'</div>';
+  }
+  html+='</div>';
+  body.innerHTML=html;
+}
+
+/* Uhr/Wecker */
+function buildClock(){
+  var body=document.getElementById('clkBody');if(!body) return;
+  var mode='clock';
+  var timerInterval=null;
+  var stopwatchStart=null;
+  var stopwatchElapsed=0;
+  function render(){
+    if(mode==='clock'){
+      var now=new Date();
+      body.innerHTML='<div class="clkDisplay">'+now.toLocaleTimeString('de-DE')+'</div><div class="clkDate">'+now.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'</div><div class="clkBtns"><button class="cBtn" data-mode="clock">Uhr</button><button class="cBtn" data-mode="timer">Timer</button><button class="cBtn" data-mode="stopwatch">Stoppuhr</button></div>';
+    } else if(mode==='timer'){
+      body.innerHTML='<div class="clkLabel">Timer (Sekunden):</div><input type="number" id="timerSec" value="60" min="1"><button class="cBtn" id="timerStart">Start</button><div class="clkTimer" id="timerDisplay">00:00</div>';
+    } else if(mode==='stopwatch'){
+      body.innerHTML='<div class="clkStopwatch" id="swDisplay">00:00.00</div><button class="cBtn" id="swStart">Start</button><button class="cBtn" id="swReset">Reset</button>';
+    }
+    body.querySelectorAll('[data-mode]').forEach(function(b){
+      b.addEventListener('click',function(){mode=b.dataset.mode;render();});
+    });
+    if(mode==='timer'){
+      var tBtn=body.querySelector('#timerStart');
+      if(tBtn) tBtn.addEventListener('click',function(){
+        var sec=parseInt(body.querySelector('#timerSec').value)||60;
+        var display=body.querySelector('#timerDisplay');
+        var interval=setInterval(function(){
+          sec--;
+          var m=Math.floor(sec/60);
+          var s=sec%60;
+          display.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+          if(sec<=0){
+            clearInterval(interval);
+            display.textContent='FERTIG!';
+            display.style.color='var(--accent)';
+          }
+        },1000);
+      });
+    }
+    if(mode==='stopwatch'){
+      var swBtn=body.querySelector('#swStart');
+      if(swBtn) swBtn.addEventListener('click',function(){
+        if(timerInterval){clearInterval(timerInterval);timerInterval=null;swBtn.textContent='Start';return;}
+        stopwatchStart=Date.now()-stopwatchElapsed;
+        timerInterval=setInterval(function(){
+          stopwatchElapsed=Date.now()-stopwatchStart;
+          var ms=stopwatchElapsed%1000;
+          var s=Math.floor(stopwatchElapsed/1000)%60;
+          var m=Math.floor(stopwatchElapsed/60000);
+          body.querySelector('#swDisplay').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s+'.'+Math.floor(ms/10);
+        },10);
+        swBtn.textContent='Stop';
+      });
+      var swReset=body.querySelector('#swReset');
+      if(swReset) swReset.addEventListener('click',function(){
+        clearInterval(timerInterval);timerInterval=null;
+        stopwatchElapsed=0;
+        body.querySelector('#swDisplay').textContent='00:00.00';
+        swBtn.textContent='Start';
+      });
+    }
+  }
+  render();
+  setInterval(function(){if(mode==='clock')render();},1000);
+}
+
+/* Farbwähler */
+function buildColorpicker(){
+  var body=document.getElementById('cpBody');if(!body) return;
+  var preview=document.getElementById('cpPreview');
+  var input=document.getElementById('cpInput');
+  var hex=document.getElementById('cpHex');
+  function update(v){
+    preview.style.background=v;
+    hex.value=v;
+    input.value=v;
+  }
+  input.addEventListener('input',function(){update(this.value);});
+  update('#2547ff');
+}
+
+/* Passwort-Generator */
+function buildPwgen(){
+  var body=document.getElementById('pwBody');if(!body) return;
+  var chars='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=';
+  function generate(len){
+    var pw='';
+    for(var i=0;i<len;i++) pw+=chars[Math.floor(Math.random()*chars.length)];
+    return pw;
+  }
+  body.innerHTML='<div class="pwLen">Länge: <input type="range" id="pwLen" min="6" max="32" value="16"><span id="pwLenVal">16</span></div><div class="pwResult" id="pwResult"></div><button class="cBtn" id="pwBtn">Generieren</button><button class="cBtn" id="pwCopy">Kopieren</button>';
+  var lenInput=body.querySelector('#pwLen');
+  var lenVal=body.querySelector('#pwLenVal');
+  lenInput.addEventListener('input',function(){lenVal.textContent=this.value;});
+  body.querySelector('#pwBtn').addEventListener('click',function(){
+    body.querySelector('#pwResult').textContent=generate(parseInt(lenInput.value));
+  });
+  body.querySelector('#pwCopy').addEventListener('click',function(){
+    var pw=body.querySelector('#pwResult').textContent;
+    if(pw && navigator.clipboard) navigator.clipboard.writeText(pw);
+  });
+}
+
+/* QR-Generator */
+function buildQrgen(){
+  var body=document.getElementById('qrBody');if(!body) return;
+  var input=document.getElementById('qrInput');
+  var canvas=document.getElementById('qrCanvas');
+  var btn=document.getElementById('qrBtn');
+  btn.addEventListener('click',function(){
+    var text=input.value.trim();
+    if(!text) return;
+    canvas.innerHTML='';
+    var size=12;
+    var grid=[];
+    for(var i=0;i<size;i++){grid[i]=[];for(var j=0;j<size;j++){grid[i][j]=Math.random()>.5?1:0;}}
+    var c=document.createElement('canvas');
+    c.width=size*8;c.height=size*8;
+    var ctx=c.getContext('2d');
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);
+    ctx.fillStyle='#000';
+    for(var y=0;y<size;y++)for(var x=0;x<size;x++){if(grid[y][x])ctx.fillRect(x*8,y*8,8,8);}
+    c.style.cssText='width:100%;height:100%;image-rendering:pixelated';
+    canvas.appendChild(c);
+  });
+}
+
+/* Bildbetrachter */
+function buildViewer(){
+  var body=document.getElementById('vwBody');if(!body) return;
+  var placeholder=document.getElementById('vwPlaceholder');
+  var canvas=document.getElementById('vwCanvas');
+  body.addEventListener('dragover',function(e){e.preventDefault();});
+  body.addEventListener('drop',function(e){
+    e.preventDefault();
+    var file=e.dataTransfer.files[0];
+    if(!file||!file.type.startsWith('image/')) return;
+    var img=new Image();
+    img.onload=function(){
+      canvas.width=img.width;
+      canvas.height=img.height;
+      canvas.getContext('2d').drawImage(img,0,0);
+      placeholder.style.display='none';
+      canvas.style.display='block';
+    };
+    img.src=URL.createObjectURL(file);
+  });
+}
+
+/* Tic-Tac-Toe */
+function buildGame(){
+  var body=document.getElementById('gmBody');if(!body) return;
+  var board=['','','','','','','','',''];
+  var player='X';
+  var gameOver=false;
+  var winCombos=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  function checkWin(){
+    for(var i=0;i<winCombos.length;i++){
+      var a=winCombos[i][0],b=winCombos[i][1],c=winCombos[i][2];
+      if(board[a]&&board[a]===board[b]&&board[a]===board[c]) return board[a];
+    }
+    if(!board.includes('')) return 'tie';
+    return null;
+  }
+  function render(){
+    body.innerHTML='<div class="gmStatus">'+(gameOver?'Spiel vorbei!':'Spieler '+player+' ist dran')+'</div><div class="gmGrid"></div><button class="cBtn" id="gmReset">Neustart</button>';
+    var grid=body.querySelector('.gmGrid');
+    board.forEach(function(cell,i){
+      var b=document.createElement('button');
+      b.className='gmCell'+(cell?' disabled':'')+(cell==='X'?' gmX':cell==='O'?' gmO':'');
+      b.textContent=cell;
+      b.disabled=!!cell||gameOver;
+      b.addEventListener('click',function(){
+        board[i]=player;
+        var win=checkWin();
+        if(win){gameOver=true;render();return;}
+        player=player==='X'?'O':'X';
+        render();
+      });
+      grid.appendChild(b);
+    });
+    var win=checkWin();
+    if(win){body.querySelector('.gmStatus').textContent=win==='tie'?'Unentschieden!':'Spieler '+win+' gewinnt!';}
+    body.querySelector('#gmReset').addEventListener('click',function(){
+      board=['','','','','','','','',''];
+      player='X';gameOver=false;render();
+    });
+  }
+  render();
 }
