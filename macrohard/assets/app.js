@@ -304,6 +304,11 @@
     mk.querySelector('.wclose').addEventListener('click',function(e){
       e.stopPropagation();
       var wnd=this.closest('.wnd');
+      var wId=wnd.getAttribute('data-app');
+      if(wId && window.osIntervals && window.osIntervals[wId]){
+        clearInterval(window.osIntervals[wId]);
+        delete window.osIntervals[wId];
+      }
       if(wnd) wnd.remove();
       var tbIcon=document.getElementById('tb-'+id);
       if(tbIcon) tbIcon.remove();
@@ -1118,7 +1123,8 @@ function buildTaskmgr(){
     });
   }
   render();
-  setInterval(render,1000);
+  if(!window.osIntervals) window.osIntervals = {};
+  window.osIntervals['taskmgr'] = setInterval(render,1000);
 }
 
 /* Systeminfo */
