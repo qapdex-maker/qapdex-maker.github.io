@@ -336,7 +336,7 @@
    * Öffnet eine App im Desktop-Fenster
    * @param {string} id - App-ID (z.B. 'notepad', 'calculator')
    */
-  function openApp(id){
+  function openApp(id){playSound('open');
     var w=document.getElementById('w-'+id);
     if(w){w.classList.add('focused');w.style.zIndex=++zIdx;focused=id;updateFocus();return;}
     var mk=document.createElement('div');
@@ -1647,6 +1647,64 @@ function buildCalendar(){
 }
 
 /* Uhr/Wecker */
+/* Sound-Effekte */
+var AudioCtx = window.AudioContext || window.webkitAudioContext;
+var audioCtx = null;
+
+function playSound(type) {
+  try {
+    if (!audioCtx) audioCtx = new AudioCtx();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    var now = audioCtx.currentTime;
+    if (type === 'click') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, now);
+      osc.frequency.exponentialRampToValueAtTime(400, now + 0.05);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    } else if (type === 'open') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(300, now);
+      osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.1);
+    } else if (type === 'close') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(500, now);
+      osc.frequency.exponentialRampToValueAtTime(200, now + 0.12);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.start(now);
+      osc.stop(now + 0.12);
+    } else if (type === 'notify') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(660, now);
+      osc.frequency.setValueAtTime(880, now + 0.15);
+      osc.frequency.setValueAtTime(660, now + 0.3);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc.start(now);
+      osc.stop(now + 0.4);
+    } else if (type === 'error') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(200, now);
+      osc.frequency.setValueAtTime(150, now + 0.15);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    }
+  } catch (e) {}
+}
+
 function buildClock(){
   var body=document.getElementById('clkBody');if(!body) return;
   var mode='clock';
