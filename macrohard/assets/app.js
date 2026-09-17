@@ -1502,9 +1502,10 @@ songs.forEach(function(s,i){
       err.innerHTML='<div style="font-size:48px">🔒</div><div style="font-weight:700;font-size:13px">Diese Seite kann nicht in einem iframe geladen werden.</div><div style="font-size:11px;color:var(--muted);max-width:280px">Viele Webseiten blockieren iframes aus Sicherheitsgründen.</div><button class="cBtn" id="brOpenExt" style="margin-top:8px">Im externen Browser öffnen</button>';
       content.appendChild(iframe);
       content.appendChild(err);
-      iframe.onload=function(){err.style.display='none'};
-      iframe.onerror=function(){err.style.display='flex';iframe.style.display='none'};
-      setTimeout(function(){if(iframe.contentDocument===null)err.style.display='flex'},4000);
+      var brLoaded=false;
+      iframe.onload=function(){brLoaded=true;err.style.display='none'};
+      iframe.onerror=function(){if(!brLoaded){err.style.display='flex';iframe.style.display='none'}};
+      setTimeout(function(){if(!brLoaded)err.style.display='flex'},4000);
       err.querySelector('#brOpenExt').addEventListener('click',function(){window.open(t.url,'_blank')});
     }
 
