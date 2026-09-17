@@ -1094,42 +1094,59 @@
       try{localStorage.setItem(SK_RADIO,JSON.stringify(radioStations))}catch(e){}
     }
 
-    /* === Audio Graph === */
+    /* === Audio Graph (idempotent: SourceNode nur einmal pro Audio-Element) === */
+    var graphConnected=false;
     function initAudioGraph(){
-      if(audioCtx){
-        if(!analyser){
-          analyser=audioCtx.createAnalyser();
-          analyser.fftSize=128;
+      if(!audioCtx){
+        audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+        sourceNode=audioCtx.createMediaElementSource(audio);
+        analyser=audioCtx.createAnalyser();
+        analyser.fftSize=128;
+        biquadFilters=eqBands.map(function(freq,i){
+          var f=audioCtx.createBiquadFilter();
+          f.type=i===0?'lowshelf':i===eqBands.length-1?'highshelf':'peaking';
+          f.frequency.value=freq;f.gain.value=0;return f;
+        });
+        graphConnected=true;
+      }
+      if(!sourceNode){
+        try{sourceNode=audioCtx.createMediaElementSource(audio);}catch(e){}
+      }
+      if(!analyser){
+        analyser=audioCtx.createAnalyser();
+        analyser.fftSize=128;
+        graphConnected=true;
+      }
+      if(biquadFilters.length===0){
+        biquadFilters=eqBands.map(function(freq,i){
+          var f=audioCtx.createBiquadFilter();
+          f.type=i===0?'lowshelf':i===eqBands.length-1?'highshelf':'peaking';
+          f.frequency.value=freq;f.gain.value=0;return f;
+        });
+        graphConnected=true;
+      }
+      if(graphConnected&&sourceNode){
+        try{
           var node=sourceNode;
           biquadFilters.forEach(function(f){node.connect(f);node=f;});
           node.connect(analyser);analyser.connect(audioCtx.destination);
-        }
-        return;
+        }catch(e){}
+        graphConnected=false;
       }
-      audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-      sourceNode=audioCtx.createMediaElementSource(audio);
-      analyser=audioCtx.createAnalyser();
-      analyser.fftSize=128;
-      biquadFilters=eqBands.map(function(freq,i){
-        var f=audioCtx.createBiquadFilter();
-        f.type=i===0?'lowshelf':i===eqBands.length-1?'highshelf':'peaking';
-        f.frequency.value=freq;f.gain.value=0;return f;
-      });
-      var node=sourceNode;
-      biquadFilters.forEach(function(f){node.connect(f);node=f;});
-      node.connect(analyser);analyser.connect(audioCtx.destination);
     }
     function ensureResumed(){
       if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
     }
 
     /* === Visualizer === */
+    var visRafId=null;
     function initVisualizer(){
       var canvas=document.getElementById('musVisualizer');if(!canvas)return;
       var ctx=canvas.getContext('2d');
       var buf=new Uint8Array(analyser?analyser.frequencyBinCount:64);
+      if(visRafId)cancelAnimationFrame(visRafId);
       function draw(){
-        requestAnimationFrame(draw);
+        visRafId=requestAnimationFrame(draw);
         if(!analyser)return;
         analyser.getByteFrequencyData(buf);
         ctx.fillStyle='#0b0b0c';ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -1144,7 +1161,8 @@
       draw();
     }
 
-    /* === Beatpad === */
+    /* === Beatpad — unabhängig vom Player (eigener Gain, kein MediaElementSource) === */
+    var beatpadGain=null;
     function initBeatpad(){
       var pad=document.getElementById('musBeatpad');if(!pad)return;
       var samples=[
@@ -1158,16 +1176,24 @@
         var b=document.createElement('button');
         b.className='beatpad-btn';b.textContent=s.n;b.style.background=s.c;
         b.addEventListener('click',function(){
-          initAudioGraph();ensureResumed();
-          var osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
-          osc.type=i===2?'square':i===7?'sawtooth':'sine';
-          osc.frequency.setValueAtTime(s.f,audioCtx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(s.f*0.5,audioCtx.currentTime+s.d);
-          gain.gain.setValueAtTime(0.5,audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+s.d);
-          osc.connect(gain);gain.connect(audioCtx.destination);
-          osc.start();osc.stop(audioCtx.currentTime+s.d);
-          b.style.transform='scale(.92)';setTimeout(function(){b.style.transform=''},100);
+          try{
+            if(!audioCtx){
+              audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+              beatpadGain=audioCtx.createGain();
+              beatpadGain.gain.value=0.3;
+              beatpadGain.connect(audioCtx.destination);
+            }
+            ensureResumed();
+            var osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+            osc.type=i===2?'square':i===7?'sawtooth':'sine';
+            osc.frequency.setValueAtTime(s.f,audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(Math.max(s.f*0.3,10),audioCtx.currentTime+s.d);
+            gain.gain.setValueAtTime(0.8,audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+s.d);
+            osc.connect(gain);gain.connect(audioCtx.destination);
+            osc.start();osc.stop(audioCtx.currentTime+s.d+0.05);
+            b.style.transform='scale(.92)';setTimeout(function(){b.style.transform=''},100);
+          }catch(e){}
         });
         pad.appendChild(b);
       });
@@ -1188,23 +1214,26 @@
       });
     }
 
-    /* === Progress === */
+    /* === Progress (nur einmal gebunden, kein doppelter Listener) === */
     function startProgress(){
-      audio.addEventListener('timeupdate',function(){
-        var prog=document.getElementById('musProg');var l=document.getElementById('musProgL');
-        if(!prog||!l)return;
-        if(isRadio){l.textContent='● LIVE';prog.value=0;return;}
-        if(audio.duration){prog.value=(audio.currentTime/audio.duration)*100;var m=Math.floor(audio.currentTime/60);var sec=Math.floor(audio.currentTime%60);l.textContent=m+':'+(sec<10?'0':'')+sec;}
-      },{once:false});
-      audio.addEventListener('ended',function(){
-        if(repeat){audio.currentTime=0;playAudio();return;}
-        if(isRadio)return;
-        nextTrack();
-      },{once:false});
-      audio.addEventListener('error',function(){
-        var l=document.getElementById('musProgL');
-        if(l)l.textContent='⚠ Fehler';
-      });
+      audio.addEventListener('timeupdate',onTimeUpdate);
+      audio.addEventListener('ended',onEnded);
+      audio.addEventListener('error',onError);
+    }
+    function onTimeUpdate(){
+      var prog=document.getElementById('musProg');var l=document.getElementById('musProgL');
+      if(!prog||!l)return;
+      if(isRadio||!isFinite(audio.duration)){l.textContent='● LIVE';prog.value=0;return;}
+      if(audio.duration&&audio.duration>0){prog.value=(audio.currentTime/audio.duration)*100;var m=Math.floor(audio.currentTime/60);var sec=Math.floor(audio.currentTime%60);l.textContent=m+':'+(sec<10?'0':'')+sec;}
+    }
+    function onEnded(){
+      if(repeat){audio.currentTime=0;playAudio();return;}
+      if(isRadio)return;
+      nextTrack();
+    }
+    function onError(){
+      var l=document.getElementById('musProgL');
+      if(l)l.textContent='⚠ Fehler';
     }
 
     /* === Play === */
@@ -1284,7 +1313,19 @@
       showNotif('Music','Hochgeladen: '+s.n,'🎵');
     }
 
-    /* === Radio Browser === */
+    /* === Radio Browser mit Fallback === */
+    var fallbackStations=[
+      {name:'SomaFM: DEF CON Radio',u:'https://ice1.somafm.com/defcon-128-mp3',codec:'MP3',votes:5000},
+      {name:'SomaFM: Groove Salad',u:'https://ice1.somafm.com/groovesalad-128-mp3',codec:'MP3',votes:4500},
+      {name:'SomaFM: Fluid',u:'https://ice1.somafm.com/fluid-128-mp3',codec:'MP3',votes:4000},
+      {name:'SomaFM: Vaporwaves',u:'https://ice1.somafm.com/vaporwaves-128-mp3',codec:'MP3',votes:3800},
+      {name:'SomaFM: Beat Blender',u:'https://ice1.somafm.com/beatblender-128-mp3',codec:'MP3',votes:3500},
+      {name:'SomaFM: Drone Zone',u:'https://ice1.somafm.com/dronezone-128-mp3',codec:'MP3',votes:3200},
+      {name:'SomaFM: Syntradio',u:'https://ice1.somafm.com/syntradio-128-mp3',codec:'MP3',votes:3000},
+      {name:'Subcity Radio',u:'https://fdn0.subcity.org/subcity-192.mp3',codec:'MP3',votes:2800},
+      {name:'NTS Radio 1',u:'https://stream-relay-geo.ntslive.net/stream1',codec:'MP3',votes:2500},
+      {name:'NTS Radio 2',u:'https://stream-relay-geo.ntslive.net/stream2',codec:'MP3',votes:2300}
+    ];
     function fetchRadios(){
       if(radioStations.length>0){renderRadio();return}
       var l=document.getElementById('musRadioStatus');
@@ -1295,16 +1336,21 @@
       x.onload=function(){
         try{
           var arr=JSON.parse(x.responseText);
-          radioStations=arr.filter(function(s){return s.url_resolved&&s.url_resolved.length>5}).slice(0,20).map(function(s){
+          var found=arr.filter(function(s){return s.url_resolved&&s.url_resolved.length>5}).slice(0,20).map(function(s){
             return{name:s.name.replace(/[^\x20-\x7E]/g,''),u:s.url_resolved,codec:s.codec||'',votes:s.votes||0}
           });
-          saveRadios();
+          if(found.length){
+            radioStations=found;
+            saveRadios();
+          } else {
+            radioStations=fallbackStations;
+          }
           renderRadio();
           if(l){l.textContent=radioStations.length+' Sender geladen';l.style.color='var(--muted)'}
-        }catch(e){if(l){l.textContent='Fehler beim Laden';l.style.color='red'}}
+        }catch(e){radioStations=fallbackStations;renderRadio();if(l){l.textContent='Fallback: '+fallbackStations.length+' Sender';l.style.color='var(--muted)'}}
       };
-      x.onerror=function(){if(l){l.textContent='Keine Internetverbindung';l.style.color='red'}};
-      x.ontimeout=function(){if(l){l.textContent='Timeout';l.style.color='red'}};
+      x.onerror=function(){radioStations=fallbackStations;renderRadio();if(l){l.textContent='Offline → '+fallbackStations.length+' Fallback-Sender';l.style.color='var(--muted)'}};
+      x.ontimeout=function(){radioStations=fallbackStations;renderRadio();if(l){l.textContent='Timeout → '+fallbackStations.length+' Fallback-Sender';l.style.color='var(--muted)'}};
       x.send();
     }
 
