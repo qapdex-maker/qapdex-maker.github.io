@@ -825,7 +825,11 @@
     if(trashPath&&fsData[trashPath]){
       side.innerHTML+='<div class="feItem" data-path="'+trashPath+'">🗑 Papierkorb</div>';
     }
-    parts.forEach(function(p){acc+=p+'\\';side.innerHTML+='<div class="feItem" data-path="'+acc+'">📁 '+p+'</div>';});
+    parts.forEach(function(p,i){
+      acc+=p;
+      side.innerHTML+='<div class="feItem'+(i===parts.length-1?' current':'')+'" data-path="'+acc+'">📁 '+p+'</div>';
+      acc+='\\';
+    });
     side.querySelectorAll('.feItem').forEach(function(el){el.addEventListener('click',function(){curPath=el.dataset.path;renderExplorer();});});
     grid.innerHTML='';
     if(!dirs.length&&!files.length){
@@ -841,7 +845,9 @@
         }
         document.querySelectorAll('.feFile.selected').forEach(function(x){x.classList.remove('selected');});
         this.classList.add('selected');
-        curPath=curPath==='C:\\'?'C:\\'+dir:curPath+dir+'\\';renderExplorer();
+        var newPath=curPath==='C:\\'?'C:\\'+dir:curPath+'\\'+dir;
+        curPath=newPath;
+        renderExplorer();
       });
       el.addEventListener('contextmenu',function(e){
         e.preventDefault();
@@ -914,7 +920,8 @@
       item.addEventListener('click',function(){
         var act=item.dataset.act;
         if(act==='open'){
-          curPath=path==='C:\\'?'C:\\'+dir:path+'\\'+dir;renderExplorer();
+          curPath=path==='C:\\'?'C:\\'+dir:path+'\\'+dir;
+          renderExplorer();
         }else if(act==='rename'){
           var nn=prompt('Neuer Name:',dir);
           if(nn&&nn!==dir){
