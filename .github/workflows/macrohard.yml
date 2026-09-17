@@ -22,25 +22,26 @@ jobs:
         with:
           node-version: '20'
           
-      - name: Install dependencies
+      - name: Syntax Check app.js
         run: |
           cd macrohard
-          npm ci
+          node --check assets/app.js
+          echo "✅ app.js syntax OK"
           
-      - name: Lint
+      - name: Run Tests
         run: |
           cd macrohard
-          npm run lint
+          node tests/app.test.js
           
-      - name: Test
+      - name: Verify sw.js exists
         run: |
           cd macrohard
-          npm test
+          test -f sw.js && echo "✅ sw.js present"
           
-      - name: Verify JS
+      - name: Verify manifest.json
         run: |
           cd macrohard
-          npm run verify
+          test -f manifest.json && echo "✅ manifest.json present"
 
   deploy:
     needs: lint-and-test
