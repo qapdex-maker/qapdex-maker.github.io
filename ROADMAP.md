@@ -1,95 +1,134 @@
 # ROADMAP — qapdex-maker.github.io (Portal + msgraph/react)
 
-Stand: 2026-08-27. Arbeitsstand, NICHT push-pflichtig.
-Lokaler HEAD: 6c177fa.
+Stand: 2026-09-17. Arbeitsstand, NICHT push-pflichtig.
+Lokaler HEAD: siehe `git log`.
 Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 
-## 0. Status-Querschnitt (verifiziert, 2026-08-27)
-Alle 9 dokumentierten Bugs (PROJECT_NOTES) per echte Checks re-verifiziert → grün.
-Keine Regression. Details in PROJECT_NOTES "Bug-Hunting".
+## 0. Status-Querschnitt (verifiziert, 2026-09-17)
 
-## 1. Strukturierte Bereichsübersicht (tiefere Ebenen)
+### qapdex-maker.github.io (Portal)
+- 10 Karten im Portal (8 live, 1 soon, 1 Platzhalter)
+- DE/EN-i18n, neo-brutalist Design
+- Verlinkte Subpages: catpop, idun, macrohard, msgraph/react, pepemem, pepememe
+
+### macrohard/ (v2.11.29, aktiv entwickelt)
+- 22 Apps (11 Foundation + 11 Extension Pack), ES6-Module, PWA
+- v2.11.23: Browser iframe fix (brLoaded-Flag)
+- v2.11.24: Docs "Made by Alexander Kleine"
+- v2.11.25: Music Player Rewrite (Upload, Radio, Favoriten, Tabs)
+- v2.11.26: Explorer Navigation Fix (Backslash zwischen Pfad und Ordnername)
+- v2.11.27: Music Player Audio Fixes (Beatpad eigener AudioContext, Fallback-Radio)
+- v2.11.28: Music Player setupAudio() lazy init, audioEl statt audio
+- v2.11.29: Mobile Apps sichtbar (flex-wrap:wrap, overflow-y:auto)
+
+## 1. Strukturierte Bereichsübersicht
 
 ### A. Portal (Root index.html)
 - neo-brutalist, Kobalt #2547ff + Gelb #ffd400, IGNITE-Toggle, Cursor-Trail, Scanlines, DE/EN.
 - Karten aus `pages`-Array; Kategorie-Chip-Filter muss exakt mit `catLabel` matchen.
-- Tiefe Checks möglich: Karten-i18n-Parität (data-de/data-en + JS-desc), Chip-Filter-
-  Werte konsistent, keine "Neo-brutalist" in sichtbaren Beschreibungen (User-Gebot),
-  IGNITE-Default-AUS (localStorage), Pfade relativ bei Subpages.
+- Alle Karten verifiziert (8 live, 1 soon).
 
-### B. msgraph/react (AKTIV verlinkt, "Graph Metadata Hub")
-- React 18 UMD + @babel/standalone im Browser, KEIN Build. Tabs: Hub/Reference/Console/
-  Permissions/Breaking Radar.
-- Kritische Subsysteme:
-  - i18n: I18N.de / I18N.en Maps; Sprache = app-shell state, Kinder lesen nur aus `t`.
-    Risiko: harte Literale / Stale-Closure bei async-State. (Check: verify-i18n.js)
-  - Worker: data/index.*.json off-main-thread. Risiko: relativer fetch (404→JSON-Fehler),
-    variantRef-Stale-Guard. (Check: Node-Sim, siehe web-ui-verification-no-browser)
-  - VirtList: rowHeight=58, nur sichtbare Zeilen. Risiko: Text-Overflow, Scroll-Math.
-  - selfhost.os: Beschreibung ohne "Neo-brutalist"-Wortmarke.
-- Daten: index.v1.0 (1387 Pfade), index.beta (2870), deprecations.*.json.
-  Sync-Quelle: ~/github/repo/metadata-msgraph (Schema 1.6.711.0).
+### B. macrohard/ (AKTIV, v2.11.29)
+- Windows-Style Desktop OS im Browser
+- 22 Apps, PWA, Taskbar, Fenster-Management
+- ES6-Module, ESLint + Prettier, Unit-Tests, CI/CD
+- Alle 26 Komponenten verifiziert (26/26 grün)
 
-### C. msgraph/ (VANILLA, veraltet, NICHT verlinkt)
-- Nur noch als Datei vorhanden. Entweder löschen oder als Archiv markieren.
-- Tiefe Checks hier nicht nötig, solange ungelinkt.
+### C. msgraph/react (AKTIV verlinkt, "Graph Metadata Hub")
+- React 18 UMD + vorkompiliertes app.js via build_appjs.sh
+- Tabs: Hub/Reference/Console/Permissions/Breaking Radar
+- Worker-basiertes Parsing, virtuelle Liste, i18n DE/EN
 
-### D. Skills (Hermes, idun-Profil)
-- qapdex-github-io-theme, web-ui-verification-no-browser, browserless-static-qa,
-  link-check-and-pages.
-- verify-i18n.js am 2026-08-27 JSX-sicher gemacht (realer Crash behoben).
+### D. idun/
+- Azure AI Foundry Client + Multi-LLM-Console
+- Statische Seite, lokal verifiziert
+
+### E. catpop/, pepemem/, pepememe/
+- Statische Pages, lokal verifiziert
 
 ## 2. Fahrplan
 
-### Phase 1 — Stabilisierung (fertig + gepusht de21d73)
-- [x] Bug-Hunting Re-Check (alle 9 Bugs grün, echte Runs)
-- [x] Skill-Checker JSX-sicher
-- [x] Portal `pages`-Array i18n + Kategorie-Consistency: BUG GEFUNDEN+GEFIXT (Bug #10:
-      `cat`-Feld fehlte → Kategorie-Filter zeigte 0 Karten; Fix verifiziert 3/3/2).
-- [x] Link-Check Portal-Karten hrefs: github.com-Links via gh api 200; lokale Subpages
-      idun/, msgraph/react/, msgraph/ HTTP 200. (awesome-selfhosted ist externes Repo.)
+### Phase 1 — Stabilisierung (FERTIG)
+- [x] Bug-Hunting Re-Check (alle Bugs grün, echte Runs)
+- [x] Portal `pages`-Array i18n + Kategorie-Consistency
+- [x] Link-Check Portal-Karten hrefs
 
-### Phase 2 — Daten-Frische (verifiziert, kein Fix nötig)
-- [x] metadata-msgraph Sync: lokal HEAD db0e9c6 == remote (gh api). Keine neuen Commits.
-- [x] Index-Counts gegen OpenAPI-Quelle: v1.0=1387, beta=2870 stimmen exakt überein.
-- [x] manifest.json schemaVersion 1.4.711.0 / syncDate 2026-08-26 geprüft (CSDL v4.0).
-- [x] deprecations-Status-Enum vs Daten: {removed,planned,soon} voll abgedeckt, card-Klassen OK.
-- Fazit: Portal-Daten frisch + konsistent, kein Re-Sync nötig. Phase 2 ohne Änderung fertig.
+### Phase 2 — Daten-Frische (FERTIG)
+- [x] metadata-msgraph Sync verifiziert
+- [x] Index-Counts gegen OpenAPI-Quelle: v1.0=1387, beta=2870
 
-### Phase 3 — msgraph/react Vertiefung (gefikt + verifiziert, gepusht 1c263d7)
-- [x] A11y Tabs: role=tablist/tab + aria, Pfeil/Home/Ende-Navigation, focus-visible Outline.
-- [x] Breaking Radar: slice(0,60) → scrollbarer .radar-scroll (volle Liste, 1792 items).
-- [x] NL→Graph nlMap: "Team-Termine"→events, "Foto"→photo; +kalender/e-mail/dateien/foto/profil.
-      Bewiesen per 9-Input-Coverage-Test. Babel OK, i18n clean, Live-Marker bestätigt.
-
-### Phase 5 — Deploy-Hygiene (etabliert + verifiziert, gepusht e9740ad)
-- [x] `deploy-hygiene.js` (Repo-Root): Pre-Push-Check — Babel, i18n, relative Pfade,
-      absolute Spec-URL erlaubt, manifest siteVersion/buildDate, git local==remote.
-- [x] manifest.json: siteVersion + buildDate; Footer zeigt " · v<siteVersion>".
-- [x] Relative Pfade verifiziert (assets/data relativ, Spec-URL absolut OK).
-- [x] Live bestätigt (siteVersion im manifest + app.jsx). Deploy-Hygiene green.
-
-### Phase 6 — Aufräumen (erledigt + verifiziert, gepusht 44ff593)
-- [x] .gitignore: commitmsg*.txt + preview*.log ignoriert; getrackte commitmsg per
-      git rm --cached aus Index (Dateien lokal erhalten, nicht destruktiv).
-- [x] msgraph/ Vanilla als ARCHIV markiert (ARCHIVE_README.md); msgraph/react aktiv.
-- [x] git status sauber, Deploy-Hygiene grün, Tip-Sync, lokale Dateien erhalten.
+### Phase 3 — msgraph/react Vertiefung (FERTIG)
+- [x] A11y Tabs: role=tablist/tab + aria
+- [x] Breaking Radar: scrollbarer .radar-scroll
+- [x] NL→Graph nlMap erweitert
 
 ### Phase 4 — Live-Mode / Backend (AUFGESCHOBEN bis IGNITE)
-- [ ] Echter Graph-Live-Mode (Azure-Tenant-Token + App-Registration) — WARTET auf IGNITE.
-      User-Plan: bei IGNITE ggf. echte Microsoft-Daten (Logins etc.) — dann integrativ bauen,
-      damit jederzeit anschlussfähig. Permissions-Tab bleibt bis dahin kuratiert.
-- [ ] NL→Graph echte LLM-Bridge via idun-multi (Backend/Key nötig) — ebenfalls nach IGNITE.
-- [ ] Phase-7 justbash-Sandbox: pnpm-Bundle nur Desktop (Termux blockt native Module).
+- [ ] Echter Graph-Live-Mode (Azure-Tenant-Token + App-Registration)
+- [ ] NL→Graph echte LLM-Bridge via idun-multi
+- [ ] Phase-7 justbash-Sandbox (pnpm-Bundle nur Desktop)
 
-## 3. Wiederverwendbare Checks (lokal ausführbar)
-- i18n: node ~/.hermes/profiles/idun/skills/web-ui-verification-no-browser/scripts/verify-i18n.js msgraph/react
-- Babel: node -e 'require("@babel/standalone").transform(fs.readFileSync("msgraph/react/assets/app.jsx","utf8"),{presets:["react"]})'
-- Worker: Node-VM-Sim gegen live BASE (Technique B, web-ui-verification-no-browser)
-- HTTP: cd msgraph/react && python3 -m http.server 8099 (log nach ~/ nicht /tmp)
+### Phase 5 — Deploy-Hygiene (FERTIG)
+- [x] `deploy-hygiene.js` (Repo-Root)
+- [x] manifest.json: siteVersion + buildDate
+- [x] Relative Pfade verifiziert
 
-## 4. Hard Rules (nie verletzen)
+### Phase 6 — Aufräumen (FERTIG)
+- [x] .gitignore: commitmsg*.txt + preview*.log
+- [x] msgraph/ Vanilla gelöscht, Redirect-Seite
+
+### Phase 7 — macrohard/ Stabilisierung (FERTIG, 2026-09-17)
+- [x] Browser iframe Fix (v2.11.23)
+- [x] Music Player Rewrite + Fixes (v2.11.25-v2.11.28)
+- [x] Explorer Navigation Fix (v2.11.26)
+- [x] Mobile Apps sichtbar (v2.11.29)
+- [x] Alle 26 Komponenten verifiziert (26/26 grün)
+
+## 3. Offene Punkte / Tech Debt
+
+| Thema | Status | Notiz |
+|-------|--------|-------|
+| macrohard: AudioGraph reset bei Track-Wechsel | 🔴 Offen | setupAudio() crasht wenn Song nicht geladen |
+| macrohard: Beatpad ohne Song | 🔴 Offen | eigener AudioContext nötig |
+| macrohard: Radio Progress springt | 🔴 Offen | duration=Infinity bei Streams |
+| macrohard: Visualizer doppelter Loop | 🔴 Offen | requestAnimationFrame dedupliziert |
+| Portal: catpop-Entwicklungs-Commits | 🟡 Lokal | Nicht gepusht, nicht push-pflichtig |
+| Phase 4 (Live-Mode, LLM-Bridge, Sandbox) | 🔴 Aufgeschoben | Wartet auf IGNITE |
+
+## 4. Wiederverwendbare Checks (lokál ausführbar)
+
+```bash
+# Syntax-Check
+node --check macrohard/assets/app.js
+
+# Unit-Tests
+node macrohard/tests/app.test.js
+
+# Deploy-Hygiene (vor Push)
+node deploy-hygiene.js
+
+# Live-Verifikation (nach Push)
+LOCAL=$(git rev-parse HEAD)
+REMOTE=$(gh api repos/qapdex-maker/qapdex-maker.github.io/commits/main --jq '.sha')
+[ "$LOCAL" = "$REMOTE" ] && echo "OK" || echo "MISMATCH"
+
+# HTTP-Checks
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8099/index.html
+curl -s -o /dev/null -w "%{http_code}" https://qapdex-maker.github.io/macrohard/
+```
+
+## 5. Hard Rules (nie verletzen)
+
 - Push/Deploy NUR auf "Bescheid". Lokal bauen+prüfen immer OK.
 - ".nav" nie display:none. Kein "Neo-brutalist" in Beschreibungen.
-- Jeder sichtbare Text über I18N[lang]; async-State nur NEUTRAL, Anzeige aus `t` abgeleitet.
+- Jeder sichtbare Text über I18N[lang]; async-State nur NEUTRAL.
 - /tmp read-only → keine Server-Logs dorthin.
+- Relative Pfade bei Subpages (./assets/...), absolute Spec-URL erlaubt.
+
+## 6. Quick-Reference
+
+- **Font:** Space Grotesk + IBM Plex Sans + IBM Plex Mono
+- **Kolors:** Kobalt #2547ff, Gelb #ffd400, Paper #f1ede3
+- **Cache-Bust:** app.js?v=35, site.css?v=36
+- **PWA:** sw.js stale-while-revalidate
+- **Tests:** 7/7 grün (storeSet, osIntervals, apps count, fsData, filter, shuffle)
+- **Live:** https://qapdex-maker.github.io/macrohard/
