@@ -1,0 +1,54 @@
+name: Macrohard CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'macrohard/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'macrohard/**'
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: |
+          cd macrohard
+          npm ci
+          
+      - name: Lint
+        run: |
+          cd macrohard
+          npm run lint
+          
+      - name: Test
+        run: |
+          cd macrohard
+          npm test
+          
+      - name: Verify JS
+        run: |
+          cd macrohard
+          npm run verify
+
+  deploy:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
