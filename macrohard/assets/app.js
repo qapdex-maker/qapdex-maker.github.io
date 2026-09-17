@@ -1060,7 +1060,7 @@
     var favIds=[];
     var radioStations=[];
     var activeTab='playlist';
-    var audio=new Audio();audio.volume=0.7;
+    /* audioEl wird lazy in setupAudio() initialisiert */
     var curIdx=-1,curStation=null,playing=false,repeat=false,shuffled=[];
     var audioCtx=null,sourceNode=null,analyser=null,biquadFilters=[];
     var eqBands=[60,150,400,1000,3000,8000];
@@ -1094,45 +1094,28 @@
       try{localStorage.setItem(SK_RADIO,JSON.stringify(radioStations))}catch(e){}
     }
 
-    /* === Audio Graph (idempotent: SourceNode nur einmal pro Audio-Element) === */
-    var graphConnected=false;
-    function initAudioGraph(){
-      if(!audioCtx){
-        audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-        sourceNode=audioCtx.createMediaElementSource(audio);
-        analyser=audioCtx.createAnalyser();
-        analyser.fftSize=128;
-        biquadFilters=eqBands.map(function(freq,i){
-          var f=audioCtx.createBiquadFilter();
-          f.type=i===0?'lowshelf':i===eqBands.length-1?'highshelf':'peaking';
-          f.frequency.value=freq;f.gain.value=0;return f;
-        });
-        graphConnected=true;
-      }
-      if(!sourceNode){
-        try{sourceNode=audioCtx.createMediaElementSource(audio);}catch(e){}
-      }
-      if(!analyser){
-        analyser=audioCtx.createAnalyser();
-        analyser.fftSize=128;
-        graphConnected=true;
-      }
-      if(biquadFilters.length===0){
-        biquadFilters=eqBands.map(function(freq,i){
-          var f=audioCtx.createBiquadFilter();
-          f.type=i===0?'lowshelf':i===eqBands.length-1?'highshelf':'peaking';
-          f.frequency.value=freq;f.gain.value=0;return f;
-        });
-        graphConnected=true;
-      }
-      if(graphConnected&&sourceNode){
-        try{
-          var node=sourceNode;
-          biquadFilters.forEach(function(f){node.connect(f);node=f;});
-          node.connect(analyser);analyser.connect(audioCtx.destination);
-        }catch(e){}
-        graphConnected=false;
-      }
+    /* === Audio Graph — lazy, bei Bedarf Reset des Audio-Elements === */
+    var audioEl=null, audioCtx=null, sourceNode=null, analyser=null, biquadFilters=[];
+    function setupAudio(){
+      if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+      if(sourceNode) return; /* nur einmal pro Element */
+      audioEl=new Audio();
+      audioEl.volume=0.7;
+      sourceNode=audioCtx.createMediaElementSource(audioEl);
+      analyser=audioCtx.createAnalyser();
+      analyser.fftSize=128;
+      biquadFilters=eqBands.map(function(freq,i){
+        var f=audioCtx.createBiquadFilter();
+        f.type=i===0?'lowshelf':i===eqBands.length-1?'highshelf':'peaking';
+        f.frequency.value=freq;f.gain.value=0;return f;
+      });
+      var node=sourceNode;
+      biquadFilters.forEach(function(f){node.connect(f);node=f;});
+      node.connect(analyser);analyser.connect(audioCtx.destination);
+      /* Event-Listener NUR EINMAL */
+      audioEl.addEventListener('timeupdate',onTimeUpdate);
+      audioEl.addEventListener('ended',onEnded);
+      audioEl.addEventListener('error',onError);
     }
     function ensureResumed(){
       if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
@@ -1223,11 +1206,11 @@
     function onTimeUpdate(){
       var prog=document.getElementById('musProg');var l=document.getElementById('musProgL');
       if(!prog||!l)return;
-      if(isRadio||!isFinite(audio.duration)){l.textContent='● LIVE';prog.value=0;return;}
-      if(audio.duration&&audio.duration>0){prog.value=(audio.currentTime/audio.duration)*100;var m=Math.floor(audio.currentTime/60);var sec=Math.floor(audio.currentTime%60);l.textContent=m+':'+(sec<10?'0':'')+sec;}
+      if(isRadio||!isFinite(audioEl.duration)){l.textContent='● LIVE';prog.value=0;return;}
+      if(audioEl.duration&&audioEl.duration>0){prog.value=(audioEl.currentTime/audioEl.duration)*100;var m=Math.floor(audioEl.currentTime/60);var sec=Math.floor(audioEl.currentTime%60);l.textContent=m+':'+(sec<10?'0':'')+sec;}
     }
     function onEnded(){
-      if(repeat){audio.currentTime=0;playAudio();return;}
+      if(repeat){audioEl.currentTime=0;playAudio();return;}
       if(isRadio)return;
       nextTrack();
     }
@@ -1236,10 +1219,11 @@
       if(l)l.textContent='⚠ Fehler';
     }
 
-    /* === Play === */
+    /* === Play — nutzt audioEl (lazy-initialized) === */
     function playAudio(){
+      setupAudio();
       ensureResumed();
-      var p=audio.play();
+      var p=audioEl.play();
       if(p&&p.catch)p.catch(function(e){
         var l=document.getElementById('musProgL');
         if(l)l.textContent='⚠ Blocked';
@@ -1249,8 +1233,9 @@
       if(i<0||i>=songs.length)return;
       curIdx=i;curStation=null;isRadio=false;
       var s=songs[i];
-      audio.src=s.u;
-      try{initAudioGraph();}catch(e){}
+      setupAudio();
+      audioEl.src=s.u;
+      audioEl.load();
       initVisualizer();
       playAudio();
       playing=true;
@@ -1258,17 +1243,20 @@
     }
     function playRadio(station){
       curStation=station;isRadio=true;curIdx=-1;
-      audio.src=station.u;
-      try{initAudioGraph();}catch(e){}
+      setupAudio();
+      audioEl.src=station.u;
+      audioEl.load();
       initVisualizer();
       playAudio();
       playing=true;
       updateUI();
     }
     function stop(){
-      audio.pause();playing=false;updateUI();
+      setupAudio();
+      audioEl.pause();playing=false;updateUI();
     }
     function togglePlay(){
+      setupAudio();
       if(playing){stop();}
       else if(isRadio&&curStation){playRadio(curStation);}
       else if(curIdx>=0){playTrack(curIdx);}
@@ -1295,7 +1283,6 @@
       var prev=(curIdx-1+songs.length)%songs.length;
       playTrack(prev);
     }
-
     /* === Upload === */
     function handleUpload(file){
       if(!file||!file.type.match(/^audio\//)){
@@ -1508,8 +1495,8 @@
     document.getElementById('musPlayBtn').addEventListener('click',togglePlay);
     document.getElementById('musPrev').addEventListener('click',prevTrack);
     document.getElementById('musNext').addEventListener('click',nextTrack);
-    document.getElementById('musVol').addEventListener('input',function(){audio.volume=parseFloat(this.value);document.getElementById('musVolL').textContent=Math.round(this.value*100)+'%'});
-    document.getElementById('musProg').addEventListener('input',function(){if(audio.duration&&!isRadio)audio.currentTime=(this.value/100)*audio.duration});
+    document.getElementById('musVol').addEventListener('input',function(){setupAudio();audioEl.volume=parseFloat(this.value);document.getElementById('musVolL').textContent=Math.round(this.value*100)+'%'});
+    document.getElementById('musProg').addEventListener('input',function(){setupAudio();if(audioEl.duration&&!isRadio)audioEl.currentTime=(this.value/100)*audioEl.duration});
     document.getElementById('musShuffle').addEventListener('click',function(){
       shuffled=songs.map(function(_,i){return i});
       shuffled=shuffleArray(shuffled);
