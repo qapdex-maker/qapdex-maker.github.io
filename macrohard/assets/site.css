@@ -459,8 +459,17 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 #musVisualizer{width:100%;max-width:280px;height:50px;border:2px solid var(--line);background:#0b0b0c;display:block;margin:0 auto}
 .musVol{display:flex;align-items:center;gap:6px;padding:4px 8px}
 .musItem{display:flex;align-items:center;gap:8px;padding:4px;border:2px solid var(--line);background:var(--surface);box-shadow:var(--shadow-sm)}
+.musItem.playing{border-color:var(--accent);background:var(--paper)}
 .musPlay{width:32px;height:32px;border:2px solid var(--line);background:var(--accent);color:#fff;font-size:12px;cursor:pointer;box-shadow:var(--shadow-sm)}
-.musInfo{flex:1;font-size:11px}
+.musInfo{flex:1;font-size:11px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.musFav,.musDel{background:none;border:none;font-size:14px;cursor:pointer;padding:0 4px;flex-shrink:0}
+
+/* ===== music tabs ===== */
+.musTabs{display:flex;gap:2px;padding:4px 8px;border-bottom:2px solid var(--line);background:var(--surface)}
+.musTab{padding:4px 10px;border:2px solid var(--line);background:var(--paper);cursor:pointer;font-family:var(--font-mono);font-size:10px;box-shadow:var(--shadow-sm)}
+.musTab.active{background:var(--accent);color:#fff}
+.musUpload{border-style:dashed}
+#musListInner{flex:1;overflow-y:auto;min-height:0}
 
 /* ===== global search ===== */
 #globalSearch{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center}

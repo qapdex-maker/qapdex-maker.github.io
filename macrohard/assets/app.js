@@ -354,7 +354,7 @@
       case 'explorer': body='<div class="fePath"><span>📁</span><input id="fePath" value="C:\Users\macrohard\Desktop"></div><div class="feSide" id="feSide"></div><div class="feGrid" id="feGrid"></div>';break;
       case 'paint': body='<div class="ptColors" id="ptColors"></div><canvas class="ptCanvas" id="ptCanvas" width="400" height="260"></canvas>';break;
       case 'browser': body='<div class="brTabs" id="brTabs"></div><div class="brBar"><button class="brBtn" id="brBack" title="Zurück">←</button><button class="brBtn" id="brFwd" title="Vor">→</button><button class="brBtn" id="brRefresh" title="Aktualisieren">↻</button><button class="brBtn" id="brHome" title="Startseite">⌂</button><input id="brAddr" value="https://duckduckgo.com" placeholder="URL oder Suche..."><button class="brBtn" id="brGo" title="Los">➜</button><button class="brBtn" id="brBm" title="Lesezeichen">☆</button><button class="brBtn" id="brNewTab" title="Neuer Tab">+</button></div><div class="brContent" id="brContent"></div>';break;
-      case 'music': body='<div class="musPlayer"><div class="musList" id="musList"></div><div class="musExtra"><div class="musPadSection"><div class="musSectionTitle">🥁 Beatpad</div><div class="musBeatpad" id="musBeatpad"></div></div><div class="musEqSection"><div class="musSectionTitle">🎛 Equalizer</div><canvas id="musVisualizer" width="280" height="60"></canvas><div class="musEq" id="musEq"></div></div></div></div>';break;
+      case 'music': body='<div class="musPlayer" id="musPlayer"><div class="musList" id="musList"></div><div class="musExtra"><div class="musPadSection"><div class="musSectionTitle">🥁 Beatpad</div><div class="musBeatpad" id="musBeatpad"></div></div><div class="musEqSection"><div class="musSectionTitle">🎛 Equalizer</div><canvas id="musVisualizer" width="280" height="60"></canvas><div class="musEq" id="musEq"></div></div></div></div>';break;
       case 'chat': body='<div class="cpMsgs" id="cpMsgs"></div><div class="cpSugs" id="cpSugs"></div><div class="cpIn"><input id="cpIn" placeholder="Nachricht..."><button id="cpSend">Send</button></div>';break;
       case 'docs': body='<div class="mdBody" id="mdBody"><h3>MakerOS Docs</h3><p>Neo-brutalist desktop OS — qapdex-maker.github.io edition.</p><p>13 Apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links, AMIBIOS.</p><p style="margin-top:12px;font-size:11px;color:var(--muted)">Made by Alexander Kleine</p></div>';break;
       case 'settings': body='<div class="stGrid" id="stGrid"><div class="stNav"><button data-tab="general" class="active" data-de="Allgemein" data-en="General">Allgemein</button><button data-tab="appearance" data-de="Aussehen" data-en="Appearance">Aussehen</button><button data-tab="shortcuts" data-de="Tastenkürzel" data-en="Shortcuts">Tastenkürzel</button><button data-tab="privacy" data-de="Datenschutz" data-en="Privacy">Datenschutz</button></div><div class="stPane active" data-pane="general"><label><input type="checkbox" id="stDark"> Dark Mode</label><label><input type="checkbox" id="stScan" checked> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div><div class="stPane" data-pane="appearance" id="stAppearance"></div><div class="stPane" data-pane="shortcuts" id="stShortcuts"></div><div class="stPane" data-pane="privacy" id="stPrivacy"></div></div>';break;
@@ -1035,22 +1035,70 @@
     var link=document.createElement('a');link.download='paint.png';link.href=canvas.toDataURL('image/png');link.click();toast('PNG exportiert');
   }
 
-  /* Music — S1+S2: Volume + Progress + Audio + Shuffle/Repeat */
+  /* Music — S3: Upload + Radio + Favoriten + Beatpad + Equalizer */
   function buildMusic(){
     var list=document.getElementById('musList');if(!list) return;
+    var content=list.parentElement;
+
+    /* Storage Keys */
+    var SK_FAV='mus_favs', SK_CUSTOM='mus_custom', SK_RADIO='mus_radio';
+
+    /* State */
     var songs=[
-      {n:'Macrohard Anthems',a:'IDUN Studio',u:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
-      {n:'Maker of Cancellation',a:'Perchance Sound',u:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'},
-      {n:'Neo-Brutalist Beat',a:'qapdex-maker',u:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
-      {n:'IDUN Tone',a:'IDUN Studio',u:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'}
+      {n:'Macrohard Anthems',a:'IDUN Studio',u:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',src:'demo'},
+      {n:'Maker of Cancellation',a:'Perchance Sound',u:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',src:'demo'},
+      {n:'Neo-Brutalist Beat',a:'qapdex-maker',u:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',src:'demo'},
+      {n:'IDUN Tone',a:'IDUN Studio',u:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',src:'demo'}
     ];
-    /* Equalizer sliders */
+    var favIds=[];
+    var radioStations=[];
+    var activeTab='playlist';
+    var audio=new Audio();audio.volume=0.7;
+    var curIdx=-1,curStation=null,playing=false,repeat=false,shuffled=[];
+    var audioCtx=null,sourceNode=null,analyser=null,biquadFilters=[];
     var eqBands=[60,150,400,1000,3000,8000];
     var eqValues={60:0,150:0,400:0,1000:0,3000:0,8000:0};
-    var biquadFilters=[];
-    var audioCtx=null,sourceNode=null,analyser=null;
+    var isRadio=false;
+    var pendingPlay=false;
+
+    /* === Storage Helpers === */
+    function loadFavs(){
+      try{favIds=JSON.parse(localStorage.getItem(SK_FAV)||'[]')}catch(e){favIds=[]}
+    }
+    function saveFavs(){
+      try{localStorage.setItem(SK_FAV,JSON.stringify(favIds))}catch(e){}
+    }
+    function loadCustom(){
+      try{
+        var c=JSON.parse(localStorage.getItem(SK_CUSTOM)||'[]');
+        c.forEach(function(s){s.src='custom';s._lob=true;songs.push(s)});
+      }catch(e){}
+    }
+    function saveCustom(s){
+      try{localStorage.setItem(SK_CUSTOM,JSON.stringify(s))}catch(e){}
+    }
+    function loadRadios(){
+      try{
+        var r=JSON.parse(localStorage.getItem(SK_RADIO)||'[]');
+        if(r.length)radioStations=r;
+      }catch(e){}
+    }
+    function saveRadios(){
+      try{localStorage.setItem(SK_RADIO,JSON.stringify(radioStations))}catch(e){}
+    }
+
+    /* === Audio Graph === */
     function initAudioGraph(){
-      if(audioCtx)return;
+      if(audioCtx){
+        if(!analyser){
+          analyser=audioCtx.createAnalyser();
+          analyser.fftSize=128;
+          var node=sourceNode;
+          biquadFilters.forEach(function(f){node.connect(f);node=f;});
+          node.connect(analyser);analyser.connect(audioCtx.destination);
+        }
+        return;
+      }
       audioCtx=new (window.AudioContext||window.webkitAudioContext)();
       sourceNode=audioCtx.createMediaElementSource(audio);
       analyser=audioCtx.createAnalyser();
@@ -1058,58 +1106,53 @@
       biquadFilters=eqBands.map(function(freq,i){
         var f=audioCtx.createBiquadFilter();
         f.type=i===0?'lowshelf':i===eqBands.length-1?'highshelf':'peaking';
-        f.frequency.value=freq;
-        f.gain.value=0;
-        return f;
+        f.frequency.value=freq;f.gain.value=0;return f;
       });
       var node=sourceNode;
       biquadFilters.forEach(function(f){node.connect(f);node=f;});
-      node.connect(analyser);
-      analyser.connect(audioCtx.destination);
+      node.connect(analyser);analyser.connect(audioCtx.destination);
     }
+    function ensureResumed(){
+      if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
+    }
+
+    /* === Visualizer === */
     function initVisualizer(){
       var canvas=document.getElementById('musVisualizer');if(!canvas)return;
       var ctx=canvas.getContext('2d');
-      var buf=new Uint8Array(analyser.frequencyBinCount);
+      var buf=new Uint8Array(analyser?analyser.frequencyBinCount:64);
       function draw(){
         requestAnimationFrame(draw);
+        if(!analyser)return;
         analyser.getByteFrequencyData(buf);
-        ctx.fillStyle='#0b0b0c';
-        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle='#0b0b0c';ctx.fillRect(0,0,canvas.width,canvas.height);
         var bw=canvas.width/buf.length;
         for(var i=0;i<buf.length;i++){
           var h=(buf[i]/255)*canvas.height;
           var g=ctx.createLinearGradient(0,canvas.height,0,canvas.height-h);
           g.addColorStop(0,'#ffd400');g.addColorStop(1,'#2547ff');
-          ctx.fillStyle=g;
-          ctx.fillRect(i*bw,canvas.height-h,bw-1,h);
+          ctx.fillStyle=g;ctx.fillRect(i*bw,canvas.height-h,bw-1,h);
         }
       }
-      if(analyser)draw();
+      draw();
     }
+
+    /* === Beatpad === */
     function initBeatpad(){
       var pad=document.getElementById('musBeatpad');if(!pad)return;
       var samples=[
-        {n:'Kick',f:60,d:0.4,c:'#ff4000'},
-        {n:'Snare',f:200,d:0.2,c:'#2547ff'},
-        {n:'HiHat',f:8000,d:0.05,c:'#ffd400'},
-        {n:'Clap',f:1200,d:0.15,c:'#0f0'},
-        {n:'Tom',f:100,d:0.3,c:'#f0f'},
-        {n:'Rim',f:600,d:0.1,c:'#0ff'},
-        {n:'Bass',f:80,d:0.4,c:'#ff8000'},
-        {n:'Stab',f:440,d:0.2,c:'#800'},
+        {n:'Kick',f:60,d:0.4,c:'#ff4000'},{n:'Snare',f:200,d:0.2,c:'#2547ff'},
+        {n:'HiHat',f:8000,d:0.05,c:'#ffd400'},{n:'Clap',f:1200,d:0.15,c:'#0f0'},
+        {n:'Tom',f:100,d:0.3,c:'#f0f'},{n:'Rim',f:600,d:0.1,c:'#0ff'},
+        {n:'Bass',f:80,d:0.4,c:'#ff8000'},{n:'Stab',f:440,d:0.2,c:'#800'},
         {n:'Crash',f:5000,d:0.5,c:'#666'}
       ];
       samples.forEach(function(s,i){
         var b=document.createElement('button');
-        b.className='beatpad-btn';
-        b.textContent=s.n;
-        b.style.background=s.c;
+        b.className='beatpad-btn';b.textContent=s.n;b.style.background=s.c;
         b.addEventListener('click',function(){
-          if(!audioCtx)initAudioGraph();
-          if(audioCtx.state==='suspended')audioCtx.resume();
-          var osc=audioCtx.createOscillator();
-          var gain=audioCtx.createGain();
+          initAudioGraph();ensureResumed();
+          var osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
           osc.type=i===2?'square':i===7?'sawtooth':'sine';
           osc.frequency.setValueAtTime(s.f,audioCtx.currentTime);
           osc.frequency.exponentialRampToValueAtTime(s.f*0.5,audioCtx.currentTime+s.d);
@@ -1117,12 +1160,13 @@
           gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+s.d);
           osc.connect(gain);gain.connect(audioCtx.destination);
           osc.start();osc.stop(audioCtx.currentTime+s.d);
-          b.style.transform='scale(.92)';
-          setTimeout(function(){b.style.transform='';},100);
+          b.style.transform='scale(.92)';setTimeout(function(){b.style.transform=''},100);
         });
         pad.appendChild(b);
       });
     }
+
+    /* === Equalizer === */
     function initEqualizer(){
       var eq=document.getElementById('musEq');if(!eq)return;
       eqBands.forEach(function(freq,i){
@@ -1130,45 +1174,300 @@
         var label=document.createElement('span');label.textContent=freq>=1000?(freq/1000)+'k':freq;
         var slider=document.createElement('input');slider.type='range';slider.min=-12;slider.max=12;slider.value=0;slider.className='eq-range';
         slider.addEventListener('input',function(){
-          var v=parseFloat(this.value);
-          eqValues[freq]=v;
-          if(biquadFilters[i]){biquadFilters[i].gain.setValueAtTime(v,audioCtx.currentTime);}
+          var v=parseFloat(this.value);eqValues[freq]=v;
+          if(biquadFilters[i]&&audioCtx)biquadFilters[i].gain.setValueAtTime(v,audioCtx.currentTime);
         });
-        wrap.appendChild(slider);wrap.appendChild(label);
-        eq.appendChild(wrap);
+        wrap.appendChild(slider);wrap.appendChild(label);eq.appendChild(wrap);
       });
     }
-    list.innerHTML='';
-    var volBar=document.createElement('div');volBar.className='musVol';
-    volBar.innerHTML='🔊 <input type="range" id="musVol" min="0" max="1" step="0.05" value="0.7" style="flex:1"> <span id="musVolL">70</span>%';
-    var progBar=document.createElement('div');progBar.className='musVol';
-    progBar.innerHTML='⏩ <input type="range" id="musProg" min="0" max="100" step="1" value="0" style="flex:1"> <span id="musProgL">0:00</span>';
-    var ctrlBar=document.createElement('div');ctrlBar.className='musVol';
-    ctrlBar.innerHTML='<button id="musShuffle" class="cBtn">🔀 Shuffle</button><button id="musRepeat" class="cBtn">🔂 Repeat</button>';
-    list.appendChild(volBar);list.appendChild(progBar);list.appendChild(ctrlBar);
-    var audio=new Audio();audio.volume=0.7;var curIdx=0;var playing=false;var shuffled=[0,1,2,3];var repeat=false;
-    document.getElementById('musVol').addEventListener('input',function(){var v=parseFloat(this.value);audio.volume=v;document.getElementById('musVolL').textContent=Math.round(v*100);});
-    document.getElementById('musProg').addEventListener('input',function(){if(audio.duration){audio.currentTime=(this.value/100)*audio.duration;}});
-    document.getElementById('musShuffle').addEventListener('click',function(){shuffled=shuffleArray([0,1,2,3]);document.getElementById('musShuffle').style.background=shuffled?'var(--accent)':'';});
-    document.getElementById('musRepeat').addEventListener('click',function(){repeat=!repeat;this.style.background=repeat?'var(--accent)':'';});
-    initBeatpad();initEqualizer();
-songs.forEach(function(s,i){
-      var item=document.createElement('div');item.className='musItem';
-      item.innerHTML='<button class="musPlay" data-i="'+i+'">▶</button><span class="musInfo"><b>'+s.n+'</b><br><span style="font-size:10px;color:var(--muted)">'+s.a+'</span></span>';
-      item.querySelector('.musPlay').addEventListener('click',function(){
-        curIdx=i;audio.src=s.u;initAudioGraph();initVisualizer();audio.play();playing=true;this.textContent='⏸';
-        audio.addEventListener('timeupdate',function(){
-          var prog=document.getElementById('musProg');var l=document.getElementById('musProgL');
-          if(audio.duration&&prog){prog.value=(audio.currentTime/audio.duration)*100;var m=Math.floor(audio.currentTime/60);var sec=Math.floor(audio.currentTime%60);l.textContent=m+':'+(sec<10?'0':'')+sec;}
-        },{once:false});
-        audio.addEventListener('ended',function(){
-          if(repeat){audio.currentTime=0;audio.play();return;}
-          var next=(curIdx+1)%songs.length;if(shuffled.length)next=shuffled[(curIdx+1)%shuffled.length]||next;
-          var nb=list.querySelector('[data-i="'+next+'"]');if(nb)nb.click();
-        },{once:false});
+
+    /* === Progress === */
+    function startProgress(){
+      audio.addEventListener('timeupdate',function(){
+        var prog=document.getElementById('musProg');var l=document.getElementById('musProgL');
+        if(!prog||!l)return;
+        if(isRadio){l.textContent='● LIVE';prog.value=0;return;}
+        if(audio.duration){prog.value=(audio.currentTime/audio.duration)*100;var m=Math.floor(audio.currentTime/60);var sec=Math.floor(audio.currentTime%60);l.textContent=m+':'+(sec<10?'0':'')+sec;}
+      },{once:false});
+      audio.addEventListener('ended',function(){
+        if(repeat){audio.currentTime=0;playAudio();return;}
+        if(isRadio)return;
+        nextTrack();
+      },{once:false});
+      audio.addEventListener('error',function(){
+        var l=document.getElementById('musProgL');
+        if(l)l.textContent='⚠ Fehler';
       });
-      list.appendChild(item);
+    }
+
+    /* === Play === */
+    function playAudio(){
+      ensureResumed();
+      var p=audio.play();
+      if(p&&p.catch)p.catch(function(e){
+        var l=document.getElementById('musProgL');
+        if(l)l.textContent='⚠ Blocked';
+      });
+    }
+    function playTrack(i){
+      if(i<0||i>=songs.length)return;
+      curIdx=i;curStation=null;isRadio=false;
+      var s=songs[i];
+      audio.src=s.u;
+      try{initAudioGraph();}catch(e){}
+      initVisualizer();
+      playAudio();
+      playing=true;
+      updateUI();
+    }
+    function playRadio(station){
+      curStation=station;isRadio=true;curIdx=-1;
+      audio.src=station.u;
+      try{initAudioGraph();}catch(e){}
+      initVisualizer();
+      playAudio();
+      playing=true;
+      updateUI();
+    }
+    function stop(){
+      audio.pause();playing=false;updateUI();
+    }
+    function togglePlay(){
+      if(playing){stop();}
+      else if(isRadio&&curStation){playRadio(curStation);}
+      else if(curIdx>=0){playTrack(curIdx);}
+      else if(songs.length){playTrack(0);}
+    }
+    function nextTrack(){
+      if(isRadio&&radioStations.length){
+        var ni=curStation?radioStations.indexOf(curStation)+1:0;
+        playRadio(radioStations[ni%radioStations.length]);
+        return;
+      }
+      if(!songs.length)return;
+      var next=(curIdx+1)%songs.length;
+      playTrack(next);
+    }
+    function prevTrack(){
+      if(isRadio&&radioStations.length){
+        var ci=curStation?radioStations.indexOf(curStation):0;
+        var pi=(ci-1+radioStations.length)%radioStations.length;
+        playRadio(radioStations[pi]);
+        return;
+      }
+      if(!songs.length)return;
+      var prev=(curIdx-1+songs.length)%songs.length;
+      playTrack(prev);
+    }
+
+    /* === Upload === */
+    function handleUpload(file){
+      if(!file||!file.type.match(/^audio\//)){
+        showNotif('Music','Nicht unterstützt: '+file.name,'⚠️');
+        return;
+      }
+      var url=URL.createObjectURL(file);
+      var s={n:file.name.replace(/\.[^.]+$/,''),a:'Upload',u:url,src:'custom',_blob:true};
+      songs.push(s);
+      /* Save meta only (blob URLs can't be persisted, but list survives in session) */
+      var meta={n:s.n,a:s.a,ts:Date.now()};
+      loadCustom();
+      /* Render */
+      renderPlaylist();
+      showNotif('Music','Hochgeladen: '+s.n,'🎵');
+    }
+
+    /* === Radio Browser === */
+    function fetchRadios(){
+      if(radioStations.length>0){renderRadio();return}
+      var l=document.getElementById('musRadioStatus');
+      if(l){l.textContent='Lade Sender...';l.style.color='var(--accent)'}
+      var x=new XMLHttpRequest();
+      x.open('GET','https://de1.api.radio-browser.info/json/stations?limit=30&order=clickcount&reverse=true',true);
+      x.timeout=8000;
+      x.onload=function(){
+        try{
+          var arr=JSON.parse(x.responseText);
+          radioStations=arr.filter(function(s){return s.url_resolved&&s.url_resolved.length>5}).slice(0,20).map(function(s){
+            return{name:s.name.replace(/[^\x20-\x7E]/g,''),u:s.url_resolved,codec:s.codec||'',votes:s.votes||0}
+          });
+          saveRadios();
+          renderRadio();
+          if(l){l.textContent=radioStations.length+' Sender geladen';l.style.color='var(--muted)'}
+        }catch(e){if(l){l.textContent='Fehler beim Laden';l.style.color='red'}}
+      };
+      x.onerror=function(){if(l){l.textContent='Keine Internetverbindung';l.style.color='red'}};
+      x.ontimeout=function(){if(l){l.textContent='Timeout';l.style.color='red'}};
+      x.send();
+    }
+
+    /* === UI === */
+    function mkStar(id,filled){
+      return '<span class="musFav" data-id="'+id+'" style="cursor:pointer;font-size:14px;color:'+(filled?'#ffd400':'#5d584e')+'">'+(filled?'★':'☆')+'</span>';
+    }
+    function toggleFav(id){
+      var i=favIds.indexOf(id);
+      if(i>=0)favIds.splice(i,1);else favIds.push(id);
+      saveFavs();renderActiveTab();
+    }
+
+    function renderPlaylist(){
+      var el=document.getElementById('musPlaylist');if(!el)return;
+      el.innerHTML='';
+      if(!songs.length){el.innerHTML='<div style="padding:20px;color:var(--muted);text-align:center">Keine Songs. Lade welche hoch!</div>';return}
+      songs.forEach(function(s,i){
+        var isCur=(!isRadio&&curIdx===i);
+        var fav=favIds.indexOf(s.n)>=0;
+        var item=document.createElement('div');item.className='musItem'+(isCur?' playing':'');
+        item.innerHTML='<button class="musPlay" data-i="'+i+'">'+(isCur&&playing?'⏸':'▶')+'</button>'+
+          '<span class="musInfo"><b>'+s.n+'</b><br><span style="font-size:10px;color:var(--muted)">'+(s.a||s.src)+(s._blob?' · lokal':'')+'</span></span>'+
+          mkStar(s.n,fav)+(s._blob?'<button class="musDel" data-i="'+i+'" style="font-size:12px;color:red;background:none;border:none;cursor:pointer">×</button>':'');
+        item.querySelector('.musPlay').addEventListener('click',function(){playTrack(i)});
+        item.querySelector('.musFav').addEventListener('click',function(){toggleFav(s.n)});
+        if(s._blob){
+          item.querySelector('.musDel').addEventListener('click',function(){
+            URL.revokeObjectURL(s.u);
+            songs.splice(i,1);
+            if(curIdx===i)stop();else if(curIdx>i)curIdx--;
+            renderPlaylist();
+          });
+        }
+        el.appendChild(item);
+      });
+    }
+
+    function renderRadio(){
+      var el=document.getElementById('musRadio');if(!el)return;
+      el.innerHTML='';
+      if(radioStations.length===0){
+        el.innerHTML='<div style="padding:20px;color:var(--muted);text-align:center">Keine Sender geladen.</div>';
+        return;
+      }
+      radioStations.forEach(function(s,i){
+        var isCur=(isRadio&&curStation===s);
+        var item=document.createElement('div');item.className='musItem'+(isCur?' playing':'');
+        item.innerHTML='<button class="musPlay" data-i="'+i+'">'+(isCur&&playing?'⏸':'▶')+'</button>'+
+          '<span class="musInfo"><b>'+s.name+'</b><br><span style="font-size:10px;color:var(--muted)">'+(s.codec||'')+(s.votes?' · '+s.votes+' votes':'')+'</span></span>'+
+          '<span style="font-size:10px;color:var(--muted)">● LIVE</span>';
+        item.querySelector('.musPlay').addEventListener('click',function(){playRadio(s)});
+        el.appendChild(item);
+      });
+    }
+
+    function renderFavs(){
+      var el=document.getElementById('musFavs');if(!el)return;
+      el.innerHTML='';
+      var favSongs=songs.filter(function(s){return favIds.indexOf(s.n)>=0});
+      if(!favSongs.length){el.innerHTML='<div style="padding:20px;color:var(--muted);text-align:center">Noch keine Favoriten. Drücke ☆ bei einem Song.</div>';return}
+      favSongs.forEach(function(s){
+        var i=songs.indexOf(s);
+        var isCur=(!isRadio&&curIdx===i);
+        var item=document.createElement('div');item.className='musItem'+(isCur?' playing':'');
+        item.innerHTML='<button class="musPlay" data-i="'+i+'">'+(isCur&&playing?'⏸':'▶')+'</button>'+
+          '<span class="musInfo"><b>'+s.n+'</b><br><span style="font-size:10px;color:var(--muted)">'+s.a+'</span></span>'+
+          mkStar(s.name,true);
+        item.querySelector('.musPlay').addEventListener('click',function(){playTrack(i)});
+        item.querySelector('.musFav').addEventListener('click',function(){toggleFav(s.n)});
+        el.appendChild(item);
+      });
+    }
+
+    function renderActiveTab(){
+      var p=document.getElementById('musPlaylist');
+      var r=document.getElementById('musRadio');
+      var f=document.getElementById('musFavs');
+      if(!p||!r||!f)return;
+      p.style.display=activeTab==='playlist'?'block':'none';
+      r.style.display=activeTab==='radio'?'block':'none';
+      f.style.display=activeTab==='favs'?'block':'none';
+      if(activeTab==='playlist')renderPlaylist();
+      if(activeTab==='radio')renderRadio();
+      if(activeTab==='favs')renderFavs();
+    }
+
+    function updateUI(){
+      renderActiveTab();
+      /* Update play button on toolbar if exists */
+      var pb=document.getElementById('musPlayBtn');
+      if(pb)pb.textContent=playing?'⏸':'▶';
+    }
+
+    /* === Build UI === */
+    list.innerHTML='';
+    list.style.cssText='display:flex;flex-direction:column;overflow:hidden;flex:1;min-height:0';
+    var tabBar=document.createElement('div');
+    tabBar.className='musTabs';
+    tabBar.innerHTML='<button data-tab="playlist" class="musTab active">🎵 Playlist</button>'+
+      '<button data-tab="radio" class="musTab">📻 Radio</button>'+
+      '<button data-tab="favs" class="musTab">★ Favoriten ('+favIds.length+')</button>'+
+      '<label class="musTab musUpload" style="cursor:pointer">⬆ Upload<input type="file" id="musUploadIn" accept="audio/*" multiple style="display:none"></label>';
+    list.appendChild(tabBar);
+
+    var listWrap=document.createElement('div');listWrap.id='musListInner';
+    listWrap.style.cssText='flex:1;overflow-y:auto;min-height:0';
+    listWrap.innerHTML='<div id="musPlaylist"></div><div id="musRadio" style="display:none"></div><div id="musFavs" style="display:none"></div>';
+    list.appendChild(listWrap);
+
+    var statusBar=document.createElement('div');
+    statusBar.id='musRadioStatus';
+    statusBar.style.cssText='font-size:10px;color:var(--muted);padding:4px 8px;border-top:1px solid var(--line)';
+    statusBar.textContent='Bereit';
+    list.appendChild(statusBar);
+
+    /* Controls */
+    var ctrlBar=document.createElement('div');ctrlBar.className='musVol';
+    ctrlBar.innerHTML='<button id="musPlayBtn" class="cBtn">▶</button>'+
+      '<button id="musPrev" class="cBtn">⏮</button>'+
+      '<button id="musNext" class="cBtn">⏭</button>'+
+      '<button id="musShuffle" class="cBtn">🔀</button>'+
+      '<button id="musRepeat" class="cBtn">🔂</button>'+
+      '<input type="range" id="musVol" min="0" max="1" step="0.05" value="0.7" style="flex:1">'+
+      '<span id="musVolL" style="font-size:10px">70%</span>';
+    list.appendChild(ctrlBar);
+
+    var progBar=document.createElement('div');progBar.className='musVol';
+    progBar.innerHTML='<span id="musProgL" style="font-size:10px;width:50px;text-align:center">0:00</span>'+
+      '<input type="range" id="musProg" min="0" max="100" step="1" value="0" style="flex:1">';
+    list.appendChild(progBar);
+
+    /* Events */
+    tabBar.querySelectorAll('.musTab[data-tab]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        activeTab=this.dataset.tab;
+        tabBar.querySelectorAll('.musTab').forEach(function(b){b.classList.remove('active')});
+        btn.classList.add('active');
+        if(activeTab==='radio')fetchRadios();
+        renderActiveTab();
+        /* Update fav count */
+        if(activeTab!=='favs'){
+          var fb=tabBar.querySelector('[data-tab="favs"]');
+          if(fb)fb.textContent='★ Favoriten ('+favIds.length+')';
+        }
+      });
     });
+
+    var uploadIn=document.getElementById('musUploadIn');
+    if(uploadIn)uploadIn.addEventListener('change',function(){
+      for(var i=0;i<this.files.length;i++)handleUpload(this.files[i]);
+      this.value='';
+    });
+
+    document.getElementById('musPlayBtn').addEventListener('click',togglePlay);
+    document.getElementById('musPrev').addEventListener('click',prevTrack);
+    document.getElementById('musNext').addEventListener('click',nextTrack);
+    document.getElementById('musVol').addEventListener('input',function(){audio.volume=parseFloat(this.value);document.getElementById('musVolL').textContent=Math.round(this.value*100)+'%'});
+    document.getElementById('musProg').addEventListener('input',function(){if(audio.duration&&!isRadio)audio.currentTime=(this.value/100)*audio.duration});
+    document.getElementById('musShuffle').addEventListener('click',function(){
+      shuffled=songs.map(function(_,i){return i});
+      shuffled=shuffleArray(shuffled);
+      this.style.background='var(--accent)';
+      setTimeout(function(){this.style.background=''},500);
+    });
+    document.getElementById('musRepeat').addEventListener('click',function(){repeat=!repeat;this.style.background=repeat?'var(--accent)':''});
+
+    initBeatpad();initEqualizer();initVisualizer();startProgress();
+    loadFavs();loadCustom();loadRadios();
+    renderActiveTab();
   }
 
   /* Chat — S3: Timestamps in every message */
