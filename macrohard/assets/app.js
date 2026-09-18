@@ -352,7 +352,15 @@
    */
   function openApp(id){playSound('open');
     var w=document.getElementById('w-'+id);
-    if(w){w.classList.add('focused');w.style.zIndex=++zIdx;focused=id;updateFocus();return;}
+    if(w){
+      w.classList.add('focused');
+      w.style.zIndex=++zIdx;
+      focused=id;
+      updateFocus();
+      // Resume AudioContext when reopening Music app
+      if(id==='music' && typeof resumeMusic==='function') resumeMusic();
+      return;
+    }
     var mk=document.createElement('div');
     mk.className='wnd';
     mk.id='w-'+id;
@@ -420,6 +428,15 @@
       if(wId && window.osIntervals && window.osIntervals[wId]){
         clearInterval(window.osIntervals[wId]);
         delete window.osIntervals[wId];
+      }
+      // Stop music-related intervals/timeouts on close
+      if(wId==='music'){
+        if(visRafId){cancelAnimationFrame(visRafId);visRafId=null;}
+        if(typeof stopSequencer==='function')stopSequencer();
+        try{if(audioEl&&!audioEl.paused)audioEl.pause();}catch(err){}
+        try{if(audioCtx&&audioCtx.state==='running')audioCtx.suspend();}catch(err){}
+        try{if(SEQ&&SEQ.ctx&&SEQ.ctx.state==='running')SEQ.ctx.suspend();}catch(err){}
+        if(SEQ){SEQ.playing=false;SEQ.controlsInitialized=false;}
       }
       wnd.classList.add('closing');
       setTimeout(function(){wnd.remove();},200);
@@ -1241,12 +1258,17 @@
         }
       }
 
-      loadSamples().then(function() {
+      // Load samples only if not already loaded
+      if(SEQ.loaded){
         buildSeqUI(pad);
-        SEQ.loaded = true;
-      }).catch(function() {
-        buildFallbackPad(pad);
-      });
+      } else {
+        loadSamples().then(function() {
+          buildSeqUI(pad);
+          SEQ.loaded = true;
+        }).catch(function() {
+          buildFallbackPad(pad);
+        });
+      }
     }
 
     function loadSamples() {
@@ -1914,11 +1936,16 @@
       if(visRafId)cancelAnimationFrame(visRafId);
       if(stopSequencer)stopSequencer();
       try{if(audioEl&&!audioEl.paused)audioEl.pause();}catch(e){}
-      try{if(audioCtx&&audioCtx.state!=='closed')audioCtx.close();}catch(e){}
+      try{if(audioCtx&&audioCtx.state!=='closed')audioCtx.suspend();}catch(e){}
     };
     initSequencer();initEqualizer();initVisualizer();
     loadFavs();loadCustom();loadRadios();
     renderActiveTab();updateUI();
+  }
+
+  function resumeMusic(){
+    if(SEQ.ctx&&SEQ.ctx.state==='suspended')SEQ.ctx.resume();
+    if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
   }
 
   /* Chat — S3: Timestamps in every message */
