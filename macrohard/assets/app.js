@@ -1676,6 +1676,7 @@
       var pad = document.getElementById('musBeatpad');
       if (!pad) return;
 
+      // Reset pattern state
       SEQ.pattern = [];
       SEQ.muted = [];
       for (var i = 0; i < 8; i++) {
@@ -1686,21 +1687,24 @@
         }
       }
 
-      // Load samples only if not already loaded
-      if(SEQ.loaded){
+      // Load samples asynchronously, fall back to synthesized sounds
+      if (SEQ.loaded) {
         buildSeqUI(pad);
       } else {
         loadSamples().then(function() {
           buildSeqUI(pad);
           SEQ.loaded = true;
         }).catch(function() {
+          // Fallback: synthesized drum sounds
           buildFallbackPad(pad);
         });
       }
     }
 
     function loadSamples() {
-      SEQ.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return Promise.reject('No AudioContext');
+      SEQ.ctx = new AudioContext();
       var promises = [];
       for (var t = 0; t < 8; t++) {
         (function(trackIdx){
@@ -1719,44 +1723,90 @@
         results.forEach(function(r) {
           SEQ.buffers[r.idx] = r.decoded;
         });
+        // If ALL samples failed, trigger fallback
+        var anyLoaded = results.some(function(r){ return r.decoded; });
+        if (!anyLoaded) return Promise.reject('All samples failed');
       });
     }
 
     function playSample(trackIdx, when) {
-      if (!SEQ.buffers[trackIdx] || SEQ.muted[trackIdx]) return;
-      if (SEQ.solo >= 0 && SEQ.solo !== trackIdx) return;
-      if (!SEQ.ctx) return;
-      if (SEQ.ctx.state === 'suspended') SEQ.ctx.resume();
+      // Try samples first
+      if (SEQ.buffers[trackIdx] && SEQ.ctx && !SEQ.muted[trackIdx]) {
+        if (SEQ.solo >= 0 && SEQ.solo !== trackIdx) return;
+        if (SEQ.ctx.state === 'suspended') SEQ.ctx.resume();
 
-      // Setup EQ for Sequencer on first play
-      setupSeqEQ();
-
-      if (!SEQ.master) {
-        SEQ.master = SEQ.ctx.createGain();
-        SEQ.master.gain.value = SEQ.vol;
-        // Connect through EQ if available, otherwise direct
-        if (seqBiquadFilters.length > 0) {
-          // EQ chain will connect to destination
-        } else {
+        if (!SEQ.master) {
+          SEQ.master = SEQ.ctx.createGain();
+          SEQ.master.gain.value = SEQ.vol;
           SEQ.master.connect(SEQ.ctx.destination);
         }
-      }
 
-      var src = SEQ.ctx.createBufferSource();
-      var gain = SEQ.ctx.createGain();
-      src.buffer = SEQ.buffers[trackIdx];
-      gain.gain.value = 0.8;
-      src.connect(gain);
-
-      // Route through EQ chain or directly to master
-      if (seqBiquadFilters.length > 0) {
-        // Find the first filter in chain
-        gain.connect(seqBiquadFilters[0]);
-      } else {
+        var src = SEQ.ctx.createBufferSource();
+        var gain = SEQ.ctx.createGain();
+        src.buffer = SEQ.buffers[trackIdx];
+        gain.gain.value = 0.8;
+        src.connect(gain);
         gain.connect(SEQ.master);
+        src.start(when || 0);
+        return;
       }
 
-      src.start(when || 0);
+      // Fallback: synthesized drum sound
+      if (SEQ.muted[trackIdx]) return;
+      if (SEQ.solo >= 0 && SEQ.solo !== trackIdx) return;
+
+      var ctx = SEQ.ctx;
+      if (!ctx) {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        SEQ.ctx = new AC();
+        ctx = SEQ.ctx;
+      }
+      if (ctx.state === 'suspended') ctx.resume();
+
+      if (!SEQ.master) {
+        SEQ.master = ctx.createGain();
+        SEQ.master.gain.value = SEQ.vol;
+        SEQ.master.connect(ctx.destination);
+      }
+
+      var trackType = trackIdx % 4;
+      var o = ctx.createOscillator();
+      var g = ctx.createGain();
+      
+      if (trackType === 0) { // Kick
+        o.type = 'sine';
+        o.frequency.setValueAtTime(120, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.15);
+        g.gain.setValueAtTime(0.8, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+        o.start(ctx.currentTime);
+        o.stop(ctx.currentTime + 0.2);
+      } else if (trackType === 1) { // Snare
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(200, ctx.currentTime);
+        g.gain.setValueAtTime(0.5, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        o.start(ctx.currentTime);
+        o.stop(ctx.currentTime + 0.1);
+      } else if (trackType === 2) { // HiHat
+        o.type = 'square';
+        o.frequency.setValueAtTime(8000, ctx.currentTime);
+        g.gain.setValueAtTime(0.2, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+        o.start(ctx.currentTime);
+        o.stop(ctx.currentTime + 0.05);
+      } else { // Bass
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(60 + trackIdx * 10, ctx.currentTime);
+        g.gain.setValueAtTime(0.4, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        o.start(ctx.currentTime);
+        o.stop(ctx.currentTime + 0.15);
+      }
+      
+      o.connect(g);
+      g.connect(SEQ.master);
     }
 
     function scheduleNote(stepTime, step) {
@@ -2074,13 +2124,17 @@
         var b = document.createElement('button');
         b.className = 'beatpad-btn'; b.textContent = s.n; b.style.background = s.c;
         b.addEventListener('click', function(){
-          if (!SEQ.ctx) SEQ.ctx = new (window.AudioContext || window.webkitAudioContext)();
-          if (!SEQ.master) { SEQ.master = SEQ.ctx.createGain(); SEQ.master.gain.value = 0.3; SEQ.master.connect(SEQ.ctx.destination); }
-          var o = SEQ.ctx.createOscillator(), g = SEQ.ctx.createGain();
-          o.type = i===2?'square':'sine'; o.frequency.value = s.f;
-          g.gain.setValueAtTime(0.5, SEQ.ctx.currentTime);
-          g.gain.exponentialRampToValueAtTime(0.001, SEQ.ctx.currentTime + 0.3);
-          o.connect(g); g.connect(SEQ.master); o.start(); o.stop(SEQ.ctx.currentTime + 0.3);
+          if (!SEQ.ctx) {
+            var AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return;
+            SEQ.ctx = new AC();
+          }
+          if (!SEQ.master) {
+            SEQ.master = SEQ.ctx.createGain();
+            SEQ.master.gain.value = 0.3;
+            SEQ.master.connect(SEQ.ctx.destination);
+          }
+          playSample(i);
           b.style.transform='scale(.92)'; setTimeout(function(){b.style.transform='';},80);
         });
         pad.appendChild(b);
