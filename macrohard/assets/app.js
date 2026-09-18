@@ -1253,15 +1253,17 @@
       SEQ.ctx = new (window.AudioContext || window.webkitAudioContext)();
       var promises = [];
       for (var t = 0; t < 8; t++) {
-        var libIdx = seqTracks[t];
-        var sample = SAMPLE_LIBRARY[libIdx];
-        promises.push(
-          fetch('./assets/samples/' + sample.f + '.mp3')
-            .then(function(r) { return r.arrayBuffer(); })
-            .then(function(buf) { return SEQ.ctx.decodeAudioData(buf); })
-            .then(function(decoded) { return {idx: t, decoded: decoded}; })
-            .catch(function() { return {idx: t, decoded: null}; })
-        );
+        (function(trackIdx){
+          var libIdx = seqTracks[trackIdx];
+          var sample = SAMPLE_LIBRARY[libIdx];
+          promises.push(
+            fetch('./assets/samples/' + sample.f + '.mp3')
+              .then(function(r) { return r.arrayBuffer(); })
+              .then(function(buf) { return SEQ.ctx.decodeAudioData(buf); })
+              .then(function(decoded) { return {idx: trackIdx, decoded: decoded}; })
+              .catch(function() { return {idx: trackIdx, decoded: null}; })
+          );
+        })(t);
       }
       return Promise.all(promises).then(function(results) {
         results.forEach(function(r) {
@@ -1273,6 +1275,8 @@
     function playSample(trackIdx, when) {
       if (!SEQ.buffers[trackIdx] || SEQ.muted[trackIdx]) return;
       if (SEQ.solo >= 0 && SEQ.solo !== trackIdx) return;
+      if (!SEQ.ctx) return;
+      if (SEQ.ctx.state === 'suspended') SEQ.ctx.resume();
 
       if (!SEQ.master) {
         SEQ.master = SEQ.ctx.createGain();
@@ -1868,7 +1872,9 @@
         player.querySelectorAll('.musExtraTab').forEach(function(b){b.classList.remove('active')});
         btn.classList.add('active');
         player.querySelectorAll('.musExtra').forEach(function(p){p.style.display='none'});
-        var target=player.querySelector('#mus'+extra.charAt(0).toUpperCase()+extra.slice(1));
+        // Map extra name to section ID
+        var sectionId = extra==='beatpad' ? '#musBeatpadSection' : '#mus'+extra.charAt(0).toUpperCase()+extra.slice(1);
+        var target=player.querySelector(sectionId);
         if(target)target.style.display='block';
         if(extra==='vis')initVisualizer();
       });
