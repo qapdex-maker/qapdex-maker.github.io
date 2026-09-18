@@ -41,6 +41,10 @@
       notepad:'Notepad',calculator:'Calculator',terminal:'Terminal',
       explorer:'Explorer',paint:'Paint',browser:'Browser',
       music:'Music',chat:'Chat',docs:'Docs',settings:'Settings',links:'Links',
+      amibios:'AMIBIOS',taskmgr:'Taskmgr',sysinfo:'Sysinfo',
+      calendar:'Kalender',clock:'Uhr',colorpicker:'ColorPicker',
+      pwgen:'PwGen',qrgen:'QRGen',viewer:'Viewer',game:'TicTacToe',
+      editor:'Editor',imgeditor:'ImgEditor',pomodoro:'Pomodoro',notes:'Notes',
       start:'Start',search:'Suche...',
       noproc:'Kein Prozess',
       welcome:'Willkommen bei MakerOS',
@@ -49,13 +53,19 @@
       files:'Dateien',folders:'Ordner',
       canvas:'Leinwand',colors:'Farben',
       docs:'Docs',music:'Music',chat:'Chat',
-      links:'Links',perchance:'Perchance',settings:'Settings'
+      links:'Links',perchance:'Perchance',settings:'Settings',
+      all:'Alle',prod:'Produktivität',system:'System',media:'Media',games:'Spiele',
+      showDesktop:'Desktop anzeigen',closeAll:'Alle Fenster schließen',about:'Über MakerOS'
     },
     en:{
       desktop:'Desktop',clock:'',
       notepad:'Notepad',calculator:'Calculator',terminal:'Terminal',
       explorer:'Explorer',paint:'Paint',browser:'Browser',
       music:'Music',chat:'Chat',docs:'Docs',settings:'Settings',links:'Links',
+      amibios:'AMIBIOS',taskmgr:'Taskmgr',sysinfo:'Sysinfo',
+      calendar:'Calendar',clock:'Clock',colorpicker:'ColorPicker',
+      pwgen:'PwGen',qrgen:'QRGen',viewer:'Viewer',game:'TicTacToe',
+      editor:'Editor',imgeditor:'ImgEditor',pomodoro:'Pomodoro',notes:'Notes',
       start:'Start',search:'Search...',
       noproc:'No process',
       welcome:'Welcome to MakerOS',
@@ -64,8 +74,10 @@
       files:'Files',folders:'Folders',
       canvas:'Canvas',colors:'Colors',
       docs:'Docs',music:'Music',chat:'Chat',
-      links:'Links',perchance:'Perchance',settings:'Settings'
-    }
+      links:'Links',perchance:'Perchance',settings:'Settings',
+      all:'All',prod:'Productivity',system:'System',media:'Media',games:'Games',
+      showDesktop:'Show Desktop',closeAll:'Close all windows',about:'About MakerOS'
+    },
   };
   function t(k){return I18N[lang]?I18N[lang][k]||k:k;}
 
@@ -160,7 +172,7 @@
     e.preventDefault();
     var m=document.getElementById('deskCtx');
     if(!m){m=document.createElement('div');m.id='deskCtx';
-      m.innerHTML='<div class="ctxItem" data-action="wallpaper"><span class="ctxIco">🖼</span>Wallpaper wechseln</div><div class="ctxItem" data-action="wallpaper-upload"><span class="ctxIco">⬆</span>Wallpaper hochladen</div><div class="ctxSep"></div><div class="ctxItem" data-action="theme"><span class="ctxIco">🌙</span>Theme umschalten</div><div class="ctxSep"></div><div class="ctxItem" data-a="notepad"><span class="ctxIco">📝</span>Notepad</div><div class="ctxItem" data-a="terminal"><span class="ctxIco">⬛</span>Terminal</div><div class="ctxItem" data-a="explorer"><span class="ctxIco">📁</span>Explorer</div><div class="ctxItem" data-a="paint"><span class="ctxIco">🎨</span>Paint</div><div class="ctxSep"></div><div class="ctxItem" data-action="close-all"><span class="ctxIco">✕</span>Alle Fenster schließen</div><div class="ctxSep"></div><div class="ctxItem" data-a="settings"><span class="ctxIco">⚙</span>Settings</div>';
+      m.innerHTML='<div class="ctxItem" data-action="wallpaper"><span class="ctxIco">🖼</span>Wallpaper wechseln</div><div class="ctxItem" data-action="wallpaper-upload"><span class="ctxIco">⬆</span>Wallpaper hochladen</div><div class="ctxSep"></div><div class="ctxItem" data-action="theme"><span class="ctxIco">🌙</span>Theme umschalten</div><div class="ctxItem" data-action="show-desktop"><span class="ctxIco">🗗</span>Desktop anzeigen</div><div class="ctxItem" data-action="close-all"><span class="ctxIco">✕</span>Alle Fenster schließen</div><div class="ctxSep"></div><div class="ctxItem" data-a="notepad"><span class="ctxIco">📝</span>Notepad</div><div class="ctxItem" data-a="terminal"><span class="ctxIco">⬛</span>Terminal</div><div class="ctxItem" data-a="explorer"><span class="ctxIco">📁</span>Explorer</div><div class="ctxItem" data-a="paint"><span class="ctxIco">🎨</span>Paint</div><div class="ctxSep"></div><div class="ctxItem" data-action="about"><span class="ctxIco">ℹ</span>Über MakerOS</div><div class="ctxItem" data-a="settings"><span class="ctxIco">⚙</span>Settings</div>';
       document.body.appendChild(m);
       m.querySelectorAll('.ctxItem').forEach(function(it){
         it.addEventListener('click',function(){
@@ -170,7 +182,9 @@
           if(act==='theme'){toggleTheme();}
           else if(act==='wallpaper'){openApp('settings');toast('Wähle ein Wallpaper');}
           else if(act==='wallpaper-upload'){uploadWallpaper();}
+          else if(act==='show-desktop'){minimizeAllWindows();}
           else if(act==='close-all'){closeAllWindows();}
+          else if(act==='about'){showAboutDialog();}
           m.classList.remove('open');
         });
       });
@@ -220,6 +234,49 @@
     focused=null;
     updateFocus();
     toast('Alle Fenster geschlossen');
+  }
+
+  /* Minimize all windows (show desktop) */
+  function minimizeAllWindows(){
+    var wins=document.querySelectorAll('.wnd');
+    if(!wins.length){toast('Keine Fenster offen');return;}
+    wins.forEach(function(w){
+      w.classList.add('minimized');
+      w.style.display='none';
+      var wId=w.getAttribute('data-app');
+      var tbIcon=document.getElementById('tb-'+wId);
+      if(tbIcon) tbIcon.classList.add('minimized');
+    });
+    focused=null;
+    updateFocus();
+    toast('Desktop anzeigen');
+  }
+
+  /* About Dialog */
+  function showAboutDialog(){
+    var existing=document.getElementById('aboutDialog');
+    if(existing){existing.remove();return;}
+    var d=document.createElement('div');
+    d.id='aboutDialog';
+    d.innerHTML='<div class="aboutOverlay"></div><div class="aboutBox"><div class="aboutHeader">Über MakerOS<button class="aboutClose">×</button></div><div class="aboutBody"><div class="aboutLogo">MD</div><div class="aboutInfo"><h3>MakerOS</h3><p>Windows-Style Desktop OS im Browser</p><p>Version 2.11.23 (2026-09-18)</p><p>26 Apps · Neo-Brutalist · PWA</p><p style="margin-top:8px;font-size:11px;color:var(--muted)">Made by Alexander Kleine<br>qapdex-maker.github.io<br>MIT License</p><p style="margin-top:8px;font-size:10px;color:var(--muted)">Made with Hermes Agent<br>by Nous Research</p></div></div></div>';
+    document.body.appendChild(d);
+    d.querySelector('.aboutOverlay').addEventListener('click',function(){d.remove();});
+    d.querySelector('.aboutClose').addEventListener('click',function(){d.remove();});
+  }
+
+  /* Restore minimized windows (click on taskbar icon) */
+  function restoreFromTaskbar(wId){
+    var w=document.getElementById('w-'+wId);
+    if(w){
+      w.classList.remove('minimized');
+      w.style.display='flex';
+      w.classList.add('focused');
+      w.style.zIndex=++zIdx;
+      focused=wId;
+      updateFocus();
+      var tbIcon=document.getElementById('tb-'+wId);
+      if(tbIcon) tbIcon.classList.remove('minimized');
+    }
   }
 
   function sortDeskIcons(by){
@@ -308,6 +365,7 @@
 
   /* Notifikationen-System */
   var notifQueue=[];
+  var notifCenter=[];
   /**
    * Zeigt eine Desktop-Benachrichtigung
    * @param {string} title - Überschrift
@@ -321,6 +379,60 @@
     n.querySelector('.notifClose').addEventListener('click',function(){n.remove();});
     setTimeout(function(){n.classList.add('show');},10);
     setTimeout(function(){n.classList.remove('show');setTimeout(function(){n.remove();},300);},4000);
+    /* Also add to notification center */
+    notifCenter.unshift({title:title,body:body,icon:icon||'🔔',time:Date.now()});
+    if(notifCenter.length>50)notifCenter.pop();
+    updateNotifBadge();
+  }
+
+  /* Notification Center toggle */
+  var notifCenterOpen=false;
+  function toggleNotifCenter(){
+    var nc=document.getElementById('notifCenter');
+    if(notifCenterOpen){
+      if(nc) nc.remove();
+      notifCenterOpen=false;
+      return;
+    }
+    notifCenterOpen=true;
+    nc=document.createElement('div');
+    nc.id='notifCenter';
+    var html='<div class="ncOverlay"></div><div class="ncBox"><div class="ncHeader">Benachrichtigungen<button class="ncClose">×</button></div><div class="ncList">';
+    if(!notifCenter.length){
+      html+='<div class="ncEmpty">Keine Benachrichtigungen</div>';
+    }else{
+      notifCenter.forEach(function(n){
+        var timeStr=new Date(n.time).toLocaleTimeString(lang==='de'?'de-DE':'en-US',{hour:'2-digit',minute:'2-digit'});
+        html+='<div class="ncItem"><span class="ncIcon">'+n.icon+'</span><div class="ncBody"><b>'+n.title+'</b><span>'+n.body+'</span><span class="ncTime">'+timeStr+'</span></div></div>';
+      });
+    }
+    html+='</div></div>';
+    nc.innerHTML=html;
+    document.body.appendChild(nc);
+    nc.querySelector('.ncOverlay').addEventListener('click',function(){toggleNotifCenter();});
+    nc.querySelector('.ncClose').addEventListener('click',function(){toggleNotifCenter();});
+  }
+
+  function updateNotifBadge(){
+    var badge=document.getElementById('tbNotifBadge');
+    if(!badge&&notifCenter.length>0){
+      var tbRight=document.getElementById('tbRight');
+      if(tbRight){
+        badge=document.createElement('div');
+        badge.id='tbNotifBadge';
+        badge.title='Benachrichtigungen ('+notifCenter.length+')';
+        tbRight.insertBefore(badge,tbRight.firstChild);
+        badge.addEventListener('click',toggleNotifCenter);
+      }
+    }
+    if(badge){
+      if(notifCenter.length>0){
+        badge.textContent=notifCenter.length;
+        badge.style.display='flex';
+      }else{
+        badge.style.display='none';
+      }
+    }
   }
 
   /* Start menu — mit Fix für z-index und Click-Blockade durch Boot/Lock */
@@ -345,6 +457,8 @@
       if(e.key==='Escape'){
         var sm=document.getElementById('startMenu');
         if(sm&&sm.classList.contains('open')){sm.classList.remove('open');return;}
+        if(taskViewOpen){toggleTaskView();return;}
+        if(helpOverlayOpen){toggleHelpOverlay();return;}
         if(focused&&focused._escClose) focused._escClose();
       }
     });
@@ -389,6 +503,8 @@
     else if(key==='l'){e.preventDefault();openApp('links');toast('Links');}
     else if(key==='s'){e.preventDefault();snapActive();}
     else if(key==='k'){e.preventDefault();globaleSuche();}
+    else if(key==='Tab'&&e.ctrlKey){e.preventDefault();toggleTaskView();}
+    else if(key==='?'||key==='/'){e.preventDefault();toggleHelpOverlay();}
     else if(e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==='l'){e.preventDefault();toggleTheme();}
   });
 
@@ -406,6 +522,83 @@
     if(btn) btn.textContent=document.documentElement.dataset.theme==='dark'?'☀️':'🌙';
   }
 
+  /* Task View (Win+Tab) - shows all open windows */
+  var taskViewOpen = false;
+  function toggleTaskView(){
+    var tv=document.getElementById('taskView');
+    if(taskViewOpen){
+      if(tv) tv.remove();
+      taskViewOpen=false;
+      return;
+    }
+    taskViewOpen=true;
+    tv=document.createElement('div');
+    tv.id='taskView';
+    tv.innerHTML='<div class="tvOverlay"></div><div class="tvBox"><div class="tvHeader">Alle Fenster</div><div class="tvGrid" id="tvGrid"></div><div class="tvFooter">Tab oder Klick zum Auswählen, Esc zum Schließen</div></div>';
+    document.body.appendChild(tv);
+    tv.querySelector('.tvOverlay').addEventListener('click',function(){toggleTaskView();});
+    var grid=document.getElementById('tvGrid');
+    var wins=document.querySelectorAll('.wnd');
+    if(!wins.length){
+      grid.innerHTML='<div class="tvEmpty">Keine offenen Fenster</div>';
+    } else {
+      wins.forEach(function(w){
+        var wId=w.getAttribute('data-app');
+        var instId=w.getAttribute('data-inst')||wId;
+        var title=t(wId);
+        var isMin=w.classList.contains('minimized');
+        var thumb=document.createElement('div');
+        thumb.className='tvThumb'+(isMin?' minimized':'');
+        thumb.innerHTML='<div class="tvThumbTitle">'+title+(isMin?' (minimiert)':'')+'</div><div class="tvThumbBody">'+wId+'</div>';
+        thumb.addEventListener('click',function(){
+          if(isMin){
+            w.classList.remove('minimized');
+            w.style.display='';
+            var tbIcon=document.getElementById('tb-'+instId);
+            if(tbIcon) tbIcon.classList.remove('minimized');
+          }
+          w.classList.add('focused');
+          w.style.zIndex=++zIdx;
+          focused=wId;
+          updateFocus();
+          toggleTaskView();
+        });
+        grid.appendChild(thumb);
+      });
+    }
+  }
+
+  /* Help Overlay (Ctrl+?) */
+  var helpOverlayOpen = false;
+  function toggleHelpOverlay(){
+    var ho=document.getElementById('helpOverlay');
+    if(helpOverlayOpen){
+      if(ho) ho.remove();
+      helpOverlayOpen=false;
+      return;
+    }
+    helpOverlayOpen=true;
+    ho=document.createElement('div');
+    ho.id='helpOverlay';
+    var shortcuts=[
+      ['Ctrl+N','Notepad'],['Ctrl+T','Terminal'],['Ctrl+E','Explorer'],
+      ['Ctrl+P','Paint'],['Ctrl+B','Browser'],['Ctrl+M','Music'],
+      ['Ctrl+C','Chat'],['Ctrl+D','Docs'],['Ctrl+L','Links'],
+      ['Ctrl+A','AMIBIOS'],['Ctrl+S','Snap Left/Right'],
+      ['Ctrl+K','Globale Suche'],['Ctrl+Tab','Task-View'],
+      ['Ctrl+?','Diese Hilfe'],['Esc','Fenster/Menu schließen']
+    ];
+    var html='<div class="helpOverlay-bg"></div><div class="helpBox"><div class="helpHeader">Tastenkürzel<button class="helpClose">×</button></div><div class="helpGrid">';
+    shortcuts.forEach(function(s){
+      html+='<div class="helpKey">'+s[0]+'</div><div class="helpDesc">'+s[1]+'</div>';
+    });
+    html+='</div></div>';
+    ho.innerHTML=html;
+    document.body.appendChild(ho);
+    ho.querySelector('.helpOverlay-bg').addEventListener('click',function(){toggleHelpOverlay();});
+    ho.querySelector('.helpClose').addEventListener('click',function(){toggleHelpOverlay();});
+  }
+
   function snapActive(){
     var w=document.querySelector('.wnd.focused');
     if(!w) return;
@@ -420,19 +613,39 @@
    * @param {string} id - App-ID (z.B. 'notepad', 'calculator')
    */
   function openApp(id){playSound('open');
-    var w=document.getElementById('w-'+id);
-    if(w){
+    var multiInstApps=['notepad','terminal','editor','explorer'];
+    var allowMulti = multiInstApps.indexOf(id) >= 0;
+    var instCounter = window.osInstCounter || (window.osInstCounter = {});
+    var instId = id;
+    if (allowMulti) {
+      instCounter[id] = (instCounter[id] || 0) + 1;
+      instId = id + '-inst-' + instCounter[id];
+    }
+    var w=document.getElementById('w-'+instId);
+    if(w && !w.classList.contains('minimized')){
       w.classList.add('focused');
       w.style.zIndex=++zIdx;
       focused=id;
       updateFocus();
-      // Resume AudioContext when reopening Music app
       if(id==='music' && typeof resumeMusic==='function') resumeMusic();
+      return;
+    }
+    if(w && w.classList.contains('minimized')){
+      w.classList.remove('minimized');
+      w.style.display='';
+      w.classList.add('focused');
+      w.style.zIndex=++zIdx;
+      focused=id;
+      updateFocus();
+      var tbIcon=document.getElementById('tb-'+instId);
+      if(tbIcon) tbIcon.classList.remove('minimized');
       return;
     }
     var mk=document.createElement('div');
     mk.className='wnd';
-    mk.id='w-'+id;
+    mk.id='w-'+instId;
+    mk.setAttribute('data-app',id);
+    mk.setAttribute('data-inst',instId);
     var _isMobile = window.innerWidth <= 760;
     if(_isMobile){
       mk.style.left='0';mk.style.top='0';mk.style.width='100vw';mk.style.height='calc(100vh - 52px)';
@@ -440,8 +653,8 @@
       mk.style.left=(80+(zIdx%5)*30)+'px';mk.style.top=(40+(zIdx%5)*20)+'px';
       mk.style.width='640px';mk.style.height='420px';
     }
-    mk.style.zIndex=++zIdx;mk.setAttribute('data-app',id);
-    var title=t(id);
+    mk.style.zIndex=++zIdx;
+    var title=t(id) + (allowMulti && instCounter[id] > 1 ? ' #' + instCounter[id] : '');
     var body='';
     switch(id){
       case 'notepad': body='<textarea class="npArea" id="npArea" placeholder="Notepad — tippe hier..."></textarea><div class="npStats" id="npStats">0 Zeichen</div>';break;
@@ -502,9 +715,10 @@
       e.stopPropagation();
       var wnd=this.closest('.wnd');
       var wId=wnd.getAttribute('data-app');
-      if(wId && window.osIntervals && window.osIntervals[wId]){
-        clearInterval(window.osIntervals[wId]);
-        delete window.osIntervals[wId];
+      var instId=wnd.getAttribute('data-inst') || wId;
+      if(instId && window.osIntervals && window.osIntervals[instId]){
+        clearInterval(window.osIntervals[instId]);
+        delete window.osIntervals[instId];
       }
       // Taskmanager cleanup
       if(wId==='taskmgr'){
@@ -555,16 +769,19 @@
       }
       wnd.classList.add('closing');
       setTimeout(function(){wnd.remove();},200);
-      var tbIcon=document.getElementById('tb-'+id);
-      if(tbIcon) tbIcon.remove();
+      var tbIconClose=document.getElementById('tb-'+instId);
+      if(tbIconClose) tbIconClose.remove();
     });
     mk.querySelector('.wmin').addEventListener('click',function(e){e.stopPropagation();
-      var tbIcon=document.getElementById('tb-'+id);
-      if(mk.style.display==='none'){mk.style.display='';if(tbIcon)tbIcon.classList.add('running');}
-      else{mk.style.display='none';if(tbIcon)tbIcon.classList.remove('running');}
+      var tbIcon=document.getElementById('tb-'+instId);
+      mk.classList.add('minimized');
+      mk.style.display='none';
+      if(tbIcon) tbIcon.classList.add('minimized');
+      focused=null;
+      updateFocus();
     });
     mk.querySelector('.wmax').addEventListener('click',function(e){e.stopPropagation();
-      var tbIcon=document.getElementById('tb-'+id);
+      var tbIcon=document.getElementById('tb-'+instId);
       if(mk.dataset.max==='true'){
         mk.style.left=mk.dataset.origLeft;mk.style.top=mk.dataset.origTop;
         mk.style.width=mk.dataset.origWidth;mk.style.height=mk.dataset.origHeight;
@@ -585,17 +802,27 @@
     focused=id; updateFocus();
 
     /* Taskbar-Icon erstellen wenn nicht vorhanden */
-    if(!document.getElementById('tb-'+id)){
+    if(!document.getElementById('tb-'+instId)){
       var tbIcon=document.createElement('div');
       tbIcon.className='tbIcon running focused';
-      tbIcon.id='tb-'+id;
+      tbIcon.id='tb-'+instId;
       tbIcon.title=t(id);
       tbIcon.dataset.app=id;
-      tbIcon.innerHTML='<span>'+t(id)+'</span><span class="tbRun"></span>';
+      tbIcon.dataset.inst=instId;
+      var lbl = t(id) + (allowMulti && instCounter[id] > 1 ? ' #'+instCounter[id] : '');
+      tbIcon.innerHTML='<span>'+lbl+'</span><span class="tbRun"></span>';
       tbIcon.addEventListener('click',function(e){
-        var w=document.getElementById('w-'+id);
+        var w=document.getElementById('w-'+instId);
         if(!w) return;
-        if(w.style.display==='none'){
+        if(w.classList.contains('minimized')){
+          w.classList.remove('minimized');
+          w.style.display='';
+          this.classList.remove('minimized');
+          w.classList.add('focused');
+          w.style.zIndex=++zIdx;
+          focused=id;
+          updateFocus();
+        } else if(w.style.display==='none'){
           w.style.display='';
           this.classList.add('running');
           w.classList.add('focused');
@@ -614,7 +841,7 @@
       });
       var tbCenterEl=document.getElementById('tbCenter');if(tbCenterEl) tbCenterEl.appendChild(tbIcon);
     } else {
-      var existingIcon=document.getElementById('tb-'+id);
+      var existingIcon=document.getElementById('tb-'+instId);
       if(existingIcon){
         existingIcon.classList.add('running','focused');
       }
@@ -999,6 +1226,7 @@
     }
     dirs.forEach(function(dir){
       var el=document.createElement('div');el.className='feFile feFolder';
+      el.draggable=true;
       el.innerHTML='<span class="ico">📁</span><span class="fn">'+dir+'</span><span class="meta">Ordner</span>';
       el.addEventListener('click',function(e){
         if(e.shiftKey||e.ctrlKey||e.metaKey){
@@ -1011,6 +1239,36 @@
         curPath=newPath;
         renderExplorer();
       });
+      el.addEventListener('dragstart',function(e){
+        e.dataTransfer.setData('text/plain',JSON.stringify({type:'folder',name:dir,path:curPath}));
+        e.dataTransfer.effectAllowed='move';
+      });
+      el.addEventListener('dragover',function(e){
+        e.preventDefault();
+        e.dataTransfer.dropEffect='move';
+        this.classList.add('dragover');
+      });
+      el.addEventListener('dragleave',function(e){
+        this.classList.remove('dragover');
+      });
+      el.addEventListener('drop',function(e){
+        e.preventDefault();
+        this.classList.remove('dragover');
+        var data=JSON.parse(e.dataTransfer.getData('text/plain'));
+        if(data.type==='file'){
+          var srcDir=fsData[data.path];
+          var dstDir=fsData[curPath];
+          if(srcDir&&dstDir){
+            var idx=srcDir.files.indexOf(data.name);
+            if(idx!==-1){
+              srcDir.files.splice(idx,1);
+              dstDir.files.push(data.name);
+              renderExplorer();
+              toast('Verschoben: '+data.name);
+            }
+          }
+        }
+      });
       el.addEventListener('contextmenu',function(e){
         e.preventDefault();
         showFolderContextMenu(e,dir,curPath,dirs);
@@ -1019,6 +1277,7 @@
     });
     files.forEach(function(f){
       var el=document.createElement('div');el.className='feFile feDocument';
+      el.draggable=true;
       var ext=f.split('.').pop().toLowerCase();
       var icon={txt:'📄',html:'🌐',css:'🎨',js:'⚡',png:'🖼',jpg:'🖼',csv:'📊',docx:'📝',zip:'📦',exe:'⚙',md:'📝'}[ext]||'📄';
       el.innerHTML='<span class="ico">'+icon+'</span><span class="fn">'+f+'</span><span class="meta">'+ext.toUpperCase()+'</span>';
@@ -1029,6 +1288,10 @@
         }
         document.querySelectorAll('.feFile.selected').forEach(function(x){x.classList.remove('selected');});
         this.classList.add('selected');
+      });
+      el.addEventListener('dragstart',function(e){
+        e.dataTransfer.setData('text/plain',JSON.stringify({type:'file',name:f,path:curPath}));
+        e.dataTransfer.effectAllowed='move';
       });
       el.addEventListener('contextmenu',function(e){
         e.preventDefault();
@@ -2483,9 +2746,21 @@
       var galleryLabel=document.createElement('div');galleryLabel.style.cssText='font-weight:bold;margin-top:6px';galleryLabel.textContent='Galerie:';
       grid.appendChild(galleryLabel);
       var galGrid=document.createElement('div');galGrid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:4px';
-      ['linear-gradient(135deg,#2547ff,#ff4d00)','linear-gradient(135deg,#0b0b0c,#5d584e)','radial-gradient(circle at 30% 30%,#ffd400,#2547ff)','linear-gradient(180deg,#1a1a1e,#2a2a2e)','linear-gradient(135deg,#0f4c75,#3282b8)','linear-gradient(135deg,#3a0066,#9d00ff)','linear-gradient(135deg,#ff6b6b,#feca57)','linear-gradient(135deg,#48dbfb,#0abde3)','linear-gradient(135deg,#1dd1a1,#10ac84)','linear-gradient(135deg,#5f27cd,#341f97)','linear-gradient(135deg,#ff9ff3,#f368e0)','linear-gradient(135deg,#00d2d3,#54a0ff)'].forEach(function(g){
-        var b=document.createElement('button');b.style.cssText='height:36px;border:2px solid var(--line);background:'+g+';cursor:pointer;box-shadow:var(--shadow)';
-        b.title=g;b.addEventListener('click',function(){var desk=document.getElementById('desktop');if(desk){desk.style.backgroundImage=g;desk.style.backgroundSize='cover';try{localStorage.setItem('os_wall',g);}catch(e){}toast('Wallpaper gesetzt');}});
+      ['linear-gradient(135deg,#2547ff,#ff4d00)','linear-gradient(135deg,#0b0b0c,#5d584e)','radial-gradient(circle at 30% 30%,#ffd400,#2547ff)','linear-gradient(180deg,#1a1a1e,#2a2a2e)','linear-gradient(135deg,#0f4c75,#3282b8)','linear-gradient(135deg,#3a0066,#9d00ff)','linear-gradient(135deg,#ff6b6b,#feca57)','linear-gradient(135deg,#48dbfb,#0abde3)','linear-gradient(135deg,#1dd1a1,#10ac84)','linear-gradient(135deg,#5f27cd,#341f97)','linear-gradient(135deg,#ff9ff3,#f368e0)','linear-gradient(135deg,#00d2d3,#54a0ff)'].forEach(function(g,i){
+        var b=document.createElement('button');b.style.cssText='height:48px;border:2px solid var(--line);background:'+g+';cursor:pointer;box-shadow:var(--shadow);position:relative;transition:transform .1s';
+        b.title='Wallpaper '+(i+1);
+        b.addEventListener('click',function(){
+          var desk=document.getElementById('desktop');
+          if(desk){
+            desk.style.backgroundImage=g;desk.style.backgroundSize='cover';
+            desk.style.backgroundPosition='center';
+            try{localStorage.setItem('os_wall',g);}catch(e){}
+            galGrid.querySelectorAll('button').forEach(function(btn){btn.style.outline='';btn.style.transform='';});
+            b.style.outline='3px solid var(--accent-2)';
+            b.style.transform='scale(1.05)';
+            toast('Wallpaper gesetzt');
+          }
+        });
         galGrid.appendChild(b);
       });
       grid.appendChild(galGrid);
@@ -2503,11 +2778,32 @@
         themeBtns.appendChild(b);
       });
       grid.appendChild(themeBtns);
-      /* AMIBIOS quick launch */
-      var bioBtn=document.createElement('button');bioBtn.className='cBtn';bioBtn.textContent='⚙ Launch AMIBIOS';
-      bioBtn.addEventListener('click',function(){openApp('amibios');});
-      grid.appendChild(bioBtn);
-      /* Reset */
+      /* Desktop Icon Size */
+      var iconSizeLabel=document.createElement('label');iconSizeLabel.innerHTML='Icon-Größe: <select id="stIconSize"><option value="small">Klein</option><option value="medium" selected>Mittel</option><option value="large">Groß</option></select>';
+      var iconSizeBtn=document.createElement('button');iconSizeBtn.className='cBtn';iconSizeBtn.textContent='Apply';
+      iconSizeBtn.addEventListener('click',function(){
+        var v=document.getElementById('stIconSize').value;
+        var desk=document.getElementById('deskIcons');
+        if(desk){
+          desk.dataset.iconSize=v;
+          try{localStorage.setItem('os_iconsize',v);}catch(e){}
+        }
+        toast('Icon-Größe: '+v);
+      });
+      iconSizeLabel.appendChild(iconSizeBtn);grid.appendChild(iconSizeLabel);
+      /* Grid toggle */
+      var gridLabel=document.createElement('label');gridLabel.innerHTML='<input type="checkbox" id="stGrid" checked> Desktop-Raster anzeigen';
+      gridLabel.addEventListener('change',function(){
+        var desk=document.getElementById('deskIcons');
+        if(desk){
+          desk.classList.toggle('show-grid',document.getElementById('stGrid').checked);
+          try{localStorage.setItem('os_grid',document.getElementById('stGrid').checked?'1':'0');}catch(e){}
+        }
+      });
+      grid.appendChild(gridLabel);
+      /* Restore icon size/grid */
+      try{var is=localStorage.getItem('os_iconsize');if(is){var isEl=document.getElementById('stIconSize');if(isEl)isEl.value=is;var desk=document.getElementById('deskIcons');if(desk)desk.dataset.iconSize=is;}}catch(e){}
+      try{var gd=localStorage.getItem('os_grid');if(gd==='0'){var gdEl=document.getElementById('stGrid');if(gdEl)gdEl.checked=false;var desk=document.getElementById('deskIcons');if(desk)desk.classList.remove('show-grid');}}catch(e){}
       var resetBtn=document.createElement('button');resetBtn.className='cBtn op';resetBtn.textContent='Reset Defaults';
       resetBtn.addEventListener('click',function(){
         document.documentElement.className='';
@@ -2653,12 +2949,29 @@
       desk.appendChild(makeIcon(a));
     });
     var sm=document.getElementById('smList');
+    var smSearch=document.getElementById('smSearch');
     desktopApps.forEach(function(a){
       var it=document.createElement('div');it.className='smItem';it.setAttribute('data-app',a.id);
+      it.setAttribute('data-label',a.label.toLowerCase());
       it.innerHTML='<span class="ico">'+a.iconSvg+'</span>'+t(a.id);
       it.addEventListener('click',function(){openApp(a.id);document.getElementById('startMenu').classList.remove('open');});
       sm.appendChild(it);
     });
+    if(smSearch){
+      smSearch.addEventListener('input',function(){
+        var q=this.value.toLowerCase();
+        var items=sm.querySelectorAll('.smItem');
+        items.forEach(function(it){
+          var label=it.getAttribute('data-label')||'';
+          var appName=it.textContent.toLowerCase();
+          if(!q||label.indexOf(q)!==-1||appName.indexOf(q)!==-1){
+            it.style.display='flex';
+          }else{
+            it.style.display='none';
+          }
+        });
+      });
+    }
     /* Theme Toggle Button in Taskbar */
     var tbRight=document.getElementById('tbRight');
     if(tbRight){
