@@ -507,9 +507,10 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .musVolWrap span{font-size:10px;color:var(--muted);font-family:var(--font-mono)}
 
 /* Sidebar */
-.musSidebar{width:280px;display:flex;flex-direction:column;border-left:3px solid var(--line);background:var(--surface);overflow:hidden}
-.musSidebarFoot{padding:4px;border-top:2px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.musSidebar{width:280px;display:flex;flex-direction:column;border-left:3px solid var(--line);background:var(--surface);overflow:hidden;min-height:0}
+.musSidebarFoot{padding:4px;border-top:2px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .musUploadBtn{padding:4px 8px;border:2px dashed var(--line);background:transparent;cursor:pointer;font-family:var(--font-mono);font-size:10px}
+.musList{flex:1;overflow-y:auto;padding:4px;display:flex;flex-direction:column;gap:2px;min-height:0}
 
 /* Extra Tabs */
 .musExtraTabs{display:flex;gap:2px;padding:4px;border-top:2px solid var(--line);background:var(--surface)}
