@@ -1842,9 +1842,11 @@
     function playRadio(station){
       curStation=station;isRadio=true;curIdx=-1;
       setupAudio();
+      if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
       audioEl.src=station.u;audioEl.load();
       initVisualizer();
-      playAudio();playing=true;
+      playAudio();
+      playing=true;
       updateUI();
     }
     function stop(){setupAudio();audioEl.pause();playing=false;updateUI()}
@@ -1963,11 +1965,26 @@
       radioStations.forEach(function(s,i){
         var isCur=(isRadio&&curStation===s);
         var item=document.createElement('div');item.className='musItem'+(isCur?' playing':'');
+        // Blinking LIVE indicator for active station
+        var liveIndicator = '<span class="radio-live'+(isCur&&playing?' blinking':'')+'">● LIVE</span>';
         item.innerHTML='<button class="musPlay" data-i="'+i+'">'+(isCur&&playing?'⏸':'▶')+'</button>'+
           '<span class="musInfo"><b>'+s.name+'</b><br><span style="font-size:10px;color:var(--muted)">'+(s.codec||'')+(s.votes?' · '+s.votes+' votes':'')+'</span></span>'+
-          '<span style="font-size:10px;color:var(--muted)">● LIVE</span>';
+          liveIndicator;
         item.querySelector('.musPlay').addEventListener('click',function(){playRadio(s)});
         el.appendChild(item);
+      });
+    }
+    // Update LIVE indicator blinking state
+    function updateRadioIndicator(){
+      var el=document.getElementById('musRadio');if(!el)return;
+      var liveEls=el.querySelectorAll('.radio-live');
+      liveEls.forEach(function(ind){
+        var item=ind.closest('.musItem');
+        if(item&&item.classList.contains('playing')&&playing){
+          ind.classList.add('blinking');
+        } else {
+          ind.classList.remove('blinking');
+        }
       });
     }
 
@@ -2009,6 +2026,7 @@
       if(artistEl)artistEl.textContent=(curIdx>=0&&songs[curIdx])?songs[curIdx].a:(curStation?'● Live Radio':'Wähle einen Song');
       if(albumEl)albumEl.textContent=(curIdx>=0&&songs[curIdx])?songs[curIdx].src:(curStation?curStation.codec||'Stream':'—');
       if(artIcon)artIcon.textContent=isRadio?'📻':(playing?'♫':'♪');
+      updateRadioIndicator();
     }
 
     /* === Sidebar Toggle === */
