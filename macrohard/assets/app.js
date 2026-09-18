@@ -110,7 +110,17 @@
   }
   function restoreSession(){
     try{var saved=JSON.parse(localStorage.getItem(SESSION_KEY)||'[]');if(!saved.length)return;}catch(e){return;}
-    saved.forEach(function(s){if(s.visible){openApp(s.id);var w=document.getElementById('w-'+s.id);if(w&&s.left)w.style.left=s.left;if(w&&s.top)w.style.top=s.top;if(w&&s.width)w.style.width=s.width;if(w&&s.height)w.style.height=s.height;}});
+    var _isMobile = window.innerWidth <= 760;
+    saved.forEach(function(s){
+      if(s.visible){
+        openApp(s.id);
+        var w=document.getElementById('w-'+s.id);
+        if(w){
+          if(_isMobile){w.style.left='0';w.style.top='0';w.style.width='100vw';w.style.height='calc(100vh - 52px)';}
+          else{if(s.left)w.style.left=s.left;if(s.top)w.style.top=s.top;if(s.width)w.style.width=s.width;if(s.height)w.style.height=s.height;}
+        }
+      }
+    });
   }
   /* Wallpaper */
   function setWallpaper(url){
@@ -128,10 +138,14 @@
    */
   function snapWindow(w,direction){
     var wW=window.innerWidth;var wH=window.innerHeight;
-    if(direction==='left'){w.style.left='0';w.style.top='0';w.style.width=(wW/2-4)+'px';w.style.height=wH+'px';}
-    else if(direction==='right'){w.style.left=(wW/2+4)+'px';w.style.top='0';w.style.width=(wW/2-4)+'px';w.style.height=wH+'px';}
-    else if(direction==='max'){w.style.left='0';w.style.top='0';w.style.width='100vw';w.style.height='100vh';}
-    else if(direction==='restore'){w.style.left=w.dataset.origLeft||'';w.style.top=w.dataset.origTop||'';w.style.width=w.dataset.origWidth||'';w.style.height=w.dataset.origHeight||'';}
+    var _isMobile = wW <= 760;
+    if(direction==='left'){w.style.left='0';w.style.top='0';w.style.width=_isMobile?'100vw':(wW/2-4)+'px';w.style.height=_isMobile?'calc(100vh - 52px)':wH+'px';}
+    else if(direction==='right'){w.style.left='0';w.style.top='0';w.style.width=_isMobile?'100vw':(wW/2-4)+'px';w.style.height=_isMobile?'calc(100vh - 52px)':wH+'px';}
+    else if(direction==='max'){w.style.left='0';w.style.top='0';w.style.width='100vw';w.style.height=_isMobile?'calc(100vh - 52px)':'100vh';}
+    else if(direction==='restore'){
+      if(_isMobile){w.style.left='0';w.style.top='0';w.style.width='100vw';w.style.height='calc(100vh - 52px)';}
+      else{w.style.left=w.dataset.origLeft||'';w.style.top=w.dataset.origTop||'';w.style.width=w.dataset.origWidth||'';w.style.height=w.dataset.origHeight||'';}
+    }
     saveSession();
   }
   /* Accessibility: reduced motion */
@@ -342,8 +356,13 @@
     var mk=document.createElement('div');
     mk.className='wnd';
     mk.id='w-'+id;
-    mk.style.left=(80+(zIdx%5)*30)+'px';mk.style.top=(40+(zIdx%5)*20)+'px';
-    mk.style.width='640px';mk.style.height='420px';
+    var _isMobile = window.innerWidth <= 760;
+    if(_isMobile){
+      mk.style.left='0';mk.style.top='0';mk.style.width='100vw';mk.style.height='calc(100vh - 52px)';
+    } else {
+      mk.style.left=(80+(zIdx%5)*30)+'px';mk.style.top=(40+(zIdx%5)*20)+'px';
+      mk.style.width='640px';mk.style.height='420px';
+    }
     mk.style.zIndex=++zIdx;mk.setAttribute('data-app',id);
     var title=t(id);
     var body='';
@@ -354,7 +373,7 @@
       case 'explorer': body='<div class="fePath"><span>📁</span><input id="fePath" value="C:\Users\macrohard\Desktop"></div><div class="feSide" id="feSide"></div><div class="feGrid" id="feGrid"></div>';break;
       case 'paint': body='<div class="ptColors" id="ptColors"></div><canvas class="ptCanvas" id="ptCanvas" width="400" height="260"></canvas>';break;
       case 'browser': body='<div class="brTabs" id="brTabs"></div><div class="brBar"><button class="brBtn" id="brBack" title="Zurück">←</button><button class="brBtn" id="brFwd" title="Vor">→</button><button class="brBtn" id="brRefresh" title="Aktualisieren">↻</button><button class="brBtn" id="brHome" title="Startseite">⌂</button><input id="brAddr" value="https://duckduckgo.com" placeholder="URL oder Suche..."><button class="brBtn" id="brGo" title="Los">➜</button><button class="brBtn" id="brBm" title="Lesezeichen">☆</button><button class="brBtn" id="brNewTab" title="Neuer Tab">+</button></div><div class="brContent" id="brContent"></div>';break;
-      case 'music': body='<div class="musPlayer" id="musPlayer"><div class="musList" id="musList"></div><div class="musExtra"><div class="musPadSection"><div class="musSectionTitle">🥁 Beatpad</div><div class="musBeatpad" id="musBeatpad"></div></div><div class="musEqSection"><div class="musSectionTitle">🎛 Equalizer</div><canvas id="musVisualizer" width="280" height="60"></canvas><div class="musEq" id="musEq"></div></div></div></div>';break;
+      case 'music': body='<div class="musPlayer"><div class="musHeader"><span class="musLogo">🎵 Music</span><button class="musToggle" id="musToggle">☰ Playlist</button></div><div class="musBody"><div class="musMain"><div class="musArt" id="musArt"><span id="musArtIcon">♪</span></div><div class="musMeta"><div class="musTitle" id="musTitle">Player</div><div class="musArtist" id="musArtist">Wähle einen Song</div><div class="musAlbum" id="musAlbum">—</div></div><div class="musSeek"><input type="range" id="musProg" min="0" max="100" step="1" value="0"><div class="musTimes"><span id="musProgL">0:00</span><span id="musProgR">0:00</span></div></div><div class="musControls"><button id="musShuffle" title="Shuffle">🔀</button><button id="musPrev" title="Zurück">⏮</button><button id="musPlayBtn" class="musPlay" title="Play">▶</button><button id="musNext" title="Weiter">⏭</button><button id="musRepeat" title="Repeat">🔁</button></div><div class="musVolWrap"><span>🔊</span><input type="range" id="musVol" min="0" max="1" step="0.05" value="0.7"><span id="musVolL">70%</span></div></div><div class="musSidebar" id="musSidebar"><div class="musTabs"><button data-tab="playlist" class="musTab active">🎵 Playlist</button><button data-tab="radio" class="musTab">📻 Radio</button><button data-tab="favs" class="musTab">★ Favs</button></div><div id="musPlaylist" class="musList"></div><div id="musRadio" class="musList" style="display:none"></div><div id="musFavs" class="musList" style="display:none"></div><div class="musSidebarFoot"><label class="musUploadBtn">⬆ Upload<input type="file" id="musUploadIn" accept="audio/*" multiple style="display:none"></label><span id="musRadioStatus" style="font-size:9px;color:var(--muted)"></span></div></div></div><div class="musExtraTabs"><button data-extra="beatpad" class="musExtraTab active">🥁 Beatpad</button><button data-extra="eq" class="musExtraTab">🎛 EQ</button><button data-extra="vis" class="musExtraTab">📊 Visualizer</button></div><div id="musBeatpad" class="musExtra"><div class="musBeatpad" id="musBeatpad"></div></div><div id="musEq" class="musExtra" style="display:none"><canvas id="musVisualizer" width="280" height="60"></canvas><div class="musEq" id="musEq"></div></div><div id="musVis" class="musExtra" style="display:none"><canvas id="musVisCanvas" width="280" height="100"></canvas></div></div>';break;
       case 'chat': body='<div class="cpMsgs" id="cpMsgs"></div><div class="cpSugs" id="cpSugs"></div><div class="cpIn"><input id="cpIn" placeholder="Nachricht..."><button id="cpSend">Send</button></div>';break;
       case 'docs': body='<div class="mdBody" id="mdBody"><h3>MakerOS Docs</h3><p>Neo-brutalist desktop OS — qapdex-maker.github.io edition.</p><p>13 Apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links, AMIBIOS.</p><p style="margin-top:12px;font-size:11px;color:var(--muted)">Made by Alexander Kleine</p></div>';break;
       case 'settings': body='<div class="stGrid" id="stGrid"><div class="stNav"><button data-tab="general" class="active" data-de="Allgemein" data-en="General">Allgemein</button><button data-tab="appearance" data-de="Aussehen" data-en="Appearance">Aussehen</button><button data-tab="shortcuts" data-de="Tastenkürzel" data-en="Shortcuts">Tastenkürzel</button><button data-tab="privacy" data-de="Datenschutz" data-en="Privacy">Datenschutz</button></div><div class="stPane active" data-pane="general"><label><input type="checkbox" id="stDark"> Dark Mode</label><label><input type="checkbox" id="stScan" checked> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div><div class="stPane" data-pane="appearance" id="stAppearance"></div><div class="stPane" data-pane="shortcuts" id="stShortcuts"></div><div class="stPane" data-pane="privacy" id="stPrivacy"></div></div>';break;
@@ -1042,13 +1061,31 @@
     var link=document.createElement('a');link.download='paint.png';link.href=canvas.toDataURL('image/png');link.click();toast('PNG exportiert');
   }
 
-  /* Music — S3: Upload + Radio + Favoriten + Beatpad + Equalizer */
+  /* Music — Refactored: Sadee-Inspired UI + MakerOS Features */
   function buildMusic(){
-    var list=document.getElementById('musList');if(!list) return;
-    var content=list.parentElement;
+    var player=document.querySelector('.musPlayer');if(!player)return;
+    var art=document.getElementById('musArt');
+    var artIcon=document.getElementById('musArtIcon');
+    var titleEl=document.getElementById('musTitle');
+    var artistEl=document.getElementById('musArtist');
+    var albumEl=document.getElementById('musAlbum');
+    var prog=document.getElementById('musProg');
+    var progL=document.getElementById('musProgL');
+    var progR=document.getElementById('musProgR');
+    var playBtn=document.getElementById('musPlayBtn');
+    var shuffleBtn=document.getElementById('musShuffle');
+    var prevBtn=document.getElementById('musPrev');
+    var nextBtn=document.getElementById('musNext');
+    var repeatBtn=document.getElementById('musRepeat');
+    var volEl=document.getElementById('musVol');
+    var volL=document.getElementById('musVolL');
+    var toggleBtn=document.getElementById('musToggle');
+    var sidebar=document.getElementById('musSidebar');
+    var uploadIn=document.getElementById('musUploadIn');
+    var radioStatus=document.getElementById('musRadioStatus');
 
     /* Storage Keys */
-    var SK_FAV='mus_favs', SK_CUSTOM='mus_custom', SK_RADIO='mus_radio';
+    var SK_FAV='mus_favs',SK_CUSTOM='mus_custom',SK_RADIO='mus_radio';
 
     /* State */
     var songs=[
@@ -1060,29 +1097,22 @@
     var favIds=[];
     var radioStations=[];
     var activeTab='playlist';
-    /* audioEl wird lazy in setupAudio() initialisiert */
     var curIdx=-1,curStation=null,playing=false,repeat=false,shuffled=[];
     var audioCtx=null,sourceNode=null,analyser=null,biquadFilters=[];
     var eqBands=[60,150,400,1000,3000,8000];
     var eqValues={60:0,150:0,400:0,1000:0,3000:0,8000:0};
     var isRadio=false;
-    var pendingPlay=false;
+    var audioEl=null;
+    var visRafId=null;
 
     /* === Storage Helpers === */
-    function loadFavs(){
-      try{favIds=JSON.parse(localStorage.getItem(SK_FAV)||'[]')}catch(e){favIds=[]}
-    }
-    function saveFavs(){
-      try{localStorage.setItem(SK_FAV,JSON.stringify(favIds))}catch(e){}
-    }
+    function loadFavs(){try{favIds=JSON.parse(localStorage.getItem(SK_FAV)||'[]')}catch(e){favIds=[]}}
+    function saveFavs(){try{localStorage.setItem(SK_FAV,JSON.stringify(favIds))}catch(e){}}
     function loadCustom(){
       try{
         var c=JSON.parse(localStorage.getItem(SK_CUSTOM)||'[]');
         c.forEach(function(s){s.src='custom';s._lob=true;songs.push(s)});
       }catch(e){}
-    }
-    function saveCustom(s){
-      try{localStorage.setItem(SK_CUSTOM,JSON.stringify(s))}catch(e){}
     }
     function loadRadios(){
       try{
@@ -1090,15 +1120,12 @@
         if(r.length)radioStations=r;
       }catch(e){}
     }
-    function saveRadios(){
-      try{localStorage.setItem(SK_RADIO,JSON.stringify(radioStations))}catch(e){}
-    }
+    function saveRadios(){try{localStorage.setItem(SK_RADIO,JSON.stringify(radioStations))}catch(e){}}
 
-    /* === Audio Graph — lazy, bei Bedarf Reset des Audio-Elements === */
-    var audioEl=null, audioCtx=null, sourceNode=null, analyser=null, biquadFilters=[];
+    /* === Audio Graph === */
     function setupAudio(){
       if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-      if(sourceNode) return; /* nur einmal pro Element */
+      if(audioEl) return;
       audioEl=new Audio();
       audioEl.volume=0.7;
       sourceNode=audioCtx.createMediaElementSource(audioEl);
@@ -1112,19 +1139,15 @@
       var node=sourceNode;
       biquadFilters.forEach(function(f){node.connect(f);node=f;});
       node.connect(analyser);analyser.connect(audioCtx.destination);
-      /* Event-Listener NUR EINMAL */
       audioEl.addEventListener('timeupdate',onTimeUpdate);
       audioEl.addEventListener('ended',onEnded);
       audioEl.addEventListener('error',onError);
     }
-    function ensureResumed(){
-      if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
-    }
+    function ensureResumed(){if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume()}
 
     /* === Visualizer === */
-    var visRafId=null;
     function initVisualizer(){
-      var canvas=document.getElementById('musVisualizer');if(!canvas)return;
+      var canvas=document.getElementById('musVisCanvas');if(!canvas)return;
       var ctx=canvas.getContext('2d');
       var buf=new Uint8Array(analyser?analyser.frequencyBinCount:64);
       if(visRafId)cancelAnimationFrame(visRafId);
@@ -1144,7 +1167,7 @@
       draw();
     }
 
-    /* === Beatpad — unabhängig vom Player (eigener Gain, kein MediaElementSource) === */
+    /* === Beatpad === */
     var beatpadGain=null;
     function initBeatpad(){
       var pad=document.getElementById('musBeatpad');if(!pad)return;
@@ -1197,76 +1220,62 @@
       });
     }
 
-    /* === Progress (nur einmal gebunden, kein doppelter Listener) === */
-    function startProgress(){
-      audio.addEventListener('timeupdate',onTimeUpdate);
-      audio.addEventListener('ended',onEnded);
-      audio.addEventListener('error',onError);
-    }
+    /* === Progress === */
     function onTimeUpdate(){
-      var prog=document.getElementById('musProg');var l=document.getElementById('musProgL');
-      if(!prog||!l)return;
-      if(isRadio||!isFinite(audioEl.duration)){l.textContent='● LIVE';prog.value=0;return;}
-      if(audioEl.duration&&audioEl.duration>0){prog.value=(audioEl.currentTime/audioEl.duration)*100;var m=Math.floor(audioEl.currentTime/60);var sec=Math.floor(audioEl.currentTime%60);l.textContent=m+':'+(sec<10?'0':'')+sec;}
+      if(isRadio||!isFinite(audioEl.duration)){progL.textContent='● LIVE';prog.value=0;return}
+      if(audioEl.duration&&audioEl.duration>0){
+        prog.value=(audioEl.currentTime/audioEl.duration)*100;
+        var m=Math.floor(audioEl.currentTime/60);
+        var sec=Math.floor(audioEl.currentTime%60);
+        progL.textContent=m+':'+(sec<10?'0':'')+sec;
+        var rm=Math.floor(audioEl.duration/60);
+        var rsec=Math.floor(audioEl.duration%60);
+        progR.textContent=rm+':'+(rsec<10?'0':'')+rsec;
+      }
     }
     function onEnded(){
-      if(repeat){audioEl.currentTime=0;playAudio();return;}
+      if(repeat){audioEl.currentTime=0;playAudio();return}
       if(isRadio)return;
       nextTrack();
     }
-    function onError(){
-      var l=document.getElementById('musProgL');
-      if(l)l.textContent='⚠ Fehler';
-    }
+    function onError(){progL.textContent='⚠ Fehler'}
 
-    /* === Play — nutzt audioEl (lazy-initialized) === */
+    /* === Play === */
     function playAudio(){
-      setupAudio();
-      ensureResumed();
+      setupAudio();ensureResumed();
       var p=audioEl.play();
-      if(p&&p.catch)p.catch(function(e){
-        var l=document.getElementById('musProgL');
-        if(l)l.textContent='⚠ Blocked';
-      });
+      if(p&&p.catch)p.catch(function(e){progL.textContent='⚠ Blocked'});
     }
     function playTrack(i){
       if(i<0||i>=songs.length)return;
       curIdx=i;curStation=null;isRadio=false;
       var s=songs[i];
       setupAudio();
-      audioEl.src=s.u;
-      audioEl.load();
+      audioEl.src=s.u;audioEl.load();
       initVisualizer();
-      playAudio();
-      playing=true;
+      playAudio();playing=true;
       updateUI();
     }
     function playRadio(station){
       curStation=station;isRadio=true;curIdx=-1;
       setupAudio();
-      audioEl.src=station.u;
-      audioEl.load();
+      audioEl.src=station.u;audioEl.load();
       initVisualizer();
-      playAudio();
-      playing=true;
+      playAudio();playing=true;
       updateUI();
     }
-    function stop(){
-      setupAudio();
-      audioEl.pause();playing=false;updateUI();
-    }
+    function stop(){setupAudio();audioEl.pause();playing=false;updateUI()}
     function togglePlay(){
       setupAudio();
-      if(playing){stop();}
-      else if(isRadio&&curStation){playRadio(curStation);}
-      else if(curIdx>=0){playTrack(curIdx);}
-      else if(songs.length){playTrack(0);}
+      if(playing)stop();
+      else if(isRadio&&curStation)playRadio(curStation);
+      else if(curIdx>=0)playTrack(curIdx);
+      else if(songs.length)playTrack(0);
     }
     function nextTrack(){
       if(isRadio&&radioStations.length){
         var ni=curStation?radioStations.indexOf(curStation)+1:0;
-        playRadio(radioStations[ni%radioStations.length]);
-        return;
+        playRadio(radioStations[ni%radioStations.length]);return
       }
       if(!songs.length)return;
       var next=(curIdx+1)%songs.length;
@@ -1276,31 +1285,25 @@
       if(isRadio&&radioStations.length){
         var ci=curStation?radioStations.indexOf(curStation):0;
         var pi=(ci-1+radioStations.length)%radioStations.length;
-        playRadio(radioStations[pi]);
-        return;
+        playRadio(radioStations[pi]);return
       }
       if(!songs.length)return;
       var prev=(curIdx-1+songs.length)%songs.length;
       playTrack(prev);
     }
+
     /* === Upload === */
     function handleUpload(file){
       if(!file||!file.type.match(/^audio\//)){
-        showNotif('Music','Nicht unterstützt: '+file.name,'⚠️');
-        return;
+        alert('Nicht unterstützt: '+file.name);return
       }
       var url=URL.createObjectURL(file);
       var s={n:file.name.replace(/\.[^.]+$/,''),a:'Upload',u:url,src:'custom',_blob:true};
       songs.push(s);
-      /* Save meta only (blob URLs can't be persisted, but list survives in session) */
-      var meta={n:s.n,a:s.a,ts:Date.now()};
-      loadCustom();
-      /* Render */
       renderPlaylist();
-      showNotif('Music','Hochgeladen: '+s.n,'🎵');
     }
 
-    /* === Radio Browser mit Fallback === */
+    /* === Radio Browser === */
     var fallbackStations=[
       {name:'SomaFM: DEF CON Radio',u:'https://ice1.somafm.com/defcon-128-mp3',codec:'MP3',votes:5000},
       {name:'SomaFM: Groove Salad',u:'https://ice1.somafm.com/groovesalad-128-mp3',codec:'MP3',votes:4500},
@@ -1315,8 +1318,7 @@
     ];
     function fetchRadios(){
       if(radioStations.length>0){renderRadio();return}
-      var l=document.getElementById('musRadioStatus');
-      if(l){l.textContent='Lade Sender...';l.style.color='var(--accent)'}
+      if(radioStatus){radioStatus.textContent='Lade Sender...';radioStatus.style.color='var(--accent)'}
       var x=new XMLHttpRequest();
       x.open('GET','https://de1.api.radio-browser.info/json/stations?limit=30&order=clickcount&reverse=true',true);
       x.timeout=8000;
@@ -1326,24 +1328,20 @@
           var found=arr.filter(function(s){return s.url_resolved&&s.url_resolved.length>5}).slice(0,20).map(function(s){
             return{name:s.name.replace(/[^\x20-\x7E]/g,''),u:s.url_resolved,codec:s.codec||'',votes:s.votes||0}
           });
-          if(found.length){
-            radioStations=found;
-            saveRadios();
-          } else {
-            radioStations=fallbackStations;
-          }
+          if(found.length){radioStations=found;saveRadios();}
+          else radioStations=fallbackStations;
           renderRadio();
-          if(l){l.textContent=radioStations.length+' Sender geladen';l.style.color='var(--muted)'}
-        }catch(e){radioStations=fallbackStations;renderRadio();if(l){l.textContent='Fallback: '+fallbackStations.length+' Sender';l.style.color='var(--muted)'}}
+          if(radioStatus){radioStatus.textContent=radioStations.length+' Sender geladen';radioStatus.style.color='var(--muted)'}
+        }catch(e){radioStations=fallbackStations;renderRadio();if(radioStatus){radioStatus.textContent='Fallback: '+fallbackStations.length+' Sender';radioStatus.style.color='var(--muted)'}}
       };
-      x.onerror=function(){radioStations=fallbackStations;renderRadio();if(l){l.textContent='Offline → '+fallbackStations.length+' Fallback-Sender';l.style.color='var(--muted)'}};
-      x.ontimeout=function(){radioStations=fallbackStations;renderRadio();if(l){l.textContent='Timeout → '+fallbackStations.length+' Fallback-Sender';l.style.color='var(--muted)'}};
+      x.onerror=function(){radioStations=fallbackStations;renderRadio();if(radioStatus){radioStatus.textContent='Offline → '+fallbackStations.length+' Fallback';radioStatus.style.color='var(--muted)'}};
+      x.ontimeout=function(){radioStations=fallbackStations;renderRadio();if(radioStatus){radioStatus.textContent='Timeout → '+fallbackStations.length+' Fallback';radioStatus.style.color='var(--muted)'}};
       x.send();
     }
 
-    /* === UI === */
+    /* === UI Helpers === */
     function mkStar(id,filled){
-      return '<span class="musFav" data-id="'+id+'" style="cursor:pointer;font-size:14px;color:'+(filled?'#ffd400':'#5d584e')+'">'+(filled?'★':'☆')+'</span>';
+      return '<span class="musFav" data-id="'+id+'" style="cursor:pointer;font-size:14px;color:'+(filled?'#ffd400':'#5d584e')+'">'+(filled?'★':'☆')+'</span>'
     }
     function toggleFav(id){
       var i=favIds.indexOf(id);
@@ -1366,8 +1364,7 @@
         item.querySelector('.musFav').addEventListener('click',function(){toggleFav(s.n)});
         if(s._blob){
           item.querySelector('.musDel').addEventListener('click',function(){
-            URL.revokeObjectURL(s.u);
-            songs.splice(i,1);
+            URL.revokeObjectURL(s.u);songs.splice(i,1);
             if(curIdx===i)stop();else if(curIdx>i)curIdx--;
             renderPlaylist();
           });
@@ -1379,10 +1376,7 @@
     function renderRadio(){
       var el=document.getElementById('musRadio');if(!el)return;
       el.innerHTML='';
-      if(radioStations.length===0){
-        el.innerHTML='<div style="padding:20px;color:var(--muted);text-align:center">Keine Sender geladen.</div>';
-        return;
-      }
+      if(radioStations.length===0){el.innerHTML='<div style="padding:20px;color:var(--muted);text-align:center">Keine Sender geladen.</div>';return}
       radioStations.forEach(function(s,i){
         var isCur=(isRadio&&curStation===s);
         var item=document.createElement('div');item.className='musItem'+(isCur?' playing':'');
@@ -1427,87 +1421,76 @@
 
     function updateUI(){
       renderActiveTab();
-      /* Update play button on toolbar if exists */
-      var pb=document.getElementById('musPlayBtn');
-      if(pb)pb.textContent=playing?'⏸':'▶';
+      if(playBtn)playBtn.textContent=playing?'⏸':'▶';
+      if(titleEl)titleEl.textContent=(curIdx>=0&&songs[curIdx])?songs[curIdx].n:(curStation?curStation.name:'Player');
+      if(artistEl)artistEl.textContent=(curIdx>=0&&songs[curIdx])?songs[curIdx].a:(curStation?'● Live Radio':'Wähle einen Song');
+      if(albumEl)albumEl.textContent=(curIdx>=0&&songs[curIdx])?songs[curIdx].src:(curStation?curStation.codec||'Stream':'—');
+      if(artIcon)artIcon.textContent=isRadio?'📻':(playing?'♫':'♪');
     }
 
-    /* === Build UI === */
-    list.innerHTML='';
-    list.style.cssText='display:flex;flex-direction:column;overflow:hidden;flex:1;min-height:0';
-    var tabBar=document.createElement('div');
-    tabBar.className='musTabs';
-    tabBar.innerHTML='<button data-tab="playlist" class="musTab active">🎵 Playlist</button>'+
-      '<button data-tab="radio" class="musTab">📻 Radio</button>'+
-      '<button data-tab="favs" class="musTab">★ Favoriten ('+favIds.length+')</button>'+
-      '<label class="musTab musUpload" style="cursor:pointer">⬆ Upload<input type="file" id="musUploadIn" accept="audio/*" multiple style="display:none"></label>';
-    list.appendChild(tabBar);
+    /* === Sidebar Toggle === */
+    if(toggleBtn)toggleBtn.addEventListener('click',function(){
+      sidebar.classList.toggle('open');
+    });
 
-    var listWrap=document.createElement('div');listWrap.id='musListInner';
-    listWrap.style.cssText='flex:1;overflow-y:auto;min-height:0';
-    listWrap.innerHTML='<div id="musPlaylist"></div><div id="musRadio" style="display:none"></div><div id="musFavs" style="display:none"></div>';
-    list.appendChild(listWrap);
-
-    var statusBar=document.createElement('div');
-    statusBar.id='musRadioStatus';
-    statusBar.style.cssText='font-size:10px;color:var(--muted);padding:4px 8px;border-top:1px solid var(--line)';
-    statusBar.textContent='Bereit';
-    list.appendChild(statusBar);
-
-    /* Controls */
-    var ctrlBar=document.createElement('div');ctrlBar.className='musVol';
-    ctrlBar.innerHTML='<button id="musPlayBtn" class="cBtn">▶</button>'+
-      '<button id="musPrev" class="cBtn">⏮</button>'+
-      '<button id="musNext" class="cBtn">⏭</button>'+
-      '<button id="musShuffle" class="cBtn">🔀</button>'+
-      '<button id="musRepeat" class="cBtn">🔂</button>'+
-      '<input type="range" id="musVol" min="0" max="1" step="0.05" value="0.7" style="flex:1">'+
-      '<span id="musVolL" style="font-size:10px">70%</span>';
-    list.appendChild(ctrlBar);
-
-    var progBar=document.createElement('div');progBar.className='musVol';
-    progBar.innerHTML='<span id="musProgL" style="font-size:10px;width:50px;text-align:center">0:00</span>'+
-      '<input type="range" id="musProg" min="0" max="100" step="1" value="0" style="flex:1">';
-    list.appendChild(progBar);
-
-    /* Events */
-    tabBar.querySelectorAll('.musTab[data-tab]').forEach(function(btn){
+    /* === Tab Navigation === */
+    player.querySelectorAll('.musTab[data-tab]').forEach(function(btn){
       btn.addEventListener('click',function(){
         activeTab=this.dataset.tab;
-        tabBar.querySelectorAll('.musTab').forEach(function(b){b.classList.remove('active')});
+        player.querySelectorAll('.musTab').forEach(function(b){b.classList.remove('active')});
         btn.classList.add('active');
         if(activeTab==='radio')fetchRadios();
         renderActiveTab();
-        /* Update fav count */
-        if(activeTab!=='favs'){
-          var fb=tabBar.querySelector('[data-tab="favs"]');
-          if(fb)fb.textContent='★ Favoriten ('+favIds.length+')';
-        }
+        var fb=player.querySelector('[data-tab="favs"]');
+        if(fb)fb.textContent='★ Favs ('+favIds.length+')';
       });
     });
 
-    var uploadIn=document.getElementById('musUploadIn');
+    /* === Extra Tabs (Beatpad/EQ/Vis) === */
+    player.querySelectorAll('.musExtraTab[data-extra]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var extra=this.dataset.extra;
+        player.querySelectorAll('.musExtraTab').forEach(function(b){b.classList.remove('active')});
+        btn.classList.add('active');
+        player.querySelectorAll('.musExtra').forEach(function(p){p.style.display='none'});
+        var target=player.querySelector('#mus'+extra.charAt(0).toUpperCase()+extra.slice(1));
+        if(target)target.style.display='block';
+        if(extra==='vis')initVisualizer();
+      });
+    });
+
+    /* === Upload === */
     if(uploadIn)uploadIn.addEventListener('change',function(){
       for(var i=0;i<this.files.length;i++)handleUpload(this.files[i]);
       this.value='';
     });
 
-    document.getElementById('musPlayBtn').addEventListener('click',togglePlay);
-    document.getElementById('musPrev').addEventListener('click',prevTrack);
-    document.getElementById('musNext').addEventListener('click',nextTrack);
-    document.getElementById('musVol').addEventListener('input',function(){setupAudio();audioEl.volume=parseFloat(this.value);document.getElementById('musVolL').textContent=Math.round(this.value*100)+'%'});
-    document.getElementById('musProg').addEventListener('input',function(){setupAudio();if(audioEl.duration&&!isRadio)audioEl.currentTime=(this.value/100)*audioEl.duration});
-    document.getElementById('musShuffle').addEventListener('click',function(){
+    /* === Controls === */
+    if(playBtn)playBtn.addEventListener('click',togglePlay);
+    if(prevBtn)prevBtn.addEventListener('click',prevTrack);
+    if(nextBtn)nextBtn.addEventListener('click',nextTrack);
+    if(volEl)volEl.addEventListener('input',function(){
+      setupAudio();audioEl.volume=parseFloat(this.value);
+      if(volL)volL.textContent=Math.round(this.value*100)+'%';
+    });
+    if(prog)prog.addEventListener('input',function(){
+      setupAudio();if(audioEl.duration&&!isRadio)audioEl.currentTime=(this.value/100)*audioEl.duration
+    });
+    if(shuffleBtn)shuffleBtn.addEventListener('click',function(){
       shuffled=songs.map(function(_,i){return i});
       shuffled=shuffleArray(shuffled);
       this.style.background='var(--accent)';
       setTimeout(function(){this.style.background=''},500);
     });
-    document.getElementById('musRepeat').addEventListener('click',function(){repeat=!repeat;this.style.background=repeat?'var(--accent)':''});
+    if(repeatBtn)repeatBtn.addEventListener('click',function(){
+      repeat=!repeat;
+      this.style.background=repeat?'var(--accent)':'';
+    });
 
-    initBeatpad();initEqualizer();initVisualizer();startProgress();
+    /* === Init === */
+    initBeatpad();initEqualizer();initVisualizer();
     loadFavs();loadCustom();loadRadios();
-    renderActiveTab();
+    renderActiveTab();updateUI();
   }
 
   /* Chat — S3: Timestamps in every message */
@@ -1959,6 +1942,7 @@
   /* Window drag via titlebar */
   var dragging=null,dx=0,dy=0;
   function dragStart(e,w){
+    if(window.innerWidth <= 760) return;
     e.preventDefault();
     var clientX=e.clientX||e.touches[0].clientX;
     var clientY=e.clientY||e.touches[0].clientY;

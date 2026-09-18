@@ -251,15 +251,6 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .clLink:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow-hover);border-color:var(--accent)}
 .clLink .clIco{width:20px;height:20px;flex:0 0 auto}
 
-/* ===== music ===== */
-.musList{padding:10px;display:flex;flex-direction:column;gap:6px}
-.musItem{display:flex;align-items:center;gap:10px;padding:8px;border:2px solid var(--line);background:var(--surface);cursor:pointer}
-.musItem:hover{background:var(--paper)}
-.musPlay{width:28px;height:28px;border:2px solid var(--line);background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold}
-.musInfo{flex:1;font-size:12px;font-family:"IBM Plex Mono",monospace}
-.musVol{display:flex;align-items:center;gap:6px;padding:4px 10px}
-.musVol input[type=range]{flex:1}
-
 /* ===== settings ===== */
 .stGrid{padding:10px;display:flex;flex-direction:column;gap:8px;max-height:100%;overflow-y:auto}
 .stNav{display:flex;gap:2px;padding:4px 10px;border-bottom:2px solid var(--line)}
@@ -315,7 +306,10 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
   .dskApp .ico svg{width:24px;height:24px}
   .dskApp .lbl{font-size:10px}
   #startMenu{width:240px;max-height:300px}
-  .wnd{min-width:220px;min-height:140px}
+  .wnd{position:fixed;left:0!important;top:0!important;width:100vw!important;height:calc(100vh - 52px)!important;min-width:0;min-height:0}
+  .wnd-resize{display:none}
+  .wmax{display:none}
+  .wtitle{cursor:default}
 }
 
 /* ===== window open animation ===== */
@@ -446,33 +440,70 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .ptToolbar button:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow);border-color:var(--accent)}
 .ptToolbar button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-/* ===== music player ===== */
-.musPlayer{display:flex;flex-direction:column;height:100%}
-.musList{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:4px}
-.musExtra{flex:1;overflow-y:auto;border-top:2px solid var(--line)}
-.musSectionTitle{font-size:10px;font-weight:700;font-family:var(--font-mono);padding:6px 8px;background:var(--paper);color:var(--muted);text-transform:uppercase}
-.musPadSection,.musEqSection{padding:4px}
-.musBeatpad{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px}
-.beatpad-btn{padding:10px 4px;font-size:10px;font-weight:700;border:2px solid var(--line);box-shadow:var(--shadow-sm);color:#fff;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;transition:transform .05s}
-.beatpad-btn:active{transform:scale(.92)}
-.musEq{display:flex;gap:4px;padding:4px;justify-content:center;flex-wrap:wrap}
-.eq-slider{display:flex;flex-direction:column;align-items:center;gap:2px}
-.eq-range{writing-mode:bt-lr;-webkit-appearance:slider-vertical;width:16px;height:50px}
-.eq-slider span{font-size:8px;color:var(--muted);font-family:var(--font-mono)}
-#musVisualizer{width:100%;max-width:280px;height:50px;border:2px solid var(--line);background:#0b0b0c;display:block;margin:0 auto}
-.musVol{display:flex;align-items:center;gap:6px;padding:4px 8px}
-.musItem{display:flex;align-items:center;gap:8px;padding:4px;border:2px solid var(--line);background:var(--surface);box-shadow:var(--shadow-sm)}
-.musItem.playing{border-color:var(--accent);background:var(--paper)}
-.musPlay{width:32px;height:32px;border:2px solid var(--line);background:var(--accent);color:#fff;font-size:12px;cursor:pointer;box-shadow:var(--shadow-sm)}
-.musInfo{flex:1;font-size:11px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.musFav,.musDel{background:none;border:none;font-size:14px;cursor:pointer;padding:0 4px;flex-shrink:0}
+/* ===== music player (Sadee-Inspired) ===== */
+.musPlayer{display:flex;flex-direction:column;height:100%;background:var(--paper)}
 
-/* ===== music tabs ===== */
-.musTabs{display:flex;gap:2px;padding:4px 8px;border-bottom:2px solid var(--line);background:var(--surface)}
-.musTab{padding:4px 10px;border:2px solid var(--line);background:var(--paper);cursor:pointer;font-family:var(--font-mono);font-size:10px;box-shadow:var(--shadow-sm)}
-.musTab.active{background:var(--accent);color:#fff}
-.musUpload{border-style:dashed}
-#musListInner{flex:1;overflow-y:auto;min-height:0}
+/* Header */
+.musHeader{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-bottom:3px solid var(--line);background:var(--surface)}
+.musLogo{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--accent)}
+.musToggle{padding:4px 10px;border:2px solid var(--line);background:var(--paper);font-family:var(--font-mono);font-size:10px;cursor:pointer;box-shadow:var(--shadow-sm)}
+.musToggle:hover{background:var(--accent);color:#fff}
+
+/* Body — Main + Sidebar */
+.musBody{flex:1;display:flex;overflow:hidden;min-height:0}
+
+/* Main Player Area */
+.musMain{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:12px;overflow-y:auto}
+
+/* Album Art */
+.musArt{width:120px;height:120px;border:3px solid var(--line);background:var(--surface);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;font-size:48px;color:var(--muted)}
+.musArt img{width:100%;height:100%;object-fit:cover}
+
+/* Meta Info */
+.musMeta{text-align:center}
+.musTitle{font-size:16px;font-weight:700;color:var(--ink)}
+.musArtist{font-size:12px;color:var(--muted)}
+.musAlbum{font-size:10px;color:var(--accent)}
+
+/* Seek Bar */
+.musSeek{width:100%;max-width:360px}
+.musSeek input[type=range]{width:100%;-webkit-appearance:none;height:6px;border-radius:0;background:var(--line)}
+.musSeek input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid var(--ink);cursor:pointer}
+.musTimes{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-family:var(--font-mono);margin-top:2px}
+
+/* Controls */
+.musControls{display:flex;gap:8px;align-items:center}
+.musControls button{width:36px;height:36px;border:2px solid var(--line);background:var(--surface);box-shadow:var(--shadow-sm);cursor:pointer;font-size:14px}
+.musControls button:hover{background:var(--accent);color:#fff}
+.musPlay{width:48px!important;height:48px!important;background:var(--accent)!important;color:#fff!important;font-size:18px!important}
+
+/* Volume */
+.musVolWrap{display:flex;align-items:center;gap:6px;width:100%;max-width:200px}
+.musVolWrap input[type=range]{flex:1;-webkit-appearance:none;height:4px;background:var(--line)}
+.musVolWrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);cursor:pointer}
+.musVolWrap span{font-size:10px;color:var(--muted);font-family:var(--font-mono)}
+
+/* Sidebar */
+.musSidebar{width:280px;display:flex;flex-direction:column;border-left:3px solid var(--line);background:var(--surface);overflow:hidden}
+.musSidebarFoot{padding:4px;border-top:2px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.musUploadBtn{padding:4px 8px;border:2px dashed var(--line);background:transparent;cursor:pointer;font-family:var(--font-mono);font-size:10px}
+
+/* Extra Tabs */
+.musExtraTabs{display:flex;gap:2px;padding:4px;border-top:2px solid var(--line);background:var(--surface)}
+.musExtraTab{flex:1;padding:6px;border:2px solid var(--line);background:var(--paper);font-family:var(--font-mono);font-size:10px;cursor:pointer;text-align:center}
+.musExtraTab.active{background:var(--accent);color:#fff}
+
+/* Extra Sections */
+.musExtra{padding:8px;overflow-y:auto}
+#musVisCanvas{width:100%;max-width:280px;height:100px;border:2px solid var(--line);background:#0b0b0c;display:block;margin:0 auto}
+
+/* Mobile */
+@media(max-width:760px){
+  .musSidebar{position:fixed;right:-100%;top:0;bottom:52px;width:85%;z-index:1000;transition:right .25s;border-left:3px solid var(--line)}
+  .musSidebar.open{right:0}
+  .musMain{padding:12px}
+  .musArt{width:80px;height:80px;font-size:32px}
+}
 
 /* ===== global search ===== */
 #globalSearch{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center}
