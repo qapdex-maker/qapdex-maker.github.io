@@ -493,6 +493,18 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .musExtraTab{flex:1;padding:6px;border:2px solid var(--line);background:var(--paper);font-family:var(--font-mono);font-size:10px;cursor:pointer;text-align:center}
 .musExtraTab.active{background:var(--accent);color:#fff}
 
+/* Beatpad neu */
+.beatpad-header{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:2px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.beatpad-title{font-weight:700;font-size:12px;color:var(--accent)}
+.beatpad-btn-lg{padding:6px 14px;border:2px solid var(--line);background:var(--paper);font-family:var(--font-mono);font-size:11px;cursor:pointer;box-shadow:var(--shadow-sm)}
+.beatpad-btn-lg:hover{background:var(--accent);color:#fff}
+.beatpad-stop:hover{background:var(--danger)}
+.beatpad-bpm{padding:4px 8px;border:2px solid var(--line);background:var(--paper);font-family:var(--font-mono);font-size:10px;cursor:pointer}
+.beatpad-vol-wrap{display:flex;align-items:center;gap:6px;padding:4px 10px;border-top:2px solid var(--line);background:var(--surface)}
+.beatpad-vol-wrap input[type=range]{flex:1;-webkit-appearance:none;height:4px;background:var(--line)}
+.beatpad-vol-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);cursor:pointer}
+.beatpad-vol-wrap span{font-size:10px;color:var(--muted);font-family:var(--font-mono)}
+
 /* Extra Sections */
 .musExtra{padding:8px;overflow-y:auto}
 #musVisCanvas{width:100%;max-width:280px;height:100px;border:2px solid var(--line);background:#0b0b0c;display:block;margin:0 auto}

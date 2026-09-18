@@ -373,7 +373,7 @@
       case 'explorer': body='<div class="fePath"><span>📁</span><input id="fePath" value="C:\Users\macrohard\Desktop"></div><div class="feSide" id="feSide"></div><div class="feGrid" id="feGrid"></div>';break;
       case 'paint': body='<div class="ptColors" id="ptColors"></div><canvas class="ptCanvas" id="ptCanvas" width="400" height="260"></canvas>';break;
       case 'browser': body='<div class="brTabs" id="brTabs"></div><div class="brBar"><button class="brBtn" id="brBack" title="Zurück">←</button><button class="brBtn" id="brFwd" title="Vor">→</button><button class="brBtn" id="brRefresh" title="Aktualisieren">↻</button><button class="brBtn" id="brHome" title="Startseite">⌂</button><input id="brAddr" value="https://duckduckgo.com" placeholder="URL oder Suche..."><button class="brBtn" id="brGo" title="Los">➜</button><button class="brBtn" id="brBm" title="Lesezeichen">☆</button><button class="brBtn" id="brNewTab" title="Neuer Tab">+</button></div><div class="brContent" id="brContent"></div>';break;
-      case 'music': body='<div class="musPlayer"><div class="musHeader"><span class="musLogo">🎵 Music</span><button class="musToggle" id="musToggle">☰ Playlist</button></div><div class="musBody"><div class="musMain"><div class="musArt" id="musArt"><span id="musArtIcon">♪</span></div><div class="musMeta"><div class="musTitle" id="musTitle">Player</div><div class="musArtist" id="musArtist">Wähle einen Song</div><div class="musAlbum" id="musAlbum">—</div></div><div class="musSeek"><input type="range" id="musProg" min="0" max="100" step="1" value="0"><div class="musTimes"><span id="musProgL">0:00</span><span id="musProgR">0:00</span></div></div><div class="musControls"><button id="musShuffle" title="Shuffle">🔀</button><button id="musPrev" title="Zurück">⏮</button><button id="musPlayBtn" class="musPlay" title="Play">▶</button><button id="musNext" title="Weiter">⏭</button><button id="musRepeat" title="Repeat">🔁</button></div><div class="musVolWrap"><span>🔊</span><input type="range" id="musVol" min="0" max="1" step="0.05" value="0.7"><span id="musVolL">70%</span></div></div><div class="musSidebar" id="musSidebar"><div class="musTabs"><button data-tab="playlist" class="musTab active">🎵 Playlist</button><button data-tab="radio" class="musTab">📻 Radio</button><button data-tab="favs" class="musTab">★ Favs</button></div><div id="musPlaylist" class="musList"></div><div id="musRadio" class="musList" style="display:none"></div><div id="musFavs" class="musList" style="display:none"></div><div class="musSidebarFoot"><label class="musUploadBtn">⬆ Upload<input type="file" id="musUploadIn" accept="audio/*" multiple style="display:none"></label><span id="musRadioStatus" style="font-size:9px;color:var(--muted)"></span></div></div></div><div class="musExtraTabs"><button data-extra="beatpad" class="musExtraTab active">🥁 Beatpad</button><button data-extra="eq" class="musExtraTab">🎛 EQ</button><button data-extra="vis" class="musExtraTab">📊 Visualizer</button></div><div id="musBeatpad" class="musExtra"><div class="musBeatpad" id="musBeatpad"></div></div><div id="musEq" class="musExtra" style="display:none"><canvas id="musVisualizer" width="280" height="60"></canvas><div class="musEq" id="musEq"></div></div><div id="musVis" class="musExtra" style="display:none"><canvas id="musVisCanvas" width="280" height="100"></canvas></div></div>';break;
+      case 'music': body='<div class="musPlayer"><div class="musHeader"><span class="musLogo">🎵 Music</span><button class="musToggle" id="musToggle">☰ Playlist</button></div><div class="musBody"><div class="musMain"><div class="musArt" id="musArt"><span id="musArtIcon">♪</span></div><div class="musMeta"><div class="musTitle" id="musTitle">Player</div><div class="musArtist" id="musArtist">Wähle einen Song</div><div class="musAlbum" id="musAlbum">—</div></div><div class="musSeek"><input type="range" id="musProg" min="0" max="100" step="1" value="0"><div class="musTimes"><span id="musProgL">0:00</span><span id="musProgR">0:00</span></div></div><div class="musControls"><button id="musShuffle" title="Shuffle">🔀</button><button id="musPrev" title="Zurück">⏮</button><button id="musPlayBtn" class="musPlay" title="Play">▶</button><button id="musNext" title="Weiter">⏭</button><button id="musRepeat" title="Repeat">🔁</button></div><div class="musVolWrap"><span>🔊</span><input type="range" id="musVol" min="0" max="1" step="0.05" value="0.7"><span id="musVolL">70%</span></div></div><div class="musSidebar" id="musSidebar"><div class="musTabs"><button data-tab="playlist" class="musTab active">🎵 Playlist</button><button data-tab="radio" class="musTab">📻 Radio</button><button data-tab="favs" class="musTab">★ Favs</button></div><div id="musPlaylist" class="musList"></div><div id="musRadio" class="musList" style="display:none"></div><div id="musFavs" class="musList" style="display:none"></div><div class="musSidebarFoot"><label class="musUploadBtn">⬆ Upload<input type="file" id="musUploadIn" accept="audio/*" multiple style="display:none"></label><span id="musRadioStatus" style="font-size:9px;color:var(--muted)"></span></div></div></div><div class="musExtraTabs"><button data-extra="beatpad" class="musExtraTab active">🥁 Beatpad</button><button data-extra="eq" class="musExtraTab">🎛 EQ</button><button data-extra="vis" class="musExtraTab">📊 Visualizer</button></div><div id="musBeatpadSection" class="musExtra"><div class="beatpad-header"><span class="beatpad-title">🥁 Beatpad</span><button id="beatpadPlay" class="beatpad-btn-lg" title="Play Loop">▶ Play</button><button id="beatpadStop" class="beatpad-btn-lg beatpad-stop" title="Stop">⏹ Stop</button><select id="beatpadBpm" class="beatpad-bpm"><option value="100">100 BPM</option><option value="120" selected>120 BPM</option><option value="140">140 BPM</option><option value="160">160 BPM</option><option value="180">180 BPM</option></select></div><div class="musBeatpad" id="musBeatpad"></div><div class="beatpad-vol-wrap"><span>🔊</span><input type="range" id="beatpadVol" min="0" max="100" value="50"><span id="beatpadVolL">50%</span></div></div><div id="musEq" class="musExtra" style="display:none"><canvas id="musVisualizer" width="280" height="60"></canvas><div class="musEq" id="musEq"></div></div><div id="musVis" class="musExtra" style="display:none"><canvas id="musVisCanvas" width="280" height="100"></canvas></div></div>';break;
       case 'chat': body='<div class="cpMsgs" id="cpMsgs"></div><div class="cpSugs" id="cpSugs"></div><div class="cpIn"><input id="cpIn" placeholder="Nachricht..."><button id="cpSend">Send</button></div>';break;
       case 'docs': body='<div class="mdBody" id="mdBody"><h3>MakerOS Docs</h3><p>Neo-brutalist desktop OS — qapdex-maker.github.io edition.</p><p>13 Apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links, AMIBIOS.</p><p style="margin-top:12px;font-size:11px;color:var(--muted)">Made by Alexander Kleine</p></div>';break;
       case 'settings': body='<div class="stGrid" id="stGrid"><div class="stNav"><button data-tab="general" class="active" data-de="Allgemein" data-en="General">Allgemein</button><button data-tab="appearance" data-de="Aussehen" data-en="Appearance">Aussehen</button><button data-tab="shortcuts" data-de="Tastenkürzel" data-en="Shortcuts">Tastenkürzel</button><button data-tab="privacy" data-de="Datenschutz" data-en="Privacy">Datenschutz</button></div><div class="stPane active" data-pane="general"><label><input type="checkbox" id="stDark"> Dark Mode</label><label><input type="checkbox" id="stScan" checked> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div><div class="stPane" data-pane="appearance" id="stAppearance"></div><div class="stPane" data-pane="shortcuts" id="stShortcuts"></div><div class="stPane" data-pane="privacy" id="stPrivacy"></div></div>';break;
@@ -1089,10 +1089,10 @@
 
     /* State */
     var songs=[
-      {n:'Macrohard Anthems',a:'IDUN Studio',u:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',src:'demo'},
-      {n:'Maker of Cancellation',a:'Perchance Sound',u:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',src:'demo'},
-      {n:'Neo-Brutalist Beat',a:'qapdex-maker',u:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',src:'demo'},
-      {n:'IDUN Tone',a:'IDUN Studio',u:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',src:'demo'}
+      {n:'Song 1',a:'SoundHelix',u:'./assets/music/SoundHelix-Song-1.mp3',src:'demo'},
+      {n:'Song 2',a:'SoundHelix',u:'./assets/music/SoundHelix-Song-2.mp3',src:'demo'},
+      {n:'Song 3',a:'SoundHelix',u:'./assets/music/SoundHelix-Song-3.mp3',src:'demo'},
+      {n:'Song 4',a:'SoundHelix',u:'./assets/music/SoundHelix-Song-4.mp3',src:'demo'}
     ];
     var favIds=[];
     var radioStations=[];
@@ -1167,10 +1167,21 @@
       draw();
     }
 
-    /* === Beatpad === */
+    /* === Beatpad mit Play/Stop Loop === */
     var beatpadGain=null;
+    var beatpadLoopId=null;
+    var beatpadPlaying=false;
+    var beatpadBpm=120;
+    var beatpadVol=0.5;
+    var beatpadPad=null;
+    var beatpadScheduleTimer=null;
+    var beatpadNextNote=0;
+    var beatpadVolumeNode=null;
+
     function initBeatpad(){
-      var pad=document.getElementById('musBeatpad');if(!pad)return;
+      beatpadPad=document.getElementById('musBeatpad');
+      if(!beatpadPad)return;
+
       var samples=[
         {n:'Kick',f:60,d:0.4,c:'#ff4000'},{n:'Snare',f:200,d:0.2,c:'#2547ff'},
         {n:'HiHat',f:8000,d:0.05,c:'#ffd400'},{n:'Clap',f:1200,d:0.15,c:'#0f0'},
@@ -1178,31 +1189,137 @@
         {n:'Bass',f:80,d:0.4,c:'#ff8000'},{n:'Stab',f:440,d:0.2,c:'#800'},
         {n:'Crash',f:5000,d:0.5,c:'#666'}
       ];
+
       samples.forEach(function(s,i){
         var b=document.createElement('button');
-        b.className='beatpad-btn';b.textContent=s.n;b.style.background=s.c;
+        b.className='beatpad-btn';
+        b.textContent=s.n;
+        b.style.background=s.c;
+        b.dataset.idx=i;
         b.addEventListener('click',function(){
           try{
             if(!audioCtx){
               audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-              beatpadGain=audioCtx.createGain();
-              beatpadGain.gain.value=0.3;
-              beatpadGain.connect(audioCtx.destination);
             }
             ensureResumed();
-            var osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
-            osc.type=i===2?'square':i===7?'sawtooth':'sine';
-            osc.frequency.setValueAtTime(s.f,audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(Math.max(s.f*0.3,10),audioCtx.currentTime+s.d);
-            gain.gain.setValueAtTime(0.8,audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+s.d);
-            osc.connect(gain);gain.connect(audioCtx.destination);
-            osc.start();osc.stop(audioCtx.currentTime+s.d+0.05);
-            b.style.transform='scale(.92)';setTimeout(function(){b.style.transform=''},100);
+            playBeatSample(s,i);
+            b.style.transform='scale(.85)';
+            setTimeout(function(){b.style.transform=''},80);
           }catch(e){}
         });
-        pad.appendChild(b);
+        beatpadPad.appendChild(b);
       });
+
+      // Play Button
+      var playBtn=document.getElementById('beatpadPlay');
+      if(playBtn){
+        playBtn.addEventListener('click',function(){
+          if(beatpadPlaying){
+            stopBeatpadLoop();
+          } else {
+            startBeatpadLoop();
+          }
+        });
+      }
+
+      // Stop Button
+      var stopBtn=document.getElementById('beatpadStop');
+      if(stopBtn){
+        stopBtn.addEventListener('click',function(){
+          stopBeatpadLoop();
+        });
+      }
+
+      // BPM Selector
+      var bpmSel=document.getElementById('beatpadBpm');
+      if(bpmSel){
+        bpmSel.addEventListener('change',function(){
+          beatpadBpm=parseInt(this.value);
+          if(beatpadPlaying){
+            // Restart with new BPM
+            stopBeatpadLoop();
+            startBeatpadLoop();
+          }
+        });
+      }
+
+      // Volume
+      var volSlider=document.getElementById('beatpadVol');
+      var volLabel=document.getElementById('beatpadVolL');
+      if(volSlider){
+        volSlider.addEventListener('input',function(){
+          beatpadVol=parseInt(this.value)/100;
+          if(beatpadVolumeNode){
+            beatpadVolumeNode.gain.setValueAtTime(beatpadVol,audioCtx.currentTime);
+          }
+          if(volLabel)volLabel.textContent=this.value+'%';
+        });
+      }
+    }
+
+    function playBeatSample(s,i){
+      ensureResumed();
+      if(!beatpadVolumeNode){
+        beatpadVolumeNode=audioCtx.createGain();
+        beatpadVolumeNode.gain.value=beatpadVol;
+        beatpadVolumeNode.connect(audioCtx.destination);
+      }
+      var osc=audioCtx.createOscillator();
+      var gain=audioCtx.createGain();
+      osc.type=i===2?'square':i===7?'sawtooth':'sine';
+      osc.frequency.setValueAtTime(s.f,audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(s.f*0.3,10),audioCtx.currentTime+s.d);
+      gain.gain.setValueAtTime(0.7,audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+s.d);
+      osc.connect(gain);
+      gain.connect(beatpadVolumeNode);
+      osc.start();
+      osc.stop(audioCtx.currentTime+s.d+0.05);
+    }
+
+    function startBeatpadLoop(){
+      if(beatpadPlaying)return;
+      beatpadPlaying=true;
+      if(!audioCtx){audioCtx=new(window.AudioContext||window.webkitAudioContext)()}
+      if(!beatpadVolumeNode){
+        beatpadVolumeNode=audioCtx.createGain();
+        beatpadVolumeNode.gain.value=beatpadVol;
+        beatpadVolumeNode.connect(audioCtx.destination);
+      }
+      var playBtn=document.getElementById('beatpadPlay');
+      if(playBtn){playBtn.textContent='⏸ Pause';playBtn.style.background='var(--accent-2)'}
+
+      var samples=[
+        {n:'Kick',f:60,d:0.4},{n:'Snare',f:200,d:0.2},
+        {n:'HiHat',f:8000,d:0.05},{n:'Clap',f:1200,d:0.15},
+        {n:'Tom',f:100,d:0.3},{n:'Rim',f:600,d:0.1},
+        {n:'Bass',f:80,d:0.4},{n:'Stab',f:440,d:0.2},
+        {n:'Crash',f:5000,d:0.5}
+      ];
+
+      var stepDurations=[0.25,0.25,0.25,0.25,0.5,0.5,0.25,0.5];
+
+      var scheduleNote=function(){
+        if(!beatpadPlaying)return;
+        var s=samples[beatpadNextNote%samples.length];
+        playBeatSample(s,beatpadNextNote%samples.length);
+        beatpadNextNote=(beatpadNextNote+1)%samples.length;
+
+        var stepDur=(60/beatpadBpm)*stepDurations[beatpadNextNote%stepDurations.length];
+        beatpadScheduleTimer=setTimeout(scheduleNote,stepDur*1000);
+      };
+      scheduleNote();
+    }
+
+    function stopBeatpadLoop(){
+      beatpadPlaying=false;
+      if(beatpadScheduleTimer){
+        clearTimeout(beatpadScheduleTimer);
+        beatpadScheduleTimer=null;
+      }
+      beatpadNextNote=0;
+      var playBtn=document.getElementById('beatpadPlay');
+      if(playBtn){playBtn.textContent='▶ Play';playBtn.style.background=''}
     }
 
     /* === Equalizer === */
