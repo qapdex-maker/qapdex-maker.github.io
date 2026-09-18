@@ -1089,10 +1089,10 @@
 
     /* State */
     var songs=[
-      {n:'Song 1',a:'SoundHelix',u:'./assets/music/SoundHelix-Song-1.mp3',src:'demo'},
-      {n:'Song 2',a:'SoundHelix',u:'./assets/music/SoundHelix-Song-2.mp3',src:'demo'},
-      {n:'Song 3',a:'SoundHelix',u:'./assets/music/SoundHelix-Song-3.mp3',src:'demo'},
-      {n:'Song 4',a:'SoundHelix',u:'./assets/music/SoundHelix-Song-4.mp3',src:'demo'}
+      {n:'Macrohard Anthems',a:'IDUN Studio',u:'./assets/music/SoundHelix-Song-1.mp3',src:'local'},
+      {n:'Maker of Cancellation',a:'Perchance Sound',u:'./assets/music/SoundHelix-Song-2.mp3',src:'local'},
+      {n:'Neo-Brutalist Beat',a:'qapdex-maker',u:'./assets/music/SoundHelix-Song-3.mp3',src:'local'},
+      {n:'IDUN Tone',a:'IDUN Studio',u:'./assets/music/SoundHelix-Song-4.mp3',src:'local'}
     ];
     var favIds=[];
     var radioStations=[];
@@ -1167,159 +1167,397 @@
       draw();
     }
 
-    /* === Beatpad mit Play/Stop Loop === */
-    var beatpadGain=null;
-    var beatpadLoopId=null;
-    var beatpadPlaying=false;
-    var beatpadBpm=120;
-    var beatpadVol=0.5;
-    var beatpadPad=null;
-    var beatpadScheduleTimer=null;
-    var beatpadNextNote=0;
-    var beatpadVolumeNode=null;
+    /* === Pattern Sequencer === */
+    var seqPattern = [];
+    var seqPlaying = false;
+    var seqBpm = 120;
+    var seqVol = 0.7;
+    var seqStep = 0;
+    var seqTimer = null;
+    var seqBuffers = [];
+    var seqCtx = null;
+    var seqMasterGain = null;
+    var seqLoaded = false;
 
-    function initBeatpad(){
-      beatpadPad=document.getElementById('musBeatpad');
-      if(!beatpadPad)return;
+    var seqSamples = [
+      { file: './assets/samples/909kick1.mp3', name: 'Kick', color: '#ff4000' },
+      { file: './assets/samples/909snare1.mp3', name: 'Snare', color: '#2547ff' },
+      { file: './assets/samples/909closehat.mp3', name: 'HiHat', color: '#ffd400' },
+      { file: './assets/samples/808openhat.mp3', name: 'OpnHat', color: '#ff8000' },
+      { file: './assets/samples/punch.mp3', name: 'Clap', color: '#0f0' },
+      { file: './assets/samples/jubass1.mp3', name: 'Bass', color: '#f0f' },
+      { file: './assets/samples/subbass.mp3', name: 'Sub', color: '#800' },
+      { file: './assets/samples/cowbell.mp3', name: 'Bell', color: '#666' }
+    ];
 
-      var samples=[
-        {n:'Kick',f:60,d:0.4,c:'#ff4000'},{n:'Snare',f:200,d:0.2,c:'#2547ff'},
-        {n:'HiHat',f:8000,d:0.05,c:'#ffd400'},{n:'Clap',f:1200,d:0.15,c:'#0f0'},
-        {n:'Tom',f:100,d:0.3,c:'#f0f'},{n:'Rim',f:600,d:0.1,c:'#0ff'},
-        {n:'Bass',f:80,d:0.4,c:'#ff8000'},{n:'Stab',f:440,d:0.2,c:'#800'},
-        {n:'Crash',f:5000,d:0.5,c:'#666'}
-      ];
+    var seqSteps = 16;
 
-      samples.forEach(function(s,i){
-        var b=document.createElement('button');
-        b.className='beatpad-btn';
-        b.textContent=s.n;
-        b.style.background=s.c;
-        b.dataset.idx=i;
-        b.addEventListener('click',function(){
-          try{
-            if(!audioCtx){
-              audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-            }
-            ensureResumed();
-            playBeatSample(s,i);
-            b.style.transform='scale(.85)';
-            setTimeout(function(){b.style.transform=''},80);
-          }catch(e){}
-        });
-        beatpadPad.appendChild(b);
+    function initSequencer() {
+      var pad = document.getElementById('musBeatpad');
+      if (!pad) return;
+
+      // Init pattern (empty)
+      for (var i = 0; i < seqSamples.length; i++) {
+        seqPattern[i] = [];
+        for (var j = 0; j < seqSteps; j++) {
+          seqPattern[i][j] = false;
+        }
+      }
+
+      // Load samples
+      loadSeqSamples().then(function() {
+        buildSeqGrid(pad);
+        buildSeqControls(pad);
+        seqLoaded = true;
+      }).catch(function(e) {
+        // Fallback: simple pad
+        buildFallbackPad(pad);
+      });
+    }
+
+    function loadSeqSamples() {
+      if (!seqCtx) {
+        seqCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      var promises = seqSamples.map(function(s) {
+        return fetch(s.file)
+          .then(function(r) { return r.arrayBuffer(); })
+          .then(function(buf) { return seqCtx.decodeAudioData(buf); })
+          .then(function(decoded) {
+            seqBuffers.push(decoded);
+          })
+          .catch(function() {
+            seqBuffers.push(null);
+          });
       });
 
-      // Play Button
-      var playBtn=document.getElementById('beatpadPlay');
-      if(playBtn){
-        playBtn.addEventListener('click',function(){
-          if(beatpadPlaying){
-            stopBeatpadLoop();
-          } else {
-            startBeatpadLoop();
-          }
-        });
+      return Promise.all(promises);
+    }
+
+    function playStepSound(sampleIdx) {
+      if (!seqLoaded || !seqBuffers[sampleIdx] || !seqCtx) return;
+      if (seqCtx.state === 'suspended') seqCtx.resume();
+
+      if (!seqMasterGain) {
+        seqMasterGain = seqCtx.createGain();
+        seqMasterGain.gain.value = seqVol;
+        seqMasterGain.connect(seqCtx.destination);
       }
 
-      // Stop Button
-      var stopBtn=document.getElementById('beatpadStop');
-      if(stopBtn){
-        stopBtn.addEventListener('click',function(){
-          stopBeatpadLoop();
-        });
-      }
+      var src = seqCtx.createBufferSource();
+      var gain = seqCtx.createGain();
+      src.buffer = seqBuffers[sampleIdx];
+      gain.gain.value = 0.8;
+      src.connect(gain);
+      gain.connect(seqMasterGain);
+      src.start();
+    }
 
-      // BPM Selector
-      var bpmSel=document.getElementById('beatpadBpm');
-      if(bpmSel){
-        bpmSel.addEventListener('change',function(){
-          beatpadBpm=parseInt(this.value);
-          if(beatpadPlaying){
-            // Restart with new BPM
-            stopBeatpadLoop();
-            startBeatpadLoop();
-          }
+    function buildSeqGrid(pad) {
+      // Remove old content
+      var oldPad = pad.querySelector('.musBeatpad');
+      if (oldPad) oldPad.remove();
+
+      // Main container
+      var container = document.createElement('div');
+      container.className = 'seq-container';
+
+      // Step numbers
+      var stepRow = document.createElement('div');
+      stepRow.className = 'seq-step-row';
+      for (var j = 0; j < seqSteps; j++) {
+        var stepNum = document.createElement('span');
+        stepNum.className = 'seq-step-num';
+        stepNum.textContent = (j + 1).toString();
+        stepNum.dataset.step = j;
+        stepRow.appendChild(stepNum);
+      }
+      container.appendChild(stepRow);
+
+      // Grid rows (8 samples)
+      seqSamples.forEach(function(sample, i) {
+        var row = document.createElement('div');
+        row.className = 'seq-row';
+
+        // Label
+        var label = document.createElement('span');
+        label.className = 'seq-label';
+        label.textContent = sample.name;
+        label.style.background = sample.color;
+        row.appendChild(label);
+
+        // Steps
+        for (var j = 0; j < seqSteps; j++) {
+          var step = document.createElement('button');
+          step.className = 'seq-step' + (seqPattern[i][j] ? ' active' : '');
+          step.dataset.row = i;
+          step.dataset.col = j;
+          step.addEventListener('click', toggleStep);
+          row.appendChild(step);
+        }
+        container.appendChild(row);
+      });
+
+      pad.appendChild(container);
+
+      // Playhead marker
+      updatePlayhead();
+    }
+
+    function buildSeqControls(pad) {
+      // Header with controls
+      var header = pad.parentElement.querySelector('.beatpad-header');
+      if (!header) return;
+
+      // Update BPM
+      var bpmSel = header.querySelector('#beatpadBpm');
+      if (bpmSel) {
+        bpmSel.addEventListener('change', function() {
+          seqBpm = parseInt(this.value);
         });
       }
 
       // Volume
-      var volSlider=document.getElementById('beatpadVol');
-      var volLabel=document.getElementById('beatpadVolL');
-      if(volSlider){
-        volSlider.addEventListener('input',function(){
-          beatpadVol=parseInt(this.value)/100;
-          if(beatpadVolumeNode){
-            beatpadVolumeNode.gain.setValueAtTime(beatpadVol,audioCtx.currentTime);
+      var volSlider = header.querySelector('#beatpadVol');
+      var volLabel = header.querySelector('#beatpadVolL');
+      if (volSlider) {
+        volSlider.addEventListener('input', function() {
+          seqVol = parseInt(this.value) / 100;
+          if (seqMasterGain) {
+            seqMasterGain.gain.setValueAtTime(seqVol, seqCtx.currentTime);
           }
-          if(volLabel)volLabel.textContent=this.value+'%';
+          if (volLabel) volLabel.textContent = this.value + '%';
         });
       }
+
+      // Play button
+      var playBtn = header.querySelector('#beatpadPlay');
+      if (playBtn) {
+        playBtn.addEventListener('click', toggleSequencer);
+      }
+
+      // Stop button
+      var stopBtn = header.querySelector('#beatpadStop');
+      if (stopBtn) {
+        stopBtn.addEventListener('click', stopSequencer);
+      }
+
+      // Shuffle button
+      var shuffleBtn = document.createElement('button');
+      shuffleBtn.className = 'beatpad-btn-lg seq-shuffle';
+      shuffleBtn.textContent = '🔀 Shuffle';
+      shuffleBtn.title = 'Random pattern';
+      shuffleBtn.addEventListener('click', shufflePattern);
+      header.appendChild(shuffleBtn);
+
+      // Clear button
+      var clearBtn = document.createElement('button');
+      clearBtn.className = 'beatpad-btn-lg seq-clear';
+      clearBtn.textContent = '🗑 Clear';
+      clearBtn.title = 'Clear pattern';
+      clearBtn.addEventListener('click', clearPattern);
+      header.appendChild(clearBtn);
+
+      // Preset button
+      var presetBtn = document.createElement('button');
+      presetBtn.className = 'beatpad-btn-lg seq-preset';
+      presetBtn.textContent = '📋 Preset';
+      presetBtn.title = 'Load preset pattern';
+      presetBtn.addEventListener('click', loadPresetPattern);
+      header.appendChild(presetBtn);
     }
 
-    function playBeatSample(s,i){
-      ensureResumed();
-      if(!beatpadVolumeNode){
-        beatpadVolumeNode=audioCtx.createGain();
-        beatpadVolumeNode.gain.value=beatpadVol;
-        beatpadVolumeNode.connect(audioCtx.destination);
-      }
-      var osc=audioCtx.createOscillator();
-      var gain=audioCtx.createGain();
-      osc.type=i===2?'square':i===7?'sawtooth':'sine';
-      osc.frequency.setValueAtTime(s.f,audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(Math.max(s.f*0.3,10),audioCtx.currentTime+s.d);
-      gain.gain.setValueAtTime(0.7,audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+s.d);
-      osc.connect(gain);
-      gain.connect(beatpadVolumeNode);
-      osc.start();
-      osc.stop(audioCtx.currentTime+s.d+0.05);
+    function toggleStep() {
+      var row = parseInt(this.dataset.row);
+      var col = parseInt(this.dataset.col);
+      seqPattern[row][col] = !seqPattern[row][col];
+      this.classList.toggle('active');
+
+      // Play sample on click
+      playStepSound(row);
     }
 
-    function startBeatpadLoop(){
-      if(beatpadPlaying)return;
-      beatpadPlaying=true;
-      if(!audioCtx){audioCtx=new(window.AudioContext||window.webkitAudioContext)()}
-      if(!beatpadVolumeNode){
-        beatpadVolumeNode=audioCtx.createGain();
-        beatpadVolumeNode.gain.value=beatpadVol;
-        beatpadVolumeNode.connect(audioCtx.destination);
-      }
-      var playBtn=document.getElementById('beatpadPlay');
-      if(playBtn){playBtn.textContent='⏸ Pause';playBtn.style.background='var(--accent-2)'}
+    function updatePlayhead() {
+      // Remove old playhead markers
+      document.querySelectorAll('.seq-step.active-step').forEach(function(el) {
+        el.classList.remove('active-step');
+      });
 
-      var samples=[
-        {n:'Kick',f:60,d:0.4},{n:'Snare',f:200,d:0.2},
-        {n:'HiHat',f:8000,d:0.05},{n:'Clap',f:1200,d:0.15},
-        {n:'Tom',f:100,d:0.3},{n:'Rim',f:600,d:0.1},
-        {n:'Bass',f:80,d:0.4},{n:'Stab',f:440,d:0.2},
-        {n:'Crash',f:5000,d:0.5}
+      if (!seqPlaying) return;
+
+      // Mark current step
+      var stepNums = document.querySelectorAll('.seq-step-num');
+      stepNums.forEach(function(el, i) {
+        if (i % seqSteps === seqStep) {
+          el.classList.add('active-step');
+        }
+      });
+    }
+
+    function sequencerLoop() {
+      if (!seqPlaying) return;
+
+      // Play sounds for current step
+      for (var i = 0; i < seqSamples.length; i++) {
+        if (seqPattern[i][seqStep]) {
+          playStepSound(i);
+        }
+      }
+
+      // Visual feedback
+      var currentSteps = document.querySelectorAll('.seq-step[data-col="' + seqStep + '"]');
+      currentSteps.forEach(function(el) {
+        el.classList.add('current');
+        setTimeout(function() { el.classList.remove('current'); }, 100);
+      });
+
+      // Advance step
+      seqStep = (seqStep + 1) % seqSteps;
+      updatePlayhead();
+
+      // Schedule next step (16th note)
+      var stepDuration = (60 / seqBpm) / 4 * 1000;
+      seqTimer = setTimeout(sequencerLoop, stepDuration);
+    }
+
+    function toggleSequencer() {
+      if (seqPlaying) {
+        stopSequencer();
+      } else {
+        startSequencer();
+      }
+    }
+
+    function startSequencer() {
+      if (!seqLoaded) return;
+      seqPlaying = true;
+      if (!seqCtx) seqCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (seqCtx.state === 'suspended') seqCtx.resume();
+
+      if (!seqMasterGain) {
+        seqMasterGain = seqCtx.createGain();
+        seqMasterGain.gain.value = seqVol;
+        seqMasterGain.connect(seqCtx.destination);
+      }
+
+      var playBtn = document.getElementById('beatpadPlay');
+      if (playBtn) {
+        playBtn.textContent = '⏸ Pause';
+        playBtn.style.background = 'var(--accent-2)';
+      }
+
+      seqStep = 0;
+      sequencerLoop();
+    }
+
+    function stopSequencer() {
+      seqPlaying = false;
+      seqStep = 0;
+      if (seqTimer) {
+        clearTimeout(seqTimer);
+        seqTimer = null;
+      }
+      updatePlayhead();
+
+      var playBtn = document.getElementById('beatpadPlay');
+      if (playBtn) {
+        playBtn.textContent = '▶ Play';
+        playBtn.style.background = '';
+      }
+    }
+
+    function shufflePattern() {
+      clearPattern();
+      for (var i = 0; i < seqSamples.length; i++) {
+        for (var j = 0; j < seqSteps; j++) {
+          // Higher probability for kick on 1,5,9,13 and snare on 5,13
+          var prob = 0.15;
+          if (i === 0 && j % 4 === 0) prob = 0.8; // Kick on downbeats
+          if (i === 1 && (j === 4 || j === 12)) prob = 0.7; // Snare on 5,13
+          if (i === 2) prob = 0.5; // HiHat frequent
+          if (Math.random() < prob) {
+            seqPattern[i][j] = true;
+          }
+        }
+      }
+      rebuildSeqGrid();
+    }
+
+    function clearPattern() {
+      for (var i = 0; i < seqSamples.length; i++) {
+        for (var j = 0; j < seqSteps; j++) {
+          seqPattern[i][j] = false;
+        }
+      }
+      rebuildSeqGrid();
+    }
+
+    function loadPresetPattern() {
+      clearPattern();
+      // House beat: kick 1,5,9,13 / snare 5,13 / hihat 1,3,5,7,9,11,13,15
+      var kickSteps = [0, 4, 8, 12];
+      var snareSteps = [4, 12];
+      var hihatSteps = [0, 2, 4, 6, 8, 10, 12, 14];
+
+      kickSteps.forEach(function(s) { seqPattern[0][s] = true; });
+      snareSteps.forEach(function(s) { seqPattern[1][s] = true; });
+      hihatSteps.forEach(function(s) { seqPattern[2][s] = true; });
+
+      rebuildSeqGrid();
+    }
+
+    function rebuildSeqGrid() {
+      var pad = document.getElementById('musBeatpad');
+      if (!pad) return;
+      var grid = pad.querySelector('.seq-container');
+      if (!grid) return;
+
+      var steps = grid.querySelectorAll('.seq-step');
+      steps.forEach(function(el) {
+        var row = parseInt(el.dataset.row);
+        var col = parseInt(el.dataset.col);
+        if (seqPattern[row] && seqPattern[row][col]) {
+          el.classList.add('active');
+        } else {
+          el.classList.remove('active');
+        }
+      });
+    }
+
+    function buildFallbackPad(pad) {
+      // Simple oscillator-based pad if samples fail
+      pad.innerHTML = '';
+      var samples = [
+        { n: 'Kick', c: '#ff4000' }, { n: 'Snare', c: '#2547ff' },
+        { n: 'HiHat', c: '#ffd400' }, { n: 'Clap', c: '#0f0' },
+        { n: 'Tom', c: '#f0f' }, { n: 'Bass', c: '#ff8000' },
+        { n: 'Stab', c: '#800' }, { n: 'Crash', c: '#666' }
       ];
-
-      var stepDurations=[0.25,0.25,0.25,0.25,0.5,0.5,0.25,0.5];
-
-      var scheduleNote=function(){
-        if(!beatpadPlaying)return;
-        var s=samples[beatpadNextNote%samples.length];
-        playBeatSample(s,beatpadNextNote%samples.length);
-        beatpadNextNote=(beatpadNextNote+1)%samples.length;
-
-        var stepDur=(60/beatpadBpm)*stepDurations[beatpadNextNote%stepDurations.length];
-        beatpadScheduleTimer=setTimeout(scheduleNote,stepDur*1000);
-      };
-      scheduleNote();
-    }
-
-    function stopBeatpadLoop(){
-      beatpadPlaying=false;
-      if(beatpadScheduleTimer){
-        clearTimeout(beatpadScheduleTimer);
-        beatpadScheduleTimer=null;
-      }
-      beatpadNextNote=0;
-      var playBtn=document.getElementById('beatpadPlay');
-      if(playBtn){playBtn.textContent='▶ Play';playBtn.style.background=''}
+      samples.forEach(function(s, i) {
+        var b = document.createElement('button');
+        b.className = 'beatpad-btn';
+        b.textContent = s.n;
+        b.style.background = s.c;
+        b.addEventListener('click', function() {
+          if (!seqCtx) seqCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (!seqMasterGain) {
+            seqMasterGain = seqCtx.createGain();
+            seqMasterGain.gain.value = 0.3;
+            seqMasterGain.connect(seqCtx.destination);
+          }
+          var o = seqCtx.createOscillator(), g = seqCtx.createGain();
+          o.type = i === 2 ? 'square' : 'sine';
+          o.frequency.value = [60, 200, 8000, 1200, 100, 80, 440, 5000][i];
+          g.gain.setValueAtTime(0.5, seqCtx.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.001, seqCtx.currentTime + 0.3);
+          o.connect(g); g.connect(seqMasterGain);
+          o.start(); o.stop(seqCtx.currentTime + 0.3);
+          b.style.transform = 'scale(.92)';
+          setTimeout(function() { b.style.transform = ''; }, 80);
+        });
+        pad.appendChild(b);
+      });
     }
 
     /* === Equalizer === */
@@ -1605,7 +1843,7 @@
     });
 
     /* === Init === */
-    initBeatpad();initEqualizer();initVisualizer();
+    initSequencer();initEqualizer();initVisualizer();
     loadFavs();loadCustom();loadRadios();
     renderActiveTab();updateUI();
   }
