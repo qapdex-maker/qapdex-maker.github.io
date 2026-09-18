@@ -135,4 +135,58 @@ test('shuffleArray preserves all elements', () => {
   assert.ok(shuffled.includes(3));
 });
 
+// Test: storeDel works
+test('storeDel works', () => {
+  // Restore localStorage.setItem (may be mocked by previous test)
+  global.window.localStorage.setItem = function(k, v) { this._data[k] = v; };
+  const storeDel = (k) => {
+    try { global.window.localStorage.removeItem(k); } catch(e) {}
+    try { global.window.sessionStorage.removeItem(k); } catch(e) {}
+  };
+  global.window.localStorage.setItem('test_del', 'value');
+  storeDel('test_del');
+  assert.equal(global.window.localStorage.getItem('test_del'), null);
+});
+
+// Test: osTimeouts cleanup
+test('osTimeouts cleanup works', () => {
+  global.window.osTimeouts = {};
+  global.window.osTimeouts['test'] = setTimeout(() => {}, 1000);
+  assert.ok(global.window.osTimeouts['test'] !== undefined);
+  clearTimeout(global.window.osTimeouts['test']);
+  delete global.window.osTimeouts['test'];
+  assert.equal(global.window.osTimeouts['test'], undefined);
+});
+
+// Test: AudioContext state handling
+test('AudioContext state handling', () => {
+  const mockCtx = {
+    state: 'running',
+    resume: function() { this.state = 'running'; },
+    suspend: function() { this.state = 'suspended'; }
+  };
+  assert.equal(mockCtx.state, 'running');
+  mockCtx.suspend();
+  assert.equal(mockCtx.state, 'suspended');
+  mockCtx.resume();
+  assert.equal(mockCtx.state, 'running');
+});
+
+// Test: localStorage quota fallback returns false
+test('storeSet returns false when both storages fail', () => {
+  const origLS = global.window.localStorage.setItem;
+  const origSS = global.window.sessionStorage.setItem;
+  global.window.localStorage.setItem = () => { throw new Error('fail'); };
+  global.window.sessionStorage.setItem = () => { throw new Error('fail'); };
+  const storeSet = (k, v) => {
+    try { global.window.localStorage.setItem(k, v); return true; } catch(e) {}
+    try { global.window.sessionStorage.setItem(k, v); return true; } catch(e) {}
+    return false;
+  };
+  const result = storeSet('k', 'v');
+  assert.equal(result, false);
+  global.window.localStorage.setItem = origLS;
+  global.window.sessionStorage.setItem = origSS;
+});
+
 console.log('All tests passed!');

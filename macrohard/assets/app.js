@@ -130,8 +130,7 @@
     desk.style.backgroundImage='url('+url+')';desk.style.backgroundSize='cover';
     try{localStorage.setItem('os_wall',url);}catch(e){}
   }
-  var savedWall=localStorage.getItem('os_wall');
-  if(savedWall)setWallpaper(savedWall);
+  try{var savedWall=localStorage.getItem('os_wall');if(savedWall)setWallpaper(savedWall);}catch(e){}
   /* Snapping */
   /**
    * Snapped ein Fenster an eine Bildschirmkante
@@ -225,6 +224,7 @@
 
   function sortDeskIcons(by){
     var c=document.getElementById('deskIcons');
+    if(!c) return;
     var items=Array.from(c.children);
     items.sort(function(a,b){
       var la=a.querySelector('.lbl').textContent.toLowerCase();
@@ -471,7 +471,7 @@
       case 'notes': body='<div class="ntLayout"><div class="ntSidebar"><input type="text" id="ntSearch" placeholder="Suchen..."><div class="ntTags" id="ntTags"></div><div class="ntList" id="ntList"></div><button class="cBtn" id="ntNew">+ Neue Notiz</button></div><div class="ntEditor"><input type="text" id="ntTitle" placeholder="Titel"><input type="text" id="ntTagInput" placeholder="Tags (kommagetrennt)"><textarea id="ntContent" placeholder="Markdown..."></textarea><div class="ntPreview" id="ntPreview"></div><div class="ntSaveRow"><button class="cBtn" id="ntSave">Speichern</button><button class="cBtn op" id="ntTogglePreview">Preview</button></div></div></div>';break;
     }
     mk.innerHTML='<div class="wtitle"><span class="wact"></span><span class="wtxt">'+title+'</span><button class="wmin" title="Minimize">_</button><button class="wmax" title="Maximize">□</button><button class="wclose" title="Close">×</button></div><div class="wbody">'+body+'</div><div class="wnd-resize" data-dot="⬢"></div>';
-    document.getElementById('desktop').appendChild(mk);
+    var desktopEl2=document.getElementById('desktop');if(desktopEl2) desktopEl2.appendChild(mk);
     if(id==='calculator') buildCalc();
     if(id==='explorer') buildExplorer();
     if(id==='paint') buildPaint();
@@ -506,6 +506,14 @@
         clearInterval(window.osIntervals[wId]);
         delete window.osIntervals[wId];
       }
+      // Taskmanager cleanup
+      if(wId==='taskmgr'){
+        if(window.osIntervals['taskmgr']){
+          clearInterval(window.osIntervals['taskmgr']);
+          delete window.osIntervals['taskmgr'];
+        }
+        TASKMGR_INITIALIZED=false;
+      }
       // Explorer cleanup
       if(wId==='explorer'){
         EXPLOADER_INITIALIZED=false;
@@ -532,6 +540,7 @@
         if(visRafId){cancelAnimationFrame(visRafId);visRafId=null;}
         if(typeof stopSequencer==='function')stopSequencer();
         if(isRadio)cleanupRadio();
+        if(visRafId){cancelAnimationFrame(visRafId);visRafId=null;}
         try{if(audioEl&&!audioEl.paused)audioEl.pause();}catch(err){}
         try{if(audioCtx&&audioCtx.state==='running')audioCtx.suspend();}catch(err){}
         try{if(SEQ&&SEQ.ctx&&SEQ.ctx.state==='running')SEQ.ctx.suspend();}catch(err){}
@@ -603,7 +612,7 @@
           updateFocus();
         }
       });
-      document.getElementById('tbCenter').appendChild(tbIcon);
+      var tbCenterEl=document.getElementById('tbCenter');if(tbCenterEl) tbCenterEl.appendChild(tbIcon);
     } else {
       var existingIcon=document.getElementById('tb-'+id);
       if(existingIcon){
@@ -1239,6 +1248,7 @@
     var eqBands=[60,150,400,1000,3000,8000];
     var eqValues={60:0,150:0,400:0,1000:0,3000:0,8000:0};
     var isRadio=false;
+    var activeExtraTab='beatpad';
 
     function applyEQValues(){
       eqBands.forEach(function(freq,i){
@@ -1295,7 +1305,11 @@
     /* === Audio Graph === */
     function setupAudio(){
       if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-      if(audioEl) return;
+      if(audioEl) {
+        // Resume AudioContext if suspended
+        if(audioCtx.state==='suspended'){try{audioCtx.resume();}catch(e){}}
+        return;
+      }
       audioEl=new Audio();
       audioEl.volume=0.7;
       sourceNode=audioCtx.createMediaElementSource(audioEl);
@@ -1318,10 +1332,12 @@
     /* === Visualizer === */
     function initVisualizer(){
       var canvas=document.getElementById('musVisCanvas');if(!canvas)return;
+      if(visRafId){cancelAnimationFrame(visRafId);visRafId=null;}
       var ctx=canvas.getContext('2d');
+      if(!ctx)return;
       var buf=new Uint8Array(analyser?analyser.frequencyBinCount:64);
-      if(visRafId)cancelAnimationFrame(visRafId);
       function draw(){
+        if(!document.getElementById('musVisCanvas')){visRafId=null;return;}
         visRafId=requestAnimationFrame(draw);
         if(!analyser)return;
         analyser.getByteFrequencyData(buf);
@@ -2002,7 +2018,7 @@
       var s=songs[i];
       setupAudio();
       audioEl.src=s.u;audioEl.load();
-      initVisualizer();
+      if(activeExtraTab==='vis')initVisualizer();
       playAudio();playing=true;
       updateUI();
     }
@@ -2040,7 +2056,7 @@
     // Cleanup Radio context
     function cleanupRadio(){
       if(radioSource){try{radioSource.disconnect();}catch(e){radioSource=null;}}
-      if(radioCtx&&radioCtx.state==='running'){radioCtx.suspend();}
+      if(radioCtx&&radioCtx.state==='running'){try{radioCtx.suspend();}catch(e){}}
     }
     function stop(){
       if(isRadio){cleanupRadio();}
@@ -2255,6 +2271,9 @@
     player.querySelectorAll('.musExtraTab[data-extra]').forEach(function(btn){
       btn.addEventListener('click',function(){
         var extra=this.dataset.extra;
+        activeExtraTab=extra;
+        // Stop visualizer when switching away
+        if(extra!=='vis'&&visRafId){cancelAnimationFrame(visRafId);visRafId=null;}
         player.querySelectorAll('.musExtraTab').forEach(function(b){b.classList.remove('active')});
         btn.classList.add('active');
         player.querySelectorAll('.musExtra').forEach(function(p){p.style.display='none'});
@@ -2297,10 +2316,11 @@
     /* === Init === */
     /* Register cleanup for when Music app is closed */
     window.osTimeouts['music_cleanup']=function(){
-      if(visRafId)cancelAnimationFrame(visRafId);
+      if(visRafId){cancelAnimationFrame(visRafId);visRafId=null;}
       if(stopSequencer)stopSequencer();
       try{if(audioEl&&!audioEl.paused)audioEl.pause();}catch(e){}
       try{if(audioCtx&&audioCtx.state!=='closed')audioCtx.suspend();}catch(e){}
+      try{if(SEQ&&SEQ.ctx&&SEQ.ctx.state!=='closed')SEQ.ctx.suspend();}catch(e){}
     };
     initSequencer();initEqualizer();
     loadFavs();loadCustom();loadRadios();
@@ -2424,11 +2444,12 @@
     if(stDarkEl) stDarkEl.addEventListener('change',function(){
       document.documentElement.dataset.theme=this.checked?'dark':'';
       try{localStorage.setItem('os_dark',this.checked?'1':'0');}catch(e){}
+      updateThemeToggleBtn();
     });
     var stScan=document.getElementById('stScan');
     if(stScan) stScan.addEventListener('change',function(){
       document.documentElement.classList.toggle('scanlines',this.checked);
-      try{localStorage.setItem('os_scan',this.checked?'1':'0');}catch(e){}
+      storeSet('os_scan',this.checked?'1':'0');
     });
     var stLangEl=document.getElementById('stLang');
     if(stLangEl) stLangEl.addEventListener('change',function(){lang=this.value;refreshUI();});
@@ -2527,7 +2548,6 @@
       if(clearBtn) clearBtn.addEventListener('click',function(){
         if(confirm('Alle lokalen Daten löschen?')){
           try{localStorage.clear();}catch(e){}
-          // Soft reset: reset UI state and clear session storage instead of location.reload()
           try{sessionStorage.clear();}catch(e){}
           document.documentElement.className='';
           document.documentElement.style.removeProperty('--accent');
@@ -2779,13 +2799,17 @@
 
     /* Events */
     addr.addEventListener('keydown',function(e){if(e.key==='Enter')openUrl(addr.value)});
-    document.getElementById('brGo').addEventListener('click',function(){openUrl(addr.value)});
-    document.getElementById('brBack').addEventListener('click',function(){if(histIdx>0){histIdx--;addr.value=history[histIdx];navigateTo(history[histIdx])}});
-    document.getElementById('brFwd').addEventListener('click',function(){if(histIdx<history.length-1){histIdx++;addr.value=history[histIdx];navigateTo(history[histIdx])}});
-    document.getElementById('brRefresh').addEventListener('click',function(){showTab(activeTab)});
-    document.getElementById('brHome').addEventListener('click',function(){openUrl('home')});
-    document.getElementById('brBm').addEventListener('click',function(){var u=prompt('Lesezeichen hinzufügen (URL):');if(u)openUrl(u)});
-    document.getElementById('brNewTab').addEventListener('click',function(){openUrl('home')});
+    ['brGo','brBack','brFwd','brRefresh','brHome','brBm','brNewTab'].forEach(function(bid){
+      var bel=document.getElementById(bid);if(bel) bel.addEventListener('click',function(){
+        if(bid==='brGo'&&addr)openUrl(addr.value);
+        else if(bid==='brBack'){if(histIdx>0){histIdx--;if(addr)addr.value=history[histIdx];navigateTo(history[histIdx]);}}
+        else if(bid==='brFwd'){if(histIdx<history.length-1){histIdx++;if(addr)addr.value=history[histIdx];navigateTo(history[histIdx]);}}
+        else if(bid==='brRefresh')showTab(activeTab);
+        else if(bid==='brHome')openUrl('home');
+        else if(bid==='brBm'){var u=prompt('Lesezeichen hinzufügen (URL):');if(u)openUrl(u);}
+        else if(bid==='brNewTab')openUrl('home');
+      });
+    });
 
     /* Init */
     tabs.push({id:uid(),url:'home',title:'Startseite'});
@@ -2877,7 +2901,7 @@ function buildEditor(){
   var langSel=document.getElementById('edLang');
   var stats=document.getElementById('edStats');
   var toolbar=document.querySelector('.edToolbar');
-  if(!area||!lines) return;
+  if(!area||!lines||!toolbar) return;
 
   var SK='editor_save';
   var SK_LANG='editor_lang';
@@ -2889,7 +2913,7 @@ function buildEditor(){
   }catch(e){}
   try{
     var lg=localStorage.getItem(SK_LANG);
-    if(lg) langSel.value=lg;
+    if(lg&&langSel) langSel.value=lg;
   }catch(e){}
 
   function updateLines(){
@@ -2922,13 +2946,15 @@ function buildEditor(){
     try{localStorage.setItem(SK_LANG,this.value);}catch(e){}
   });
 
-  toolbar.querySelector('#edNew').addEventListener('click',function(){
+  var edNewBtn=toolbar.querySelector('#edNew');
+  if(edNewBtn) edNewBtn.addEventListener('click',function(){
     area.value='';
     updateLines();
     toast('Neuer Editor');
   });
 
-  toolbar.querySelector('#edOpen').addEventListener('click',function(){
+  var edOpenBtn=toolbar.querySelector('#edOpen');
+  if(edOpenBtn) edOpenBtn.addEventListener('click',function(){
     var inp=document.createElement('input');
     inp.type='file';
     inp.accept='.txt,.js,.html,.css,.md,.json';
@@ -2949,12 +2975,13 @@ function buildEditor(){
     inp.click();
   });
 
-  toolbar.querySelector('#edSave').addEventListener('click',function(){
+  var edSaveBtn=toolbar.querySelector('#edSave');
+  if(edSaveBtn) edSaveBtn.addEventListener('click',function(){
     var content=area.value;
     var blob=new Blob([content],{type:'text/plain'});
     var a=document.createElement('a');
     a.href=URL.createObjectURL(blob);
-    a.download='document.'+(langSel.value==='md'?'md':langSel.value==='html'?'html':langSel.value==='css'?'css':'js');
+    a.download='document.'+(langSel&&langSel.value==='md'?'md':langSel&&langSel.value==='html'?'html':langSel&&langSel.value==='css'?'css':'js');
     a.click();
     URL.revokeObjectURL(a.href);
     toast('Gespeichert');
@@ -2967,7 +2994,7 @@ function buildEditor(){
 function buildImgeditor(){
   var canvas=document.getElementById('ieCanvas');
   var toolbar=document.querySelector('.ieToolbar');
-  if(!canvas||!toolbar) return;
+  if(!canvas||!toolbar||!canvas.getContext) return;
 
   var ctx=canvas.getContext('2d');
   var origImage=null;
@@ -3033,7 +3060,8 @@ function buildImgeditor(){
     }
   }
 
-  toolbar.querySelector('#ieLoad').addEventListener('click',function(){
+  var ieLoadBtn=toolbar.querySelector('#ieLoad');
+  if(ieLoadBtn) ieLoadBtn.addEventListener('click',function(){
     var inp=document.createElement('input');
     inp.type='file';
     inp.accept='image/*';
@@ -3059,19 +3087,22 @@ function buildImgeditor(){
     inp.click();
   });
 
-  toolbar.querySelector('#ieFilter').addEventListener('change',function(){
+  var ieFilterSel=toolbar.querySelector('#ieFilter');
+  if(ieFilterSel) ieFilterSel.addEventListener('change',function(){
     drawState.filters=this.value;
     applyFilters();
   });
 
-  toolbar.querySelector('#ieRotate').addEventListener('click',function(){
+  var ieRotateBtn=toolbar.querySelector('#ieRotate');
+  if(ieRotateBtn) ieRotateBtn.addEventListener('click',function(){
     if(!origImage) return;
     drawState.rotation=(drawState.rotation+90)%360;
     applyFilters();
     toast('Rotiert: '+drawState.rotation+'°');
   });
 
-  toolbar.querySelector('#ieResize').addEventListener('click',function(){
+  var ieResizeBtn=toolbar.querySelector('#ieResize');
+  if(ieResizeBtn) ieResizeBtn.addEventListener('click',function(){
     if(!origImage) return;
     var w=prompt('Breite (px):',canvas.width);
     var h=prompt('Höhe (px):',canvas.height);
@@ -3082,7 +3113,8 @@ function buildImgeditor(){
     }
   });
 
-  toolbar.querySelector('#ieCrop').addEventListener('click',function(){
+  var ieCropBtn=toolbar.querySelector('#ieCrop');
+  if(ieCropBtn) ieCropBtn.addEventListener('click',function(){
     if(!origImage) return;
     if(cropMode){cropMode=false;this.style.background='';toast('Crop abgebrochen');return;}
     cropMode=true;
@@ -3126,7 +3158,8 @@ function buildImgeditor(){
     if(btn) btn.style.background='';
   });
 
-  toolbar.querySelector('#ieExportPNG').addEventListener('click',function(){
+  var ieExportPngBtn=toolbar.querySelector('#ieExportPNG');
+  if(ieExportPngBtn) ieExportPngBtn.addEventListener('click',function(){
     var a=document.createElement('a');
     a.download='image.png';
     a.href=canvas.toDataURL('image/png');
@@ -3134,7 +3167,8 @@ function buildImgeditor(){
     toast('PNG exportiert');
   });
 
-  toolbar.querySelector('#ieExportJPG').addEventListener('click',function(){
+  var ieExportJpgBtn=toolbar.querySelector('#ieExportJPG');
+  if(ieExportJpgBtn) ieExportJpgBtn.addEventListener('click',function(){
     var a=document.createElement('a');
     a.download='image.jpg';
     a.href=canvas.toDataURL('image/jpeg',0.85);
@@ -3235,6 +3269,7 @@ function buildPomodoro(){
         remaining=remaining||totalSeconds;
       }
       interval=setInterval(tick,1000);
+      if(!window.osIntervals)window.osIntervals={};
       window.osIntervals['pomodoro']=interval;
       running=true;this.textContent='Pause';
       update();
@@ -3413,7 +3448,17 @@ function buildNotes(){
 
   loadNotes();
   render();
-}})();
+}
+
+/* ===== Global Cleanup on Window Close ===== */
+window.addEventListener('beforeunload',function(){
+  Object.keys(window.osIntervals||{}).forEach(function(k){clearInterval(window.osIntervals[k]);});
+  Object.keys(window.osTimeouts||{}).forEach(function(k){
+    var v=window.osTimeouts[k];
+    if(typeof v==='number')clearTimeout(v);
+    else if(typeof v==='function'){try{v();}catch(e){}}
+  });
+});})();
 
 /* AMIBIOS Setup — iframe window */
 function buildAMIBIOS(){
@@ -3456,7 +3501,9 @@ function buildTaskmgr(){
     content.className='tmContent';
     if(activeTab==='Prozesse'){
       var wins=document.querySelectorAll('.wnd');
-      if(!wins.length){
+      // Also count windows with iframes (like AMIBIOS)
+      var allWindows=document.querySelectorAll('[data-app]');
+      if(!allWindows.length){
         content.innerHTML='<div class="mock">Keine offenen Fenster</div>';
       } else {
         var table=document.createElement('div');
@@ -3466,7 +3513,7 @@ function buildTaskmgr(){
         header.className='tmHeader';
         header.innerHTML='<span class="col-name">Name</span><span class="col-cpu">CPU</span><span class="col-ram">Arbeitsspeicher</span><span class="col-status">Status</span><span class="col-action"></span>';
         table.appendChild(header);
-        wins.forEach(function(w){
+        allWindows.forEach(function(w){
           var nameEl=w.querySelector('.wtxt');
           if(!nameEl) return; // Skip if element not found
           var name=nameEl.textContent;
@@ -3488,7 +3535,7 @@ function buildTaskmgr(){
         /* Summary */
         var sum=document.createElement('div');
         sum.className='tmSummary';
-        sum.innerHTML='<span>'+wins.length+' Prozesse</span><span>CPU: '+(Math.random()*30).toFixed(0)+'%</span><span>RAM: '+(Math.random()*40+20).toFixed(0)+'%</span>';
+        sum.innerHTML='<span>'+allWindows.length+' Prozesse</span><span>CPU: '+(Math.random()*30).toFixed(0)+'%</span><span>RAM: '+(Math.random()*40+20).toFixed(0)+'%</span>';
         content.appendChild(sum);
       }
     } else if(activeTab==='Leistung'){
@@ -3611,8 +3658,13 @@ var audioCtx = null;
 
 function playSound(type) {
   try {
-    if (!audioCtx) audioCtx = new AudioCtx();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (!audioCtx){
+      audioCtx = new AudioCtx();
+    }
+    if (audioCtx.state === 'suspended'){
+      audioCtx.resume();
+      return; // Skip this call, will work next time
+    }
     var osc = audioCtx.createOscillator();
     var gain = audioCtx.createGain();
     osc.connect(gain);
@@ -3669,16 +3721,20 @@ function buildClock(){
   var timerInterval=null;
   var stopwatchStart=null;
   var stopwatchElapsed=0;
+  if(!window.osIntervals) window.osIntervals = {};
   var clockIntervalId=setInterval(function(){if(mode==='clock')render();},1000);
   window.osIntervals['clock_app']=clockIntervalId;
   function cleanupClock(){
-    clearInterval(clockIntervalId);
+    if(clockIntervalId){clearInterval(clockIntervalId);clockIntervalId=null;}
     if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
-    delete window.osIntervals['clock_app'];
-    delete window.osIntervals['clock_app_timer'];
+    if(window.osIntervals){
+      delete window.osIntervals['clock_app'];
+      delete window.osIntervals['clock_app_timer'];
+    }
   }
   window.osTimeouts['clock_cleanup']=cleanupClock;
   function render(){
+    if(!document.getElementById('clkBody')) return; // Window closed
     if(mode==='clock'){
       var now=new Date();
       body.innerHTML='<div class="clkDisplay">'+now.toLocaleTimeString('de-DE')+'</div><div class="clkDate">'+now.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'</div><div class="clkBtns"><button class="cBtn" data-mode="clock">Uhr</button><button class="cBtn" data-mode="timer">Timer</button><button class="cBtn" data-mode="stopwatch">Stoppuhr</button></div>';
@@ -3737,6 +3793,16 @@ function buildClock(){
   }
   render();
 }
+
+/* ===== Global Cleanup on Window Close ===== */
+window.addEventListener('beforeunload',function(){
+  Object.keys(window.osIntervals||{}).forEach(function(k){clearInterval(window.osIntervals[k]);});
+  Object.keys(window.osTimeouts||{}).forEach(function(k){
+    var v=window.osTimeouts[k];
+    if(typeof v==='number')clearTimeout(v);
+    else if(typeof v==='function'){try{v();}catch(e){}}
+  });
+});
 
 /* Farbwähler */
 function buildColorpicker(){
@@ -3862,3 +3928,13 @@ function buildGame(){
   }
   render();
 }
+
+/* ===== Global Cleanup on Window Close ===== */
+window.addEventListener('beforeunload',function(){
+  Object.keys(window.osIntervals||{}).forEach(function(k){clearInterval(window.osIntervals[k]);});
+  Object.keys(window.osTimeouts||{}).forEach(function(k){
+    var v=window.osTimeouts[k];
+    if(typeof v==='number')clearTimeout(v);
+    else if(typeof v==='function'){try{v();}catch(e){}}
+  });
+});
