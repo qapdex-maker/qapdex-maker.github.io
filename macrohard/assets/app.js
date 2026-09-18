@@ -222,13 +222,18 @@
     if(!wins.length){toast('Keine Fenster offen');return;}
     wins.forEach(function(w){
       var wId=w.getAttribute('data-app');
-      if(wId && window.osIntervals && window.osIntervals[wId]){
-        clearInterval(window.osIntervals[wId]);
-        delete window.osIntervals[wId];
+      var instId=w.getAttribute('data-inst')||wId;
+      if(instId && window.osIntervals){
+        Object.keys(window.osIntervals).forEach(function(k){
+          if(k===instId||k===wId){
+            clearInterval(window.osIntervals[k]);
+            delete window.osIntervals[k];
+          }
+        });
       }
       w.classList.add('closing');
       setTimeout(function(){w.remove();},200);
-      var tbIcon=document.getElementById('tb-'+wId);
+      var tbIcon=document.getElementById('tb-'+instId);
       if(tbIcon) tbIcon.remove();
     });
     focused=null;
@@ -716,61 +721,52 @@
       var wnd=this.closest('.wnd');
       var wId=wnd.getAttribute('data-app');
       var instId=wnd.getAttribute('data-inst') || wId;
-      if(instId && window.osIntervals && window.osIntervals[instId]){
-        clearInterval(window.osIntervals[instId]);
-        delete window.osIntervals[instId];
-      }
-      // Taskmanager cleanup
-      if(wId==='taskmgr'){
-        if(window.osIntervals['taskmgr']){
-          clearInterval(window.osIntervals['taskmgr']);
-          delete window.osIntervals['taskmgr'];
+      // Generic interval cleanup
+      try{
+        if(instId && window.osIntervals){
+          Object.keys(window.osIntervals).forEach(function(k){
+            if(k===instId||k.indexOf(instId)===0||k.indexOf(wId)===0){
+              clearInterval(window.osIntervals[k]);
+              delete window.osIntervals[k];
+            }
+          });
         }
-        TASKMGR_INITIALIZED=false;
-      }
-      // Explorer cleanup
-      if(wId==='explorer'){
-        EXPLOADER_INITIALIZED=false;
-      }
+      }catch(err){}
+      // App-specific cleanup flags (reset on close so re-init works)
+      if(wId==='taskmgr'){TASKMGR_INITIALIZED=false;}
+      if(wId==='explorer'){EXPLOADER_INITIALIZED=false;}
+      if(wId==='browser'){BROWSER_INITIALIZED=false;}
+      if(wId==='music'){MUSIC_INITIALIZED=false;}
+      // Stop music-specific resources
+      try{
+        if(wId==='music'){
+          if(visRafId){cancelAnimationFrame(visRafId);visRafId=null;}
+          if(typeof stopSequencer==='function')stopSequencer();
+          if(isRadio)cleanupRadio();
+          if(SEQ){SEQ.playing=false;SEQ.controlsInitialized=false;}
+          EQ_INITIALIZED=false;
+        }
+      }catch(err){}
       // Chat cleanup
-      if(wId==='chat'){
-        if(window.osTimeouts&&window.osTimeouts['chat_cleanup'])window.osTimeouts['chat_cleanup']();
-      }
-      // Browser cleanup
-      if(wId==='browser'){
-        BROWSER_INITIALIZED=false;
-      }
-      // Stop pomodoro interval on close
-      if(wId==='pomodoro'&&window.osIntervals['pomodoro']){
-        clearInterval(window.osIntervals['pomodoro']);
-        delete window.osIntervals['pomodoro'];
-      }
-      // Stop clock app intervals on close
-      if(wId==='clock'&&window.osTimeouts['clock_cleanup']){
-        window.osTimeouts['clock_cleanup']();
-      }
-      // Stop music-related intervals/timeouts on close
-      if(wId==='music'){
-        if(visRafId){cancelAnimationFrame(visRafId);visRafId=null;}
-        if(typeof stopSequencer==='function')stopSequencer();
-        if(isRadio)cleanupRadio();
-        if(visRafId){cancelAnimationFrame(visRafId);visRafId=null;}
-        try{if(audioEl&&!audioEl.paused)audioEl.pause();}catch(err){}
-        try{if(audioCtx&&audioCtx.state==='running')audioCtx.suspend();}catch(err){}
-        try{if(SEQ&&SEQ.ctx&&SEQ.ctx.state==='running')SEQ.ctx.suspend();}catch(err){}
-        if(SEQ){SEQ.playing=false;SEQ.controlsInitialized=false;}
-        EQ_INITIALIZED=false;
-        MUSIC_INITIALIZED=false;
-      }
-      // Stop taskmgr interval on close
-      if(wId==='taskmgr'&&window.osIntervals['taskmgr']){
-        clearInterval(window.osIntervals['taskmgr']);
-        delete window.osIntervals['taskmgr'];
-      }
+      try{
+        if(wId==='chat'&&window.osTimeouts&&window.osTimeouts['chat_cleanup']){
+          window.osTimeouts['chat_cleanup']();
+        }
+      }catch(err){}
+      // Clock cleanup
+      try{
+        if(wId==='clock'&&window.osTimeouts&&window.osTimeouts['clock_cleanup']){
+          window.osTimeouts['clock_cleanup']();
+        }
+      }catch(err){}
+      // Close animation + remove
       wnd.classList.add('closing');
       setTimeout(function(){wnd.remove();},200);
       var tbIconClose=document.getElementById('tb-'+instId);
       if(tbIconClose) tbIconClose.remove();
+      focused=null;
+      updateFocus();
+      saveSession();
     });
     mk.querySelector('.wmin').addEventListener('click',function(e){e.stopPropagation();
       var tbIcon=document.getElementById('tb-'+instId);
