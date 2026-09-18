@@ -2406,8 +2406,19 @@ function buildTaskmgr(){
   var body=document.getElementById('tmBody');if(!body) return;
   var tabs=['Prozesse','Leistung','App-Verlauf','Start','Benutzer'];
   var activeTab='Prozesse';
+
+  // Clear existing interval before creating new one
+  if(!window.osIntervals) window.osIntervals = {};
+  if(window.osIntervals['taskmgr']){
+    clearInterval(window.osIntervals['taskmgr']);
+    delete window.osIntervals['taskmgr'];
+  }
+
   function render(){
-    body.innerHTML='';
+    var currentBody=document.getElementById('tmBody');
+    if(!currentBody) return; // Window closed
+
+    currentBody.innerHTML='';
     /* Tab-Bar */
     var tabBar=document.createElement('div');
     tabBar.className='tmTabs';
@@ -2418,7 +2429,7 @@ function buildTaskmgr(){
       tab.addEventListener('click',function(){activeTab=t;render()});
       tabBar.appendChild(tab);
     });
-    body.appendChild(tabBar);
+    currentBody.appendChild(tabBar);
     /* Tab-Content */
     var content=document.createElement('div');
     content.className='tmContent';
@@ -2435,7 +2446,9 @@ function buildTaskmgr(){
         header.innerHTML='<span class="col-name">Name</span><span class="col-cpu">CPU</span><span class="col-ram">Arbeitsspeicher</span><span class="col-status">Status</span><span class="col-action"></span>';
         table.appendChild(header);
         wins.forEach(function(w){
-          var name=w.querySelector('.wtxt').textContent;
+          var nameEl=w.querySelector('.wtxt');
+          if(!nameEl) return; // Skip if element not found
+          var name=nameEl.textContent;
           var id=w.getAttribute('data-app')||'';
           var row=document.createElement('div');
           row.className='tmProc';
@@ -2458,18 +2471,28 @@ function buildTaskmgr(){
         content.appendChild(sum);
       }
     } else if(activeTab==='Leistung'){
-      content.innerHTML='<div class="mock">Leistungsdaten werden geladen...</div>';
+      /* CPU Chart */
+      var cpuVal=Math.floor(Math.random()*60+20);
+      var ramVal=Math.floor(Math.random()*50+30);
+      content.innerHTML='<div style="display:flex;gap:16px;flex-wrap:wrap">'
+        +'<div style="flex:1;min-width:180px"><div style="font-size:10px;color:var(--muted);margin-bottom:4px">CPU-Auslastung</div>'
+        +'<div class="tmBar"><div class="tmBarFill" style="width:'+cpuVal+'%"></div></div>'
+        +'<div style="font-size:18px;font-weight:bold;margin-top:4px">'+cpuVal+'%</div></div>'
+        +'<div style="flex:1;min-width:180px"><div style="font-size:10px;color:var(--muted);margin-bottom:4px">Arbeitsspeicher</div>'
+        +'<div class="tmBar"><div class="tmBarFill" style="width:'+ramVal+'%;background:var(--secondary)"></div></div>'
+        +'<div style="font-size:18px;font-weight:bold;margin-top:4px">'+ramVal+'%</div></div>'
+        +'</div>';
     } else if(activeTab==='App-Verlauf'){
       content.innerHTML='<div class="mock">App-Verlauf ist leer</div>';
     } else if(activeTab==='Start'){
       content.innerHTML='<div class="mock">Keine Start-Apps konfiguriert</div>';
     } else {
-      content.innerHTML='<div class="mock">Benutzer: macrohard</div>';
+      content.innerHTML='<div class="mock">Benutzer: macrohard<br/>Berechtigungen: Administrator</div>';
     }
-    body.appendChild(content);
+    currentBody.appendChild(content);
   }
+
   render();
-  if(!window.osIntervals) window.osIntervals = {};
   window.osIntervals['taskmgr'] = setInterval(render,2000);
 }
 
