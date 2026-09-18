@@ -1235,9 +1235,43 @@
     var activeTab='playlist';
     var curIdx=-1,curStation=null,playing=false,repeat=false,shuffled=[];
     var audioCtx=null,sourceNode=null,analyser=null,biquadFilters=[];
+    var seqBiquadFilters=[];
     var eqBands=[60,150,400,1000,3000,8000];
     var eqValues={60:0,150:0,400:0,1000:0,3000:0,8000:0};
     var isRadio=false;
+
+    function applyEQValues(){
+      eqBands.forEach(function(freq,i){
+        var v=eqValues[freq]||0;
+        if(biquadFilters[i]&&audioCtx&&audioCtx.state==='running'){
+          biquadFilters[i].gain.setValueAtTime(v,audioCtx.currentTime);
+        }
+        if(seqBiquadFilters[i]&&SEQ.ctx&&SEQ.ctx.state==='running'){
+          try{seqBiquadFilters[i].gain.setValueAtTime(v,SEQ.ctx.currentTime);}catch(e){}
+        }
+      });
+    }
+
+    function setupSeqEQ(){
+      if(!SEQ.ctx||seqBiquadFilters.length>0)return;
+      seqBiquadFilters=eqBands.map(function(freq,i){
+        var f=SEQ.ctx.createBiquadFilter();
+        f.type=i===0?'lowshelf':i===eqBands.length-1?'highshelf':'peaking';
+        f.frequency.value=freq;f.gain.value=eqValues[freq]||0;return f;
+      });
+      // Connect: source -> biquadFilters -> destination
+      // We connect them in playSample via the gain node chain
+      var node=SEQ.master;
+      if(node&&seqBiquadFilters.length>0){
+        // Insert filters between master and destination
+        try{
+          node.disconnect();
+          var chain=node;
+          seqBiquadFilters.forEach(function(f){chain.connect(f);chain=f;});
+          chain.connect(SEQ.ctx.destination);
+        }catch(e){}
+      }
+    }
     var audioEl=null;
     var visRafId=null;
 
@@ -1419,10 +1453,18 @@
       if (!SEQ.ctx) return;
       if (SEQ.ctx.state === 'suspended') SEQ.ctx.resume();
 
+      // Setup EQ for Sequencer on first play
+      setupSeqEQ();
+
       if (!SEQ.master) {
         SEQ.master = SEQ.ctx.createGain();
         SEQ.master.gain.value = SEQ.vol;
-        SEQ.master.connect(SEQ.ctx.destination);
+        // Connect through EQ if available, otherwise direct
+        if (seqBiquadFilters.length > 0) {
+          // EQ chain will connect to destination
+        } else {
+          SEQ.master.connect(SEQ.ctx.destination);
+        }
       }
 
       var src = SEQ.ctx.createBufferSource();
@@ -1430,7 +1472,15 @@
       src.buffer = SEQ.buffers[trackIdx];
       gain.gain.value = 0.8;
       src.connect(gain);
-      gain.connect(SEQ.master);
+
+      // Route through EQ chain or directly to master
+      if (seqBiquadFilters.length > 0) {
+        // Find the first filter in chain
+        gain.connect(seqBiquadFilters[0]);
+      } else {
+        gain.connect(SEQ.master);
+      }
+
       src.start(when || 0);
     }
 
@@ -1850,6 +1900,9 @@
           if(biquadFilters[i]&&audioCtx&&audioCtx.state==='running'){
             biquadFilters[i].gain.setValueAtTime(v,audioCtx.currentTime);
           }
+          if(seqBiquadFilters[i]&&SEQ.ctx&&SEQ.ctx.state==='running'){
+            try{seqBiquadFilters[i].gain.setValueAtTime(v,SEQ.ctx.currentTime);}catch(e){}
+          }
           // Update value display
           var valEl=this.parentNode.querySelector('.eq-value');
           if(valEl) valEl.textContent=(v>=0?'+':'')+v+'dB';
@@ -1889,8 +1942,11 @@
       if(!values) return;
       eqBands.forEach(function(freq,i){
         eqValues[freq]=values[i];
-        if(biquadFilters[i]&&audioCtx){
+        if(biquadFilters[i]&&audioCtx&&audioCtx.state==='running'){
           biquadFilters[i].gain.setValueAtTime(values[i],audioCtx.currentTime);
+        }
+        if(seqBiquadFilters[i]&&SEQ.ctx&&SEQ.ctx.state==='running'){
+          try{seqBiquadFilters[i].gain.setValueAtTime(values[i],SEQ.ctx.currentTime);}catch(e){}
         }
         // Update UI
         var slider=document.querySelector('.eq-range[data-freq="'+freq+'"]');
