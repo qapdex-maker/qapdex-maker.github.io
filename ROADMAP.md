@@ -20,6 +20,8 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 - v2.11.27: Music Player Audio Fixes (Beatpad eigener AudioContext, Fallback-Radio)
 - v2.11.28: Music Player setupAudio() lazy init, audioEl statt audio
 - v2.11.29: Mobile Apps sichtbar (flex-wrap:wrap, overflow-y:auto)
+- v2.11.30: Music Player Refactor — Sadee-Inspired UI (Album Art, Sidebar, Controls)
+- v2.11.30: Mobile Fenster immer Vollbild (openApp/snapWindow/restoreSession)
 
 ## 1. Strukturierte Bereichsübersicht
 
@@ -28,7 +30,7 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 - Karten aus `pages`-Array; Kategorie-Chip-Filter muss exakt mit `catLabel` matchen.
 - Alle Karten verifiziert (8 live, 1 soon).
 
-### B. macrohard/ (AKTIV, v2.11.29)
+### B. macrohard/ (AKTIV, v2.11.30)
 - Windows-Style Desktop OS im Browser
 - 22 Apps, PWA, Taskbar, Fenster-Management
 - ES6-Module, ESLint + Prettier, Unit-Tests, CI/CD
