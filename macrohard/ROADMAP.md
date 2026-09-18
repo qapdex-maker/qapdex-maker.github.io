@@ -6,7 +6,7 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 
 ## 0. Status-Querschnitt (verifiziert, 2026-09-18)
 
-### macrohard/ (v2.11.31, aktiv entwickelt)
+### macrohard/ (v2.11.32, aktiv entwickelt)
 - 22 Apps (11 Foundation + 11 Extension Pack), ES6-Module, PWA
 - Unit-Tests: 7 Tests, alle grün
 - CI/CD: GitHub Actions (lint + deploy)
@@ -23,6 +23,7 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 - v2.11.31: AMIBIOS Refactor (Boot-Sequenz, 7 Tabs, interaktive Felder, PC Speaker)
 - v2.11.31: CI Fix (deploy-pages permission)
 - v2.11.31: Taskmanager Fix (Interval-Cleanup, Null-Checks, Leistung-Tab)
+- v2.11.32: App-Audit Fixes (Notepad, Music, Chat, Links, Browser, Clock)
 
 ## 1. Apps Übersicht (22 Apps)
 
