@@ -441,6 +441,7 @@
         try{if(audioCtx&&audioCtx.state==='running')audioCtx.suspend();}catch(err){}
         try{if(SEQ&&SEQ.ctx&&SEQ.ctx.state==='running')SEQ.ctx.suspend();}catch(err){}
         if(SEQ){SEQ.playing=false;SEQ.controlsInitialized=false;}
+        EQ_INITIALIZED=false;
       }
       wnd.classList.add('closing');
       setTimeout(function(){wnd.remove();},200);
@@ -1659,20 +1660,148 @@
     // Load saved pattern on init
     loadSavedPattern();
 
-    /* === Equalizer === */
+    /* === Equalizer mit Presets und Visualisierung === */
+    var EQ_PRESETS = {
+      'Flat': [0, 0, 0, 0, 0, 0],
+      'Bass Boost': [6, 4, 2, 0, 0, 0],
+      'Treble Boost': [0, 0, 0, 2, 4, 6],
+      'V-Shape': [4, 2, -2, -2, 2, 4],
+      'Warm': [3, 2, 0, 0, 1, 2],
+      'Bright': [-2, -1, 0, 2, 4, 5],
+      'Rock': [4, 3, -1, -2, 2, 4],
+      'Pop': [-1, 2, 4, 3, 0, -1],
+      'Jazz': [3, 1, -2, 0, 2, 4],
+      'Classical': [3, 1, -1, -1, 1, 3]
+    };
+
     function initEqualizer(){
-      var eq=document.getElementById('musEq');if(!eq)return;
-      eqBands.forEach(function(freq,i){
-        var wrap=document.createElement('div');wrap.className='eq-slider';
-        var label=document.createElement('span');label.textContent=freq>=1000?(freq/1000)+'k':freq;
-        var slider=document.createElement('input');slider.type='range';slider.min=-12;slider.max=12;slider.value=0;slider.className='eq-range';
-        slider.addEventListener('input',function(){
-          var v=parseFloat(this.value);eqValues[freq]=v;
-          if(biquadFilters[i]&&audioCtx)biquadFilters[i].gain.setValueAtTime(v,audioCtx.currentTime);
+      var eq=document.getElementById('musEq');if(!eq) return;
+      eq.innerHTML='';
+
+      // Check if already initialized
+      if(EQ_INITIALIZED) return;
+      EQ_INITIALIZED = true;
+
+      // Header
+      var header=document.createElement('div');
+      header.className='eq-header';
+      header.innerHTML='<span class="eq-title">🎛 Equalizer</span>';
+      var resetBtn=document.createElement('button');
+      resetBtn.className='eq-reset';
+      resetBtn.textContent='Reset';
+      resetBtn.addEventListener('click',function(){
+        applyEQPreset('Flat');
+        document.querySelectorAll('.eq-preset-btn').forEach(function(b){b.classList.remove('active');});
+        document.querySelector('.eq-preset-btn[data-preset="Flat"]').classList.add('active');
+      });
+      header.appendChild(resetBtn);
+      eq.appendChild(header);
+
+      // Presets
+      var presetWrap=document.createElement('div');
+      presetWrap.className='eq-presets';
+      Object.keys(EQ_PRESETS).forEach(function(name,idx){
+        var btn=document.createElement('button');
+        btn.className='eq-preset-btn'+(name==='Flat'?' active':'');
+        btn.textContent=name;
+        btn.dataset.preset=name;
+        btn.addEventListener('click',function(){
+          document.querySelectorAll('.eq-preset-btn').forEach(function(b){b.classList.remove('active');});
+          this.classList.add('active');
+          applyEQPreset(name);
         });
-        wrap.appendChild(slider);wrap.appendChild(label);eq.appendChild(wrap);
+        presetWrap.appendChild(btn);
+      });
+      eq.appendChild(presetWrap);
+
+      // Bands
+      var bandsWrap=document.createElement('div');
+      bandsWrap.className='eq-bands';
+
+      eqBands.forEach(function(freq,i){
+        var band=document.createElement('div');
+        band.className='eq-band';
+
+        // Label
+        var label=document.createElement('span');
+        label.textContent=freq>=1000?(freq/1000)+'k':freq;
+        band.appendChild(label);
+
+        // Slider wrap
+        var sliderWrap=document.createElement('div');
+        sliderWrap.className='eq-slider-wrap';
+
+        var slider=document.createElement('input');
+        slider.type='range';
+        slider.min=-12;
+        slider.max=12;
+        slider.value=eqValues[freq]||0;
+        slider.className='eq-range';
+        slider.dataset.freq=freq;
+        slider.dataset.idx=i;
+        slider.addEventListener('input',function(){
+          var v=parseFloat(this.value);
+          eqValues[freq]=v;
+          if(biquadFilters[i]&&audioCtx){
+            biquadFilters[i].gain.setValueAtTime(v,audioCtx.currentTime);
+          }
+          // Update value display
+          var valEl=this.parentNode.querySelector('.eq-value');
+          if(valEl) valEl.textContent=(v>=0?'+':'')+v+'dB';
+          // Update meter
+          var meterFill=this.parentNode.querySelector('.eq-meter-fill');
+          if(meterFill){
+            var pct=((v+12)/24)*100;
+            meterFill.style.height=pct+'%';
+          }
+        });
+        sliderWrap.appendChild(slider);
+
+        // Value display
+        var valEl=document.createElement('span');
+        valEl.className='eq-value';
+        valEl.textContent='0dB';
+        sliderWrap.appendChild(valEl);
+
+        // Meter (visual feedback)
+        var meter=document.createElement('div');
+        meter.className='eq-meter';
+        var meterFill=document.createElement('div');
+        meterFill.className='eq-meter-fill';
+        meterFill.style.height='50%';
+        meter.appendChild(meterFill);
+        sliderWrap.appendChild(meter);
+
+        band.appendChild(sliderWrap);
+        bandsWrap.appendChild(band);
+      });
+
+      eq.appendChild(bandsWrap);
+    }
+
+    function applyEQPreset(name){
+      var values=EQ_PRESETS[name];
+      if(!values) return;
+      eqBands.forEach(function(freq,i){
+        eqValues[freq]=values[i];
+        if(biquadFilters[i]&&audioCtx){
+          biquadFilters[i].gain.setValueAtTime(values[i],audioCtx.currentTime);
+        }
+        // Update UI
+        var slider=document.querySelector('.eq-range[data-freq="'+freq+'"]');
+        if(slider){
+          slider.value=values[i];
+          var valEl=slider.parentNode.querySelector('.eq-value');
+          if(valEl) valEl.textContent=(values[i]>=0?'+':'')+values[i]+'dB';
+          var meterFill=slider.parentNode.querySelector('.eq-meter-fill');
+          if(meterFill){
+            var pct=((values[i]+12)/24)*100;
+            meterFill.style.height=pct+'%';
+          }
+        }
       });
     }
+    var EQ_INITIALIZED=false;
 
     /* === Progress === */
     function onTimeUpdate(){

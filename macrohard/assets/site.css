@@ -534,6 +534,24 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .musExtra{padding:8px;overflow-y:auto}
 #musVisCanvas{width:100%;max-width:280px;height:100px;border:2px solid var(--line);background:#0b0b0c;display:block;margin:0 auto}
 
+/* Equalizer */
+.eq-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.eq-title{font-weight:700;font-size:12px;color:var(--accent)}
+.eq-presets{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.eq-preset-btn{padding:4px 8px;font-size:9px;border:2px solid var(--line);background:var(--surface);cursor:pointer;font-family:var(--font-mono);box-shadow:var(--shadow-sm)}
+.eq-preset-btn:hover{background:var(--accent);color:#fff}
+.eq-preset-btn.active{background:var(--accent);color:#fff}
+.eq-reset{padding:4px 10px;font-size:9px;border:2px solid var(--line);background:var(--danger);color:#fff;cursor:pointer;font-family:var(--font-mono)}
+.eq-reset:hover{opacity:.8}
+.eq-bands{display:flex;gap:6px;align-items:flex-end;justify-content:center;height:140px;padding:8px;background:var(--paper);border:2px solid var(--line);overflow-x:auto}
+.eq-band{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:32px}
+.eq-band label{font-size:8px;color:var(--muted);font-family:var(--font-mono);text-transform:uppercase}
+.eq-slider-wrap{position:relative;width:100%;height:100px;display:flex;align-items:center;justify-content:center}
+.eq-range{writing-mode:bt-lr;-webkit-appearance:slider-vertical;width:16px;height:80px}
+.eq-value{font-size:8px;font-family:var(--font-mono);color:var(--accent);min-height:12px;text-align:center}
+.eq-meter{width:6px;height:80px;background:var(--bg);border:1px solid var(--line);position:relative;overflow:hidden}
+.eq-meter-fill{position:absolute;bottom:0;width:100%;background:linear-gradient(0deg,var(--accent) 0%,var(--accent-2) 60%,var(--danger) 100%);transition:height .1s}
+
 /* Mobile */
 @media(max-width:760px){
   .musSidebar{position:fixed;right:-100%;top:0;bottom:52px;width:85%;z-index:1000;transition:right .25s;border-left:3px solid var(--line)}
