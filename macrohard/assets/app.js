@@ -1415,7 +1415,6 @@
             var newSample = SAMPLE_LIBRARY[newLibIdx];
             label.textContent = newSample.n;
             label.style.background = newSample.c;
-            // Load new sample
             fetch('./assets/samples/' + newSample.f + '.mp3')
               .then(function(r) { return r.arrayBuffer(); })
               .then(function(buf) { return SEQ.ctx.decodeAudioData(buf); })
@@ -1455,15 +1454,12 @@
 
       pad.innerHTML = '';
       pad.appendChild(container);
-      buildSeqControls(pad);
-    }
 
-    function toggleStep() {
-      var row = parseInt(this.dataset.row);
-      var col = parseInt(this.dataset.col);
-      SEQ.pattern[row][col] = !SEQ.pattern[row][col];
-      this.classList.toggle('active');
-      playSample(row);
+      // Controls nur einmalig initialisieren
+      if (!SEQ.controlsInitialized) {
+        SEQ.controlsInitialized = true;
+        buildSeqControls(pad);
+      }
     }
 
     function buildSeqControls(pad) {
@@ -1522,6 +1518,14 @@
       saveBtn.title = 'Save pattern';
       saveBtn.addEventListener('click', savePattern);
       header.appendChild(saveBtn);
+    }
+
+    function toggleStep() {
+      var row = parseInt(this.dataset.row);
+      var col = parseInt(this.dataset.col);
+      SEQ.pattern[row][col] = !SEQ.pattern[row][col];
+      this.classList.toggle('active');
+      playSample(row);
     }
 
     function shufflePattern() {
