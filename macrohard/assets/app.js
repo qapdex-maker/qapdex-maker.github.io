@@ -429,6 +429,10 @@
         clearInterval(window.osIntervals[wId]);
         delete window.osIntervals[wId];
       }
+      // Explorer cleanup
+      if(wId==='explorer'){
+        EXPLOADER_INITIALIZED=false;
+      }
       // Stop music-related intervals/timeouts on close
       if(wId==='music'){
         if(visRafId){cancelAnimationFrame(visRafId);visRafId=null;}
@@ -780,9 +784,16 @@
   }
 
   function buildExplorer(){
-    renderExplorer();
-    var inp=document.getElementById('fePath');if(!inp) return;
-    inp.addEventListener('keydown',function(e){if(e.key==='Enter'){curPath=inp.value;renderExplorer();}});
+    // Only initialize event listeners once
+    if(EXPLOADER_INITIALIZED) {
+      renderExplorer();
+      return;
+    }
+    EXPLOADER_INITIALIZED = true;
+
+    var inp=document.getElementById('fePath');
+    if(inp) inp.addEventListener('keydown',function(e){if(e.key==='Enter'){curPath=inp.value;renderExplorer();}});
+
     /* Toolbar */
     var tb=document.createElement('div');tb.className='feToolbar';
     [{n:'Neu',a:'new-folder'},{n:'Datei',a:'new-file'},{n:'Suche',a:'search'}].forEach(function(t){
@@ -796,7 +807,9 @@
     });
     var sideEl=document.getElementById('feSide');
     if(sideEl) sideEl.parentNode.insertBefore(tb,sideEl);
+    renderExplorer();
   }
+  var EXPLOADER_INITIALIZED=false;
   function newExplorerItem(type){
     var name=prompt(type==='folder'?'Ordnername:':'Dateiname:');
     if(!name) return;
