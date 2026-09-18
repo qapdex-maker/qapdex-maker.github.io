@@ -86,15 +86,15 @@ test('osIntervals registry works', () => {
 });
 
 // Test: Desktop apps count
-test('desktopApps has 22 entries', () => {
+test('desktopApps has 25 entries', () => {
   // Simulate the desktopApps array
   const desktopApps = [
     'notepad','calculator','terminal','explorer','paint','browser',
     'music','chat','docs','settings','links','amibios',
     'taskmgr','sysinfo','calendar','clock','colorpicker','pwgen',
-    'qrgen','viewer','game'
+    'qrgen','viewer','game','editor','imgeditor','pomodoro','notes'
   ];
-  assert.equal(desktopApps.length, 21);
+  assert.equal(desktopApps.length, 25);
 });
 
 // Test: fsData structure

@@ -256,6 +256,10 @@
     {id:'qrgen',label:'QRGen',icon:'qr'},
     {id:'viewer',label:'Viewer',icon:'vw'},
     {id:'game',label:'TicTacToe',icon:'game'},
+    {id:'editor',label:'Editor',icon:'editor'},
+    {id:'imgeditor',label:'ImgEdit',icon:'imgeditor'},
+    {id:'pomodoro',label:'Pomodoro',icon:'pomodoro'},
+    {id:'notes',label:'Notes',icon:'notes'},
   ];
 
   function makeIcon(a){
@@ -291,7 +295,11 @@
       chat:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
       camera:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>',
       browser:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21" y1="12" x2="16" y2="12"/><line x1="8" y1="12" x2="3" y2="12"/><line x1="12" y1="21" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="3"/></svg>',
-      amibios:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>', tm:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>', si:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12" y2="16"/></svg>', cal:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', clock:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>', cp:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="12.5" r="2.5"/><circle cx="6.5" cy="17.5" r="2.5"/></svg>', pw:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>', qr:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="21" x2="21" y2="21"/></svg>', vw:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>', game:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/><circle cx="12" cy="12" r="9"/></svg>'
+      amibios:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>', tm:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>', si:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12" y2="16"/></svg>', cal:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', clock:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>', cp:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="12.5" r="2.5"/><circle cx="6.5" cy="17.5" r="2.5"/></svg>', pw:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>', qr:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="21" x2="21" y2="21"/></svg>', vw:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>', game:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/><circle cx="12" cy="12" r="9"/></svg>',
+      editor:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
+      imgeditor:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>',
+      pomodoro:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="14" r="8"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="12" y1="14" x2="15" y2="14"/><line x1="9" y1="2" x2="15" y2="2"/></svg>',
+      notes:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'
     };
     return s[name]||'';
   }
@@ -455,6 +463,10 @@
       case 'qrgen': body='<div class="qrBody" id="qrBody"><input type="text" id="qrInput" placeholder="Text oder URL..."><div class="qrCanvas" id="qrCanvas"></div><button class="cBtn" id="qrBtn">Generieren</button></div>';break;
       case 'viewer': body='<div class="vwBody" id="vwBody"><div id="vwPlaceholder">Bild hierher ziehen</div><canvas id="vwCanvas"></canvas></div>';break;
       case 'game': body='<div class="gmBody" id="gmBody"></div>';break;
+      case 'editor': body='<div class="edToolbar"><button class="cBtn" id="edNew">Neu</button><button class="cBtn" id="edOpen">Öffnen</button><button class="cBtn" id="edSave">Speichern</button><select id="edLang"><option value="js">JavaScript</option><option value="html">HTML</option><option value="css">CSS</option><option value="md">Markdown</option></select><span class="edStats" id="edStats">0 Zeilen</span></div><div class="edContainer"><div class="edLines" id="edLines"></div><textarea class="edArea" id="edArea" spellcheck="false"></textarea></div>';break;
+      case 'imgeditor': body='<div class="ieToolbar"><button class="cBtn" id="ieLoad">Bild laden</button><button class="cBtn" id="ieCrop">Crop</button><button class="cBtn" id="ieRotate">Rotate</button><button class="cBtn" id="ieResize">Resize</button><select id="ieFilter"><option value="none">Kein Filter</option><option value="grayscale">Grayscale</option><option value="sepia">Sepia</option><option value="blur">Blur</option><option value="invert">Invert</option></select><button class="cBtn" id="ieExportPNG">PNG</button><button class="cBtn" id="ieExportJPG">JPG</button></div><div class="ieContainer"><canvas id="ieCanvas"></canvas></div>';break;
+      case 'pomodoro': body='<div class="poBody"><div class="poProgress"><svg class="poRing" viewBox="0 0 120 120"><circle class="poRingBg" cx="60" cy="60" r="54"/><circle class="poRingFg" id="poRingFg" cx="60" cy="60" r="54"/></svg><div class="poTime" id="poTime">25:00</div></div><div class="poLabel" id="poLabel">Arbeit</div><div class="poControls"><button class="cBtn" id="poStart">Start</button><button class="cBtn" id="poReset">Reset</button></div><div class="poSettings"><label>Dauer: <input type="number" id="poWorkMin" value="25" min="1" max="60"> min</label><label>Pause: <input type="number" id="poBreakMin" value="5" min="1" max="30"> min</label></div><div class="poCount" id="poCount">Sessions: 0</div></div>';break;
+      case 'notes': body='<div class="ntLayout"><div class="ntSidebar"><input type="text" id="ntSearch" placeholder="Suchen..."><div class="ntTags" id="ntTags"></div><div class="ntList" id="ntList"></div><button class="cBtn" id="ntNew">+ Neue Notiz</button></div><div class="ntEditor"><input type="text" id="ntTitle" placeholder="Titel"><input type="text" id="ntTagInput" placeholder="Tags (kommagetrennt)"><textarea id="ntContent" placeholder="Markdown..."></textarea><div class="ntPreview" id="ntPreview"></div><div class="ntSaveRow"><button class="cBtn" id="ntSave">Speichern</button><button class="cBtn op" id="ntTogglePreview">Preview</button></div></div></div>';break;
     }
     mk.innerHTML='<div class="wtitle"><span class="wact"></span><span class="wtxt">'+title+'</span><button class="wmin" title="Minimize">_</button><button class="wmax" title="Maximize">□</button><button class="wclose" title="Close">×</button></div><div class="wbody">'+body+'</div><div class="wnd-resize" data-dot="⬢"></div>';
     document.getElementById('desktop').appendChild(mk);
@@ -479,6 +491,10 @@
     if(id==='qrgen') buildQrgen();
     if(id==='viewer') buildViewer();
     if(id==='game') buildGame();
+    if(id==='editor') buildEditor();
+    if(id==='imgeditor') buildImgeditor();
+    if(id==='pomodoro') buildPomodoro();
+    if(id==='notes') buildNotes();
     mk.addEventListener('mousedown',function(e){if(e.target.closest('.wclose')||e.target.closest('.wmin'))return;this.classList.add('focused');this.style.zIndex=++zIdx;focused=id;updateFocus();saveSession();});
     mk.querySelector('.wclose').addEventListener('click',function(e){
       e.stopPropagation();
@@ -2761,7 +2777,526 @@
     else{hint.style.display='none';}
   }
   function hideSnapHint(){var h=document.getElementById('snapHint');if(h)h.style.display='none';}
-})();
+/* ===== File Editor ===== */
+function buildEditor(){
+  var area=document.getElementById('edArea');
+  var lines=document.getElementById('edLines');
+  var langSel=document.getElementById('edLang');
+  var stats=document.getElementById('edStats');
+  var toolbar=document.querySelector('.edToolbar');
+  if(!area||!lines) return;
+
+  var SK='editor_save';
+  var SK_LANG='editor_lang';
+
+  /* Load saved content */
+  try{
+    var sv=localStorage.getItem(SK);
+    if(sv) area.value=sv;
+    var lg=localStorage.getItem(SK_LANG);
+    if(lg) langSel.value=lg;
+  }catch(e){}
+
+  function updateLines(){
+    var content=area.value;
+    var lineCount=content.split('\n').length;
+    var html='';
+    for(var i=1;i<=lineCount;i++){
+      html+='<div class="edLine">'+i+'</div>';
+    }
+    lines.innerHTML=html;
+    stats.textContent=lineCount+' Zeilen · '+(content.trim().split(/\s+/).filter(Boolean).length)+' Wörter';
+    try{localStorage.setItem(SK,content);}catch(e){}
+  }
+
+  area.addEventListener('input',updateLines);
+  area.addEventListener('scroll',function(){lines.scrollTop=area.scrollTop;});
+
+  area.addEventListener('keydown',function(e){
+    if(e.key==='Tab'){
+      e.preventDefault();
+      var start=area.selectionStart;
+      var end=area.selectionEnd;
+      area.value=area.value.substring(0,start)+'  '+area.value.substring(end);
+      area.selectionStart=area.selectionEnd=start+2;
+      updateLines();
+    }
+  });
+
+  langSel.addEventListener('change',function(){
+    try{localStorage.setItem(SK_LANG,this.value);}catch(e){}
+  });
+
+  toolbar.querySelector('#edNew').addEventListener('click',function(){
+    area.value='';
+    updateLines();
+    toast('Neuer Editor');
+  });
+
+  toolbar.querySelector('#edOpen').addEventListener('click',function(){
+    var inp=document.createElement('input');
+    inp.type='file';
+    inp.accept='.txt,.js,.html,.css,.md,.json';
+    inp.style.display='none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change',function(){
+      var file=inp.files[0];
+      if(!file) return;
+      var reader=new FileReader();
+      reader.onload=function(ev){
+        area.value=ev.target.result;
+        updateLines();
+        toast('Geladen: '+file.name);
+      };
+      reader.readAsText(file);
+      inp.remove();
+    });
+    inp.click();
+  });
+
+  toolbar.querySelector('#edSave').addEventListener('click',function(){
+    var content=area.value;
+    var blob=new Blob([content],{type:'text/plain'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='document.'+(langSel.value==='md'?'md':langSel.value==='html'?'html':langSel.value==='css'?'css':'js');
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('Gespeichert');
+  });
+
+  updateLines();
+}
+
+/* ===== Image Editor ===== */
+function buildImgeditor(){
+  var canvas=document.getElementById('ieCanvas');
+  var toolbar=document.querySelector('.ieToolbar');
+  if(!canvas||!toolbar) return;
+
+  var ctx=canvas.getContext('2d');
+  var origImage=null;
+  var cropStart=null,cropEnd=null,cropMode=false;
+  var drawState={rotation:0,filters:'none'};
+
+  canvas.width=500;
+  canvas.height=350;
+  ctx.fillStyle='#2a2a2e';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#5d584e';
+  ctx.font='14px IBM Plex Mono, monospace';
+  ctx.textAlign='center';
+  ctx.fillText('Bild hierher ziehen oder laden',canvas.width/2,canvas.height/2);
+
+  function applyFilters(){
+    if(!origImage) return;
+    var w=canvas.width,h=canvas.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.save();
+    ctx.translate(w/2,h/2);
+    ctx.rotate(drawState.rotation*Math.PI/180);
+    ctx.drawImage(origImage,-origImage.width/2,-origImage.height/2);
+    ctx.restore();
+
+    if(drawState.filters!=='none'){
+      var imgData=ctx.getImageData(0,0,w,h);
+      var d=imgData.data;
+      for(var i=0;i<d.length;i+=4){
+        var r=d[i],g=d[i+1],b=d[i+2];
+        if(drawState.filters==='grayscale'){
+          var avg=(r+g+b)/3;d[i]=avg;d[i+1]=avg;d[i+2]=avg;
+        } else if(drawState.filters==='sepia'){
+          d[i]=Math.min(255,r*0.393+g*0.769+b*0.189);
+          d[i+1]=Math.min(255,r*0.349+g*0.686+b*0.168);
+          d[i+2]=Math.min(255,r*0.272+g*0.534+b*0.131);
+        } else if(drawState.filters==='invert'){
+          d[i]=255-r;d[i+1]=255-g;d[i+2]=255-b;
+        }
+      }
+      if(drawState.filters!=='blur') ctx.putImageData(imgData,0,0);
+    }
+  }
+
+  toolbar.querySelector('#ieLoad').addEventListener('click',function(){
+    var inp=document.createElement('input');
+    inp.type='file';
+    inp.accept='image/*';
+    inp.style.display='none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change',function(){
+      var file=inp.files[0];
+      if(!file) return;
+      var img=new Image();
+      img.onload=function(){
+        origImage=img;
+        drawState.rotation=0;
+        drawState.filters='none';
+        document.getElementById('ieFilter').value='none';
+        canvas.width=img.width;
+        canvas.height=img.height;
+        applyFilters();
+        toast('Bild geladen');
+      };
+      img.src=URL.createObjectURL(file);
+      inp.remove();
+    });
+    inp.click();
+  });
+
+  toolbar.querySelector('#ieFilter').addEventListener('change',function(){
+    drawState.filters=this.value;
+    applyFilters();
+  });
+
+  toolbar.querySelector('#ieRotate').addEventListener('click',function(){
+    if(!origImage) return;
+    drawState.rotation=(drawState.rotation+90)%360;
+    applyFilters();
+    toast('Rotiert: '+drawState.rotation+'°');
+  });
+
+  toolbar.querySelector('#ieResize').addEventListener('click',function(){
+    if(!origImage) return;
+    var w=prompt('Breite (px):',canvas.width);
+    var h=prompt('Höhe (px):',canvas.height);
+    if(w&&h){
+      canvas.width=parseInt(w);
+      canvas.height=parseInt(h);
+      applyFilters();
+    }
+  });
+
+  toolbar.querySelector('#ieCrop').addEventListener('click',function(){
+    if(!origImage) return;
+    if(cropMode){cropMode=false;this.style.background='';toast('Crop abgebrochen');return;}
+    cropMode=true;
+    this.style.background='var(--accent)';
+    toast('Crop: Klicke und ziehe Rechteck');
+  });
+
+  canvas.addEventListener('mousedown',function(e){
+    if(!cropMode) return;
+    var r=canvas.getBoundingClientRect();
+    cropStart={x:e.clientX-r.left,y:e.clientY-r.top};
+  });
+  canvas.addEventListener('mousemove',function(e){
+    if(!cropMode||!cropStart) return;
+    var r=canvas.getBoundingClientRect();
+    cropEnd={x:e.clientX-r.left,y:e.clientY-r.top};
+    applyFilters();
+    ctx.save();
+    ctx.strokeStyle='var(--accent)';
+    ctx.lineWidth=2;
+    ctx.setLineDash([5,5]);
+    ctx.strokeRect(cropStart.x,cropStart.y,cropEnd.x-cropStart.x,cropEnd.y-cropStart.y);
+    ctx.restore();
+  });
+  canvas.addEventListener('mouseup',function(){
+    if(!cropMode||!cropStart||!cropEnd) return;
+    var w=Math.abs(cropEnd.x-cropStart.x);
+    var h=Math.abs(cropEnd.y-cropStart.y);
+    var x=Math.min(cropStart.x,cropEnd.x);
+    var y=Math.min(cropStart.y,cropEnd.y);
+    if(w>10&&h>10){
+      var imgData=ctx.getImageData(x,y,w,h);
+      canvas.width=w;canvas.height=h;
+      ctx.putImageData(imgData,0,0);
+      var img=new Image();
+      img.onload=function(){origImage=img;};
+      img.src=canvas.toDataURL();
+    }
+    cropStart=null;cropEnd=null;cropMode=false;
+    var btn=toolbar.querySelector('#ieCrop');
+    if(btn) btn.style.background='';
+  });
+
+  toolbar.querySelector('#ieExportPNG').addEventListener('click',function(){
+    var a=document.createElement('a');
+    a.download='image.png';
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+    toast('PNG exportiert');
+  });
+
+  toolbar.querySelector('#ieExportJPG').addEventListener('click',function(){
+    var a=document.createElement('a');
+    a.download='image.jpg';
+    a.href=canvas.toDataURL('image/jpeg',0.85);
+    a.click();
+    toast('JPG exportiert');
+  });
+
+  /* Drag & Drop */
+  var container=document.querySelector('.ieContainer');
+  if(container){
+    container.addEventListener('dragover',function(e){e.preventDefault();});
+    container.addEventListener('drop',function(e){
+      e.preventDefault();
+      var file=e.dataTransfer.files[0];
+      if(!file||!file.type.startsWith('image/')) return;
+      var img=new Image();
+      img.onload=function(){
+        origImage=img;drawState.rotation=0;drawState.filters='none';
+        canvas.width=img.width;canvas.height=img.height;
+        applyFilters();toast('Bild geladen');
+      };
+      img.src=URL.createObjectURL(file);
+    });
+  }
+}
+
+/* ===== Pomodoro Timer ===== */
+function buildPomodoro(){
+  var timeEl=document.getElementById('poTime');
+  var labelEl=document.getElementById('poLabel');
+  var ringFg=document.getElementById('poRingFg');
+  var startBtn=document.querySelector('#poStart');
+  var resetBtn=document.querySelector('#poReset');
+  var countEl=document.getElementById('poCount');
+  if(!timeEl) return;
+
+  var workMinInput=document.getElementById('poWorkMin');
+  var breakMinInput=document.getElementById('poBreakMin');
+
+  var totalSeconds=25*60;
+  var remaining=25*60;
+  var interval=null;
+  var isWork=true;
+  var sessions=0;
+  var running=false;
+  var radius=54;
+  var circumference=2*Math.PI*radius;
+
+  if(ringFg){
+    ringFg.style.strokeDasharray=circumference;
+    ringFg.style.strokeDashoffset=0;
+  }
+
+  function fmt(s){
+    var m=Math.floor(s/60);
+    var sec=s%60;
+    return (m<10?'0':'')+m+':'+(sec<10?'0':'')+sec;
+  }
+
+  function update(){
+    timeEl.textContent=fmt(remaining);
+    var pct=remaining/totalSeconds;
+    if(ringFg) ringFg.style.strokeDashoffset=circumference*(1-pct);
+    if(isWork){ringFg.style.stroke='var(--accent)';labelEl.textContent='Arbeit';}
+    else{ringFg.style.stroke='var(--success)';labelEl.textContent='Pause';}
+    countEl.textContent='Sessions: '+sessions;
+  }
+
+  function tick(){
+    remaining--;
+    update();
+    if(remaining<=0){
+      clearInterval(interval);interval=null;running=false;
+      startBtn.textContent='Start';
+      playSound('notify');
+      if(isWork){
+        sessions++;
+        isWork=false;
+        totalSeconds=(parseInt(breakMinInput.value)||5)*60;
+        showNotif('Pomodoro','Zeit für eine Pause! 🍅','🍅');
+      } else {
+        isWork=true;
+        totalSeconds=(parseInt(workMinInput.value)||25)*60;
+        showNotif('Pomodoro','Pause vorbei — weiter gehts!','💪');
+      }
+      remaining=totalSeconds;
+      update();
+    }
+  }
+
+  startBtn.addEventListener('click',function(){
+    if(running){
+      clearInterval(interval);interval=null;running=false;
+      this.textContent='Start';
+    } else {
+      if(!interval){
+        totalSeconds=isWork?(parseInt(workMinInput.value)||25)*60:(parseInt(breakMinInput.value)||5)*60;
+        remaining=remaining||totalSeconds;
+      }
+      interval=setInterval(tick,1000);
+      running=true;this.textContent='Pause';
+      update();
+    }
+  });
+
+  resetBtn.addEventListener('click',function(){
+    clearInterval(interval);interval=null;running=false;
+    startBtn.textContent='Start';
+    isWork=true;
+    totalSeconds=(parseInt(workMinInput.value)||25)*60;
+    remaining=totalSeconds;
+    update();
+  });
+
+  update();
+}
+
+/* ===== Notes App ===== */
+function buildNotes(){
+  var searchInp=document.getElementById('ntSearch');
+  var tagsEl=document.getElementById('ntTags');
+  var listEl=document.getElementById('ntList');
+  var titleInp=document.getElementById('ntTitle');
+  var tagInp=document.getElementById('ntTagInput');
+  var contentEl=document.getElementById('ntContent');
+  var previewEl=document.getElementById('ntPreview');
+  var saveBtn=document.querySelector('#ntSave');
+  var togglePrevBtn=document.querySelector('#ntTogglePreview');
+  var newBtn=document.querySelector('#ntNew');
+  if(!listEl) return;
+
+  var SK_NOTES='notes_data';
+  var currentId=null;
+  var notes=[];
+  var filterTag='';
+  var showPreview=false;
+
+  function loadNotes(){
+    try{
+      notes=JSON.parse(localStorage.getItem(SK_NOTES)||'[]');
+    }catch(e){notes=[];}
+  }
+  function saveNotes(){
+    try{localStorage.setItem(SK_NOTES,JSON.stringify(notes));}catch(e){}
+  }
+
+  /* Markdown-ish render */
+  function mdRender(md){
+    var escaped=md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    escaped=escaped.replace(/^### (.+)$/gm,'<h3>$1</h3>');
+    escaped=escaped.replace(/^## (.+)$/gm,'<h2>$1</h2>');
+    escaped=escaped.replace(/^# (.+)$/gm,'<h1>$1</h1>');
+    escaped=escaped.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+    escaped=escaped.replace(/\*(.+?)\*/g,'<em>$1</em>');
+    escaped=escaped.replace(/^- (.+)$/gm,'<li>$1</li>');
+    escaped=escaped.replace(/(<li>.*<\/li>\n?)+/g,function(m){return '<ul>'+m+'</ul>';});
+    escaped=escaped.replace(/\n/g,'<br>');
+    return escaped;
+  }
+
+  function renderTags(){
+    var tags={};
+    notes.forEach(function(n){
+      (n.tags||[]).forEach(function(t){tags[t]=(tags[t]||0)+1;});
+    });
+    tagsEl.innerHTML='';
+    var allSpan=document.createElement('span');
+    allSpan.className='ntTag'+(filterTag===''?' active':'');
+    allSpan.textContent='Alle ('+notes.length+')';
+    allSpan.addEventListener('click',function(){filterTag='';render();});
+    tagsEl.appendChild(allSpan);
+    Object.keys(tags).forEach(function(t){
+      var s=document.createElement('span');
+      s.className='ntTag'+(filterTag===t?' active':'');
+      s.textContent=t+' ('+tags[t]+')';
+      s.addEventListener('click',function(){filterTag=t;render();});
+      tagsEl.appendChild(s);
+    });
+  }
+
+  function renderList(){
+    var q=(searchInp.value||'').toLowerCase();
+    listEl.innerHTML='';
+    notes.filter(function(n){
+      if(filterTag&&!(n.tags||[]).indexOf(filterTag)>=0) return false;
+      if(q&&n.title.toLowerCase().indexOf(q)===-1&&n.content.toLowerCase().indexOf(q)===-1) return false;
+      return true;
+    }).sort(function(a,b){return b.updated-a.updated;}).forEach(function(n){
+      var item=document.createElement('div');
+      item.className='ntItem'+(n.id===currentId?' active':'');
+      item.innerHTML='<div class="ntItemTitle">'+(n.title||'Ohne Titel')+'</div><div class="ntItemMeta">'+new Date(n.updated).toLocaleDateString('de-DE')+' · '+(n.tags||[]).join(', ')+'</div>';
+      var del=document.createElement('button');
+      del.className='ntItemDel';
+      del.textContent='×';
+      del.addEventListener('click',function(e){
+        e.stopPropagation();
+        notes=notes.filter(function(x){return x.id!==n.id;});
+        saveNotes();
+        if(currentId===n.id){currentId=null;}
+        render();
+        toast('Gelöscht');
+      });
+      item.appendChild(del);
+      item.addEventListener('click',function(){loadNote(n.id);});
+      listEl.appendChild(item);
+    });
+  }
+
+  function loadNote(id){
+    var n=notes.filter(function(x){return x.id===id;})[0];
+    if(!n) return;
+    currentId=id;
+    titleInp.value=n.title||'';
+    tagInp.value=(n.tags||[]).join(', ');
+    contentEl.value=n.content||'';
+    renderPreview();
+    renderList();
+  }
+
+  function renderPreview(){
+    if(showPreview){
+      previewEl.innerHTML=mdRender(contentEl.value);
+      previewEl.style.display='block';
+      contentEl.style.display='none';
+      togglePrevBtn.textContent='Edit';
+    } else {
+      previewEl.style.display='none';
+      contentEl.style.display='block';
+      togglePrevBtn.textContent='Preview';
+    }
+  }
+
+  function saveCurrent(){
+    var title=titleInp.value.trim();
+    var content=contentEl.value;
+    var tags=(tagInp.value||'').split(',').map(function(t){return t.trim();}).filter(Boolean);
+    if(!title&&!content){
+      toast('Leere Notiz ignoriert');
+      return;
+    }
+    if(currentId){
+      var n=notes.filter(function(x){return x.id===currentId;})[0];
+      if(n){
+        n.title=title;n.content=content;n.tags=tags;n.updated=Date.now();
+      }
+    } else {
+      currentId='n_'+Date.now();
+      notes.unshift({id:currentId,title:title,content:content,tags:tags,updated:Date.now(),created:Date.now()});
+    }
+    saveNotes();
+    render();
+    toast('Gespeichert');
+  }
+
+  saveBtn.addEventListener('click',saveCurrent);
+  togglePrevBtn.addEventListener('click',function(){
+    showPreview=!showPreview;
+    renderPreview();
+  });
+  newBtn.addEventListener('click',function(){
+    currentId=null;
+    titleInp.value='';
+    tagInp.value='';
+    contentEl.value='';
+    showPreview=false;
+    renderPreview();
+    renderList();
+    titleInp.focus();
+  });
+
+  searchInp.addEventListener('input',renderList);
+  contentEl.addEventListener('input',function(){
+    if(showPreview) renderPreview();
+  });
+
+  loadNotes();
+  render();
+}})();
 
 /* AMIBIOS Setup — iframe window */
 function buildAMIBIOS(){
