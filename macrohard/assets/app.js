@@ -437,6 +437,7 @@
       if(wId==='music'){
         if(visRafId){cancelAnimationFrame(visRafId);visRafId=null;}
         if(typeof stopSequencer==='function')stopSequencer();
+        if(isRadio)cleanupRadio();
         try{if(audioEl&&!audioEl.paused)audioEl.pause();}catch(err){}
         try{if(audioCtx&&audioCtx.state==='running')audioCtx.suspend();}catch(err){}
         try{if(SEQ&&SEQ.ctx&&SEQ.ctx.state==='running')SEQ.ctx.suspend();}catch(err){}
@@ -1829,8 +1830,14 @@
       var p=audioEl.play();
       if(p&&p.catch)p.catch(function(e){progL.textContent='⚠ Blocked'});
     }
+    /* Audio Context for Radio (separate to avoid MediaElementSource lock) */
+    var radioCtx=null;
+    var radioSource=null;
+
     function playTrack(i){
       if(i<0||i>=songs.length)return;
+      // Clean up Radio if switching from Radio to track
+      if(isRadio&&radioSource){cleanupRadio();}
       curIdx=i;curStation=null;isRadio=false;
       var s=songs[i];
       setupAudio();
@@ -1841,24 +1848,53 @@
     }
     function playRadio(station){
       curStation=station;isRadio=true;curIdx=-1;
-      setupAudio();
-      if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
-      audioEl.src=station.u;audioEl.load();
-      initVisualizer();
-      playAudio();
+      // Stop any current playback first
+      if(audioEl&&!audioEl.paused){audioEl.pause();audioEl.src='';}
+      // Create separate AudioContext for Radio
+      if(!radioCtx) radioCtx=new (window.AudioContext||window.webkitAudioContext)();
+      if(radioCtx.state==='suspended')radioCtx.resume();
+      // Clean up old source
+      if(radioSource){try{radioSource.disconnect();}catch(e){}}
+      // Create new Audio element for Radio
+      var radioEl=new Audio();
+      radioEl.crossOrigin='anonymous';
+      radioEl.volume=0.7;
+      // Create MediaElementSource for Radio
+      radioSource=radioCtx.createMediaElementSource(radioEl);
+      // Connect directly to destination (no EQ/Analyser for Radio streams)
+      radioSource.connect(radioCtx.destination);
+      // Set source and play
+      radioEl.src=station.u;
+      radioEl.play().then(function(){
+        // Success
+      }).catch(function(e){
+        progL.textContent='⚠ Fehler';
+      });
+      // Also update main audioEl reference for progress display
+      audioEl=radioEl;
       playing=true;
       updateUI();
+      // Don't use visualizer for Radio (streams don't provide freq data)
+      if(visRafId){cancelAnimationFrame(visRafId);visRafId=null;}
     }
-    function stop(){setupAudio();audioEl.pause();playing=false;updateUI()}
+    // Cleanup Radio context
+    function cleanupRadio(){
+      if(radioSource){try{radioSource.disconnect();}catch(e){radioSource=null;}}
+      if(radioCtx&&radioCtx.state==='running'){radioCtx.suspend();}
+    }
+    function stop(){
+      if(isRadio){cleanupRadio();}
+      setupAudio();audioEl.pause();playing=false;updateUI()
+    }
     function togglePlay(){
-      setupAudio();
-      if(playing)stop();
+      if(playing){stop();}
       else if(isRadio&&curStation)playRadio(curStation);
       else if(curIdx>=0)playTrack(curIdx);
       else if(songs.length)playTrack(0);
     }
     function nextTrack(){
       if(isRadio&&radioStations.length){
+        cleanupRadio();
         var ni=curStation?radioStations.indexOf(curStation)+1:0;
         playRadio(radioStations[ni%radioStations.length]);return
       }
@@ -1868,6 +1904,7 @@
     }
     function prevTrack(){
       if(isRadio&&radioStations.length){
+        cleanupRadio();
         var ci=curStation?radioStations.indexOf(curStation):0;
         var pi=(ci-1+radioStations.length)%radioStations.length;
         playRadio(radioStations[pi]);return
