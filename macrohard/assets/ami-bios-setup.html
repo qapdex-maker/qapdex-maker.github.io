@@ -1,508 +1,889 @@
 <!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AMIBIOS Setup Utility</title>
+<style>
+/* === AMIBIOS CRT Style — Pure CSS, no external deps === */
+:root{
+  --bg:#0a0a0a;
+  --surface:#121414;
+  --surface-low:#1a1c1c;
+  --surface-high:#292a2a;
+  --primary:#0edcdd;
+  --primary-fixed:#4df9f9;
+  --secondary:#e9e941;
+  --secondary-fixed:#d8d82f;
+  --error:#ffb4ab;
+  --text:#e3e2e2;
+  --text-dim:#bacac9;
+  --ink:#0b0b0c;
+  --accent:#2547ff;
+  --accent-2:#ffd400;
+  --line:#3b4949;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Courier New',Courier,monospace;
+  font-size:13px;
+  line-height:1.4;
+  height:100%;
+  overflow:hidden;
+}
+/* CRT Effects */
+.crt{
+  position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.15) 0,rgba(0,0,0,.15) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:multiply;
+}
+.crt-vignette{
+  position:fixed;inset:0;pointer-events:none;z-index:9998;
+  box-shadow:inset 0 0 100px rgba(0,0,0,.7);
+}
+.crt-flicker{
+  animation:flicker 4s infinite;
+}
+@keyframes flicker{
+  0%,100%{opacity:1}
+  3%{opacity:.95}
+  6%{opacity:1}
+  7%{opacity:.92}
+  9%{opacity:1}
+  50%{opacity:.98}
+}
+.crt-glow{
+  text-shadow:0 0 5px var(--primary),0 0 10px rgba(14,220,221,.3);
+}
+/* Boot Screen */
+#boot-screen{
+  position:fixed;inset:0;z-index:1000;
+  background:#000;
+  color:#aaa;
+  font-size:12px;
+  padding:20px;
+  overflow:hidden;
+  transition:opacity .6s;
+}
+#boot-screen .boot-line{
+  margin:2px 0;
+  white-space:pre;
+}
+#boot-screen .highlight{color:var(--primary)}
+#boot-screen .ok{color:#0f0}
+#boot-screen .mem{color:var(--secondary)}
+/* Main BIOS Container */
+#bios{
+  display:flex;
+  flex-direction:column;
+  height:100%;
+  overflow:hidden;
+}
+/* Header Tape */
+.bios-header{
+  background:var(--surface-high);
+  border-bottom:3px solid var(--line);
+  padding:6px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:between;
+  gap:16px;
+  flex-shrink:0;
+}
+.bios-header .logo{
+  color:var(--primary);
+  font-weight:bold;
+  font-size:14px;
+}
+.bios-header .title{
+  color:var(--secondary);
+  font-weight:bold;
+  letter-spacing:2px;
+}
+.bios-header .subtitle{
+  color:var(--text-dim);
+  font-size:10px;
+  margin-left:auto;
+}
+.blink{
+  animation:blink 1s infinite;
+}
+@keyframes blink{
+  0%,49%{opacity:1}
+  50%,100%{opacity:0}
+}
+/* Main Body */
+.bios-body{
+  flex:1;
+  display:flex;
+  overflow:hidden;
+  min-height:0;
+}
+/* Sidebar */
+.bios-sidebar{
+  width:240px;
+  background:var(--surface-low);
+  border-right:3px solid var(--line);
+  display:flex;
+  flex-direction:column;
+  overflow-y:auto;
+  flex-shrink:0;
+}
+.bios-sidebar-title{
+  padding:8px 12px;
+  background:var(--surface-high);
+  color:var(--primary);
+  font-weight:bold;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  border-bottom:2px solid var(--line);
+}
+.bios-menu-item{
+  padding:6px 12px;
+  cursor:pointer;
+  border-left:3px solid transparent;
+  transition:all .15s;
+  font-size:12px;
+}
+.bios-menu-item:hover{
+  background:var(--surface-high);
+  border-left-color:var(--primary);
+  color:var(--primary-fixed);
+}
+.bios-menu-item.active{
+  background:var(--accent);
+  color:#fff;
+  border-left-color:var(--secondary);
+  font-weight:bold;
+}
+.bios-menu-item .arrow{
+  float:right;
+  opacity:0;
+}
+.bios-menu-item.active .arrow{
+  opacity:1;
+}
+/* Detail Panel */
+.bios-detail{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.bios-detail-header{
+  padding:8px 16px;
+  background:var(--surface-high);
+  color:var(--primary);
+  font-weight:bold;
+  border-bottom:2px solid var(--line);
+  flex-shrink:0;
+}
+.bios-detail-body{
+  flex:1;
+  overflow-y:auto;
+  padding:12px;
+}
+/* Form Fields */
+.field-row{
+  display:flex;
+  align-items:center;
+  padding:6px 8px;
+  border-bottom:1px solid rgba(255,255,255,.05);
+  gap:12px;
+}
+.field-row:hover{
+  background:var(--surface-low);
+}
+.field-label{
+  width:180px;
+  flex-shrink:0;
+  color:var(--text-dim);
+  font-size:11px;
+}
+.field-value{
+  flex:1;
+  color:var(--primary-fixed);
+  font-weight:bold;
+  font-size:12px;
+  background:var(--bg);
+  padding:4px 8px;
+  border:2px solid var(--line);
+  outline:none;
+  font-family:inherit;
+}
+.field-value:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 6px var(--accent);
+}
+.field-value.select{
+  cursor:pointer;
+}
+.field-value.readonly{
+  color:var(--secondary);
+  border-color:transparent;
+  background:transparent;
+}
+/* Memory Bar */
+.mem-bar-wrap{
+  background:var(--bg);
+  border:2px solid var(--line);
+  height:16px;
+  position:relative;
+  overflow:hidden;
+  flex:1;
+}
+.mem-bar-fill{
+  height:100%;
+  background:var(--secondary);
+  transition:width .5s;
+}
+.mem-bar-label{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:9px;
+  color:#000;
+  font-weight:bold;
+}
+/* Bottom Keys */
+.bios-keys{
+  background:var(--surface-high);
+  border-top:3px solid var(--line);
+  padding:4px 8px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  flex-shrink:0;
+}
+.bios-key{
+  background:var(--bg);
+  border:2px solid var(--line);
+  padding:4px 8px;
+  font-size:10px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-width:60px;
+}
+.bios-key .key-name{
+  color:var(--primary);
+  font-weight:bold;
+  font-size:11px;
+}
+.bios-key .key-desc{
+  color:var(--text-dim);
+  font-size:9px;
+}
+/* Toast */
+#toast-container{
+  position:fixed;
+  bottom:60px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:2000;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  align-items:center;
+  pointer-events:none;
+}
+.toast{
+  background:var(--surface-high);
+  border:2px solid var(--accent-2);
+  color:var(--text);
+  padding:6px 16px;
+  font-size:11px;
+  box-shadow:4px 4px 0 var(--ink);
+  white-space:nowrap;
+  opacity:0;
+  transition:opacity .2s;
+}
+/* CRT Screen Curve */
+.crt-curve{
+  border-radius:4px;
+  overflow:hidden;
+}
+/* Responsive */
+@media(max-width:760px){
+  .bios-sidebar{width:160px}
+  .field-label{width:120px;font-size:10px}
+}
+</style>
+</head>
+<body class="crt-flicker">
+<div class="crt"></div>
+<div class="crt-vignette"></div>
 
-<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;background-color:#0d0e0f;}body{overscroll-behavior:none;font-family:'Space Mono',monospace;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.crt-overlay{background:linear-gradient(rgba(18,20,20,0) 50%,rgba(0,0,0,0.35) 50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03));background-size:100% 3px,6px 100%;pointer-events:none;}.crt-vignette{box-shadow:inset 0 0 80px rgba(0,0,0,0.85);pointer-events:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-primary":"#003737","on-tertiary-container":"#c51e12","outline-variant":"#3b4949","primary-container":"#4df9f9","on-background":"#e3e2e2","on-primary-fixed":"#002020","on-tertiary":"#690000","surface-container-low":"#1a1c1c","on-error-container":"#ffdad6","on-primary-container":"#007070","surface-tint":"#0edcdd","surface-variant":"#343535","on-secondary-fixed":"#1d1d00","primary-fixed":"#4df9f9","surface-container-lowest":"#0d0e0f","error-container":"#93000a","on-surface":"#e3e2e2","secondary-fixed":"#e9e941","surface-dim":"#121414","error":"#ffb4ab","outline":"#849493","secondary":"#d8d82f","tertiary":"#ffffff","tertiary-fixed":"#ffdad4","on-surface-variant":"#bacac9","secondary-container":"#bcbc01","on-error":"#690005","surface-container-high":"#292a2a","primary-fixed-dim":"#0edcdd","tertiary-container":"#ffdad4","inverse-primary":"#006a6a","secondary-fixed-dim":"#cdcd21","on-tertiary-fixed-variant":"#930000","on-primary-fixed-variant":"#004f50","on-secondary-container":"#4a4a00","surface-bright":"#38393a","background":"#121414","tertiary-fixed-dim":"#ffb4a8","on-secondary-fixed-variant":"#494900","surface":"#121414","surface-container":"#1e2020","surface-container-highest":"#343535","on-secondary":"#323200","inverse-surface":"#e3e2e2","primary":"#ffffff","inverse-on-surface":"#2f3131","on-tertiary-fixed":"#410000"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-xl":"2rem","space-md":"1rem","gutter":"1rem","space-xs":"0.25rem","space-lg":"1.5rem","margin":"1rem","space-sm":"0.5rem"},"fontFamily":{"label-md":["Space Mono"],"headline-lg":["Space Mono"],"body-md":["Space Mono"],"label-sm":["Space Mono"],"label-lg":["Space Mono"],"headline-xl":["Space Mono"],"headline-md":["Space Mono"],"body-sm":["Space Mono"],"body-lg":["Space Mono"]},"fontSize":{"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.04em","fontWeight":"700"}],"headline-lg":["16px",{"lineHeight":"20px","letterSpacing":"0.08em","fontWeight":"700"}],"body-md":["13px",{"lineHeight":"18px","letterSpacing":"0.02em","fontWeight":"400"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"700"}],"label-lg":["13px",{"lineHeight":"16px","letterSpacing":"0.06em","fontWeight":"700"}],"headline-xl":["20px",{"lineHeight":"24px","letterSpacing":"0.1em","fontWeight":"700"}],"headline-md":["14px",{"lineHeight":"18px","letterSpacing":"0.05em","fontWeight":"700"}],"body-sm":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"400"}],"body-lg":["14px",{"lineHeight":"20px","letterSpacing":"0.02em","fontWeight":"400"}]}}}};</script></head><body class="bg-surface-container-lowest text-on-surface select-none overflow-x-hidden min-h-screen flex flex-col items-center justify-center p-space-xs"><div class="fixed inset-0 cr-chassis z-50 pointer-events-none crt-overlay crt-vignette"></div><div class="w-full max-w-[1024px] aspect-[4/3] bg-surface-container-low border border-outline-variant flex flex-col justify-between relative shadow-2xl overflow-hidden"><header class="w-full bg-surface-container-lowest z-20"><div class="flex justify-between items-center px-space-md py-space-xs text-on-surface-variant font-label-sm text-label-sm border-b border-outline-variant"><span>ROM PCI/ISA BIOS (2A59CF0C)</span><span>AWARD SOFTWARE, INC. (C) 1994</span><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div><div class="bg-surface-container px-space-md py-space-xs text-center border-b border-outline-variant"><span class="font-headline-lg text-headline-lg text-secondary uppercase tracking-widest">CMOS SETUP UTILITY</span></div><nav class="flex items-center justify-center gap-space-md py-space-xs px-space-md bg-surface-container-high border-b border-outline-variant" data-active-classes="bg-secondary text-on-secondary font-bold"><a aria-current="page" class="uppercase bg-secondary text-on-secondary font-bold" data-path="standard-cmos-setup" href="#">[Standard Setup]</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface uppercase" data-path="bios-features-setup" href="#">[BIOS Features]</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface uppercase" data-path="chipset-features-setup" href="#">[Chipset Setup]</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface uppercase" data-path="power-management-setup" href="#">[Power Mgmt]</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface uppercase" data-path="pnp-pci-configuration" href="#">[PnP/PCI]</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface uppercase" data-path="integrated-peripherals" href="#">[Peripherals]</a></nav></header><main class="flex-1 w-full bg-surface-container-low px-space-md py-space-sm relative overflow-y-auto font-body-md text-body-md text-on-surface"><div class="flex flex-col w-full text-on-surface select-none relative font-body-md text-body-md leading-none">
-<!-- Subtle CRT Scanline / Raster Bar Effect Overlay -->
-<div class="absolute inset-0 pointer-events-none opacity-25 z-40 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]"></div>
-<!-- Main Background Container Emulating Full 80x25 VGA Workspace in Token-Matched Deep Palette -->
-<div class="w-full bg-surface-container-lowest p-space-xs flex flex-col gap-space-xs relative">
-<!-- TOP STATUS TAPE (Simulated Award BIOS Identity Ribbon) -->
-<div class="w-full bg-surface-container-high text-on-surface-variant flex items-center justify-between px-space-sm py-space-xs text-label-sm font-label-sm uppercase tracking-wider">
-<div class="flex items-center gap-space-sm">
-<span class="text-secondary font-headline-md text-headline-md animate-pulse">■</span>
-<span class="text-primary font-bold">ROM PCI/ISA BIOS (2A59CF0C)</span>
-</div>
-<div class="text-secondary font-headline-md text-headline-md tracking-widest bg-surface-container-lowest px-space-sm py-0.5">
-        CMOS SETUP UTILITY
-      </div>
-<div class="text-on-surface-variant">
-        AWARD SOFTWARE, INC.
-      </div>
-</div>
-<!-- MAIN TWO-COLUMN MENU (Underlay Frame) -->
-<div class="w-full grid grid-cols-1 md:grid-cols-2 gap-space-xs relative">
-<!-- LEFT COLUMN -->
-<div class="bg-surface-container p-space-xs flex flex-col gap-1 shadow-2xl relative">
-<div class="text-primary-fixed-dim font-label-sm text-label-sm px-space-xs py-0.5 uppercase tracking-widest flex justify-between bg-surface-container-high">
-<span>╔═ SYSTEM CORE ARCHITECTURE ═╗</span>
-<span>[MENU 1/2]</span>
-</div>
-<div id="menu-list" class="flex flex-col gap-0.5 mt-space-xs font-label-md text-label-md" role="listbox" aria-label="BIOS Setup Menu">
-<!-- Active Highlighted Element -->
-<div class="flex items-center justify-between px-space-sm py-1 bg-secondary text-on-secondary cursor-pointer" id="item-std-cmos">
-<span class="tracking-wide">► STANDARD CMOS SETUP</span>
-<span class="font-headline-md text-headline-md">◄</span>
-</div>
-<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors">
-<span class="tracking-wide">  BIOS FEATURES SETUP</span>
-<span class="text-on-surface-variant text-label-sm font-label-sm">[CPU/CACHE]</span>
-</div>
-<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors">
-<span class="tracking-wide">  CHIPSET FEATURES SETUP</span>
-<span class="text-on-surface-variant text-label-sm font-label-sm">[DRAM/TIMING]</span>
-</div>
-<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors">
-<span class="tracking-wide">  POWER MANAGEMENT SETUP</span>
-<span class="text-on-surface-variant text-label-sm font-label-sm">[APM/ACPI]</span>
-</div>
-<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors">
-<span class="tracking-wide">  PNP/PCI CONFIGURATION</span>
-<span class="text-on-surface-variant text-label-sm font-label-sm">[IRQ/DMA]</span>
-</div>
-<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-on-surface-variant cursor-pointer transition-colors">
-<span class="tracking-wide">  LOAD BIOS DEFAULTS</span>
-<span class="text-secondary font-bold text-label-sm font-label-sm">[F6]</span>
-</div>
-<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-on-surface-variant cursor-pointer transition-colors">
-<span class="tracking-wide">  LOAD SETUP DEFAULTS</span>
-<span class="text-secondary font-bold text-label-sm font-label-sm">[F7]</span>
-</div>
-</div>
-<div class="mt-space-xs text-outline font-label-sm text-label-sm px-space-xs">
-          ╚════════════════════════════════════╝
-        </div>
-</div>
-<!-- RIGHT COLUMN -->
-<div class="bg-surface-container p-space-xs flex flex-col gap-1 shadow-2xl relative">
-<div class="text-primary-fixed-dim font-label-sm text-label-sm px-space-xs py-0.5 uppercase tracking-widest flex justify-between bg-surface-container-high">
-<span>╔═ SECURITY &amp; STORAGE UTILS ═╗</span>
-<span>[MENU 2/2]</span>
-</div>
-<div class="flex flex-col gap-0.5 mt-space-xs font-label-md text-label-md">
-<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors">
-<span class="tracking-wide">  SUPERVISOR PASSWORD</span>
-<span class="text-error font-bold text-label-sm font-label-sm">[SET]</span>
-</div>
-<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors">
-<span class="tracking-wide">  USER PASSWORD</span>
-<span class="text-outline font-bold text-label-sm font-label-sm">[NONE]</span>
-</div>
-<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors">
-<span class="tracking-wide">  IDE HDD AUTO DETECTION</span>
-<span class="text-primary-fixed-dim text-label-sm font-label-sm">[AUTO]</span>
-</div>
-<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors">
-<span class="tracking-wide">  HDD LOW LEVEL FORMAT</span>
-<span class="text-error font-bold text-label-sm font-label-sm">[UTIL]</span>
-</div>
-<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-secondary-fixed cursor-pointer transition-colors">
-<span class="tracking-wide">  SAVE &amp; EXIT SETUP</span>
-<span class="text-secondary font-bold text-label-sm font-label-sm">[F10]</span>
-</div>
-<div class="flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-on-tertiary-container cursor-pointer transition-colors">
-<span class="tracking-wide">  EXIT WITHOUT SAVING</span>
-<span class="text-error font-bold text-label-sm font-label-sm">[ESC]</span>
-</div>
-<div class="flex items-center justify-between px-space-sm py-1 opacity-50">
-<span class="text-outline">  FLASH MEMORY UPGRADE</span>
-<span class="text-outline text-label-sm font-label-sm">[REV 1.04]</span>
-</div>
-</div>
-<div class="mt-space-xs text-outline font-label-sm text-label-sm px-space-xs">
-          ╚════════════════════════════════════╝
-        </div>
-</div>
-</div>
-<!-- INSET FOREGROUND MODAL / SUB-WINDOW (Standard CMOS Setup Detail Window) -->
-<!-- Authentic Hard-Shadow Layering (8px solid drop offset using negative margins & positioning) -->
-<div id="detail-window" class="w-full bg-surface-container-lowest p-space-xs shadow-2xl relative z-30">
-<!-- Modal Header Bar with Retro Box ASCII Title -->
-<div class="bg-surface-container-highest text-primary-fixed-dim px-space-sm py-1 flex items-center justify-between font-label-md text-label-md" id="detail-header">
-<span class="tracking-wider">╔════ STANDARD CMOS SETUP (AWARD SOFTWARE INC.) ════╗</span>
-<span class="text-secondary font-bold text-label-sm font-label-sm">[ESC: BACK]</span>
-</div>
-<!-- Detail Body Grid -->
-<div class="bg-surface-container-low p-space-sm flex flex-col gap-space-xs">
-<!-- ROW 1: Date & Time Readouts -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md bg-surface-container px-space-sm py-space-xs">
-<div class="flex items-center justify-between font-label-sm text-label-sm">
-<span class="text-primary-fixed-dim font-bold">Date (mm:dd:yy) :</span>
-<span class="bg-surface-container-lowest px-space-xs py-0.5 text-secondary font-headline-md text-headline-md tracking-wider">
-              Fri, Oct 21 1994
-            </span>
-</div>
-<div class="flex items-center justify-between font-label-sm text-label-sm">
-<span class="text-primary-fixed-dim font-bold">Time (hh:mm:ss) :</span>
-<span class="bg-surface-container-lowest px-space-xs py-0.5 text-secondary font-headline-md text-headline-md tracking-widest" id="bios-clock">
-              14 : 32 : 08
-            </span>
-</div>
-</div>
-<!-- HARD DISK CONTROLLER MATRIX TABLE -->
-<div class="flex flex-col bg-surface-container-lowest p-space-xs overflow-x-auto">
-<div class="text-primary font-headline-md text-headline-md px-space-xs py-0.5 bg-surface-container-high flex items-center justify-between">
-<span>HARD DISKS</span>
-<span class="text-label-sm font-label-sm text-secondary">CYLS HEAD SECTOR SIZE MODE</span>
-</div>
-<!-- Table Header -->
-<div class="grid grid-cols-12 text-label-sm font-label-sm text-on-surface-variant px-space-xs py-1 bg-surface-container">
-<div class="col-span-3">DRIVE</div>
-<div class="col-span-2">TYPE</div>
-<div class="col-span-2">SIZE</div>
-<div class="col-span-1">CYLS</div>
-<div class="col-span-1">HEAD</div>
-<div class="col-span-1">SECT</div>
-<div class="col-span-2 text-right">MODE</div>
-</div>
-<!-- Master 1 -->
-<div class="grid grid-cols-12 text-label-sm font-label-sm px-space-xs py-1 text-primary hover:bg-surface-container-high transition-colors">
-<div class="col-span-3 text-primary-fixed-dim font-bold">Pri Master :</div>
-<div class="col-span-2 text-secondary">USER</div>
-<div class="col-span-2 text-primary font-bold">540 MB</div>
-<div class="col-span-1">1048</div>
-<div class="col-span-1">16</div>
-<div class="col-span-1">63</div>
-<div class="col-span-2 text-right text-secondary-fixed">LBA</div>
-</div>
-<!-- Slave 1 -->
-<div class="grid grid-cols-12 text-label-sm font-label-sm px-space-xs py-1 text-outline hover:bg-surface-container-high transition-colors">
-<div class="col-span-3 text-on-surface-variant font-bold">Pri Slave  :</div>
-<div class="col-span-2">None</div>
-<div class="col-span-2">0 MB</div>
-<div class="col-span-1">0</div>
-<div class="col-span-1">0</div>
-<div class="col-span-1">0</div>
-<div class="col-span-2 text-right">----</div>
-</div>
-<!-- Master 2 -->
-<div class="grid grid-cols-12 text-label-sm font-label-sm px-space-xs py-1 text-primary hover:bg-surface-container-high transition-colors">
-<div class="col-span-3 text-primary-fixed-dim font-bold">Sec Master :</div>
-<div class="col-span-4 text-primary font-bold">CD-ROM ATAPI</div>
-<div class="col-span-3 text-outline">4x SPEED</div>
-<div class="col-span-2 text-right text-secondary-fixed">AUTO</div>
-</div>
-<!-- Slave 2 -->
-<div class="grid grid-cols-12 text-label-sm font-label-sm px-space-xs py-1 text-outline hover:bg-surface-container-high transition-colors">
-<div class="col-span-3 text-on-surface-variant font-bold">Sec Slave  :</div>
-<div class="col-span-2">None</div>
-<div class="col-span-2">0 MB</div>
-<div class="col-span-1">0</div>
-<div class="col-span-1">0</div>
-<div class="col-span-1">0</div>
-<div class="col-span-2 text-right">----</div>
-</div>
-</div>
-<!-- DRIVE CONFIGURATION & HARDWARE DIAGNOSTICS SPLIT -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-space-xs">
-<!-- Floppy & Display Diagnostics -->
-<div class="bg-surface-container p-space-xs flex flex-col gap-1 font-label-sm text-label-sm">
-<div class="flex items-center justify-between py-0.5 px-space-xs hover:bg-surface-container-high">
-<span class="text-primary-fixed-dim">Drive A :</span>
-<span class="text-primary font-bold bg-surface-container-lowest px-1">[1.44M, 3.5 in.]</span>
-</div>
-<div class="flex items-center justify-between py-0.5 px-space-xs hover:bg-surface-container-high">
-<span class="text-primary-fixed-dim">Drive B :</span>
-<span class="text-primary font-bold bg-surface-container-lowest px-1">[1.2M, 5.25 in.]</span>
-</div>
-<div class="flex items-center justify-between py-0.5 px-space-xs hover:bg-surface-container-high">
-<span class="text-primary-fixed-dim">Floppy 3 Mode :</span>
-<span class="text-outline bg-surface-container-lowest px-1">[Disabled]</span>
-</div>
-<div class="flex items-center justify-between py-0.5 px-space-xs hover:bg-surface-container-high">
-<span class="text-primary-fixed-dim">Video Graphics :</span>
-<span class="text-secondary font-bold bg-surface-container-lowest px-1">[EGA / VGA]</span>
-</div>
-<div class="flex items-center justify-between py-0.5 px-space-xs hover:bg-surface-container-high">
-<span class="text-primary-fixed-dim">Halt On Errors :</span>
-<span class="text-error font-bold bg-surface-container-lowest px-1">[All Errors]</span>
-</div>
-</div>
-<!-- Base / Extended Memory Hardware Diagnostic Counters -->
-<div class="bg-surface-container p-space-xs flex flex-col justify-between font-label-sm text-label-sm">
-<div class="text-secondary font-headline-md text-headline-md tracking-wider bg-surface-container-highest px-space-xs py-0.5">
-              MEMORY DIAGNOSTICS
-            </div>
-<div class="flex flex-col gap-1 mt-1">
-<div class="flex items-center justify-between text-on-surface-variant">
-<span>Base Memory .........</span>
-<span class="text-primary font-bold">640 KB</span>
-</div>
-<div class="flex items-center justify-between text-on-surface-variant">
-<span>Extended Memory .....</span>
-<span class="text-primary font-bold">15,360 KB</span>
-</div>
-<div class="flex items-center justify-between text-on-surface-variant">
-<span>Other Memory ........</span>
-<span class="text-primary font-bold">384 KB</span>
-</div>
-<div class="flex items-center justify-between text-secondary-fixed bg-surface-container-lowest px-space-xs py-1 mt-0.5 font-bold">
-<span>TOTAL SYSTEM MEMORY :</span>
-<span class="text-secondary text-headline-md font-headline-md">16,384 KB</span>
-</div>
-</div>
-<!-- ASCII Physical Allocation Visual Gauge -->
-<div class="flex flex-col gap-0.5 mt-2">
-<div class="flex justify-between text-outline text-label-sm font-label-sm">
-<span>POST RAM MAP</span>
-<span>[640K / 16M]</span>
-</div>
-<div class="bg-surface-container-lowest text-secondary tracking-widest text-label-sm font-label-sm py-0.5 overflow-hidden">
-                ████████████████████░░░░░░░░░░░░
-              </div>
-</div>
-</div>
-</div>
-</div>
-<!-- Sub-Window Bottom ASCII Frame -->
-<div class="bg-surface-container-highest text-primary-fixed-dim px-space-sm py-0.5 font-label-sm text-label-sm flex justify-between">
-<span>╚═════════════════════════════════════════════════════════╝</span>
-<span class="text-on-surface-variant">PAGE 1 OF 1</span>
-</div>
-</div>
-<!-- SITUATIONAL HELP / ACTION HINT TAPE -->
-<div class="w-full bg-surface-container text-primary-fixed-dim px-space-sm py-1 flex items-center justify-between font-label-md text-label-md">
-<div class="flex items-center gap-space-xs">
-<span class="text-secondary font-bold">ITEM SPEC :</span>
-<span>Set Day, Month, Year &amp; System RTC Clock via Number Keys</span>
-</div>
-<div class="text-outline text-label-sm font-label-sm">
-        CMOS ADDR: [0x0E-0x3F]
-      </div>
-</div>
-<!-- STATUS TOAST CONTAINER -->
-<div id="bios-toast-container" style="position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:100;pointer-events:none;display:flex;flex-direction:column;gap:6px;align-items:center;"></div>
-<!-- BOTTOM CONTROL LEGEND KEY MATRIX (DOS 1-Line Density Recreation) -->
-<div class="w-full bg-surface-container-high p-space-xs grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-1 font-label-sm text-label-sm">
-<div class="bg-surface-container-lowest px-space-xs py-1 flex flex-col items-center">
-<span class="text-primary font-bold">ESC</span>
-<span class="text-on-surface-variant">Quit</span>
-</div>
-<div class="bg-surface-container-lowest px-space-xs py-1 flex flex-col items-center">
-<span class="text-primary font-bold">↑ ↓ → ←</span>
-<span class="text-on-surface-variant">Select Item</span>
-</div>
-<div class="bg-surface-container-lowest px-space-xs py-1 flex flex-col items-center">
-<span class="text-secondary font-bold">PU/PD/+/-</span>
-<span class="text-on-surface-variant">Modify</span>
-</div>
-<div class="bg-surface-container-lowest px-space-xs py-1 flex flex-col items-center">
-<span class="text-secondary font-bold">F1 / (Sh)F2</span>
-<span class="text-on-surface-variant">Help/Color</span>
-</div>
-<div class="bg-surface-container-lowest px-space-xs py-1 flex flex-col items-center">
-<span class="text-secondary font-bold">F5 / F6</span>
-<span class="text-on-surface-variant">Old/BIOS Def</span>
-</div>
-<div class="bg-surface-container-lowest px-space-xs py-1 flex flex-col items-center">
-<span class="text-secondary font-bold">F7</span>
-<span class="text-on-surface-variant">Setup Def</span>
-</div>
-<div class="bg-surface-container-lowest px-space-xs py-1 flex flex-col items-center col-span-2 sm:col-span-1">
-<span class="text-primary-fixed font-bold">F10</span>
-<span class="text-secondary font-bold">Save &amp; Exit</span>
-</div>
-</div>
-</div>
-</div>
+<!-- Boot Screen -->
+<div id="boot-screen"></div>
+
+<!-- Main BIOS -->
+<div id="bios" style="display:none">
+  <div class="bios-header">
+    <span class="logo">■ AMIBIOS</span>
+    <span class="title">CMOS SETUP UTILITY</span>
+    <span class="subtitle">American Megatrends Inc. <span class="blink">_</span></span>
+  </div>
+  <div class="bios-body">
+    <div class="bios-sidebar">
+      <div class="bios-sidebar-title">► Main Menu</div>
+      <div id="menu-list"></div>
+    </div>
+    <div class="bios-detail">
+      <div class="bios-detail-header" id="detail-header">╔════ STANDARD CMOS SETUP (AWARD) ════╗</div>
+      <div class="bios-detail-body" id="detail-body"></div>
+    </div>
+  </div>
+  <div class="bios-keys">
+    <div class="bios-key"><span class="key-name">ESC</span><span class="key-desc">Quit</span></div>
+    <div class="bios-key"><span class="key-name">↑↓←→</span><span class="key-desc">Navigate</span></div>
+    <div class="bios-key"><span class="key-name">+/-</span><span class="key-desc">Modify</span></div>
+    <div class="bios-key"><span class="key-name">Enter</span><span class="key-desc">Edit</span></div>
+    <div class="bios-key"><span class="key-name">F5</span><span class="key-desc">Old Values</span></div>
+    <div class="bios-key"><span class="key-name">F6</span><span class="key-desc">BIOS Def</span></div>
+    <div class="bios-key"><span class="key-name">F7</span><span class="key-desc">Setup Def</span></div>
+    <div class="bios-key"><span class="key-name">F10</span><span class="key-desc">Save &amp; Exit</span></div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
 <script>
-(function() {
-  /* ── State ── */
+(function(){
+  'use strict';
+
+  // === State ===
   var state = {
-    currentTab: 'standard-cmos-setup',
+    currentTab: 'standard-cmos',
     selectedItem: 0,
-    items: [],
     modified: false,
-    biosDate: 'Fri, Oct 21 1994',
-    biosTime: { h: 14, m: 32, s: 8 },
-    cmosFields: {
-      date: { label: 'Date (mm:dd:yy)', value: 'Fri, Oct 21 1994', editable: true, type: 'date' },
-      time: { label: 'Time (hh:mm:ss)', value: '14:32:08', editable: true, type: 'time' },
-      haltOn: { label: 'Halt On', value: 'All Errors', editable: true, options: ['All Errors', 'No Errors', 'All, But Keyboard'] },
-      videoMode: { label: 'Video Mode', value: 'EGA / VGA', editable: true, options: ['EGA / VGA', 'CGA / RGB', 'Monochrome'] },
-      floppy3Mode: { label: 'Floppy 3 Mode', value: 'Disabled', editable: true, options: ['Disabled', '1.44M', '2.88M', '1.2M'] },
-      systemRAM: { label: 'Total System Memory', value: '16,384 KB', editable: false },
-      baseRAM: { label: 'Base Memory', value: '640 KB', editable: false },
-      extMemory: { label: 'Extended Memory', value: '15,360 KB', editable: false }
+    beepCtx: null,
+    memTestDone: false,
+    date: { h:14, m:32, s:8 },
+    fields: {
+      sysDate: new Date().toLocaleDateString('de-DE'),
+      sysTime: '14:32:08',
+      haltOn: { value:'All Errors', opts:['All Errors','No Errors','All But Keyboard','All But Diskette'] },
+      video: { value:'EGA/VGA', opts:['EGA/VGA','CGA 40','CGA 80','Mono'] },
+      floppyA: { value:'1.44M 3.5"', opts:['None','360K 5.25"','1.2M 5.25"','720K 3.5"','1.44M 3.5"','2.88M 3.5"'] },
+      floppyB: { value:'None', opts:['None','360K 5.25"','1.2M 5.25"','720K 3.5"','1.44M 3.5"','2.88M 3.5"'] },
+      bootSeq: { value:'A:,C:', opts:['A:,C:','C:,A:','C: Only','CD-ROM,C:,A:','LS-120,C:,A:'] },
+      bootSeek: { value:'Enabled', opts:['Enabled','Disabled'] },
+      swapFloppy: { value:'Disabled', opts:['Enabled','Disabled'] },
+      numLock: { value:'On', opts:['On','Off'] },
+      typematic: { value:'Enabled', opts:['Enabled','Disabled'] },
+      password: { value:'None', opts:['None','Setup','Always'] },
+      shadow: { value:'Enabled', opts:['Enabled','Disabled'] },
+      cache: { value:'Enabled', opts:['Enabled','Disabled'] },
+      turbo: { value:'Enabled', opts:['Enabled','Disabled'] },
+      QuickPOST: { value:'Enabled', opts:['Enabled','Disabled'] },
+      virusWarn: { value:'Enabled', opts:['Enabled','Disabled'] },
+      bootOS2: { value:'No', opts:['Yes','No'] },
+      cacheECC: { value:'Enabled', opts:['Enabled','Disabled'] },
+      dramTiming: { value:'Auto', opts:['Auto','60ns','70ns'] },
+      casLatency: { value:'3', opts:['2','3'] },
+      sdrBanks: { value:'4', opts:['2','4'] },
+      agpMode: { value:'4x', opts:['1x','2x','4x'] },
+      acpiMode: { value:'Enabled', opts:['Enabled','Disabled'] },
+      powerMode: { value:'User Define', opts:['User Define','Min Saving','Max Saving'] },
+      standbyMin: { value:'Disabled', opts:['Disabled','1 Min','2 Min','4 Min','8 Min','12 Min','20 Min'] },
+      resumeDate: { value:'0:00:00', opts:['0:00:00','1:00:00','Every Day'] },
+      irq1: { value:'PCI/ISA PnP', opts:['PCI/ISA PnP','Legacy ISA'] },
+      irq3: { value:'PCI/ISA PnP', opts:['PCI/ISA PnP','Legacy ISA','Available'] },
+      dma1: { value:'PCI/ISA PnP', opts:['PCI/ISA PnP','Legacy ISA','Available'] },
+      pnpOs: { value:'No', opts:['Yes','No'] },
+      resetConfig: { value:'No', opts:['Yes','No'] },
+      onboardIde: { value:'Both', opts:['Both','Primary Only','Secondary Only','Disabled'] },
+      usbCtrl: { value:'Enabled', opts:['Enabled','Disabled'] },
+      usbLegacy: { value:'Enabled', opts:['Enabled','Disabled'] },
+      serial1: { value:'3F8/IRQ4', opts:['3F8/IRQ4','2F8/IRQ3','3E8/IRQ4','2E8/IRQ3','Auto','Disabled'] },
+      serial2: { value:'2F8/IRQ3', opts:['3F8/IRQ4','2F8/IRQ3','3E8/IRQ4','2E8/IRQ3','Auto','Disabled'] },
+      parallel: { value:'378/IRQ7', opts:['378/IRQ7','278/IRQ5','3BC/IRQ7','Disabled'] },
+      audio: { value:'Auto', opts:['Auto','Disabled'] }
     }
   };
 
-  /* ── Tab data ── */
+  var tabNames = {
+    'standard-cmos': 'STANDARD CMOS SETUP',
+    'bios-features': 'BIOS FEATURES SETUP',
+    'chipset': 'CHIPSET FEATURES SETUP',
+    'power-mgmt': 'POWER MANAGEMENT SETUP',
+    'pnp-pci': 'PNP/PCI CONFIGURATION',
+    'integrated': 'INTEGRATED PERIPHERALS',
+    'hardware': 'HARDWARE MONITOR & MISC'
+  };
+
   var tabItems = {
-    'standard-cmos-setup': [
-      'Date / Time', 'Hard Disks', 'Floppy & Display', 'Memory Diagnostics'
-    ],
-    'bios-features-setup': [
-      'CPU / Cache', 'Power Management', 'Quick Power On'
-    ],
-    'chipset-features-setup': [
-      'DRAM Timing', 'AGP Configuration', 'Memory Hole'
-    ],
-    'power-management-setup': [
-      'APM / ACPI', 'Power Management Mode', 'Standby Timeout'
-    ],
-    'pnp-pci-configuration': [
-      'IRQ Allocation', 'DMA Channels', 'PnP OS', 'PCI Latency'
-    ],
-    'integrated-peripherals': [
-      'Onboard IDE', 'USB Configuration', 'Serial / Parallel', 'Audio'
-    ]
+    'standard-cmos': ['Date / Time','Hard Disks','Floppy & Display','Boot Sequence','Memory Info','System Summary'],
+    'bios-features': ['CPU Info','Quick POST','Boot Sequence','Boot Seek','NumLock','Typematic Rate','Password Check','Video Shadow','Cache ECC','Virus Warning','OS/2 Boot','Turbo Switch'],
+    'chipset': ['DRAM Timing','CAS Latency','SDR Banks','AGP Mode','Spread Spectrum','Memory Hole'],
+    'power-mgmt': ['ACPI Mode','Power Mode','Standby','Hibernate','Wake Events','AC Loss'],
+    'pnp-pci': ['IRQ Allocation','DMA Channels','PnP OS','PCI Latency','Reset Config','PCI VGA Palette'],
+    'integrated': ['Onboard IDE','USB Controller','USB Legacy','Serial Ports','Parallel Port','Audio AC97','Onboard LAN'],
+    'hardware': ['CPU Temperature','CPU Fan','Chassis Fan','Vcore','+3.3V','+5V','+12V','-12V','Battery']
   };
 
-  /* ── Helpers ── */
-  var clockEl, toastContainer;
-
-  function $(id) { return document.getElementById(id); }
-
-  function showToast(msg, dur) {
-    dur = dur || 2200;
-    var t = document.createElement('div');
-    t.style.cssText = 'background:var(--surface-container-high);color:var(--text-secondary);border:2px solid var(--accent);padding:6px 14px;font-family:Space Mono,monospace;font-size:12px;border-radius:2px;box-shadow:4px 4px 0 var(--ink);white-space:nowrap;opacity:0;transition:opacity 0.2s;';
-    t.textContent = msg;
-    toastContainer.appendChild(t);
-    requestAnimationFrame(function() { t.style.opacity = '1'; });
-    setTimeout(function() {
-      t.style.opacity = '0';
-      setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 200);
-    }, dur);
-  }
-
-  function updateClock() {
-    state.biosTime.s++;
-    if (state.biosTime.s >= 60) { state.biosTime.s = 0; state.biosTime.m++; }
-    if (state.biosTime.m >= 60) { state.biosTime.m = 0; state.biosTime.h++; }
-    if (state.biosTime.h >= 24) { state.biosTime.h = 0; }
-    var pad = function(n) { return String(n).padStart(2, '0'); };
-    if (clockEl) clockEl.textContent = pad(state.biosTime.h) + ' : ' + pad(state.biosTime.m) + ' : ' + pad(state.biosTime.s);
-  }
-
-  /* ── Navigation ── */
-  function switchTab(tab) {
-    var menu = $('menu-list');
-    if (!menu) return;
-    var items = menu.querySelectorAll('[data-path]');
-    items.forEach(function(el) {
-      var isActive = el.getAttribute('data-path') === tab;
-      el.className = isActive
-        ? 'uppercase bg-secondary text-on-secondary font-bold'
-        : 'font-label-md text-label-md text-on-surface-variant hover:text-on-surface uppercase';
-      if (isActive) el.setAttribute('aria-current', 'page');
-      else el.removeAttribute('aria-current');
-    });
-    var detailHeader = $('detail-header');
-    if (detailHeader) {
-      var names = {
-        'standard-cmos-setup': 'STANDARD CMOS SETUP',
-        'bios-features-setup': 'BIOS FEATURES SETUP',
-        'chipset-features-setup': 'CHIPSET FEATURES SETUP',
-        'power-management-setup': 'POWER MANAGEMENT SETUP',
-        'pnp-pci-configuration': 'PNP/PCI CONFIGURATION',
-        'integrated-peripherals': 'INTEGRATED PERIPHERALS'
-      };
-      detailHeader.querySelector('span:first-child').textContent = '╔════ ' + (names[tab] || tab).replace(/-/g, ' ').toUpperCase() + ' (AWARD SOFTWARE INC.) ════╗';
+  // === Audio (PC Speaker Beep) ===
+  function initBeep(){
+    if(!state.beepCtx){
+      try{state.beepCtx=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}
     }
-    state.currentTab = tab;
-    state.selectedItem = 0;
-    state.modified = true;
-    highlightItem();
+  }
+  function beep(freq,dur){
+    initBeep();
+    if(!state.beepCtx)return;
+    var o=state.beepCtx.createOscillator(),g=state.beepCtx.createGain();
+    o.type='square';o.frequency.value=freq;
+    g.gain.value=0.1;
+    o.connect(g);g.connect(state.beepCtx.destination);
+    o.start();
+    setTimeout(function(){o.stop()},dur||80);
+  }
+  function beepKey(){beep(800,40)}
+  function beepEnter(){beep(600,80)}
+  function beepError(){beep(200,200)}
+
+  // === Toast ===
+  function toast(msg,dur){
+    dur=dur||1800;
+    var c=document.getElementById('toast-container');
+    var t=document.createElement('div');
+    t.className='toast';
+    t.textContent=msg;
+    c.appendChild(t);
+    requestAnimationFrame(function(){t.style.opacity='1'});
+    setTimeout(function(){
+      t.style.opacity='0';
+      setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t)},250);
+    },dur);
   }
 
-  function highlightItem() {
-    var menu = $('menu-list');
-    if (!menu) return;
-    var entries = menu.querySelectorAll('[data-path]');
-    var curItems = tabItems[state.currentTab] || [];
-    entries.forEach(function(el, i) {
-      if (i === state.selectedItem) {
-        el.className = 'flex items-center justify-between px-space-sm py-1 bg-secondary text-on-secondary cursor-pointer transition-colors';
+  // === Boot Sequence ===
+  var bootLines = [
+    {t:'Award Modular BIOS v4.51PG', delay:50},
+    {t:'Copyright (C) 1984-95, Award Software, Inc.', delay:30},
+    {t:'', delay:20},
+    {t:'ASUS P2B-F ACPI BIOS Revision 1007', delay:40},
+    {t:'', delay:10},
+    {t:'Pentium II-MMX CPU at 400MHz', delay:50},
+    {t:'Memory Test : ', delay:30, cls:'mem', append:'262144K OK', cls2:'ok'},
+    {t:'', delay:10},
+    {t:'Award Plug and Play BIOS Extension v1.0A', delay:40},
+    {t:'Detecting IDE Primary Master  ... WDC AC31600H', cls:'highlight', delay:60},
+    {t:'Detecting IDE Primary Slave   ... None', cls:'highlight', delay:40},
+    {t:'Detecting IDE Secondary Master... ATAPI CD-ROM', cls:'highlight', delay:50},
+    {t:'Detecting IDE Secondary Slave ... None', cls:'highlight', delay:40},
+    {t:'', delay:10},
+    {t:'Hold DEL to run Setup', cls:'highlight', delay:40},
+    {t:'', delay:30},
+    {t:'Starting CMOS Setup Utility...', cls:'highlight', delay:100}
+  ];
+
+  function runBoot(){
+    var screen=document.getElementById('boot-screen');
+    var bios=document.getElementById('bios');
+    var lineIdx=0;
+    bios.style.display='none';
+
+    function addLine(){
+      if(lineIdx>=bootLines.length){
+        setTimeout(function(){
+          screen.style.opacity='0';
+          setTimeout(function(){
+            screen.style.display='none';
+            bios.style.display='flex';
+            state.memTestDone=true;
+            beep(1000,100);
+            toast('CMOS Setup Utility Ready — Press DEL for setup',2500);
+            renderMenu();
+            renderDetail();
+          },600);
+        },400);
+        return;
+      }
+      var l=bootLines[lineIdx];
+      var div=document.createElement('div');
+      div.className='boot-line';
+      if(l.cls)div.classList.add(l.cls);
+      div.textContent=l.t;
+      if(l.append){
+        var span=document.createElement('span');
+        if(l.cls2)span.className=l.cls2;
+        span.textContent=l.append;
+        div.appendChild(span);
+      }
+      screen.appendChild(div);
+      lineIdx++;
+      setTimeout(addLine,l.delay||30);
+    }
+    addLine();
+  }
+
+  // === Render Menu ===
+  function renderMenu(){
+    var list=document.getElementById('menu-list');
+    var items=tabItems[state.currentTab]||[];
+    list.innerHTML='';
+    items.forEach(function(item,i){
+      var div=document.createElement('div');
+      div.className='bios-menu-item'+(i===state.selectedItem?' active':'');
+      div.innerHTML='<span>'+(i===state.selectedItem?'► ':'  ')+item+'</span><span class="arrow">►</span>';
+      div.addEventListener('click',function(){
+        beepKey();
+        state.selectedItem=i;
+        renderMenu();
+        renderDetail();
+      });
+      list.appendChild(div);
+    });
+  }
+
+  // === Render Detail based on selected menu item ===
+  function renderDetail(){
+    var body=document.getElementById('detail-body');
+    var header=document.getElementById('detail-header');
+    var tab=state.currentTab;
+    var sel=state.selectedItem;
+
+    // Update header
+    header.textContent='╔════ '+tabNames[tab]+' ════╗';
+
+    body.innerHTML='';
+
+    // Build content based on tab + selection
+    if(tab==='standard-cmos'){
+      if(sel===0) renderDateTime(body);
+      else if(sel===1) renderHardDisks(body);
+      else if(sel===2) renderFloppyDisplay(body);
+      else if(sel===3) renderBootSeq(body);
+      else if(sel===4) renderMemory(body);
+      else renderSystemSummary(body);
+    }
+    else if(tab==='bios-features'){
+      renderBiosFeatures(body,sel);
+    }
+    else if(tab==='chipset'){
+      renderChipset(body,sel);
+    }
+    else if(tab==='power-mgmt'){
+      renderPowerMgmt(body,sel);
+    }
+    else if(tab==='pnp-pci'){
+      renderPnpPci(body,sel);
+    }
+    else if(tab==='integrated'){
+      renderIntegrated(body,sel);
+    }
+    else if(tab==='hardware'){
+      renderHardware(body,sel);
+    }
+  }
+
+  // === Detail Renderers ===
+  function makeRow(label,val,key){
+    var row=document.createElement('div');
+    row.className='field-row';
+    var lab=document.createElement('span');
+    lab.className='field-label';
+    lab.textContent=label;
+    var input=document.createElement('input');
+    input.className='field-value';
+    input.value=val;
+    input.readOnly=true;
+    input.addEventListener('dblclick',function(){
+      this.readOnly=false;
+      this.focus();
+      this.select();
+      beepEnter();
+    });
+    input.addEventListener('keydown',function(e){
+      if(e.key==='Enter'){
+        this.readOnly=true;
+        state.modified=true;
+        toast('✓ '+label+' changed',1000);
+        beepEnter();
+      }
+      if(e.key==='Escape'){this.readOnly=true;this.value=val}
+    });
+    input.addEventListener('blur',function(){this.readOnly=true});
+    row.appendChild(lab);
+    row.appendChild(input);
+    return row;
+  }
+
+  function makeSelect(label,val,key,opts){
+    var row=document.createElement('div');
+    row.className='field-row';
+    var lab=document.createElement('span');
+    lab.className='field-label';
+    lab.textContent=label;
+    var sel=document.createElement('select');
+    sel.className='field-value select';
+    opts.forEach(function(o){
+      var opt=document.createElement('option');
+      opt.value=o;opt.textContent=o;
+      if(o===val)opt.selected=true;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('change',function(){
+      state.fields[key].value=this.value;
+      state.modified=true;
+      toast('✓ '+label+' → '+this.value,1000);
+      beepEnter();
+    });
+    row.appendChild(lab);
+    row.appendChild(sel);
+    return row;
+  }
+
+  function renderDateTime(body){
+    body.innerHTML='<div style="font-weight:bold;color:var(--primary);margin-bottom:8px">► Date & Time Configuration</div>';
+    body.appendChild(makeRow('Date (mm/dd/yyyy)',state.fields.sysDate,'sysDate'));
+    body.appendChild(makeRow('Time (hh:mm:ss)','14:32:08','sysTime'));
+    // RTC clock
+    var div=document.createElement('div');
+    div.style.cssText='margin-top:8px;font-size:10px;color:var(--text-dim)';
+    div.textContent='RTC Clock is running — edit fields, then press Enter to commit.';
+    body.appendChild(div);
+  }
+
+  function renderHardDisks(body){
+    body.innerHTML='<div style="font-weight:bold;color:var(--primary);margin-bottom:8px">► IDE Hard Disk Drives</div>';
+    body.appendChild(makeRow('Primary Master Type','USER (Auto)',''));
+    body.appendChild(makeRow('Primary Master Size','1,621 MB',''));
+    body.appendChild(makeRow('Primary Master Cylinders','3,206',''));
+    body.appendChild(makeRow('Primary Master Heads','16',''));
+    body.appendChild(makeRow('Primary Master Sectors','63',''));
+    body.appendChild(makeRow('Primary Master Mode','LBA',''));
+    body.appendChild(makeRow('Primary Slave','None',''));
+    body.appendChild(makeRow('Secondary Master','CD-ROM (ATAPI)',''));
+    body.appendChild(makeRow('Secondary Slave','None',''));
+  }
+
+  function renderFloppyDisplay(body){
+    body.innerHTML='<div style="font-weight:bold;color:var(--primary);margin-bottom:8px">► Floppy & Display Configuration</div>';
+    body.appendChild(makeSelect('Drive A','1.44M 3.5"','floppyA',state.fields.floppyA.opts));
+    body.appendChild(makeSelect('Drive B','None','floppyB',state.fields.floppyB.opts));
+    body.appendChild(makeSelect('Floppy 3 Mode Support','Disabled','swapFloppy',['Disabled','Drive A','Drive B']));
+    body.appendChild(makeSelect('Video Display','EGA/VGA','video',state.fields.video.opts));
+    body.appendChild(makeSelect('Halt On Errors','All Errors','haltOn',state.fields.haltOn.opts));
+  }
+
+  function renderBootSeq(body){
+    body.innerHTML='<div style="font-weight:bold;color:var(--primary);margin-bottom:8px">► Boot Sequence Configuration</div>';
+    body.appendChild(makeSelect('1st Boot Device','A:,C:','bootSeq',state.fields.bootSeq.opts));
+    body.appendChild(makeSelect('Boot Up Floppy Seek','Enabled','bootSeek',state.fields.bootSeek.opts));
+    body.appendChild(makeSelect('Boot Up NumLock Status','On','numLock',state.fields.numLock.opts));
+    body.appendChild(makeSelect('Typematic Rate Setting','Enabled','typematic',state.fields.typematic.opts));
+  }
+
+  function renderMemory(body){
+    body.innerHTML='<div style="font-weight:bold;color:var(--primary);margin-bottom:8px">► Memory Diagnostics</div>';
+    var mems=[
+      {label:'Base Memory',val:'640 KB',pct:4},
+      {label:'Extended Memory',val:'255,360 KB',pct:96},
+      {label:'Other Memory',val:'384 KB',pct:0}
+    ];
+    mems.forEach(function(m){
+      var row=document.createElement('div');
+      row.className='field-row';
+      var lab=document.createElement('span');
+      lab.className='field-label';
+      lab.textContent=m.label;
+      var barWrap=document.createElement('div');
+      barWrap.className='mem-bar-wrap';
+      var fill=document.createElement('div');
+      fill.className='mem-bar-fill';
+      fill.style.width=m.pct+'%';
+      if(m.pct===0)fill.style.display='none';
+      var lbl=document.createElement('div');
+      lbl.className='mem-bar-label';
+      lbl.textContent=m.val;
+      barWrap.appendChild(fill);barWrap.appendChild(lbl);
+      row.appendChild(lab);
+      row.appendChild(barWrap);
+      body.appendChild(row);
+    });
+    var total=document.createElement('div');
+    total.style.cssText='margin-top:10px;padding:6px;border:2px solid var(--secondary);background:var(--bg);text-align:center;font-weight:bold;color:var(--secondary)';
+    total.textContent='TOTAL SYSTEM MEMORY: 262,144 KB (256 MB)';
+    body.appendChild(total);
+    var post=document.createElement('div');
+    post.style.cssText='margin-top:8px;font-size:10px;color:var(--text-dim)';
+    post.innerHTML='POST Memory Map: 640K Base | 384K Reserved | 255,360K Extended<br/>[████████████████████░░░░░░░░░░░░░░░░░░░░]';
+    body.appendChild(post);
+  }
+
+  function renderSystemSummary(body){
+    body.innerHTML='<div style="font-weight:bold;color:var(--primary);margin-bottom:8px">► System Summary</div>';
+    body.appendChild(makeRow('CPU Type','Pentium II-MMX',''));
+    body.appendChild(makeRow('CPU Speed','400 MHz',''));
+    body.appendChild(makeRow('BIOS Version','4.51PG 1007',''));
+    body.appendChild(makeRow('BIOS ID','2A59CF0C',''));
+    body.appendChild(makeRow('Serial Number','9509021337',''));
+    body.appendChild(makeRow('Asset Tag','MACROHARD-001',''));
+    body.appendChild(makeRow('Total Memory','262,144 KB',''));
+    body.appendChild(makeRow('Cache Size','512 KB',''));
+    body.appendChild(makeRow('System Date',state.fields.sysDate,''));
+    body.appendChild(makeRow('System Time','14:32:08',''));
+  }
+
+  function renderBiosFeatures(body,sel){
+    body.innerHTML='<div style="font-weight:bold;color:var(--primary);margin-bottom:8px">► BIOS Features</div>';
+    var feats=[
+      {label:'Quick Power On Self Test',key:'QuickPOST'},
+      {label:'Boot Sequence',key:'bootSeq'},
+      {label:'Boot Up Floppy Seek',key:'bootSeek'},
+      {label:'Boot Up NumLock',key:'numLock'},
+      {label:'Typematic Rate Setting',key:'typematic'},
+      {label:'Supervisor Password',key:'password'},
+      {label:'Video BIOS Shadow',key:'shadow'},
+      {label:'System BIOS Cacheable',key:'cache'},
+      {label:'Cache ECC Checking',key:'cacheECC'},
+      {label:'Virus Warning',key:'virusWarn'},
+      {label:'OS/2 for >64MB',key:'bootOS2'},
+      {label:'Turbo Function',key:'turbo'}
+    ];
+    feats.forEach(function(f){
+      var val=state.fields[f.key];
+      if(val&&val.opts){
+        body.appendChild(makeSelect(f.label,val.value,f.key,val.opts));
       } else {
-        el.className = 'flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors';
+        body.appendChild(makeRow(f.label,'Enabled',''));
       }
     });
   }
 
-  /* ── Keyboard ── */
-  document.addEventListener('keydown', function(e) {
-    var key = e.key;
-    var curItems = tabItems[state.currentTab] || [];
+  function renderChipset(body,sel){
+    body.innerHTML='<div style="font-weight:bold;color:var(--primary);margin-bottom:8px">► Chipset Configuration</div>';
+    body.appendChild(makeSelect('DRAM Timing','Auto','dramTiming',state.fields.dramTiming.opts));
+    body.appendChild(makeSelect('CAS Latency','3','casLatency',state.fields.casLatency.opts));
+    body.appendChild(makeSelect('SDRAM Banks','4','sdrBanks',state.fields.sdrBanks.opts));
+    body.appendChild(makeSelect('AGP Aperture Mode','4x','agpMode',state.fields.agpMode.opts));
+    body.appendChild(makeRow('Memory Hole at 15M-16M','Disabled',''));
+  }
 
-    switch (key) {
+  function renderPowerMgmt(body,sel){
+    body.innerHTML='<div style="font-weight:bold;color:var(--primary);margin-bottom:8px">► Power Management</div>';
+    body.appendChild(makeSelect('ACPI Suspend Type','S1(POS)','acpiMode',['S1(POS)','S3(STR)','Disabled']));
+    body.appendChild(makeSelect('Power Management Mode','User Define','powerMode',state.fields.powerMode.opts));
+    body.appendChild(makeSelect('Standby Timeout','Disabled','standbyMin',state.fields.standbyMin.opts));
+    body.appendChild(makeSelect('Hibernate After','Disabled','resumeDate',['Disabled','1 Hr','2 Hr']));
+    body.appendChild(makeRow('AC Power Loss Restart','Last State',''));
+    body.appendChild(makeRow('Wake on LAN','Disabled',''));
+    body.appendChild(makeRow('Wake on Keyboard','Disabled',''));
+  }
+
+  function renderPnpPci(body,sel){
+    body.innerHTML='<div style="font-weight:bold;color:var(--primary);margin-bottom:8px">► PnP / PCI Configuration</div>';
+    body.appendChild(makeRow('IRQ 1 (Keyboard)','PCI/ISA PnP',''));
+    body.appendChild(makeRow('IRQ 3 (COM2)','Available',''));
+    body.appendChild(makeRow('IRQ 4 (COM1)','PCI/ISA PnP',''));
+    body.appendChild(makeRow('IRQ 5 (LPT2)','Available',''));
+    body.appendChild(makeRow('DMA Channel 1','Available',''));
+    body.appendChild(makeRow('DMA Channel 3','Available',''));
+    body.appendChild(makeSelect('Plug & Play OS Installed','No','pnpOs',state.fields.pnpOs.opts));
+    body.appendChild(makeRow('PCI Latency Timer','64 PCI Clks',''));
+    body.appendChild(makeSelect('Reset Configuration Data','No','resetConfig',state.fields.resetConfig.opts));
+  }
+
+  function renderIntegrated(body,sel){
+    body.innerHTML='<div style="font-weight:bold;color:var(--primary);margin-bottom:8px">► Integrated Peripherals</div>';
+    body.appendChild(makeSelect('Onboard IDE Controller','Both','onboardIde',state.fields.onboardIde.opts));
+    body.appendChild(makeSelect('USB Controller','Enabled','usbCtrl',state.fields.usbCtrl.opts));
+    body.appendChild(makeSelect('USB Legacy Support','Enabled','usbLegacy',state.fields.usbLegacy.opts));
+    body.appendChild(makeSelect('Serial Port 1','3F8/IRQ4','serial1',state.fields.serial1.opts));
+    body.appendChild(makeSelect('Serial Port 2','2F8/IRQ3','serial2',state.fields.serial2.opts));
+    body.appendChild(makeSelect('Parallel Port','378/IRQ7','parallel',state.fields.parallel.opts));
+    body.appendChild(makeSelect('AC97 Audio','Auto','audio',state.fields.audio.opts));
+    body.appendChild(makeRow('Onboard LAN','Disabled',''));
+  }
+
+  function renderHardware(body,sel){
+    body.innerHTML='<div style="font-weight:bold;color:var(--primary);margin-bottom:8px">► Hardware Monitor</div>';
+    body.appendChild(makeRow('CPU Temperature','42 °C / 107 °F',''));
+    body.appendChild(makeRow('System Temperature','35 °C / 95 °F',''));
+    body.appendChild(makeRow('CPU Fan Speed','5430 RPM',''));
+    body.appendChild(makeRow('Chassis Fan','N/A',''));
+    body.appendChild(makeRow('Vcore Voltage','2.05V',''));
+    body.appendChild(makeRow('+3.3V Voltage','3.31V',''));
+    body.appendChild(makeRow('+5V Voltage','4.98V',''));
+    body.appendChild(makeRow('+12V Voltage','11.89V',''));
+    body.appendChild(makeRow('-12V Voltage','-11.76V',''));
+    body.appendChild(makeRow('Battery Voltage','3.12V',''));
+    var note=document.createElement('div');
+    note.style.cssText='margin-top:8px;padding:6px;border:2px solid var(--error);color:var(--error);font-size:10px';
+    note.textContent='⚠ WARNING: Values may not reflect actual hardware. Virtual sensors active.';
+    body.appendChild(note);
+  }
+
+  // === Keyboard Nav ===
+  document.addEventListener('keydown',function(e){
+    var tab=state.currentTab;
+    var items=tabItems[tab]||[];
+    switch(e.key){
       case 'ArrowUp':
         e.preventDefault();
-        if (state.selectedItem > 0) { state.selectedItem--; highlightItem(); }
+        if(state.selectedItem>0){state.selectedItem--;renderMenu();renderDetail();beepKey()}
         break;
       case 'ArrowDown':
         e.preventDefault();
-        if (state.selectedItem < curItems.length - 1) { state.selectedItem++; highlightItem(); }
+        if(state.selectedItem<items.length-1){state.selectedItem++;renderMenu();renderDetail();beepKey()}
         break;
       case 'Enter':
       case ' ':
-        e.preventDefault();
-        if (curItems[state.selectedItem]) showToast('Editing: ' + curItems[state.selectedItem], 1500);
+        beepEnter();
         break;
       case 'Escape':
-        showToast('Exiting setup — changes ' + (state.modified ? 'NOT saved' : 'discarded'), 2000);
+        beepError();
+        toast('Exiting setup — changes '+(state.modified?'NOT saved':'discarded'),2000);
         break;
       case 'F10':
         e.preventDefault();
-        showToast('✓ Setup saved — resetting...', 2000);
-        state.modified = false;
-        setTimeout(function() { showToast('Returning to desktop...', 1500); }, 1500);
+        beepEnter();
+        toast('✓ Setup saved — system resetting...',2000);
+        state.modified=false;
+        setTimeout(function(){
+          toast('Rebooting...',1500);
+          setTimeout(function(){location.reload()},2000);
+        },1500);
         break;
       case 'F5':
-        e.preventDefault();
-        showToast('Loaded old CMOS values', 1500);
-        state.modified = true;
+        e.preventDefault();beepKey();toast('Loaded previous CMOS values',1500);state.modified=true;
+        break;
+      case 'F6':
+        e.preventDefault();beepKey();toast('Loaded BIOS defaults',1500);state.modified=true;
         break;
       case 'F7':
-        e.preventDefault();
-        showToast('Loaded default setup values', 1500);
-        state.modified = true;
+        e.preventDefault();beepKey();toast('Loaded setup defaults',1500);state.modified=true;
         break;
-      case 'F2':
-        e.preventDefault();
-        showToast('Color palette: amber-on-black', 1500);
+      case 'F1':
+        e.preventDefault();toast('Help: Use arrow keys to navigate, +/- to change values',3000);
         break;
     }
   });
 
-  /* ── Menu click ── */
-  document.addEventListener('click', function(e) {
-    var target = e.target.closest('[data-path]');
-    if (target) {
-      var path = target.getAttribute('data-path');
-      var allPaths = Object.keys(tabItems);
-      if (allPaths.indexOf(path) !== -1) {
-        switchTab(path);
-      }
+  // === Tab Cycle (Shift+Tab to switch main tabs) ===
+  var tabOrder=['standard-cmos','bios-features','chipset','power-mgmt','pnp-pci','integrated','hardware'];
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Tab'){
+      e.preventDefault();
+      var curIdx=tabOrder.indexOf(state.currentTab);
+      var next=(e.shiftKey?curIdx-1+tabOrder.length:curIdx+1)%tabOrder.length;
+      state.currentTab=tabOrder[next];
+      state.selectedItem=0;
+      renderMenu();renderDetail();beepKey();
     }
   });
 
-  /* ── Init ── */
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-
-  function init() {
-    clockEl = $('bios-clock');
-    toastContainer = $('bios-toast-container');
-
-    /* RTC tick */
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    /* Populate menu items */
-    var menu = $('menu-list');
-    if (menu) {
-      var items = tabItems[state.currentTab] || [];
-      var frag = document.createDocumentFragment();
-      items.forEach(function(item, i) {
-        var div = document.createElement('div');
-        div.className = i === 0
-          ? 'flex items-center justify-between px-space-sm py-1 bg-secondary text-on-secondary cursor-pointer transition-colors'
-          : 'flex items-center justify-between px-space-sm py-1 hover:bg-surface-container-high text-primary cursor-pointer transition-colors';
-        div.setAttribute('data-path', state.currentTab);
-        div.setAttribute('role', 'option');
-        div.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
-        div.innerHTML = '<span class="tracking-wide">' + (i === 0 ? '► ' : '  ') + item + '</span><span class="text-on-surface-variant text-label-sm font-label-sm">[TAB]</span>';
-        frag.appendChild(div);
-      });
-      menu.innerHTML = '';
-      menu.appendChild(frag);
-    }
-
-    showToast('CMOS Setup Ready — F10 to Save & Exit', 2500);
-  }
+  // === Init ===
+  runBoot();
 })();
-</script></main><footer class="w-full bg-surface-container-lowest border-t border-outline-variant z-20"><div class="px-space-md py-space-xs flex flex-wrap items-center justify-between font-label-sm text-label-sm text-on-surface-variant"><div class="flex items-center gap-space-md"><span><span class="text-primary font-bold">ESC</span> : Quit</span><span><span class="text-primary font-bold">↑ ↓ → ←</span> : Select Item</span><span><span class="text-primary font-bold">PU/PD/+/-</span> : Modify</span></div><div class="flex items-center gap-space-md"><span><span class="text-secondary font-bold">(Shift)F2</span> : Color</span><span><span class="text-secondary font-bold">F5</span> : Old Values</span><span><span class="text-secondary font-bold">F7</span> : Load Defaults</span><span><span class="text-primary-fixed font-bold">F10</span> : Save &amp; Exit Setup</span></div></div></footer></div></body></html>
+</script>
+</body>
+</html>
