@@ -1915,9 +1915,16 @@
     }
 
     /* === Upload === */
+    var AUDIO_MAX_SIZE=10*1024*1024; // 10 MB
+    var AUDIO_MIME=/^audio\/(mpeg|mp3|mp4|ogg|wav|webm|aac|flac|x-m4a)$/;
+    var AUDIO_EXT=/\.(mp3|mp4|ogg|wav|webm|aac|flac|m4a)$/i;
     function handleUpload(file){
-      if(!file||!file.type.match(/^audio\//)){
-        alert('Nicht unterstützt: '+file.name);return
+      if(!file) return;
+      if(file.size>AUDIO_MAX_SIZE){
+        alert('Datei zu groß: '+file.name+' (max 10 MB)');return;
+      }
+      if(!file.type.match(/^audio\//)&&!AUDIO_EXT.test(file.name)){
+        alert('Nicht unterstützt: '+file.name+' (nur Audio)');return;
       }
       var url=URL.createObjectURL(file);
       var s={n:file.name.replace(/\.[^.]+$/,''),a:'Upload',u:url,src:'custom',_blob:true};
@@ -2179,8 +2186,20 @@
       var ts=document.createElement('span');ts.style.cssText='font-size:9px;opacity:.6;margin-left:6px';ts.textContent=m.time;
       d.appendChild(ts);el.appendChild(d);el.scrollTop=el.scrollHeight;
     }
-    /* Chat — S4: More emoji */
+    /* Chat — S4: More emoji + variable mock replies */
     var extraEmoji=['😂','😎','🔥','💡','✅','🎉','👍','🚀','🙃','🤔','👀','🎵','📸','💻','🔑','⭐','🌟','🎯','💪','🏆'];
+    var chatMockReplies=[
+      'Interessant! Erzähl mehr.',
+      'Hmm, lass mich nachdenken...',
+      'Verstanden. Ich prüfe das.',
+      'Klingt gut! Mach weiter so.',
+      'Ok, notiert. 👍',
+      'Das sehe ich anders — aber okay.'
+    ];
+    function mockReply(text){
+      var i=Math.abs((text||'').split('').reduce(function(a,c){return a+c.charCodeAt(0)|0},0))%chatMockReplies.length;
+      return chatMockReplies[i];
+    }
     var chatReplyTimer=null;
     function sendMsg(text){
       if(!text) return;
@@ -2190,7 +2209,7 @@
       /* Track timeout so it can be cancelled on close */
       if(chatReplyTimer)clearTimeout(chatReplyTimer);
       chatReplyTimer=setTimeout(function(){
-        var r='(mock) Echo: '+text;
+        var r='(mock) '+mockReply(text);
         addChatBubble(msgs,{text:r,self:false,time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})});
         try{var h2=JSON.parse(localStorage.getItem('cp_msgs')||'[]');h2.push({text:r,self:false,time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})});if(h2.length>100)h2.shift();localStorage.setItem('cp_msgs',JSON.stringify(h2));}catch(e2){}
         chatReplyTimer=null;
@@ -2303,7 +2322,17 @@
       grid.appendChild(bioBtn);
       /* Reset */
       var resetBtn=document.createElement('button');resetBtn.className='cBtn op';resetBtn.textContent='Reset Defaults';
-      resetBtn.addEventListener('click',function(){document.documentElement.className='';document.documentElement.style.removeProperty('--accent');document.documentElement.style.removeProperty('--fs');document.documentElement.dataset.theme='';document.documentElement.classList.remove('scanlines');try{localStorage.removeItem('os_accent');localStorage.removeItem('os_fs');localStorage.removeItem('os_dark');localStorage.removeItem('os_scan');localStorage.removeItem('os_theme');}catch(e){}location.reload();});
+      resetBtn.addEventListener('click',function(){
+        document.documentElement.className='';
+        document.documentElement.style.removeProperty('--accent');
+        document.documentElement.style.removeProperty('--fs');
+        document.documentElement.dataset.theme='';
+        document.documentElement.classList.remove('scanlines');
+        try{localStorage.removeItem('os_accent');localStorage.removeItem('os_fs');localStorage.removeItem('os_dark');localStorage.removeItem('os_scan');localStorage.removeItem('os_theme');}catch(e){}
+        // Soft reset: reload UI titles and show confirmation instead of location.reload()
+        refreshUI();
+        toast('Settings zurückgesetzt');
+      });
       grid.appendChild(resetBtn);
       appearance.appendChild(grid);
       /* Restore saved accent/fs */
@@ -2332,7 +2361,15 @@
       if(clearBtn) clearBtn.addEventListener('click',function(){
         if(confirm('Alle lokalen Daten löschen?')){
           try{localStorage.clear();}catch(e){}
-          location.reload();
+          // Soft reset: reset UI state and clear session storage instead of location.reload()
+          try{sessionStorage.clear();}catch(e){}
+          document.documentElement.className='';
+          document.documentElement.style.removeProperty('--accent');
+          document.documentElement.style.removeProperty('--fs');
+          document.documentElement.dataset.theme='';
+          document.documentElement.classList.remove('scanlines');
+          refreshUI();
+          toast('Alle Daten gelöscht');
         }
       });
     }
@@ -2486,7 +2523,7 @@
       var err=document.createElement('div');
       err.className='brErr';
       err.style.cssText='display:none;height:100%;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center';
-      err.innerHTML='<div style="font-size:48px">🔒</div><div style="font-weight:700;font-size:13px">Diese Seite kann nicht in einem iframe geladen werden.</div><div style="font-size:11px;color:var(--muted);max-width:280px">Viele Webseiten blockieren iframes aus Sicherheitsgründen.</div><button class="cBtn" id="brOpenExt" style="margin-top:8px">Im externen Browser öffnen</button>';
+      err.innerHTML='<div style="font-size:48px">🔒</div><div style="font-weight:700;font-size:13px">Diese Seite kann nicht in einem iframe geladen werden.</div><div style="font-size:11px;color:var(--muted);max-width:280px">Viele Webseiten blockieren iframes aus Sicherheitsgründen (CSP/X-Frame-Options). Der Server der Zielseite erlaubt keine Einbettung in andere Sites.</div><button class="cBtn" id="brOpenExt" style="margin-top:8px">Im externen Browser öffnen</button>';
       content.appendChild(iframe);
       content.appendChild(err);
       var brLoaded=false;
