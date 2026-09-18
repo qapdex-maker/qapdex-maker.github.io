@@ -159,16 +159,17 @@
     e.preventDefault();
     var m=document.getElementById('deskCtx');
     if(!m){m=document.createElement('div');m.id='deskCtx';
-      m.innerHTML='<div class="ctxItem" data-a="notepad">Notepad</div><div class="ctxItem" data-a="calculator">Calculator</div><div class="ctxItem" data-a="terminal">Terminal</div><div class="ctxItem" data-a="explorer">Explorer</div><div class="ctxItem" data-a="paint">Paint</div><div class="ctxSep"></div><div class="ctxItem" data-action="view-large"><span style="flex:1">Ansicht: Groß</span>  <span style="font-size:10px;color:var(--muted)">Icons</span></div><div class="ctxItem" data-action="view-medium"><span style="flex:1">Ansicht: Mittel</span>  <span style="font-size:10px;color:var(--muted)">Icons</span></div><div class="ctxItem" data-action="sort-name"><span style="flex:1">Sortieren: Name</span>  <span style="font-size:10px;color:var(--muted)">A-Z</span></div><div class="ctxSep"></div><div class="ctxItem" data-a="settings">Settings</div><div class="ctxItem" data-a="amibios">AMIBIOS</div>';
+      m.innerHTML='<div class="ctxItem" data-action="wallpaper"><span class="ctxIco">🖼</span>Wallpaper wechseln</div><div class="ctxItem" data-action="wallpaper-upload"><span class="ctxIco">⬆</span>Wallpaper hochladen</div><div class="ctxSep"></div><div class="ctxItem" data-action="theme"><span class="ctxIco">🌙</span>Theme umschalten</div><div class="ctxSep"></div><div class="ctxItem" data-a="notepad"><span class="ctxIco">📝</span>Notepad</div><div class="ctxItem" data-a="terminal"><span class="ctxIco">⬛</span>Terminal</div><div class="ctxItem" data-a="explorer"><span class="ctxIco">📁</span>Explorer</div><div class="ctxItem" data-a="paint"><span class="ctxIco">🎨</span>Paint</div><div class="ctxSep"></div><div class="ctxItem" data-action="close-all"><span class="ctxIco">✕</span>Alle Fenster schließen</div><div class="ctxSep"></div><div class="ctxItem" data-a="settings"><span class="ctxIco">⚙</span>Settings</div>';
       document.body.appendChild(m);
       m.querySelectorAll('.ctxItem').forEach(function(it){
         it.addEventListener('click',function(){
           var a=it.dataset.a;
           var act=it.dataset.action;
           if(a)openApp(a);
-          if(act==='view-large'){document.getElementById('deskIcons').dataset.view='large';}
-          else if(act==='view-medium'){document.getElementById('deskIcons').dataset.view='medium';}
-          else if(act==='sort-name'){sortDeskIcons('name');}
+          if(act==='theme'){toggleTheme();}
+          else if(act==='wallpaper'){openApp('settings');toast('Wähle ein Wallpaper');}
+          else if(act==='wallpaper-upload'){uploadWallpaper();}
+          else if(act==='close-all'){closeAllWindows();}
           m.classList.remove('open');
         });
       });
@@ -176,6 +177,49 @@
     m.style.left=e.clientX+'px';m.style.top=e.clientY+'px';
     m.classList.add('open');
   });
+
+  /* Wallpaper Upload — FileReader to data URL */
+  function uploadWallpaper(){
+    var inp=document.createElement('input');
+    inp.type='file';
+    inp.accept='image/*';
+    inp.style.display='none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change',function(){
+      var file=inp.files[0];
+      if(!file)return;
+      if(file.size>5*1024*1024){alert('Datei zu groß (max 5 MB)');return;}
+      var reader=new FileReader();
+      reader.onload=function(ev){
+        var url=ev.target.result;
+        setWallpaper(url);
+        toast('Wallpaper hochgeladen');
+      };
+      reader.readAsDataURL(file);
+      inp.remove();
+    });
+    inp.click();
+  }
+
+  /* Close all windows */
+  function closeAllWindows(){
+    var wins=document.querySelectorAll('.wnd');
+    if(!wins.length){toast('Keine Fenster offen');return;}
+    wins.forEach(function(w){
+      var wId=w.getAttribute('data-app');
+      if(wId && window.osIntervals && window.osIntervals[wId]){
+        clearInterval(window.osIntervals[wId]);
+        delete window.osIntervals[wId];
+      }
+      w.classList.add('closing');
+      setTimeout(function(){w.remove();},200);
+      var tbIcon=document.getElementById('tb-'+wId);
+      if(tbIcon) tbIcon.remove();
+    });
+    focused=null;
+    updateFocus();
+    toast('Alle Fenster geschlossen');
+  }
 
   function sortDeskIcons(by){
     var c=document.getElementById('deskIcons');
@@ -335,7 +379,22 @@
     else if(key==='l'){e.preventDefault();openApp('links');toast('Links');}
     else if(key==='s'){e.preventDefault();snapActive();}
     else if(key==='k'){e.preventDefault();globaleSuche();}
+    else if(e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==='l'){e.preventDefault();toggleTheme();}
   });
+
+  /* Theme Toggle — Ctrl+Shift+L + Button */
+  function toggleTheme(){
+    var cur=document.documentElement.dataset.theme;
+    var next=cur==='dark'?'':'dark';
+    document.documentElement.dataset.theme=next;
+    try{localStorage.setItem('os_dark',next==='dark'?'1':'0');}catch(e){}
+    updateThemeToggleBtn();
+    toast(next==='dark'?'Dark Mode':'Light Mode');
+  }
+  function updateThemeToggleBtn(){
+    var btn=document.getElementById('tbThemeToggle');
+    if(btn) btn.textContent=document.documentElement.dataset.theme==='dark'?'☀️':'🌙';
+  }
 
   function snapActive(){
     var w=document.querySelector('.wnd.focused');
@@ -2473,6 +2532,16 @@
       it.addEventListener('click',function(){openApp(a.id);document.getElementById('startMenu').classList.remove('open');});
       sm.appendChild(it);
     });
+    /* Theme Toggle Button in Taskbar */
+    var tbRight=document.getElementById('tbRight');
+    if(tbRight){
+      var themeBtn=document.createElement('div');
+      themeBtn.id='tbThemeToggle';
+      themeBtn.title='Theme umschalten (Ctrl+Shift+L)';
+      themeBtn.textContent=document.documentElement.dataset.theme==='dark'?'☀️':'🌙';
+      themeBtn.addEventListener('click',toggleTheme);
+      tbRight.insertBefore(themeBtn,tbRight.firstChild);
+    }
     buildMusic();buildBrowser();buildLinks();buildSettings();
     buildOmarchyLinks();
     document.getElementById('lock').addEventListener('click',function(){this.classList.add('hide');});
