@@ -3597,6 +3597,13 @@ if(!document.getElementById('skipLink')){
       a.iconSvg=svgIcon(a.icon);
       var icon=makeIcon(a);
       desk.appendChild(icon);
+      /* Keyboard support */
+      icon.addEventListener('keydown',function(e){
+        if(e.key==='Enter'||e.key===' '){
+          e.preventDefault();
+          openApp(a.id);
+        }
+      });
       /* Defer heavy apps */
       if(['music','editor','imgeditor'].indexOf(a.id)!==-1){
         icon.style.visibility='hidden';
@@ -3608,7 +3615,7 @@ if(!document.getElementById('skipLink')){
     desktopApps.forEach(function(a){
       var it=document.createElement('div');it.className='smItem';it.setAttribute('data-app',a.id);
       it.setAttribute('data-label',a.label.toLowerCase());
-      it.innerHTML='<span class="ico">'+a.iconSvg+'</span>'+t(a.id);
+      it.innerHTML='<span class="ico">'+a.iconSvg+'</span>'+a.label;
       it.addEventListener('click',function(){openApp(a.id);document.getElementById('startMenu').classList.remove('open');});
       sm.appendChild(it);
     });
