@@ -636,6 +636,12 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 /* Radio Live Indicator */
 .radio-live{font-size:10px;color:var(--muted);font-family:var(--font-mono)}
 .radio-live.blinking{color:var(--danger);animation:radioBlink 1s infinite}
+.radioSearchWrap{display:flex;gap:4px;padding:6px 8px;border-bottom:2px solid var(--line);background:var(--paper);position:sticky;top:0;z-index:5}
+.radioSearchInput{flex:1;height:26px;padding:0 8px;border:2px solid var(--line);background:var(--surface);font-size:11px;border-radius:3px}
+.radioSearchInput:focus{outline:none;border-color:var(--accent)}
+.radioSearchBtn,.radioRefreshBtn{height:26px;padding:0 10px;border:2px solid var(--line);background:var(--surface);cursor:pointer;font-size:12px;border-radius:3px}
+.radioSearchBtn:hover,.radioRefreshBtn:hover{border-color:var(--accent)}
+.radioCount{padding:4px 8px;font-size:10px;color:var(--muted);font-family:var(--font-mono);border-bottom:1px solid var(--line)}
 @keyframes radioBlink{0%,100%{opacity:1}50%{opacity:0.3}}
 
 /* Mobile */

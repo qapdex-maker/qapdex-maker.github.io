@@ -2498,31 +2498,83 @@
       {name:'SomaFM: Vaporwaves',u:'https://ice1.somafm.com/vaporwaves-128-mp3',codec:'MP3',votes:3800},
       {name:'SomaFM: Beat Blender',u:'https://ice1.somafm.com/beatblender-128-mp3',codec:'MP3',votes:3500},
       {name:'SomaFM: Drone Zone',u:'https://ice1.somafm.com/dronezone-128-mp3',codec:'MP3',votes:3200},
-      {name:'SomaFM: Syntradio',u:'https://ice1.somafm.com/syntradio-128-mp3',codec:'MP3',votes:3000},
+      {name:'SomaFM: Suburbs of Goa',u:'https://ice1.somafm.com/suburbsofgoa-128-mp3',codec:'MP3',votes:3000},
+      {name:'SomaFM: Underground 80s',u:'https://ice1.somafm.com/u80s-128-mp3',codec:'MP3',votes:2800},
+      {name:'SomaFM: Deep Space One',u:'https://ice1.somafm.com/deepspaceone-128-mp3',codec:'MP3',votes:2600},
+      {name:'SomaFM: Space Station Soma',u:'https://ice1.somafm.com/spacestation-128-mp3',codec:'MP3',votes:2400},
+      {name:'SomaFM: Secret Agent',u:'https://ice1.somafm.com/secretagent-128-mp3',codec:'MP3',votes:2200},
+      {name:'SomaFM: Lush',u:'https://ice1.somafm.com/lush-128-mp3',codec:'MP3',votes:2000},
+      {name:'SomaFM: Digitalis',u:'https://ice1.somafm.com/digitalis-128-mp3',codec:'MP3',votes:1800},
+      {name:'SomaFM: ThistleRadio',u:'https://ice1.somafm.com/thistle-128-mp3',codec:'MP3',votes:1600},
+      {name:'SomaFM: Folk Forward',u:'https://ice1.somafm.com/folkfwd-128-mp3',codec:'MP3',votes:1400},
+      {name:'SomaFM: Christmas Lounge',u:'https://ice1.somafm.com/christmas-128-mp3',codec:'MP3',votes:1200},
+      {name:'SomaFM: Boot Liquor',u:'https://ice1.somafm.com/bootliquor-128-mp3',codec:'MP3',votes:1000},
+      {name:'SomaFM: Black Rock FM',u:'https://ice1.somafm.com/brfm-128-mp3',codec:'MP3',votes:900},
+      {name:'SomaFM: The Trip',u:'https://ice1.somafm.com/thetrip-128-mp3',codec:'MP3',votes:800},
+      {name:'SomaFM: Dub Step Beyond',u:'https://ice1.somafm.com/dubstep-128-mp3',codec:'MP3',votes:700},
       {name:'Subcity Radio',u:'https://fdn0.subcity.org/subcity-192.mp3',codec:'MP3',votes:2800},
       {name:'NTS Radio 1',u:'https://stream-relay-geo.ntslive.net/stream1',codec:'MP3',votes:2500},
-      {name:'NTS Radio 2',u:'https://stream-relay-geo.ntslive.net/stream2',codec:'MP3',votes:2300}
+      {name:'NTS Radio 2',u:'https://stream-relay-geo.ntslive.net/stream2',codec:'MP3',votes:2300},
+      {name:'Radio Paradise',u:'https://stream.radioparadise.com/aac-320',codec:'AAC',votes:4000},
+      {name:'KCRW Eclectic24',u:'https://kcrw.streamguys1.com/kcrw_192k_mp3_on_air',codec:'MP3',votes:1500},
+      {name:'FIP Radio',u:'https://icecast.radiofrance.fr/fip-midfi.mp3',codec:'MP3',votes:3500},
+      {name:'Jazz Radio',u:'https://jazz-wr01.ice.infomaniak.ch/jazz-wr01-128.mp3',codec:'MP3',votes:2000},
+      {name:'Classic FM',u:'https://media-ice.musicradio.com/ClassicFMMP3',codec:'MP3',votes:3000},
+      {name:'BBC Radio 6 Music',u:'https://stream.live.vc.bbcmedia.co.uk/bbc_6music',codec:'MP3',votes:2800},
+      {name:'Radio X UK',u:'https://media-ice.musicradio.com/RadioXMP3',codec:'MP3',votes:1800},
+      {name:'Kiss FM',u:'https://stream-kiss.planetradio.co.uk/kissnational.mp3',codec:'MP3',votes:2200},
+      {name:'Capital FM',u:'https://media-ice.musicradio.com/CapitalMP3',codec:'MP3',votes:2000},
+      {name:'Radio 1 UK',u:'https://stream.live.vc.bbcmedia.co.uk/bbc_radio_one',codec:'MP3',votes:2600},
+      {name:'BBC World Service',u:'https://stream.live.vc.bbcmedia.co.uk/bbc_world_service',codec:'MP3',votes:2400},
+      {name:'NPR News',u:'https://npr-ice.streamguys1.com/live.mp3',codec:'MP3',votes:2000},
+      {name:'WNYC FM',u:'https://fm939.wnyc.org/wnycfm',codec:'MP3',votes:1500},
+      {name:'KEXP FM',u:'https://kexp-mp3-128.streamguys1.com/kexp128.mp3',codec:'MP3',votes:1800},
+      {name:'Ibiza Global Radio',u:'https://listenssl.ibizaglobalradio.com:8025/stream',codec:'MP3',votes:1200},
+      {name:'Venice Classic Radio',u:'https://uk2.streamingpulse.com/ssl/vcr1',codec:'MP3',votes:1400},
+      {name:'Radio Swiss Jazz',u:'https://stream.srg-ssr.ch/m/rsj/mp3_128',codec:'MP3',votes:1600},
+      {name:'Deutschlandfunk',u:'https://st01.dlf.de/dlf/01/128/mp3/stream.mp3',codec:'MP3',votes:2000},
+      {name:'Radio Eins',u:'https://www.radioeins.de/live.m3u',codec:'MP3',votes:1200},
+      {name:'1Live',u:'https://wdr-1live-live.icecastssl.wdr.de/wdr/1live/live/mp3/128/stream.mp3',codec:'MP3',votes:2400},
+      {name:'WDR 2',u:'https://wdr-wdr2-rheinland.icecastssl.wdr.de/wdr/wdr2/rheinland/mp3/128/stream.mp3',codec:'MP3',votes:1800},
+      {name:'BBC Radio 3',u:'https://stream.live.vc.bbcmedia.co.uk/bbc_radio_three',codec:'MP3',votes:2000},
+      {name:'BBC Radio 4',u:'https://stream.live.vc.bbcmedia.co.uk/bbc_radio_fourfm',codec:'MP3',votes:2200},
+      {name:'France Inter',u:'https://icecast.radiofrance.fr/franceinter-midfi.mp3',codec:'MP3',votes:2600},
+      {name:'Rai Radio 1',u:'https://icestreaming.rai.it/1.mp3',codec:'MP3',votes:1800},
+      {name:'ABC Radio National',u:'https://mediaserviceslive.akamaized.net/hls/live/2038163/rnnational/master.m3u8',codec:'HLS',votes:1500}
     ];
-    function fetchRadios(){
-      if(radioStations.length>0){renderRadio();return}
+    var radioServers=['de1','de2','nl1','at1','fr1','us1'];
+    var radioSearchTerm='';
+    function fetchRadios(search,forceRefresh){
+      if(!forceRefresh&&radioStations.length>0&&!search){renderRadio();return}
       if(radioStatus){radioStatus.textContent='Lade Sender...';radioStatus.style.color='var(--accent)'}
+      var query=search||'';
+      var server=radioServers[Math.floor(Math.random()*radioServers.length)];
+      var url='https://'+server+'.api.radio-browser.info/json/stations?limit=50&order=clickcount&reverse=true';
+      if(query)url+='&name='+encodeURIComponent(query);
       var x=new XMLHttpRequest();
-      x.open('GET','https://de1.api.radio-browser.info/json/stations?limit=30&order=clickcount&reverse=true',true);
-      x.timeout=8000;
+      x.open('GET',url,true);
+      x.timeout=10000;
       x.onload=function(){
         try{
           var arr=JSON.parse(x.responseText);
-          var found=arr.filter(function(s){return s.url_resolved&&s.url_resolved.length>5}).slice(0,20).map(function(s){
-            return{name:s.name.replace(/[^\x20-\x7E]/g,''),u:s.url_resolved,codec:s.codec||'',votes:s.votes||0}
+          var seen={};
+          var found=arr.filter(function(s){
+            if(!s.url_resolved||s.url_resolved.length<5)return false;
+            var key=s.url_resolved.split('/')[2];
+            if(seen[key])return false;
+            seen[key]=true;
+            return true;
+          }).slice(0,30).map(function(s){
+            return{name:(s.name||'Unbekannt').replace(/[^\x20-\x7E]/g,'').trim(),u:s.url_resolved,codec:s.codec||'',votes:s.votes||0,country:s.country||'',tags:s.tags||''}
           });
           if(found.length){radioStations=found;saveRadios();}
-          else radioStations=fallbackStations;
+          else if(!search){radioStations=fallbackStations;saveRadios();}
           renderRadio();
-          if(radioStatus){radioStatus.textContent=radioStations.length+' Sender geladen';radioStatus.style.color='var(--muted)'}
-        }catch(e){radioStations=fallbackStations;renderRadio();if(radioStatus){radioStatus.textContent='Fallback: '+fallbackStations.length+' Sender';radioStatus.style.color='var(--muted)'}}
+          if(radioStatus){radioStatus.textContent=radioStations.length+' Sender geladen'+(search?' (Suche: '+search+')':'');radioStatus.style.color='var(--muted)'}
+        }catch(e){if(!search){radioStations=fallbackStations;}renderRadio();if(radioStatus){radioStatus.textContent='Fallback: '+radioStations.length+' Sender';radioStatus.style.color='var(--muted)'}}
       };
-      x.onerror=function(){radioStations=fallbackStations;renderRadio();if(radioStatus){radioStatus.textContent='Offline → '+fallbackStations.length+' Fallback';radioStatus.style.color='var(--muted)'}};
-      x.ontimeout=function(){radioStations=fallbackStations;renderRadio();if(radioStatus){radioStatus.textContent='Timeout → '+fallbackStations.length+' Fallback';radioStatus.style.color='var(--muted)'}};
+      x.onerror=function(){if(!search){radioStations=fallbackStations;}renderRadio();if(radioStatus){radioStatus.textContent='Offline → '+radioStations.length+' Fallback';radioStatus.style.color='var(--muted)'}};
+      x.ontimeout=function(){if(!search){radioStations=fallbackStations;}renderRadio();if(radioStatus){radioStatus.textContent='Timeout → '+radioStations.length+' Fallback';radioStatus.style.color='var(--muted)'}};
       x.send();
     }
 
@@ -2563,14 +2615,35 @@
     function renderRadio(){
       var el=document.getElementById('musRadio');if(!el)return;
       el.innerHTML='';
-      if(radioStations.length===0){el.innerHTML='<div style="padding:20px;color:var(--muted);text-align:center">Keine Sender geladen.</div>';return}
+      /* Search bar */
+      var searchWrap=document.createElement('div');
+      searchWrap.className='radioSearchWrap';
+      searchWrap.innerHTML='<input type="text" id="radioSearchInput" placeholder="Sender suchen..." class="radioSearchInput"><button id="radioSearchBtn" class="radioSearchBtn">🔍</button><button id="radioRefreshBtn" class="radioRefreshBtn">↻</button>';
+      el.appendChild(searchWrap);
+      var searchInput=document.getElementById('radioSearchInput');
+      var searchBtn=document.getElementById('radioSearchBtn');
+      var refreshBtn=document.getElementById('radioRefreshBtn');
+      searchBtn.addEventListener('click',function(){fetchRadios(searchInput.value,true);});
+      searchInput.addEventListener('keydown',function(e){if(e.key==='Enter')fetchRadios(searchInput.value,true);});
+      refreshBtn.addEventListener('click',function(){searchInput.value='';fetchRadios('',true);});
+
+      /* Station count */
+      var count=document.createElement('div');
+      count.className='radioCount';
+      count.textContent=radioStations.length+' Sender';
+      el.appendChild(count);
+
+      if(radioStations.length===0){
+        el.innerHTML+='<div style="padding:20px;color:var(--muted);text-align:center">Keine Sender geladen.</div>';
+        return;
+      }
       radioStations.forEach(function(s,i){
         var isCur=(isRadio&&curStation===s);
         var item=document.createElement('div');item.className='musItem'+(isCur?' playing':'');
-        // Blinking LIVE indicator for active station
-        var liveIndicator = '<span class="radio-live'+(isCur&&playing?' blinking':'')+'">● LIVE</span>';
+        var liveIndicator='<span class="radio-live'+(isCur&&playing?' blinking':'')+'">● LIVE</span>';
+        var meta=[s.codec,s.country,s.tags?s.tags.split(',')[0]:''].filter(Boolean).join(' · ');
         item.innerHTML='<button class="musPlay" data-i="'+i+'">'+(isCur&&playing?'⏸':'▶')+'</button>'+
-          '<span class="musInfo"><b>'+s.name+'</b><br><span style="font-size:10px;color:var(--muted)">'+(s.codec||'')+(s.votes?' · '+s.votes+' votes':'')+'</span></span>'+
+          '<span class="musInfo"><b>'+s.name+'</b><br><span style="font-size:10px;color:var(--muted)">'+(meta||'Radio')+(s.votes?' · 👍'+s.votes:'')+'</span></span>'+
           liveIndicator;
         item.querySelector('.musPlay').addEventListener('click',function(){playRadio(s)});
         el.appendChild(item);
