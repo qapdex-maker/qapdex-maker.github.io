@@ -888,3 +888,31 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .aboutInfo h3{font-family:"Space Grotesk";font-size:16px;font-weight:700;text-transform:uppercase;margin-bottom:4px}
 .aboutInfo p{font-size:12px;margin:2px 0;color:var(--muted)}
 .aboutInfo p:first-of-type{color:var(--ink);font-weight:600}
+
+/* ===== tab content transitions ===== */
+.musList{animation:tabFade .15s ease-out}
+.musTabAnim{animation:tabFade .2s ease-out}
+@keyframes tabFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== start menu animation ===== */
+#startMenu{animation:startSlide .15s ease-out}
+@keyframes startSlide{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* ===== toast notification ===== */
+.toast{animation:toastIn .3s ease-out}
+@keyframes toastIn{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:translateX(0)}}
+.toast.hiding{animation:toastOut .3s ease-in forwards}
+@keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(100%)}}
+
+/* ===== taskbar icon hover ===== */
+.tbIcon{transition:transform .1s ease, opacity .1s ease}
+.tbIcon:hover{transform:translateY(-2px)}
+
+/* ===== app card transitions ===== */
+.os-app-card{transition:transform .12s ease, box-shadow .12s ease, opacity .15s ease}
+
+/* ===== wallpaper transition ===== */
+#desktop{transition:background-image .3s ease-in-out}
+
+/* ===== theme transition ===== */
+html{transition:background-color .2s ease, color .2s ease}

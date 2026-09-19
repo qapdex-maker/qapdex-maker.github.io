@@ -5,7 +5,7 @@ Session 2026-09-19 · v2.11.40 (2026-09-19). Standalone subpage in `qapdex-maker
 ## Live
 - **URL**: https://qapdex-maker.github.io/macrohard/
 - **Branch**: `main`
-- **Tests**: 24/24 passing (`node tests/app.test.js`)
+- **Tests**: 27/27 passing (`node tests/app.test.js`)
 - **Cache-Bust**: `?v=40`
 
 ## Domain
@@ -19,33 +19,33 @@ Session 2026-09-19 · v2.11.40 (2026-09-19). Standalone subpage in `qapdex-maker
 
 ## Structure
 - `index.html` — OS shell + desktop + boot/lock + i18n inline + CSS-Criticals + app cards grid
-- `assets/site.css` — design tokens, 4 themes, dark mode, components, animations, task view, help overlay, notifications
-- `assets/app.js` — boot→lock→desktop, 25 apps, multi-instance, drag & drop, task view, help overlay, notification center (4370+ lines)
+- `assets/site.css` — design tokens, 4 themes, dark mode, components, animations, task view, help overlay, notifications, transitions
+- `assets/app.js` — boot→lock→desktop, 25 apps, multi-instance, drag & drop, task view, help overlay, notification center (~4900 lines)
 - `manifest.json` — PWA manifest
 - `sw.js` — service worker (stale-while-revalidate, network-first, quota check, offline fallback)
 - `assets/ami-bios-setup.html` — AMIBIOS Setup utility (Award BIOS simulation, CRT-style)
 - `assets/samples/` — 31 drum samples (MP3 + WAV) für Pattern Sequencer
-- `tests/app.test.js` — 24 unit tests (Node.js test runner)
+- `tests/app.test.js` — 27 unit tests (Node.js test runner)
 
-## Apps (v2.11.36 — 25 Apps)
+## Apps (v2.11.40 — 25 Apps)
 
 ### Foundation (11 Apps)
 1. **Notepad** — textarea + Zeichen/Wortzähler, Ctrl+F Suche, localStorage auto-save (300ms debounce), Font-Größe, Export .txt
 2. **Calculator** — eval-based, Tastatur, klickbare History (max 12), SCI-Modus (sin/cos/tan/sqrt/pow/log/abs/π/e)
-3. **Terminal** — mock shell: help/ls/cd/pwd/touch/rm/mkdir/cp/mv/find/grep/echo/date/clear/whoami/cat/colors + Tab-Completion + colored output. Geteilter fsData mit Explorer (cd, mkdir erstellt fsData-Einträge, rm -r löscht Ordner)
+3. **Terminal** — 25 Befehle (help/ls/cd/pwd/touch/rm/mkdir/cp/mv/find/grep/echo/date/clear/whoami/cat/colors/tree/head/tail/wc/calc/history/exit/about), Tab-Completion für Befehle und Pfade, colored output. Geteilter fsData mit Explorer
 4. **Explorer** — virtual FS (C:\Users\macrohard\...), Tree links, Grid files, New Folder/File Toolbar, Drag & Drop, Umbenennen, Löschen, Multiselect, Kontextmenü. Geteilter fsData mit Terminal
 5. **Paint** — canvas draw, 24 Farben, Shape-Tools, Export PNG, Undo/Redo, Radiergummi, Linienbreite, Fill, Clear
-6. **Browser** — URL-Bar, Shortcuts, DuckDuckGo-Suche, Tab-System, öffnet URLs im externen Fenster
-7. **Music** — Pattern Sequencer (8 Tracks, 16 Steps, Lookahead-Scheduling, 31 Samples), Radio (radio-browser.info + Fallback), Upload, Favoriten, Sadee-Inspired UI, Equalizer 6-Band mit Presets, Visualizer, Beatpad
-8. **Chat** — @Kontakte, localStorage, Timestamps, Emoji
+6. **Browser** — URL-Bar, Shortcuts, DuckDuckGo-Suche, Tab-System, Bookmarks (localStorage), History, Home-Seite mit Quick-Links, iframe-Fallback bei blockierten Seiten
+7. **Music** — Pattern Sequencer (8 Tracks, 16 Steps, Lookahead-Scheduling, 31 Samples, Synthesizer-Fallback), Radio (radio-browser.info, 48 Fallback-Stationen, Multi-Server, Suche), Upload, Favoriten, Sadee-Inspired UI, Equalizer 6-Band mit Presets, Visualizer, Beatpad
+8. **Chat** — Kontakte mit Status (online/idle/offline), Bot-Antworten (Keyword-Matching), Typing-Indicator, Notification-Badge, Emoji-Bar, localStorage, Timestamps, Suggestion-Chips
 9. **Docs** — contenteditable Markdown, Export .md, Preview Toggle
 10. **Settings** — 4 Tabs (Allgemein, Aussehen, Tastenkürzel, Datenschutz), Wallpaper-Galerie 12 Themes + Custom URL + Upload, Theme-Engine Ignite/Ocean/Forest/Mono, Icon-Größe, Desktop-Raster, Accent-Color, Font-Size, PWA SW registrieren, Privacy-Clear, Reset Defaults
 11. **Links** — CRUD, Kategorien, JSON Import/Export, Omarchy Quattro Integration
 
 ### Extension Pack (14 Apps)
-12. **Taskmanager** — Prozesse (offene Fenster, Beenden, Auto-Refresh), Leistung (CPU/RAM mit Sparklines, Smoothing), App-Verlauf (getrackte App-Öffnungen), Start-Apps (Toggle-Switch), Benutzer. Alle 5 Tabs funktional
-13. **Systeminfo** — OS, Hardware, Browser, Netzwerk, Speicher, Sitzung (6 Sektionen)
-14. **Kalender** — Monatsansicht mit heutigem Tag (blauer Marker)
+12. **Taskmanager** — Prozesse (offene Fenster, Beenden, Auto-Refresh), Leistung (CPU/RAM mit Sparklines, Random-Walk-Smoothing), App-Verlauf (getrackte App-Öffnungen), Start-Apps (4 Toggle-Switches), Benutzer. Alle 5 Tabs funktional
+13. **Systeminfo** — 9 Sektionen: OS, Hardware, Browser, Netzwerk, Speicher, Sitzung, Battery (Ladezustand/Ladezeit/Restzeit), Geolocation (Breitengrad/Längengrad/Höhe/Genauigkeit), Media (Kamera/Mikrofon). Refresh-Button
+14. **Kalender** — Monatsansicht mit Navigation (Vor/Zurück), heutiger Tag (blauer Marker), Ereignisse hinzufügen/löschen (Titel + Zeit), Event-Dots auf Tagen mit Events, localStorage-Persistenz
 15. **Uhr** — Digital-Uhr, Timer (Countdown), Stoppuhr (ms-genau), Wecker
 16. **Farbwähler** — Color Picker + Hex-Anzeige
 17. **Passwort-Generator** — Länge 6-32 Zeichen, Kopieren
@@ -58,38 +58,42 @@ Session 2026-09-19 · v2.11.40 (2026-09-19). Standalone subpage in `qapdex-maker
 24. **Pomodoro** — 25-min Arbeit / 5-min Pause Timer mit SVG-Ring, Sessions-Counter, konfigurierbar
 25. **Notes** — Notizen-App mit Tags, Suche, Markdown-Preview, Sidebar-Navigation, localStorage
 
-### New in v2.11.36
-- **Pattern Sequencer**: 8×16 Grid, Lookahead-Scheduling, 31 Samples (MP3+WAV), Synthesizer-Fallback, Shuffle/Clear/Preset/Save, Mute/Solo pro Track, BPM/Vol-Steuerung
-- **Explorer/Terminal Shared FS**: `fsData` global — Terminal `mkdir` erstellt Ordner die Explorer sofort sieht, `cd` navigiert, `rm -r` löscht, Tab-Completion für Pfade
-- **Taskmanager Refaktor**: CPU/RAM Sparklines (30-Werte-Verlauf), App-Verlauf (getrackte App-Öffnungen), Start-Apps mit Toggle-Switch, CPU-Smoothing (keine wilden Sprünge)
-- **Sequencer Start Fix**: UI sofort spielbar (Synthesizer-Fallback), `when`-Scheduling für präzises Timing
-- **EQ auf Sequencer**: Filter-Kette korrekt verkettet, Reset bei Context-Rebuild
-- **24 Tests**: Sequencer, Explorer/FS, Taskmanager, Storage, Shuffle, AudioContext
+## New in v2.11.40
+- **Systeminfo**: 9 Sektionen (neu: Battery, Geolocation, Media), Refresh-Button
+- **Kalender**: Ereignisse CRUD (localStorage), Monatsnav, Event-Dots
+- **Chat**: Bot-Antworten (Keyword-Matching: hallo/hilfe/joke/quote/zeit/danke/echo), Typing-Indicator, Kontakt-Status
+- **Browser**: Bookmarks (localStorage), History, Home-Seite mit Quick-Links, iframe-Fallback
+- **Radio**: 48 Fallback-Stationen, Multi-Server (de1/de2/nl1/at1/fr1/us1), Suchfunktion, Refresh-Button
+- **Terminal**: 25 Befehle (+tree/head/tail/wc/calc/history/exit/about), Tab-Completion für Befehle und Pfade
+- **Taskmanager**: Sparklines (30-Werte-Verlauf), App-Verlauf, Start-Apps Toggles
+- **Explorer/Terminal**: Shared fsData (cd, mkdir, rm -r, renderExplorer-Refresh)
+- **Sequencer**: Synthesizer-Fallback, Lookahead-Scheduling mit `when`-Parameter
+- **Animationen**: Tab-Fade, Start-Menü Slide, Toast Slide-In/Out, Taskbar-Hover, App-Card-Hover, Wallpaper-Crossfade, Theme-Transition
+- **Tests**: 27 Tests mit App-Prüfung (25 Apps)
 
-### Platform
+## Animationen & Übergänge
+- **Tab-Inhalte**: Fade + Slide (200ms)
+- **Start-Menü**: Slide-Down + Scale (150ms)
+- **Toast**: Slide-In von rechts, sanftes Ausblenden (300ms)
+- **Taskbar-Icons**: Hover-Lift (-2px)
+- **App-Cards**: Smooth Hover + Active Transition
+- **Wallpaper**: Crossfade (300ms)
+- **Theme**: Sanfter Übergang Dark/Light (200ms)
+- **Fenster**: Bereits vorhanden (Open/Close Scale)
+
+## Platform Features
 - Desktop-Kategorien (Alle / Produktivität / System / Media / Spiele) mit Filter-Bar
 - Start-Menü mit Echtzeit-App-Suche
 - Ctrl+N/T/E/P/B/M/C/D/L/S/A Keyboard Shortcuts + Ctrl+Tab + Ctrl+?
 - Desktop Rechtsklick-Menü (Ansicht, Sortieren, Wallpaper, Theme, Desktop anzeigen, Alle schließen, Über)
 - Notification Center mit Toast-History
-- Toast Notifications (4s auto-hide)
 - Session Restore, Wallpaper (12 Galerie + Custom URL + Upload), Window Snapping
 - prefers-reduced-motion Accessibility
 - Touch-Optimierung (größere Hit-Targets)
-- Fenster-Animationen (Open/Close)
 - Esc-Close für Fenster + Start-Menü + Overlays
 - ES6-kompatibel (keine Module)
 - ESLint + Prettier konfiguriert
 - CI/CD Pipeline (GitHub Actions)
-
-## Window features
-- Drag via titlebar, Resize via bottom-right handle + touch
-- Minimize/Maximize/Close Buttons
-- Taskbar-Icons mit running/focused/minimized States
-- Close-Button erstellt/entfernt Taskbar-Icons dynamisch
-- Snap-Hints beim Drag an Bildschirmkanten
-- Multi-Instanz: Fenster bekommen unique IDs (z.B. w-notepad-inst-2)
-- Minimized Fenster sind in Taskbar klickbar zum Wiederherstellen
 
 ## Taskbar (Neo-Brutalist 3D)
 - 52px Höhe, echte Borders + 3D-Shadow (accent-2 Unterleiste)
@@ -111,6 +115,10 @@ Session 2026-09-19 · v2.11.40 (2026-09-19). Standalone subpage in `qapdex-maker
 - SW: stale-while-revalidate, network-first, quota check, offline fallback
 
 ## Version History
+- v2.11.40 (2026-09-19): Systeminfo (Battery/Geolocation/Media), Kalender (Events), Chat (Bot), Browser (Bookmarks), Radio (48 Stationen), Animationen, 27 Tests
+- v2.11.39 (2026-09-19): Kalender Refaktor (Ereignisse CRUD, Monatsnav)
+- v2.11.38 (2026-09-19): Browser Refaktor (Bookmarks, History, Home-Seite)
+- v2.11.37 (2026-09-19): Chat Refaktor (Bot-Antworten, Typing-Indicator)
 - v2.11.36 (2026-09-19): Taskmanager Refaktor (Sparklines, App-Verlauf, Start-Apps Toggle, CPU Smoothing)
 - v2.11.35 (2026-09-19): Explorer/Terminal Shared Filesystem (fsData global, cd, mkdir, rm -r, Refresh)
 - v2.11.34 (2026-09-19): Pattern Sequencer Lookahead mit `when`-Parameter, EQ setupSeqEQ Refactor, 25 Apps
@@ -140,7 +148,7 @@ Session 2026-09-19 · v2.11.40 (2026-09-19). Standalone subpage in `qapdex-maker
 
 ## Code-Qualität
 - ESLint + Prettier konfiguriert
-- Unit-Tests: `node tests/app.test.js` (24 Tests)
+- Unit-Tests: `node tests/app.test.js` (27 Tests)
 - CI/CD Pipeline (GitHub Actions)
 - JSDoc-Kommentare für public Funktionen
 
@@ -159,4 +167,7 @@ Session 2026-09-19 · v2.11.40 (2026-09-19). Standalone subpage in `qapdex-maker
 - Multi-Instanz: localStorage wird pro App-Typ geteilt
 - Sequencer: Samples laden asynchron, Synthesizer-Fallback wenn fetch() scheitert
 - Terminal: openApp-Wrapper wird bei jedem Taskmgr-Öffnen aktualisiert (kein Double-Patch)
-- Explorer: renderExplorer() hat Null-Guard für geschlossene Fenster
+- Terminal: find/grep sind case-insensitive
+
+## License
+MIT License

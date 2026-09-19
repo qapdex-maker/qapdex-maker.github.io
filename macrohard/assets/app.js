@@ -501,9 +501,21 @@
 
   /* Window management — toast helper */
   function toast(msg){
-    var t=document.getElementById('osToast');if(t){t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},2200);return;}
+    var t=document.getElementById('osToast');
+    if(t){
+      t.textContent=msg;
+      t.classList.remove('hiding');
+      t.classList.add('show');
+      clearTimeout(t._t);
+      t._t=setTimeout(function(){t.classList.add('hiding');setTimeout(function(){t.classList.remove('hiding');t.classList.remove('show');if(t.parentNode)t.remove();},300);},2200);
+      return;
+    }
     var el=document.createElement('div');el.id='osToast';el.textContent=msg;el.className='osToast show';
-    document.body.appendChild(el);setTimeout(function(){el.classList.remove('show');setTimeout(function(){if(el.parentNode)el.remove();},400);},2200);
+    document.body.appendChild(el);
+    setTimeout(function(){
+      el.classList.add('hiding');
+      setTimeout(function(){if(el.parentNode)el.remove();},400);
+    },2200);
   }
 
   /* Keyboard shortcuts — global when no input focused */
@@ -2767,6 +2779,13 @@
       if(activeTab==='playlist')renderPlaylist();
       if(activeTab==='radio')renderRadio();
       if(activeTab==='favs')renderFavs();
+      // Trigger tab animation
+      var lists=[p,r,f];
+      lists.forEach(function(l){
+        l.classList.remove('musTabAnim');
+        void l.offsetWidth; // force reflow
+        l.classList.add('musTabAnim');
+      });
     }
 
     function updateUI(){
