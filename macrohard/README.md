@@ -1,12 +1,18 @@
 # MakerOS — qapdex-maker.github.io/macrohard/
 
-Session 2026-09-19 · v2.11.36 (2026-09-19). Standalone subpage in `qapdex-maker.github.io`.
+Session 2026-09-19 · v2.11.40 (2026-09-19). Standalone subpage in `qapdex-maker.github.io`.
 
 ## Live
 - **URL**: https://qapdex-maker.github.io/macrohard/
 - **Branch**: `main`
 - **Tests**: 24/24 passing (`node tests/app.test.js`)
 - **Cache-Bust**: `?v=40`
+
+## Domain
+- **qapdex.com**: Gekauft am 2026-09-19 (0,87 Cent für 1 Jahr, checkdomain.de)
+- **Status**: Custom Domain Versuch reverted (Redirect-Schleife GitHub ↔ qapdex.com)
+- **DNS**: Einträge auf checkdomain.de entfernt, Domain leitet standardmäßig auf qapdex-maker.github.io
+- **Nächster Schritt**: GitHub Pages Custom Domain korrekt einrichten (CNAME + Settings → Pages → Custom Domain)
 
 ## Structure
 - `index.html` — OS shell + desktop + boot/lock + i18n inline + CSS-Criticals + app cards grid
