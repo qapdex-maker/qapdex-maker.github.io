@@ -24,38 +24,52 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 - v2.11.31: CI Fix (deploy-pages permission)
 - v2.11.31: Taskmanager Fix (Interval-Cleanup, Null-Checks, Leistung-Tab)
 - v2.11.32: App-Audit Fixes (Notepad, Music, Chat, Links, Browser, Clock)
+- v2.11.33: Sequencer Start Fix (UI immer bauen, Synthesizer-Fallback, Null-Checks)
+- v2.11.34: Pattern Sequencer Lookahead mit `when`-Parameter
+- v2.11.34: App-Liste aktualisiert (25 Apps, Editor, ImgEditor, Pomodoro, Notes)
+- v2.11.34: Test-Suite erweitert (21 Tests, inkl. Sequencer + Explorer)
+- v2.11.35: Explorer/Terminal Shared Filesystem (fsData global, cd, mkdir, rm -r, renderExplorer Refresh)
+- v2.11.36: Taskmanager Refaktor (Sparklines, App-Verlauf, Start-Apps Toggle, CPU Smoothing, openApp-Patch-Fix)
+- v2.11.37: Chat Bot-Antworten (Keyword-Matching, Typing-Indicator, smarte Replies)
+- v2.11.38: Browser Bookmarks + History (localStorage, Lesezeichen-Tab, Spinner)
+- v2.11.39: Kalender Ereignisse (Monatsnavigation, Event-Panel, CRUD, Dots)
+- v2.11.40: Systeminfo Live-Daten (Battery, Geolocation, Refresh, 6 Sektionen)
+- v2.11.40: Cache-Bump v40, README Update
 
-## 1. Apps Übersicht (22 Apps)
+## 1. Apps Übersicht (25 Apps)
 
 ### Foundation (11 Apps)
 | App | ID | Status | Letzter Test |
 |-----|-----|--------|--------------|
-| Notepad | notepad | ✅ Stabil | localStorage, Suche, Wortzähler, Export |
-| Calculator | calculator | ✅ Stabil | Tastatur, History, SCI |
-| Terminal | terminal | ✅ Stabil | touch/rm/mkdir/cp/mv/find/grep, colored, Tab |
-| Explorer | explorer | ✅ Stabil | New Folder/File, Search, Umbenennen, Löschen, Multiselect |
-| Paint | paint | ✅ Stabil | 24 Farben, Shapes, Export PNG, Undo/Redo |
-| Browser | browser | ✅ Stabil | Tab-System, Quick-Links, DuckDuckGo |
-| Music | music | ✅ Refactored | Pattern Sequencer, Radio, Upload, Favoriten |
-| Chat | chat | ✅ Stabil | Kontakte, localStorage, Emoji |
-| Docs | docs | ✅ Stabil | editable, Export .md, Preview |
-| Settings | settings | ✅ Stabil | 4 Tabs, Wallpaper-Galerie, Theme-Engine |
-| Links | links | ✅ Stabil | CRUD, Kategorien, JSON Import/Export |
+| Notepad | notepad | Stabil | localStorage, Suche, Wortzähler, Export |
+| Calculator | calculator | Stabil | Tastatur, History, SCI |
+| Terminal | terminal | Stabil | touch/rm/mkdir/cp/mv/find/grep, colored, Tab |
+| Explorer | explorer | Stabil | New Folder/File, Search, Umbenennen, Löschen, Multiselect |
+| Paint | paint | Stabil | 24 Farben, Shapes, Export PNG, Undo/Redo |
+| Browser | browser | Stabil | Tab-System, Quick-Links, DuckDuckGo |
+| Music | music | Refactored | Pattern Sequencer, Radio, Upload, Favoriten |
+| Chat | chat | Stabil | Kontakte, localStorage, Emoji |
+| Docs | docs | Stabil | editable, Export .md, Preview |
+| Settings | settings | Stabil | 4 Tabs, Wallpaper-Galerie, Theme-Engine |
+| Links | links | Stabil | CRUD, Kategorien, JSON Import/Export |
 
-### Extension Pack (11 Apps)
+### Extension Pack (14 Apps)
 | App | ID | Status | Letzter Test |
 |-----|-----|--------|--------------|
-| Taskmanager | taskmgr | ✅ Fixed | Prozesse, Leistung, App-Verlauf, Start, Benutzer |
-| Systeminfo | sysinfo | ✅ Stabil | OS/Hardware/Browser/Netzwerk/Speicher/Sitzung |
-| Kalender | calendar | ✅ Stabil | Monatsansicht |
-| Uhr | clock | ✅ Stabil | Timer + Stoppuhr + Wecker |
-| Farbwähler | colorpicker | ✅ Stabil | Color Picker |
-| Passwort-Generator | pwgen | ✅ Stabil | 6-32 Zeichen |
-| QR-Generator | qrgen | ✅ Stabil | Canvas |
-| Bildbetrachter | viewer | ✅ Stabil | Drag & Drop |
-| Tic-Tac-Toe | game | ✅ Stabil | |
-| AMIBIOS | amibios | ✅ Refactored | Boot-Sequenz, 7 Tabs, interaktive Felder |
-| Omarchy | omarchy | ✅ Stabil | Quattro |
+| Taskmanager | taskmgr | Fixed | Prozesse, Leistung, App-Verlauf, Start, Benutzer |
+| Systeminfo | sysinfo | Stabil | OS/Hardware/Browser/Netzwerk/Speicher/Sitzung |
+| Kalender | calendar | Stabil | Monatsansicht |
+| Uhr | clock | Stabil | Timer + Stoppuhr + Wecker |
+| Farbwähler | colorpicker | Stabil | Color Picker |
+| Passwort-Generator | pwgen | Stabil | 6-32 Zeichen |
+| QR-Generator | qrgen | Stabil | Canvas |
+| Bildbetrachter | viewer | Stabil | Drag & Drop |
+| Tic-Tac-Toe | game | Stabil | |
+| AMIBIOS | amibios | Refactored | Boot-Sequenz, 7 Tabs, interaktive Felder |
+| Editor | editor | Neu | Code-Editor mit Syntax-Highlighting |
+| ImgEditor | imgeditor | Neu | Bildbearbeitung mit Filtern |
+| Pomodoro | pomodoro | Neu | Timer mit Sessions |
+| Notes | notes | Neu | Markdown-Notizen mit Vorschau |
 
 ## 2. Fahrplan
 
@@ -82,15 +96,16 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 ### 🔴 Kritisch
 | Thema | App | Status | Notiz |
 |-------|-----|--------|-------|
-| Sequencer startet nicht | music | 🔴 Offen | Controls nur einmalig init, toggleStep aus UI gelöst |
-| AudioGraph Reset | music | 🟡 Teilweise | setupAudio() lazy, aber Buffer-Locked bei Track-Wechsel |
+| Sequencer startet nicht | music | Gelöst | UI sofort spielbar, Synthesizer-Fallback, `when`-Scheduling |
+| AudioGraph Reset | music | Gelöst | setupAudio() lazy, Filter-Steuerung über applyEQValues |
 
-### 🟡 Verbesserungswürdig
+### Verbesserungswürdig
 | Thema | App | Status | Notiz |
 |-------|-----|--------|-------|
-| Radio Progress | music | 🟡 Offen | duration=Infinity bei Streams |
-| Visualizer Loop | music | 🟡 Offen | requestAnimationFrame dedupliziert |
-| Beatpad Fallback | music | 🟡 Offen | Oscillator-Fallback wenn Samples fehlen |
+| Radio Progress | music | Gelöst | isRadio-Check in onTimeUpdate zeigt '● LIVE' |
+| Visualizer Loop | music | Gelöst | visRafId dedupliziert, Cleanup bei Tab-Wechsel |
+| Beatpad Fallback | music | Gelöst | Synthesizer-Fallback wenn Samples fehlen |
+| EQ auf Sequencer | music | Gelöst | setupSeqEQ Refactor: Filter-Reset bei Context-Rebuild, korrekte Verkettung |
 
 ### ✅ Erledigt (v2.11.31)
 | Thema | App | Status | Notiz |

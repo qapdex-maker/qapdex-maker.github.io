@@ -276,6 +276,49 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .cpMsgs{padding:10px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
 .cpMsg{padding:6px 10px;border:2px solid var(--line);background:var(--surface);font-size:12px;max-width:80%;word-break:break-word}
 .cpMsg.self{background:var(--accent);color:#fff;align-self:flex-end}
+.chatBar{display:flex;gap:4px;padding:4px 8px;border-bottom:2px solid var(--line);flex-wrap:wrap}
+.chatContact{display:flex;align-items:center;gap:4px;padding:4px 8px;border:2px solid var(--line);background:var(--surface);cursor:pointer;font-size:10px;border-radius:6px}
+.chatContact:hover{border-color:var(--accent)}
+.chatAvatar{font-size:14px}
+.chatName{font-weight:600}
+.chatStatus{width:6px;height:6px;border-radius:50%;margin-left:auto}
+.chatStatus.online{background:#10b981}
+.chatStatus.idle{background:#f59e0b}
+.chatStatus.offline{background:#666}
+.chatEmojiBar{display:flex;gap:2px;padding:4px 8px;border-bottom:2px solid var(--line);flex-wrap:wrap}
+.chatEmoji{font-size:16px;border:none;background:transparent;cursor:pointer;padding:2px}
+.chatEmoji:hover{transform:scale(1.2)}
+.chatBubbleText{word-break:break-word}
+.chatBubbleTime{font-size:9px;opacity:.6;margin-left:6px;display:block;text-align:right}
+.chatTyping{padding:6px 10px;border:2px solid var(--line);background:var(--surface);font-size:11px;max-width:80%;display:flex;align-items:center;gap:4px}
+.typingDot{width:4px;height:4px;border-radius:50%;background:var(--muted);animation:typing 1.4s infinite}
+.typingDot:nth-child(2){animation-delay:.2s}
+.typingDot:nth-child(3){animation-delay:.4s}
+@keyframes typing{0%,60%,100%{opacity:.3}30%{opacity:1}}
+
+/* Calendar */
+.calHeader{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:2px solid var(--line);background:var(--paper);position:sticky;top:0;z-index:5}
+.calNav{padding:4px 10px;border:2px solid var(--line);background:var(--surface);cursor:pointer;font-size:12px;border-radius:4px}
+.calNav:hover{border-color:var(--accent)}
+.calTitle{font-weight:700;font-size:14px;text-transform:uppercase}
+.calGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:8px}
+.calDayName{text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0}
+.calDay{text-align:center;padding:8px 4px;border:1px solid var(--line);cursor:pointer;font-size:11px;position:relative;min-height:32px;border-radius:4px}
+.calDay:hover{border-color:var(--accent)}
+.calDay.today{background:var(--accent);color:#fff;font-weight:700}
+.calDay.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.calDay.otherMonth{opacity:.3}
+.calDay.hasEvents::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--accent)}
+.calDot{display:none}
+.calPanel{border-top:2px solid var(--line);padding:8px;max-height:160px;overflow-y:auto}
+.calPanelHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.calEvents{display:flex;flex-direction:column;gap:4px}
+.calEvent{display:flex;align-items:center;gap:8px;padding:6px 8px;border:2px solid var(--line);border-left-width:4px;background:var(--paper);font-size:11px;border-radius:4px}
+.calEventTime{font-family:"IBM Plex Mono",monospace;color:var(--muted);min-width:50px}
+.calEventTitle{flex:1;font-weight:500}
+.calEventDel{padding:2px 6px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:10px;border-radius:3px}
+.calEventDel:hover{border-color:var(--accent);color:var(--accent)}
+.calNoEvents{font-size:11px;color:var(--muted);text-align:center;padding:12px}
 .cpSugs{display:flex;gap:4px;padding:6px;flex-wrap:wrap}
 .cpSugs button{padding:4px 8px;font-family:"IBM Plex Mono",monospace;font-size:10px;border:2px solid var(--line);background:var(--paper);cursor:pointer}
 .cpIn{display:flex;gap:4px;padding:6px;border-top:2px solid var(--line)}
@@ -404,6 +447,9 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .siRow{display:flex;justify-content:space-between;padding:6px 10px;border:2px solid var(--line);background:var(--surface);box-shadow:var(--shadow);font-size:11px}
 .siKey{font-weight:600;flex-shrink:0;max-width:50%}
 .siVal{color:var(--muted);font-family:"IBM Plex Mono",monospace;text-align:right;overflow-wrap:anywhere}
+.siRefresh{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;margin-bottom:8px;border:2px solid var(--line);background:var(--accent);color:#fff;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;cursor:pointer;box-shadow:var(--shadow);transition:transform .1s,box-shadow .1s}
+.siRefresh:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow-hover);background:var(--accent-2);color:var(--ink)}
+.siRefresh:active{transform:translate(1px,1px);box-shadow:var(--shadow-sm)}
 
 /* ===== calendar ===== */
 .calBody{padding:10px}
@@ -679,6 +725,14 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .brQuick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%;max-width:320px}
 .brQItem{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px;border:2px solid var(--line);background:var(--surface);cursor:pointer;border-radius:4px;box-shadow:2px 2px 0 var(--line);transition:all .15s}
 .brQItem:hover{box-shadow:3px 3px 0 var(--accent);border-color:var(--accent);transform:translate(-1px,-1px)}
+.brHomeBody{width:100%;max-width:320px;display:flex;flex-direction:column;gap:16px}
+.brSectionTitle{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.brBookmarks{display:flex;flex-direction:column;gap:4px}
+.brBmItem{display:flex;align-items:center;gap:8px;padding:6px 10px;border:2px solid var(--line);background:var(--surface);cursor:pointer;font-size:11px;border-radius:4px;box-shadow:2px 2px 0 var(--line)}
+.brBmItem:hover{border-color:var(--accent);transform:translate(-1px,-1px)}
+.brLoading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px}
+.brSpinner{width:24px;height:24px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 .brQIco{font-size:20px}
 
 /* ===== taskmanager (Windows-Stil) ===== */
@@ -697,6 +751,34 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .dot-green{width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block}
 .tmProc .col-action{text-align:right}
 .tmSummary{display:flex;gap:16px;padding:6px 10px;border-top:2px solid var(--line);font-size:10px;color:var(--muted);background:var(--paper);position:sticky;bottom:0}
+
+/* Taskmanager Bars + Sparklines */
+.tmBar{height:8px;background:var(--paper);border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-bottom:4px}
+.tmBarFill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s ease}
+.tmSparkline{display:flex;gap:1px;align-items:flex-end;height:40px;padding:4px 0}
+.tmSparkBar{flex:1;min-width:2px;background:var(--accent);border-radius:1px 1px 0 0;transition:height .2s ease}
+
+/* Taskmanager App-Verlauf */
+.tmHistory{display:flex;flex-direction:column}
+.tmHistoryRow{display:grid;grid-template-columns:80px 1fr 100px;gap:8px;padding:4px 0;border-bottom:1px solid var(--line);font-size:10px}
+.tmHistoryRow:last-child{border-bottom:none}
+.tmHistoryTime{color:var(--muted);font-family:"IBM Plex Mono",monospace}
+.tmHistoryName{font-weight:600}
+.tmHistoryAction{color:var(--muted)}
+
+/* Taskmanager Start-Apps */
+.tmStartup{display:flex;flex-direction:column;gap:4px}
+.tmStartupRow{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+.tmStartupRow:last-child{border-bottom:none}
+.tmStartupName{font-size:11px;font-weight:500}
+
+/* Toggle Switch */
+.tmToggle{position:relative;display:inline-block;width:32px;height:18px;cursor:pointer}
+.tmToggle input{display:none}
+.tmToggleSlider{position:absolute;top:0;left:0;right:0;bottom:0;background:var(--paper);border:2px solid var(--line);border-radius:9px;transition:.2s}
+.tmToggleSlider::before{content:"";position:absolute;height:10px;width:10px;left:2px;bottom:2px;background:var(--muted);border-radius:50%;transition:.2s}
+.tmToggle input:checked+.tmToggleSlider{background:var(--accent);border-color:var(--accent)}
+.tmToggle input:checked+.tmToggleSlider::before{transform:translateX(14px);background:#fff}
 
 /* ===== taskbar overflow fix ===== */
 #tbCenter{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:0 4px;overflow-x:auto;overflow-y:hidden}

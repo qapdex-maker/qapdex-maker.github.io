@@ -13,6 +13,20 @@
   window.osIntervals = window.osIntervals || {};
   window.osTimeouts = window.osTimeouts || {};
 
+  /* Globale Dateistruktur — geteilt zwischen Terminal und Explorer */
+  var fsData={
+    'C:\\Users':{dirs:['macrohard','Public'],files:[]},
+    'C:\\Users\\macrohard':{dirs:['Desktop','Dokumente','Downloads'],files:['notes.txt']},
+    'C:\\Users\\macrohard\\Desktop':{dirs:[],files:['index.html','style.css','script.js','screenshot.png']},
+    'C:\\Users\\macrohard\\Dokumente':{dirs:[],files:['projektplan.docx','daten.csv']},
+    'C:\\Users\\macrohard\\Downloads':{dirs:[],files:['macrohard.zip','theme.exe','readme.md']},
+    'C:\\Program Files':{dirs:['Macrohard','Editor'],files:[]},
+    'C:\\Windows':{dirs:['System32'],files:['system.ini']},
+    'C:\\Papierkorb':{dirs:[],files:[]},
+  };
+  var trashPath='C:\\Papierkorb';
+  var curPath='C:\\Users\\macrohard\\Desktop';
+
   /* localStorage Wrapper with quota check + fallback to sessionStorage */
   /**
    * Speichert einen Wert in localStorage mit Fallback auf sessionStorage
@@ -981,38 +995,81 @@
                       else w('Datei nicht gefunden: '+target);
                       break;
                     }
+                    case 'cd':{
+                      var dest=args[1];if(!dest){w('Usage: cd <dir>');break;}
+                      if(dest==='..'){
+                        var parts=curPath.split('\\');
+                        if(parts.length>2){parts.pop();curPath=parts.join('\\');}
+                        else{curPath='C:\\';}
+                        w(curPath);
+                        renderExplorer();
+                      } else if(dest==='/'||dest==='~'){
+                        curPath='C:\\Users\\macrohard';
+                        w(curPath);
+                        renderExplorer();
+                      } else {
+                        var np=curPath==='C:\\'?'C:\\'+dest:curPath+'\\'+dest;
+                        if(fsData[np]){curPath=np;w('→ '+curPath);renderExplorer();}
+                        else{w('Verzeichnis nicht gefunden: '+dest);}
+                      }
+                      break;
+                    }
                     case 'touch':{
                       var fn=args[1];if(!fn){w('Usage: touch <file>');break;}
                       var c=fsData[curPath];if(!c){w('Kein Verzeichnis.');break;}
                       if(c.files.indexOf(fn)!==-1){w('Datei existiert bereits: '+fn);}
-                      else{c.files.push(fn);w('Erstellt: '+fn);}
+                      else{c.files.push(fn);w('Erstellt: '+fn);renderExplorer();}
                       break;
                     }
                     case 'rm':{
-                      var fn2=args[1];if(!fn2){w('Usage: rm <file>');break;}
+                      var fn2=args[1];if(!fn2){w('Usage: rm <file> OR rm -r <dir>');break;}
+                      var recursive=args.indexOf('-r')!==-1;
                       var c2=fsData[curPath];if(!c2){w('Kein Verzeichnis.');break;}
-                      var idx=c2.files.indexOf(fn2);if(idx!==-1){c2.files.splice(idx,1);w('Gelöscht: '+fn2);}
-                      else w('Nicht gefunden: '+fn2);
+                      // Try file first
+                      var idx=c2.files.indexOf(fn2);
+                      if(idx!==-1){
+                        c2.files.splice(idx,1);
+                        w('Gelöscht: '+fn2);renderExplorer();
+                        break;
+                      }
+                      // Try directory (only with -r)
+                      var di=c2.dirs.indexOf(fn2);
+                      if(di!==-1){
+                        if(!recursive){w('Ordner: rm -r '+fn2);break;}
+                        c2.dirs.splice(di,1);
+                        // Remove fsData entry for directory
+                        var dp=curPath==='C:\\'?'C:\\'+fn2:curPath+'\\'+fn2;
+                        delete fsData[dp];
+                        w('Ordner gelöscht: '+fn2);renderExplorer();
+                        break;
+                      }
+                      w('Nicht gefunden: '+fn2);
                       break;
                     }
                     case 'mkdir':{
                       var dn=args[1];if(!dn){w('Usage: mkdir <dir>');break;}
                       var c3=fsData[curPath];if(!c3){w('Kein Verzeichnis.');break;}
-                      if(c3.dirs.indexOf(dn)!==-1){w('Existiert bereits: '+dn);}
-                      else{c3.dirs.push(dn);w('Ordner erstellt: '+dn);}
+                      if(c3.dirs.indexOf(dn)!==-1){w('Ordner existiert bereits: '+dn);}
+                      else{
+                        c3.dirs.push(dn);
+                        var np=curPath==='C:\\'?'C:\\'+dn:curPath+'\\'+dn;
+                        fsData[np]={dirs:[],files:[]};
+                        w('Ordner erstellt: '+dn);
+                        renderExplorer();
+                      }
                       break;
                     }
                     case 'cp':{
                       var src=args[1],dst=args[2];if(!src||!dst){w('Usage: cp <src> <dst>');break;}
                       var c4=fsData[curPath];if(!c4){w('Kein Verzeichnis.');break;}
-                      if(c4.files.indexOf(src)!==-1&&c4.files.indexOf(dst)===-1){c4.files.push(dst);w('Kopiert: '+src+' → '+dst);}
+                      if(c4.files.indexOf(src)!==-1&&c4.files.indexOf(dst)===-1){c4.files.push(dst);w('Kopiert: '+src+' → '+dst);renderExplorer();}
                       else w('Fehler: '+src+' nicht gefunden oder '+dst+' existiert.');
                       break;
                     }
                     case 'mv':{
                       var src2=args[1],dst2=args[2];if(!src2||!dst2){w('Usage: mv <src> <dst>');break;}
                       var c5=fsData[curPath];if(!c5){w('Kein Verzeichnis.');break;}
-                      var i2=c5.files.indexOf(src2);if(i2!==-1){c5.files[i2]=dst2;w('Verschoben: '+src2+' → '+dst2);}
+                      var i2=c5.files.indexOf(src2);if(i2!==-1){c5.files[i2]=dst2;w('Verschoben: '+src2+' → '+dst2);renderExplorer();}
                       else w('Nicht gefunden: '+src2);
                       break;
                     }
@@ -1045,7 +1102,9 @@
           default:w('Unbekannt: '+c+' — tipse "help"');
         }
         inp.value='';
-        /* Tab completion */
+      }
+      if(e.key==='Tab'){
+        e.preventDefault();
         var curVal=inp.value;
         if(curVal && !curVal.includes(' ')){
           var matches=Object.keys(fsData).filter(function(p){return p.startsWith(curVal);});
@@ -1175,19 +1234,7 @@
       bar.remove();renderExplorer();
     }
   }
-  var fsData={
-    'C:\\Users':{dirs:['macrohard','Public'],files:[]},
-    'C:\\Users\\macrohard':{dirs:['Desktop','Dokumente','Downloads'],files:['notes.txt']},
-    'C:\\Users\\macrohard\\Desktop':{dirs:[],files:['index.html','style.css','script.js','screenshot.png']},
-    'C:\\Users\\macrohard\\Dokumente':{dirs:[],files:['projektplan.docx','daten.csv']},
-    'C:\\Users\\macrohard\\Downloads':{dirs:[],files:['macrohard.zip','theme.exe','readme.md']},
-    'C:\\Program Files':{dirs:['Macrohard','Editor'],files:[]},
-    'C:\\Windows':{dirs:['System32'],files:['system.ini']},
-    'C:\\Papierkorb':{dirs:[],files:[]},
-  };
-  var trashPath='C:\\Papierkorb';
-  var curPath='C:\\Users\\macrohard\\Desktop';
-  /**
+    /**
    * Rendert die Explorer-Ansicht
    * @param {string} filter - Suchfilter für Dateien (optional)
    */
@@ -1522,20 +1569,22 @@
     }
 
     function setupSeqEQ(){
-      if(!SEQ.ctx||seqBiquadFilters.length>0)return;
+      if(!SEQ.ctx)return;
+      // Reset filters if ctx was recreated
+      if(seqBiquadFilters.length>0){
+        try{seqBiquadFilters.forEach(function(f){f.disconnect();});}catch(e){}
+        seqBiquadFilters=[];
+      }
       seqBiquadFilters=eqBands.map(function(freq,i){
         var f=SEQ.ctx.createBiquadFilter();
         f.type=i===0?'lowshelf':i===eqBands.length-1?'highshelf':'peaking';
         f.frequency.value=freq;f.gain.value=eqValues[freq]||0;return f;
       });
-      // Connect: source -> biquadFilters -> destination
-      // We connect them in playSample via the gain node chain
-      var node=SEQ.master;
-      if(node&&seqBiquadFilters.length>0){
-        // Insert filters between master and destination
+      // Rebuild chain: master -> filter1 -> ... -> filterN -> destination
+      if(SEQ.master&&seqBiquadFilters.length>0){
         try{
-          node.disconnect();
-          var chain=node;
+          SEQ.master.disconnect();
+          var chain=SEQ.master;
           seqBiquadFilters.forEach(function(f){chain.connect(f);chain=f;});
           chain.connect(SEQ.ctx.destination);
         }catch(e){}
@@ -1687,16 +1736,23 @@
         }
       }
 
-      // Load samples asynchronously, fall back to synthesized sounds
-      if (SEQ.loaded) {
-        buildSeqUI(pad);
-      } else {
+      // Ensure AudioContext exists (synthesized fallback always available)
+      if (!SEQ.ctx) {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) SEQ.ctx = new AC();
+      }
+
+      // Always build full sequencer UI first (so it's usable even if samples fail)
+      buildSeqUI(pad);
+      SEQ.loaded = true;
+
+      // Then try to load samples in background (non-blocking)
+      if (!SEQ.loaded || SEQ.loaded) {
         loadSamples().then(function() {
-          buildSeqUI(pad);
-          SEQ.loaded = true;
+          // Samples loaded — buffers updated in-place
         }).catch(function() {
-          // Fallback: synthesized drum sounds
-          buildFallbackPad(pad);
+          // Samples failed — synthesized fallback already active
+          console.warn('Sequencer: samples unavailable, using synthesized sounds');
         });
       }
     }
@@ -1704,7 +1760,7 @@
     function loadSamples() {
       var AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) return Promise.reject('No AudioContext');
-      SEQ.ctx = new AudioContext();
+      if (!SEQ.ctx) SEQ.ctx = new AudioContext();
       var promises = [];
       for (var t = 0; t < 8; t++) {
         (function(trackIdx){
@@ -1751,7 +1807,7 @@
         return;
       }
 
-      // Fallback: synthesized drum sound
+      // Fallback: synthesized drum sound (use `when` for correct scheduling)
       if (SEQ.muted[trackIdx]) return;
       if (SEQ.solo >= 0 && SEQ.solo !== trackIdx) return;
 
@@ -1770,41 +1826,42 @@
         SEQ.master.connect(ctx.destination);
       }
 
+      var t = when || ctx.currentTime;
       var trackType = trackIdx % 4;
       var o = ctx.createOscillator();
       var g = ctx.createGain();
-      
+
       if (trackType === 0) { // Kick
         o.type = 'sine';
-        o.frequency.setValueAtTime(120, ctx.currentTime);
-        o.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.15);
-        g.gain.setValueAtTime(0.8, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-        o.start(ctx.currentTime);
-        o.stop(ctx.currentTime + 0.2);
+        o.frequency.setValueAtTime(120, t);
+        o.frequency.exponentialRampToValueAtTime(30, t + 0.15);
+        g.gain.setValueAtTime(0.8, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+        o.start(t);
+        o.stop(t + 0.2);
       } else if (trackType === 1) { // Snare
         o.type = 'triangle';
-        o.frequency.setValueAtTime(200, ctx.currentTime);
-        g.gain.setValueAtTime(0.5, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-        o.start(ctx.currentTime);
-        o.stop(ctx.currentTime + 0.1);
+        o.frequency.setValueAtTime(200, t);
+        g.gain.setValueAtTime(0.5, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+        o.start(t);
+        o.stop(t + 0.1);
       } else if (trackType === 2) { // HiHat
         o.type = 'square';
-        o.frequency.setValueAtTime(8000, ctx.currentTime);
-        g.gain.setValueAtTime(0.2, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
-        o.start(ctx.currentTime);
-        o.stop(ctx.currentTime + 0.05);
+        o.frequency.setValueAtTime(8000, t);
+        g.gain.setValueAtTime(0.2, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+        o.start(t);
+        o.stop(t + 0.05);
       } else { // Bass
         o.type = 'sawtooth';
-        o.frequency.setValueAtTime(60 + trackIdx * 10, ctx.currentTime);
-        g.gain.setValueAtTime(0.4, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-        o.start(ctx.currentTime);
-        o.stop(ctx.currentTime + 0.15);
+        o.frequency.setValueAtTime(60 + trackIdx * 10, t);
+        g.gain.setValueAtTime(0.4, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+        o.start(t);
+        o.stop(t + 0.15);
       }
-      
+
       o.connect(g);
       g.connect(SEQ.master);
     }
@@ -1819,6 +1876,7 @@
 
     function scheduler() {
       if (!SEQ.playing) return;
+      if (!SEQ.ctx) return;
 
       while (SEQ.nextNoteTime < SEQ.ctx.currentTime + SEQ.lookahead) {
         var stepDur = (60.0 / SEQ.bpm) / 4.0;
@@ -1843,6 +1901,11 @@
 
     function startSequencer() {
       if (!SEQ.loaded) return;
+      if (!SEQ.ctx) {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        SEQ.ctx = new AC();
+      }
       if (SEQ.ctx.state === 'suspended') SEQ.ctx.resume();
 
       if (!SEQ.master) {
@@ -1850,6 +1913,8 @@
         SEQ.master.gain.value = SEQ.vol;
         SEQ.master.connect(SEQ.ctx.destination);
       }
+
+      setupSeqEQ();
 
       SEQ.playing = true;
       SEQ.current16th = 0;
@@ -1871,9 +1936,11 @@
         clearTimeout(SEQ.timer);
         SEQ.timer = null;
       }
-      document.querySelectorAll('.seq-step.playing').forEach(function(el) {
-        el.classList.remove('playing');
-      });
+      try{
+        document.querySelectorAll('.seq-step.playing').forEach(function(el) {
+          el.classList.remove('playing');
+        });
+      }catch(e){}
 
       var playBtn = document.getElementById('beatpadPlay');
       if (playBtn) {
@@ -2004,7 +2071,9 @@
       }
 
       var playBtn = header.querySelector('#beatpadPlay');
-      if (playBtn) playBtn.addEventListener('click', toggleSequencer);
+      if (playBtn) {
+        playBtn.addEventListener('click', toggleSequencer);
+      }
 
       var stopBtn = header.querySelector('#beatpadStop');
       if (stopBtn) stopBtn.addEventListener('click', stopSequencer);
@@ -2658,69 +2727,106 @@
   function buildChat(){
     var msgs=document.getElementById('cpMsgs');var sug=document.getElementById('cpSugs');var inp=document.getElementById('cpIn');var send=document.getElementById('cpSend');
     if(!msgs||!sug||!inp||!send) return;
-    /* Contact bar */
-    var cb=document.createElement('div');cb.style.cssText='display:flex;gap:4px;padding:4px 8px;border-bottom:2px solid var(--line);flex-wrap:wrap';
-    chatContacts.forEach(function(c){
-      var b=document.createElement('button');b.textContent='@'+c.name;b.style.cssText='font-family:IBM Plex Mono,monospace;font-size:10px;padding:2px 6px;border:2px solid var(--line);background:var(--surface);cursor:pointer';
-      b.addEventListener('click',function(){inp.placeholder='Nachricht an '+c.name+'…';inp.focus();});
+    if(CHAT_INITIALIZED) return;
+    CHAT_INITIALIZED=true;
+
+    /* Contact bar with active status */
+    var cb=document.createElement('div');cb.className='chatBar';
+    var contacts=[
+      {name:'Macro',status:'online',avatar:'🤖'},
+      {name:'Sadee',status:'online',avatar:'👨‍💻'},
+      {name:'Perchance',status:'idle',avatar:'🎲'},
+      {name:'Bot',status:'online',avatar:'⚡'}
+    ];
+    contacts.forEach(function(c){
+      var b=document.createElement('button');b.className='chatContact';
+      b.innerHTML='<span class="chatAvatar">'+c.avatar+'</span><span class="chatName">@'+c.name+'</span><span class="chatStatus '+c.status+'"></span>';
+      b.addEventListener('click',function(){inp.placeholder='Nachricht an @'+c.name+'…';inp.focus();});
       cb.appendChild(b);
     });
     sug.parentNode.insertBefore(cb,sug);
+
     /* Emoji bar */
-    var eb=document.createElement('div');eb.style.cssText='display:flex;gap:2px;padding:4px 8px;border-bottom:2px solid var(--line);flex-wrap:wrap';
-    var extraEmoji=['😂','😎','🔥','💡','✅','🎉','👍','🚀','🙃','🤔','👀','🎵','📸','💻','🔑','⭐','🌟','🎯','💪','🏆'];
-    var allEmoji=['🙂','😀','😂','😎','🔥','💡','✅','🎉','👍','🚀'].concat(extraEmoji);
-    allEmoji.forEach(function(e){
-      var b=document.createElement('button');b.textContent=e;b.style.cssText='font-size:16px;border:none;background:transparent;cursor:pointer;padding:2px';
+    var eb=document.createElement('div');eb.className='chatEmojiBar';
+    ['😂','😎','🔥','💡','✅','🎉','👍','🚀','🤔','👀','🎵','💻','🔑','⭐','💪'].forEach(function(e){
+      var b=document.createElement('button');b.textContent=e;b.className='chatEmoji';
       b.addEventListener('click',function(){inp.value+=e;inp.focus();});
       eb.appendChild(b);
     });
     cb.parentNode.insertBefore(eb,cb.nextSibling);
+
     /* Load from localStorage */
     msgs.innerHTML='';
     try{var saved=JSON.parse(localStorage.getItem('cp_msgs')||'[]');saved.forEach(function(m){addChatBubble(msgs,m);});}catch(e){}
+
     function addChatBubble(el,m){
-      var d=document.createElement('div');d.className='cpMsg'+(m.self?' self':'');d.textContent=m.text;
-      var ts=document.createElement('span');ts.style.cssText='font-size:9px;opacity:.6;margin-left:6px';ts.textContent=m.time;
-      d.appendChild(ts);el.appendChild(d);el.scrollTop=el.scrollHeight;
+      var d=document.createElement('div');d.className='cpMsg'+(m.self?' self':'');
+      d.innerHTML='<span class="chatBubbleText">'+m.text+'</span><span class="chatBubbleTime">'+m.time+'</span>';
+      el.appendChild(d);el.scrollTop=el.scrollHeight;
     }
-    /* Chat — S4: variable mock replies */
-    var chatMockReplies=[
-      'Interessant! Erzähl mehr.',
-      'Hmm, lass mich nachdenken...',
-      'Verstanden. Ich prüfe das.',
-      'Klingt gut! Mach weiter so.',
-      'Ok, notiert. 👍',
-      'Das sehe ich anders — aber okay.'
-    ];
-    function mockReply(text){
-      var i=Math.abs((text||'').split('').reduce(function(a,c){return a+c.charCodeAt(0)|0},0))%chatMockReplies.length;
-      return chatMockReplies[i];
+
+    /* Smart bot replies with keyword matching */
+    function botReply(text){
+      var t=text.toLowerCase();
+      var replies={
+        hallo:['Hallo! Wie kann ich helfen?','Hey! Schön da zu sehen.','Moin! Was gibt\'s?'],
+        hilfe:['Ich kann: echo, time, joke, quote, calc','Schreib mir! Ich antworte.','Brauchst du Hilfe bei etwas Bestimmtem?'],
+        joke:['Warum hat der Developer seine Frau verlassen? Weil sie .map() statt .forEach() nutzt. 😄','Was ist ein Compiler? Ein Programm das Fehler findet — außer seinen eigenen.','404: Witze nicht gefunden. Versuch\'s nochmal!'],
+        quote:['"Code is like humor. When you have to explain it, it\'s bad." — Cory House','"First, solve the problem. Then, write the code." — John Johnson','"Simplicity is the soul of efficiency." — Austin Freeman'],
+        zeit:['Es ist '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),'Die Uhr schlägt: '+new Date().toLocaleTimeString('de-DE')],
+        danke:['Gerne! 👋','Immer wieder gern.','Kein Problem!'],
+        echo:[text,text,text],
+        default:['Interessant!','Verstanden.','Hmm, lass mich nachdenken…','Klingt gut!','Ok, notiert.','Erzähl mehr!','Das sehe ich genauso.']
+      };
+      for(var key in replies){if(t.indexOf(key)!==-1){var arr=replies[key];return arr[Math.floor(Math.random()*arr.length)];}}
+      var def=replies.default;return def[Math.floor(Math.random()*def.length)];
     }
+
     var chatReplyTimer=null;
+    var typingEl=null;
+
     function sendMsg(text){
       if(!text) return;
       var now=new Date();var time=now.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
       addChatBubble(msgs,{text:text,self:true,time:time});
-      try{var h=JSON.parse(localStorage.getItem('cp_msgs')||'[]');h.push({text:text,self:true,time:time});if(h.length>100)h.shift();localStorage.setItem('cp_msgs',JSON.stringify(h));}catch(e){}
-      /* Track timeout so it can be cancelled on close */
+      saveMsg(text,true,time);
+
+      /* Cancel old reply timer */
       if(chatReplyTimer)clearTimeout(chatReplyTimer);
+
+      /* Typing indicator */
+      typingEl=document.createElement('div');
+      typingEl.className='chatTyping';
+      typingEl.innerHTML='… @Bot tippt<span class="typingDot"></span><span class="typingDot"></span><span class="typingDot"></span>';
+      msgs.appendChild(typingEl);
+      msgs.scrollTop=msgs.scrollHeight;
+
+      var replyDelay=500+Math.floor(Math.random()*1000);
       chatReplyTimer=setTimeout(function(){
-        var r='(mock) '+mockReply(text);
+        if(typingEl)typingEl.remove();
+        var r=botReply(text);
         addChatBubble(msgs,{text:r,self:false,time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})});
-        try{var h2=JSON.parse(localStorage.getItem('cp_msgs')||'[]');h2.push({text:r,self:false,time:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})});if(h2.length>100)h2.shift();localStorage.setItem('cp_msgs',JSON.stringify(h2));}catch(e2){}
+        saveMsg(r,false,new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
         chatReplyTimer=null;
-      },400);
+      },replyDelay);
       window.osTimeouts['chat_reply']=chatReplyTimer;
     }
+
+    function saveMsg(text,self,time){
+      try{var h=JSON.parse(localStorage.getItem('cp_msgs')||'[]');h.push({text:text,self:self,time:time});if(h.length>100)h.shift();localStorage.setItem('cp_msgs',JSON.stringify(h));}catch(e){}
+    }
+
     sug.innerHTML='';
-    ['Hallo','Wie gehts?','Hilfe','Docs'].forEach(function(t){
-      var b=document.createElement('button');b.textContent=t;b.addEventListener('click',function(){sendMsg(t);});
+    ['Hallo','Hilfe','Witz','Zeit','Quote','Echo'].forEach(function(t){
+      var b=document.createElement('button');b.textContent=t;
+      b.addEventListener('click',function(){sendMsg(t);});
       sug.appendChild(b);
     });
+
     send.addEventListener('click',function(){var v=inp.value.trim();if(!v)return;sendMsg(v);inp.value='';});
     inp.addEventListener('keydown',function(e){if(e.key==='Enter'){send.click();}});
   }
+  var CHAT_INITIALIZED=false;
 
   /* Docs — S1: editable + export + preview */
   function buildDocs(){
@@ -3037,7 +3143,7 @@
     // lock click handler already registered above
   });
 
-  /* Browser — S1+S2: Tabs + Shortcuts */
+  /* Browser — S1+S2+S3: Tabs + Shortcuts + Bookmarks + History */
   function buildBrowser(){
     var content=document.getElementById('brContent');
     var addr=document.getElementById('brAddr');
@@ -3050,8 +3156,28 @@
     var activeTab=0;
     var history=[];
     var histIdx=-1;
+    var bookmarks=loadBookmarks();
 
     function uid(){return 'br'+Math.random().toString(36).slice(2,8)}
+
+    function loadBookmarks(){
+      try{return JSON.parse(localStorage.getItem('macrohard_browser_bookmarks')||'[]');}
+      catch(e){return [
+        {name:'Wikipedia',url:'https://wikipedia.org',icon:'📚'},
+        {name:'GitHub',url:'https://github.com',icon:'💻'},
+        {name:'DuckDuckGo',url:'https://duckduckgo.com',icon:'🦆'}
+      ];}
+    }
+    function saveBookmarks(){
+      try{localStorage.setItem('macrohard_browser_bookmarks',JSON.stringify(bookmarks));}catch(e){}
+    }
+
+    function addBookmark(name,url,icon){
+      if(!bookmarks.some(function(b){return b.url===url;})){
+        bookmarks.push({name:name,url:url,icon:icon||'🔖'});
+        saveBookmarks();
+      }
+    }
 
     function renderTabs(){
       tabsEl.innerHTML='';
@@ -3060,7 +3186,7 @@
         tab.className='brTab'+(i===activeTab?' active':'');
         tab.innerHTML='<span class="brTabTit">'+(t.title||t.url)+'</span><span class="brTabX">×</span>';
         tab.querySelector('.brTabTit').addEventListener('click',function(){activeTab=i;showTab(i)});
-        tab.querySelector('.brTabX').addEventListener('click',function(){closeTab(i)});
+        tab.querySelector('.brTabX').addEventListener('click',function(e){e.stopPropagation();closeTab(i)});
         tabsEl.appendChild(tab);
       });
     }
@@ -3076,6 +3202,12 @@
         showHome();
         return;
       }
+      /* Loading spinner */
+      var loading=document.createElement('div');
+      loading.className='brLoading';
+      loading.innerHTML='<div class="brSpinner"></div><div style="font-size:11px;color:var(--muted)">Wird geladen…</div>';
+      content.appendChild(loading);
+
       var iframe=document.createElement('iframe');
       iframe.id='brFrame';
       iframe.style.cssText='width:100%;height:100%;border:none;background:#fff';
@@ -3084,14 +3216,28 @@
       var err=document.createElement('div');
       err.className='brErr';
       err.style.cssText='display:none;height:100%;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center';
-      err.innerHTML='<div style="font-size:48px">🔒</div><div style="font-weight:700;font-size:13px">Diese Seite kann nicht in einem iframe geladen werden.</div><div style="font-size:11px;color:var(--muted);max-width:280px">Viele Webseiten blockieren iframes aus Sicherheitsgründen (CSP/X-Frame-Options). Der Server der Zielseite erlaubt keine Einbettung in andere Sites.</div><button class="cBtn" id="brOpenExt" style="margin-top:8px">Im externen Browser öffnen</button>';
+      err.innerHTML='<div style="font-size:48px">🔒</div><div style="font-weight:700;font-size:13px">Diese Seite kann nicht in einem iframe geladen werden.</div><div style="font-size:11px;color:var(--muted);max-width:280px">Viele Webseiten blockieren iframes aus Sicherheitsgründen (CSP/X-Frame-Options).</div><button class="cBtn" id="brOpenExt" style="margin-top:8px">↗ Im externen Browser öffnen</button><button class="cBtn op" id="brBmThis" style="margin-top:4px">⭐ Lesezeichen</button>';
       content.appendChild(iframe);
       content.appendChild(err);
+
       var brLoaded=false;
-      iframe.onload=function(){brLoaded=true;err.style.display='none'};
-      iframe.onerror=function(){if(!brLoaded){err.style.display='flex';iframe.style.display='none'}};
-      setTimeout(function(){if(!brLoaded)err.style.display='flex'},4000);
+      iframe.onload=function(){
+        brLoaded=true;
+        loading.style.display='none';
+        err.style.display='none';
+        /* Update tab title from iframe */
+        try{
+          var title=iframe.contentDocument.title;
+          if(title){tabs[i].title=title;renderTabs();}
+        }catch(e){}
+      };
+      iframe.onerror=function(){if(!brLoaded){loading.style.display='none';err.style.display='flex';iframe.style.display='none'}};
+      setTimeout(function(){if(!brLoaded&&loading.parentNode){loading.style.display='none';err.style.display='flex';iframe.style.display='none';}},5000);
       err.querySelector('#brOpenExt').addEventListener('click',function(){window.open(t.url,'_blank')});
+      err.querySelector('#brBmThis').addEventListener('click',function(){
+        addBookmark(t.url,t.url,'🔖');
+        toast('Lesezeichen hinzugefügt: '+t.url);
+      });
     }
 
     function showHome(){
@@ -3100,17 +3246,33 @@
       content.innerHTML='';
       var home=document.createElement('div');
       home.className='brHome';
-      home.innerHTML='<div class="brLogo">🌐</div><div class="brTitle">Web-Browser</div><div class="brSub">DuckDuckGo-Suche</div><div class="brSearch"><input id="brSearchIn" placeholder="Suchbegriff eingeben..."><button id="brSearchBtn">🔍</button></div><div class="brQuick" id="brQuick"></div>';
+      home.innerHTML='<div class="brLogo">🌐</div><div class="brTitle">Web-Browser</div><div class="brSub">DuckDuckGo-Suche</div><div class="brSearch"><input id="brSearchIn" placeholder="Suchbegriff eingeben..."><button id="brSearchBtn">🔍</button></div><div class="brHomeBody"><div class="brBookmarks" id="brBookmarks"></div><div class="brQuick" id="brQuick"></div></div>';
       content.appendChild(home);
+
+      /* Bookmarks */
+      var bmDiv=document.getElementById('brBookmarks');
+      if(bookmarks.length){
+        var bmTitle=document.createElement('div');bmTitle.className='brSectionTitle';bmTitle.textContent='⭐ Lesezeichen';
+        bmDiv.appendChild(bmTitle);
+        bookmarks.forEach(function(b){
+          var a=document.createElement('div');a.className='brBmItem';
+          a.innerHTML='<span>'+b.icon+'</span><span>'+b.name+'</span>';
+          a.addEventListener('click',function(){openUrl(b.url)});
+          bmDiv.appendChild(a);
+        });
+      }
+
       /* Quick Links */
       var quick=document.getElementById('brQuick');
+      var qlTitle=document.createElement('div');qlTitle.className='brSectionTitle';qlTitle.textContent='🚀 Quick Links';
+      quick.appendChild(qlTitle);
       var links=[
         ['Wikipedia','https://wikipedia.org','📚'],
         ['GitHub','https://github.com','💻'],
         ['Reddit','https://reddit.com','📰'],
         ['YouTube','https://youtube.com','📺'],
-        ['Twitter','https://twitter.com','🐦'],
-        ['MDN','https://developer.mozilla.org','📖']
+        ['MDN','https://developer.mozilla.org','📖'],
+        ['Stack Overflow','https://stackoverflow.com','💡']
       ];
       links.forEach(function(l){
         var a=document.createElement('div');
@@ -3119,6 +3281,7 @@
         a.addEventListener('click',function(){openUrl(l[1])});
         quick.appendChild(a);
       });
+
       /* Search */
       var si=document.getElementById('brSearchIn');
       var sb=document.getElementById('brSearchBtn');
@@ -3139,14 +3302,12 @@
       /* Truncate forward history when navigating from middle */
       if(histIdx<history.length-1){history=history.slice(0,histIdx+1);}
       history.push(u);histIdx=history.length-1;
-      saveBookmarks();
     }
 
     /* Navigate without pushing to history (for back/forward) */
     function navigateTo(u){
       if(!u) return;
       var fullUrl=u.startsWith('http')||u==='home'?u:'https://'+u;
-      // Update current tab instead of creating new one for back/forward
       tabs[activeTab]={id:tabs[activeTab].id,url:fullUrl,title:fullUrl};
       showTab(activeTab);
     }
@@ -3158,21 +3319,18 @@
       showTab(activeTab);
     }
 
-    function saveBookmarks(){}
-
     /* Events */
     addr.addEventListener('keydown',function(e){if(e.key==='Enter')openUrl(addr.value)});
-    ['brGo','brBack','brFwd','brRefresh','brHome','brBm','brNewTab'].forEach(function(bid){
-      var bel=document.getElementById(bid);if(bel) bel.addEventListener('click',function(){
-        if(bid==='brGo'&&addr)openUrl(addr.value);
-        else if(bid==='brBack'){if(histIdx>0){histIdx--;if(addr)addr.value=history[histIdx];navigateTo(history[histIdx]);}}
-        else if(bid==='brFwd'){if(histIdx<history.length-1){histIdx++;if(addr)addr.value=history[histIdx];navigateTo(history[histIdx]);}}
-        else if(bid==='brRefresh')showTab(activeTab);
-        else if(bid==='brHome')openUrl('home');
-        else if(bid==='brBm'){var u=prompt('Lesezeichen hinzufügen (URL):');if(u)openUrl(u);}
-        else if(bid==='brNewTab')openUrl('home');
-      });
+    document.getElementById('brGo').addEventListener('click',function(){openUrl(addr.value)});
+    document.getElementById('brBack').addEventListener('click',function(){if(histIdx>0){histIdx--;addr.value=history[histIdx];navigateTo(history[histIdx]);}});
+    document.getElementById('brFwd').addEventListener('click',function(){if(histIdx<history.length-1){histIdx++;addr.value=history[histIdx];navigateTo(history[histIdx]);}});
+    document.getElementById('brRefresh').addEventListener('click',function(){showTab(activeTab)});
+    document.getElementById('brHome').addEventListener('click',function(){openUrl('home')});
+    document.getElementById('brBm').addEventListener('click',function(){
+      var u=prompt('Lesezeichen hinzufügen (URL):');
+      if(u){addBookmark(u,u,'🔖');toast('Lesezeichen: '+u);}
     });
+    document.getElementById('brNewTab').addEventListener('click',function(){openUrl('home')});
 
     /* Init */
     tabs.push({id:uid(),url:'home',title:'Startseite'});
@@ -3835,102 +3993,219 @@ function buildTaskmgr(){
   var body=document.getElementById('tmBody');if(!body) return;
   var tabs=['Prozesse','Leistung','App-Verlauf','Start','Benutzer'];
   var activeTab='Prozesse';
+  var cpuHistory=[];
+  var ramHistory=[];
+  // Initialize with some base values
+  for(var i=0;i<30;i++){cpuHistory.push(Math.random()*40+10);ramHistory.push(Math.random()*30+40);}
 
-  // Clear existing interval before creating new one
-  if(!window.osIntervals) window.osIntervals = {};
+  // Clear existing interval
   if(window.osIntervals['taskmgr']){
     clearInterval(window.osIntervals['taskmgr']);
     delete window.osIntervals['taskmgr'];
   }
 
-  function render(){
-    var currentBody=document.getElementById('tmBody');
-    if(!currentBody) return; // Window closed
+  // App history tracking
+  var appHistory=[];
+  if(!window._tmAppHistory) window._tmAppHistory=[];
+  appHistory=window._tmAppHistory;
 
+  // Startup apps
+  var startupApps=[
+    {name:'System Explorer',enabled:true},
+    {name:'Taskmanager',enabled:true},
+    {name:'Audio Service',enabled:false},
+    {name:'Network Monitor',enabled:true},
+  ];
+
+  // Track window open events
+  if(!window._tmOriginalOpenApp){
+    window._tmOriginalOpenApp=openApp;
+    window._tmAppHistory=appHistory;
+  }
+
+  function getCpuUsage(){
+    // Smooth CPU value with small random walk
+    var last=cpuHistory[cpuHistory.length-1];
+    var next=Math.max(5,Math.min(95,last+(Math.random()-0.5)*10));
+    cpuHistory.push(next);
+    if(cpuHistory.length>30) cpuHistory.shift();
+    return next;
+  }
+
+  function getRamUsage(){
+    // Smooth RAM value
+    var last=ramHistory[ramHistory.length-1];
+    var next=Math.max(20,Math.min(90,last+(Math.random()-0.5)*5));
+    ramHistory.push(next);
+    if(ramHistory.length>30) ramHistory.shift();
+    return next;
+  }
+
+  function renderProzesse(content){
+    var wins=document.querySelectorAll('[data-app]');
+    if(!wins.length){
+      content.innerHTML='<div class="mock">Keine offenen Fenster</div>';
+      return;
+    }
+    var table=document.createElement('div');
+    table.className='tmTable';
+    var header=document.createElement('div');
+    header.className='tmHeader';
+    header.innerHTML='<span class="col-name">Name</span><span class="col-cpu">CPU</span><span class="col-ram">Arbeitsspeicher</span><span class="col-status">Status</span><span class="col-action"></span>';
+    table.appendChild(header);
+
+    var totalCpu=0, totalRam=0;
+    wins.forEach(function(w){
+      var nameEl=w.querySelector('.wtxt');
+      if(!nameEl) return;
+      var name=nameEl.textContent;
+      var id=w.getAttribute('data-app')||'';
+      var cpu=(Math.random()*15);
+      var ram=20+Math.floor(Math.random()*80);
+      totalCpu+=cpu; totalRam+=ram;
+      var row=document.createElement('div');
+      row.className='tmProc';
+      row.innerHTML='<span class="col-name">'+name+'</span><span class="col-cpu">'+cpu.toFixed(1)+'%</span><span class="col-ram">'+ram+' MB</span><span class="col-status"><span class="dot-green"></span> Wird ausgeführt</span><span class="col-action"><button class="cBtn op tmKill">Beenden</button></span>';
+      row.querySelector('.tmKill').addEventListener('click',function(){
+        playSound('close');
+        w.classList.add('closing');
+        setTimeout(function(){w.remove();renderContent();},200);
+        var tbIcon=document.getElementById('tb-'+w.getAttribute('data-app'));
+        if(tbIcon) tbIcon.remove();
+      });
+      table.appendChild(row);
+    });
+
+    content.appendChild(table);
+    var sum=document.createElement('div');
+    sum.className='tmSummary';
+    sum.innerHTML='<span>'+wins.length+' Prozesse</span><span>CPU: '+totalCpu.toFixed(1)+'%</span><span>RAM: '+totalRam+' MB</span>';
+    content.appendChild(sum);
+  }
+
+  function renderLeistung(content){
+    var cpu=getCpuUsage();
+    var ram=getRamUsage();
+    var html='<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">';
+    html+='<div style="flex:1;min-width:180px"><div style="font-size:10px;color:var(--muted);margin-bottom:4px">CPU-Auslastung</div>';
+    html+='<div class="tmBar"><div class="tmBarFill" style="width:'+cpu+'%"></div></div>';
+    html+='<div style="font-size:18px;font-weight:bold;margin-top:4px">'+Math.round(cpu)+'%</div></div>';
+    html+='<div style="flex:1;min-width:180px"><div style="font-size:10px;color:var(--muted);margin-bottom:4px">Arbeitsspeicher</div>';
+    html+='<div class="tmBar"><div class="tmBarFill" style="width:'+ram+'%;background:var(--secondary)"></div></div>';
+    html+='<div style="font-size:18px;font-weight:bold;margin-top:4px">'+Math.round(ram)+'%</div></div>';
+    html+='</div>';
+
+    // CPU History sparkline
+    html+='<div style="margin-top:12px"><div style="font-size:10px;color:var(--muted);margin-bottom:4px">CPU-Verlauf</div>';
+    html+='<div class="tmSparkline">';
+    cpuHistory.forEach(function(v){
+      html+='<div class="tmSparkBar" style="height:'+v+'%"></div>';
+    });
+    html+='</div></div>';
+
+    // RAM History sparkline
+    html+='<div style="margin-top:12px"><div style="font-size:10px;color:var(--muted);margin-bottom:4px">RAM-Verlauf</div>';
+    html+='<div class="tmSparkline">';
+    ramHistory.forEach(function(v){
+      html+='<div class="tmSparkBar" style="height:'+v+'%;background:var(--secondary)"></div>';
+    });
+    html+='</div></div>';
+
+    content.innerHTML=html;
+  }
+
+  function renderAppVerlauf(content){
+    if(!appHistory.length){
+      content.innerHTML='<div class="mock">App-Verlauf ist leer</div>';
+      return;
+    }
+    var list=document.createElement('div');
+    list.className='tmHistory';
+    appHistory.slice().reverse().forEach(function(entry){
+      var row=document.createElement('div');
+      row.className='tmHistoryRow';
+      row.innerHTML='<span class="tmHistoryTime">'+entry.time+'</span><span class="tmHistoryName">'+entry.name+'</span><span class="tmHistoryAction">'+entry.action+'</span>';
+      list.appendChild(row);
+    });
+    content.appendChild(list);
+  }
+
+  function renderStart(content){
+    var list=document.createElement('div');
+    list.className='tmStartup';
+    startupApps.forEach(function(app){
+      var row=document.createElement('div');
+      row.className='tmStartupRow';
+      row.innerHTML='<span class="tmStartupName">'+app.name+'</span><label class="tmToggle"><input type="checkbox"'+(app.enabled?' checked="checked"':'')+'><span class="tmToggleSlider"></span></label>';
+      var cb=row.querySelector('input');
+      cb.addEventListener('change',function(){
+        app.enabled=this.checked;
+      });
+      list.appendChild(row);
+    });
+    content.appendChild(list);
+  }
+
+  function renderBenutzer(content){
+    content.innerHTML='<div class="mock">Benutzer: macrohard<br/>Berechtigungen: Administrator<br/>Anmeldung: '+new Date().toLocaleString('de-DE')+'</div>';
+  }
+
+  function renderContent(){
+    var currentBody=document.getElementById('tmBody');
+    if(!currentBody) return;
     currentBody.innerHTML='';
-    /* Tab-Bar */
+
+    // Tab bar
     var tabBar=document.createElement('div');
     tabBar.className='tmTabs';
     tabs.forEach(function(t){
       var tab=document.createElement('div');
       tab.className='tmTab'+(t===activeTab?' active':'');
       tab.textContent=t;
-      tab.addEventListener('click',function(){activeTab=t;render()});
+      tab.addEventListener('click',function(){activeTab=t;renderContent()});
       tabBar.appendChild(tab);
     });
     currentBody.appendChild(tabBar);
-    /* Tab-Content */
+
+    // Content area
     var content=document.createElement('div');
     content.className='tmContent';
-    if(activeTab==='Prozesse'){
-      var wins=document.querySelectorAll('.wnd');
-      // Also count windows with iframes (like AMIBIOS)
-      var allWindows=document.querySelectorAll('[data-app]');
-      if(!allWindows.length){
-        content.innerHTML='<div class="mock">Keine offenen Fenster</div>';
-      } else {
-        var table=document.createElement('div');
-        table.className='tmTable';
-        /* Header */
-        var header=document.createElement('div');
-        header.className='tmHeader';
-        header.innerHTML='<span class="col-name">Name</span><span class="col-cpu">CPU</span><span class="col-ram">Arbeitsspeicher</span><span class="col-status">Status</span><span class="col-action"></span>';
-        table.appendChild(header);
-        allWindows.forEach(function(w){
-          var nameEl=w.querySelector('.wtxt');
-          if(!nameEl) return; // Skip if element not found
-          var name=nameEl.textContent;
-          var id=w.getAttribute('data-app')||'';
-          var row=document.createElement('div');
-          row.className='tmProc';
-          row.innerHTML='<span class="col-name">'+name+'</span><span class="col-cpu">'+(Math.random()*15).toFixed(1)+'%</span><span class="col-ram">'+(20+Math.floor(Math.random()*80))+' MB</span><span class="col-status"><span class="dot-green"></span> Wird ausgeführt</span><span class="col-action"><button class="cBtn op tmKill">Beenden</button></span>';
-          row.querySelector('.tmKill').addEventListener('click',function(){
-            playSound('close');
-            w.classList.add('closing');
-            setTimeout(function(){w.remove()},200);
-            var tbIcon=document.getElementById('tb-'+w.getAttribute('data-app'));
-            if(tbIcon) tbIcon.remove();
-            render();
-          });
-          table.appendChild(row);
-        });
-        content.appendChild(table);
-        /* Summary */
-        var sum=document.createElement('div');
-        sum.className='tmSummary';
-        sum.innerHTML='<span>'+allWindows.length+' Prozesse</span><span>CPU: '+(Math.random()*30).toFixed(0)+'%</span><span>RAM: '+(Math.random()*40+20).toFixed(0)+'%</span>';
-        content.appendChild(sum);
-      }
-    } else if(activeTab==='Leistung'){
-      /* CPU Chart */
-      var cpuVal=Math.floor(Math.random()*60+20);
-      var ramVal=Math.floor(Math.random()*50+30);
-      content.innerHTML='<div style="display:flex;gap:16px;flex-wrap:wrap">'
-        +'<div style="flex:1;min-width:180px"><div style="font-size:10px;color:var(--muted);margin-bottom:4px">CPU-Auslastung</div>'
-        +'<div class="tmBar"><div class="tmBarFill" style="width:'+cpuVal+'%"></div></div>'
-        +'<div style="font-size:18px;font-weight:bold;margin-top:4px">'+cpuVal+'%</div></div>'
-        +'<div style="flex:1;min-width:180px"><div style="font-size:10px;color:var(--muted);margin-bottom:4px">Arbeitsspeicher</div>'
-        +'<div class="tmBar"><div class="tmBarFill" style="width:'+ramVal+'%;background:var(--secondary)"></div></div>'
-        +'<div style="font-size:18px;font-weight:bold;margin-top:4px">'+ramVal+'%</div></div>'
-        +'</div>';
-    } else if(activeTab==='App-Verlauf'){
-      content.innerHTML='<div class="mock">App-Verlauf ist leer</div>';
-    } else if(activeTab==='Start'){
-      content.innerHTML='<div class="mock">Keine Start-Apps konfiguriert</div>';
-    } else {
-      content.innerHTML='<div class="mock">Benutzer: macrohard<br/>Berechtigungen: Administrator</div>';
-    }
+    if(activeTab==='Prozesse') renderProzesse(content);
+    else if(activeTab==='Leistung') renderLeistung(content);
+    else if(activeTab==='App-Verlauf') renderAppVerlauf(content);
+    else if(activeTab==='Start') renderStart(content);
+    else renderBenutzer(content);
     currentBody.appendChild(content);
   }
 
-  render();
-  if(!window.osIntervals['taskmgr']) window.osIntervals['taskmgr'] = setInterval(render,2000);
+  // Track app opens
+  if(window._tmOpenAppWrapper) openApp=window._tmOpenAppWrapper;
+  window._tmOpenAppWrapper=openApp;
+  openApp=function(id){
+    window._tmOpenAppWrapper(id);
+    if(id!=='taskmgr'){
+      appHistory.push({name:id,action:'Gestartet',time:new Date().toLocaleTimeString('de-DE')});
+      if(appHistory.length>50) appHistory.shift();
+    }
+  };
+
+  renderContent();
+  if(!window.osIntervals['taskmgr']) window.osIntervals['taskmgr']=setInterval(function(){
+    if(activeTab==='Prozesse'||activeTab==='Leistung') renderContent();
+  },2000);
 }
 
 /* Systeminfo */
 function buildSysinfo(){
   var body=document.getElementById('siBody');if(!body) return;
   body.innerHTML='';
+  
+  /* Refresh Button */
+  var refreshBtn=document.createElement('button');
+  refreshBtn.className='siRefresh';
+  refreshBtn.textContent='↻ Aktualisieren';
+  refreshBtn.onclick=function(){buildSysinfo();};
+  body.appendChild(refreshBtn);
   
   /* OS */
   addSection('Betriebssystem');
@@ -3963,19 +4238,82 @@ function buildSysinfo(){
   addRow('Download',navigator.connection?navigator.connection.downlink+' Mbit/s':'Unbekannt');
   addRow('RTT',navigator.connection?navigator.connection.rtt+' ms':'Unbekannt');
   
-  /* Storage */
+  /* Speicher */
   addSection('Speicher');
   addRow('localStorage',!!window.localStorage?'Verfügbar':'Nicht verfügbar');
   addRow('sessionStorage',!!window.sessionStorage?'Verfügbar':'Nicht verfügbar');
   addRow('Service Worker','serviceWorker' in navigator?'Unterstützt':'Nicht unterstützt');
   addRow('Cache API','caches' in window?'Verfügbar':'Nicht verfügbar');
   
-  /* Fenster */
+  /* Sitzung */
   addSection('Sitzung');
   addRow('Offene Fenster',document.querySelectorAll('.wnd').length);
   addRow('Aktive App',document.querySelector('.wnd.focused .wtxt')?document.querySelector('.wnd.focused .wtxt').textContent:'Keine');
   addRow('Laufzeit seit Boot',Math.floor(performance.now()/1000)+' Sekunden');
   addRow('Seitengröße',document.documentElement.scrollWidth+' x '+document.documentElement.scrollHeight+' px');
+  
+  /* Battery */
+  addSection('Battery');
+  if('getBattery' in navigator){
+    navigator.getBattery().then(function(battery){
+      addRow('Ladezustand',Math.round(battery.level*100)+'%');
+      addRow('Ladezeit',battery.chargingTime===Infinity?'Lädt nicht':formatTime(battery.chargingTime));
+      addRow('Restzeit',battery.dischargingTime===Infinity?'Unbekannt':formatTime(battery.dischargingTime));
+      addRow('Ladestatus',battery.charging?'Lädt':'Entlädt');
+    }).catch(function(){
+      addRow('Ladezustand','Nicht verfügbar');
+      addRow('Ladezeit','Nicht verfügbar');
+      addRow('Restzeit','Nicht verfügbar');
+      addRow('Ladestatus','Nicht verfügbar');
+    });
+  } else {
+    addRow('Ladezustand','Nicht unterstützt');
+    addRow('Ladezeit','Nicht unterstützt');
+    addRow('Restzeit','Nicht unterstützt');
+    addRow('Ladestatus','Nicht unterstützt');
+  }
+  
+  /* Geolocation */
+  addSection('Geolocation');
+  if('geolocation' in navigator){
+    navigator.geolocation.getCurrentPosition(function(pos){
+      addRow('Breitengrad',pos.coords.latitude.toFixed(6)+'°');
+      addRow('Längengrad',pos.coords.longitude.toFixed(6)+'°');
+      addRow('Höhe',pos.coords.altitude!==null?pos.coords.altitude.toFixed(1)+' m':'Nicht verfügbar');
+      addRow('Genauigkeit',pos.coords.accuracy.toFixed(0)+' m');
+    }, function(err){
+      addRow('Breitengrad','Zugriff verweigert');
+      addRow('Längengrad','Zugriff verweigert');
+      addRow('Höhe','Zugriff verweigert');
+      addRow('Genauigkeit','Zugriff verweigert');
+    },{timeout:5000,enableHighAccuracy:false});
+    addRow('Status','Anfrage läuft...');
+  } else {
+    addRow('Breitengrad','Nicht unterstützt');
+    addRow('Längengrad','Nicht unterstützt');
+    addRow('Höhe','Nicht unterstützt');
+    addRow('Genauigkeit','Nicht unterstützt');
+  }
+  
+  /* Media */
+  addSection('Media');
+  if('mediaDevices' in navigator&&navigator.mediaDevices.enumerateDevices){
+    navigator.mediaDevices.enumerateDevices().then(function(devices){
+      var cameras=devices.filter(function(d){return d.kind==='videoinput';});
+      var mics=devices.filter(function(d){return d.kind==='audioinput';});
+      addRow('Kamera',cameras.length>0?'Verfügbar ('+cameras.length+')':'Nicht verfügbar');
+      addRow('Mikrofon',mics.length>0?'Verfügbar ('+mics.length+')':'Nicht verfügbar');
+      addRow('Geräte gesamt',devices.length);
+    }).catch(function(){
+      addRow('Kamera','Zugriff verweigert');
+      addRow('Mikrofon','Zugriff verweigert');
+      addRow('Geräte gesamt','Unbekannt');
+    });
+  } else {
+    addRow('Kamera','Nicht unterstützt');
+    addRow('Mikrofon','Nicht unterstützt');
+    addRow('Geräte gesamt','Nicht unterstützt');
+  }
   
   function addSection(title){
     var sec=document.createElement('div');
@@ -3989,30 +4327,142 @@ function buildSysinfo(){
     el.innerHTML='<span class="siKey">'+key+'</span><span class="siVal">'+val+'</span>';
     body.appendChild(el);
   }
+  function formatTime(seconds){
+    if(!seconds||seconds<=0) return 'Sofort';
+    var h=Math.floor(seconds/3600);
+    var m=Math.floor((seconds%3600)/60);
+    var s=Math.floor(seconds%60);
+    if(h>0) return h+'h '+m+'m';
+    if(m>0) return m+'m '+s+'s';
+    return s+'s';
+  }
 }
 
-/* Kalender */
+/* Kalender mit Ereignissen */
 function buildCalendar(){
   var body=document.getElementById('calBody');if(!body) return;
+  if(CALENDAR_INITIALIZED) {renderCalendar(); return;}
+  CALENDAR_INITIALIZED=true;
+
+  // State
   var today=new Date();
-  var year=today.getFullYear();
-  var month=today.getMonth();
-  var monthNames=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  var dayNames=['Mo','Di','Mi','Do','Fr','Sa','So'];
-  var firstDay=new Date(year,month,1).getDay();
-  var daysInMonth=new Date(year,month+1,0).getDate();
-  var html='<div class="calHeader"><span>'+monthNames[month]+' '+year+'</span></div>';
-  html+='<div class="calGrid">';
-  dayNames.forEach(function(d){html+='<div class="calDayName">'+d+'</div>';});
-  var startOffset=(firstDay+6)%7;
-  for(var i=0;i<startOffset;i++) html+='<div class="calDay empty"></div>';
-  for(var day=1;day<=daysInMonth;day++){
-    var isToday=day===today.getDate();
-    html+='<div class="calDay'+(isToday?' today':'')+'">'+day+'</div>';
+  var viewYear=today.getFullYear();
+  var viewMonth=today.getMonth();
+  var selectedDay=today.getDate();
+  var events=loadEvents();
+
+  function loadEvents(){
+    try{return JSON.parse(localStorage.getItem('macrohard_calendar_events')||'[]');}
+    catch(e){return [];}
   }
-  html+='</div>';
-  body.innerHTML=html;
+  function saveEvents(){
+    try{localStorage.setItem('macrohard_calendar_events',JSON.stringify(events));}catch(e){}
+  }
+  function getEventsForDate(y,m,d){
+    return events.filter(function(e){
+      return e.year===y&&e.month===m&&e.day===d;
+    });
+  }
+  function addEvent(y,m,d,title,time,color){
+    events.push({year:y,month:m,day:d,title:title,time:time||'',color:color||'var(--accent)'});
+    saveEvents();
+    renderCalendar();
+  }
+  function deleteEvent(idx){
+    events.splice(idx,1);
+    saveEvents();
+    renderCalendar();
+  }
+
+  function renderCalendar(){
+    body.innerHTML='';
+    var monthNames=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+    var dayNames=['Mo','Di','Mi','Do','Fr','Sa','So'];
+
+    // Header with navigation
+    var header=document.createElement('div');
+    header.className='calHeader';
+    header.innerHTML='<button class="calNav" id="calPrev">◀</button><span class="calTitle">'+monthNames[viewMonth]+' '+viewYear+'</span><button class="calNav" id="calNext">▶</button>';
+    body.appendChild(header);
+
+    // Grid
+    var grid=document.createElement('div');
+    grid.className='calGrid';
+    dayNames.forEach(function(d){grid.innerHTML+='<div class="calDayName">'+d+'</div>';});
+
+    var firstDay=new Date(viewYear,viewMonth,1).getDay();
+    var daysInMonth=new Date(viewYear,viewMonth+1,0).getDate();
+    var prevMonthDays=new Date(viewYear,viewMonth,0).getDate();
+    var startOffset=(firstDay+6)%7;
+
+    // Previous month days
+    for(var i=startOffset-1;i>=0;i--){
+      grid.innerHTML+='<div class="calDay otherMonth">'+(prevMonthDays-i)+'</div>';
+    }
+    // Current month days
+    for(var day=1;day<=daysInMonth;day++){
+      var isToday=(day===today.getDate()&&viewMonth===today.getMonth()&&viewYear===today.getFullYear());
+      var isSelected=(day===selectedDay);
+      var dayEvents=getEventsForDate(viewYear,viewMonth,day);
+      var hasEvents=dayEvents.length>0;
+      grid.innerHTML+='<div class="calDay'+(isToday?' today':'')+(isSelected?' selected':'')+(hasEvents?' hasEvents':'')+'" data-day="'+day+'">'+day+(hasEvents?'<span class="calDot"></span>':'')+'</div>';
+    }
+    // Next month days
+    var totalCells=startOffset+daysInMonth;
+    var remaining=42-totalCells;
+    for(var j=1;j<=remaining;j++){
+      grid.innerHTML+='<div class="calDay otherMonth">'+j+'</div>';
+    }
+    body.appendChild(grid);
+
+    // Event panel
+    var panel=document.createElement('div');
+    panel.className='calPanel';
+    var dayEvents=getEventsForDate(viewYear,viewMonth,selectedDay);
+    var panelHtml='<div class="calPanelHeader"><strong>'+selectedDay+'. '+monthNames[viewMonth]+' '+viewYear+'</strong><button class="cBtn" id="calAddEvent">+ Ereignis</button></div>';
+    if(dayEvents.length){
+      panelHtml+='<div class="calEvents">';
+      dayEvents.forEach(function(e,idx){
+        panelHtml+='<div class="calEvent" style="border-left-color:'+e.color+'"><span class="calEventTime">'+(e.time||'Ganztägig')+'</span><span class="calEventTitle">'+e.title+'</span><button class="calEventDel" data-idx="'+events.indexOf(e)+'">×</button></div>';
+      });
+      panelHtml+='</div>';
+    } else {
+      panelHtml+='<div class="calNoEvents">Keine Ereignisse</div>';
+    }
+    panel.innerHTML=panelHtml;
+    body.appendChild(panel);
+
+    // Event listeners
+    document.getElementById('calPrev').addEventListener('click',function(){
+      viewMonth--;if(viewMonth<0){viewMonth=11;viewYear--;}
+      selectedDay=1;renderCalendar();
+    });
+    document.getElementById('calNext').addEventListener('click',function(){
+      viewMonth++;if(viewMonth>11){viewMonth=0;viewYear++;}
+      selectedDay=1;renderCalendar();
+    });
+    document.getElementById('calAddEvent').addEventListener('click',function(){
+      var title=prompt('Ereignis-Titel:');
+      if(!title)return;
+      var time=prompt('Zeit (HH:MM, leer für ganztägig):');
+      addEvent(viewYear,viewMonth,selectedDay,title,time);
+    });
+    grid.querySelectorAll('.calDay:not(.otherMonth)').forEach(function(el){
+      el.addEventListener('click',function(){
+        selectedDay=parseInt(this.dataset.day);
+        renderCalendar();
+      });
+    });
+    panel.querySelectorAll('.calEventDel').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        deleteEvent(parseInt(this.dataset.idx));
+      });
+    });
+  }
+
+  renderCalendar();
 }
+var CALENDAR_INITIALIZED=false;
 
 /* Uhr/Wecker */
 /* Sound-Effekte */

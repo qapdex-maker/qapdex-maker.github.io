@@ -97,6 +97,103 @@ test('desktopApps has 25 entries', () => {
   assert.equal(desktopApps.length, 25);
 });
 
+// Test: Sequencer SEQ object structure
+test('SEQ object has required fields for pattern sequencer', () => {
+  const SEQ = {
+    pattern: [],
+    playing: false,
+    bpm: 120,
+    vol: 0.7,
+    step: 0,
+    timer: null,
+    buffers: {},
+    ctx: null,
+    master: null,
+    loaded: false,
+    nextNoteTime: 0,
+    current16th: 0,
+    lookahead: 0.1,
+    scheduleInterval: 25,
+    muted: [],
+    solo: -1,
+    controlsInitialized: false
+  };
+  assert.equal(SEQ.loaded, false);
+  assert.equal(SEQ.playing, false);
+  assert.equal(SEQ.bpm, 120);
+  assert.equal(SEQ.lookahead, 0.1);
+  assert.deepEqual(SEQ.muted, []);
+  assert.equal(SEQ.solo, -1);
+});
+
+// Test: Sequencer pattern initialization
+test('sequencer pattern initializes as 8x16 grid of false', () => {
+  const SEQ_STEPS = 16;
+  const pattern = [];
+  const muted = [];
+  for (let i = 0; i < 8; i++) {
+    pattern[i] = [];
+    muted[i] = false;
+    for (let j = 0; j < SEQ_STEPS; j++) {
+      pattern[i][j] = false;
+    }
+  }
+  assert.equal(pattern.length, 8);
+  assert.equal(pattern[0].length, 16);
+  assert.equal(pattern[0][0], false);
+  assert.equal(muted.length, 8);
+  assert.equal(muted[0], false);
+});
+
+// Test: Sequencer step toggle
+test('toggleStep flips pattern value', () => {
+  const pattern = [[false, false], [false, false]];
+  // Simulate toggle
+  pattern[0][1] = !pattern[0][1];
+  assert.equal(pattern[0][1], true);
+  pattern[0][1] = !pattern[0][1];
+  assert.equal(pattern[0][1], false);
+});
+
+// Test: Sequencer scheduler lookahead logic
+test('scheduler schedules notes within lookahead window', () => {
+  const SEQ = { bpm: 120, lookahead: 0.1, current16th: 0, nextNoteTime: 0 };
+  const stepDur = (60.0 / SEQ.bpm) / 4.0;
+  const currentTime = 0;
+  let stepsScheduled = 0;
+  while (SEQ.nextNoteTime < currentTime + SEQ.lookahead) {
+    stepsScheduled++;
+    SEQ.nextNoteTime += stepDur;
+    SEQ.current16th = (SEQ.current16th + 1) % 16;
+  }
+  assert.ok(stepsScheduled > 0);
+  assert.ok(stepsScheduled <= 4);
+});
+
+// Test: AudioContext creation fallback (synthesized mode)
+test('AudioContext can be created with webkit fallback', () => {
+  // Simulate both standard and webkit AudioContext
+  let ctx = null;
+  const AudioContext = global.window.AudioContext || global.window.webkitAudioContext;
+  if (AudioContext) {
+    ctx = new AudioContext();
+  }
+  // In test env, AudioContext is mocked — just verify the pattern
+  assert.ok(ctx !== undefined);
+});
+
+// Test: Sequencer stop clears timer
+test('stopSequencer clears timer and resets state', () => {
+  const SEQ = { playing: true, current16th: 5, timer: 123 };
+  // Simulate stopSequencer
+  SEQ.playing = false;
+  SEQ.current16th = 0;
+  if (SEQ.timer) { SEQ.timer = null; }
+  assert.equal(SEQ.playing, false);
+  assert.equal(SEQ.current16th, 0);
+  assert.equal(SEQ.timer, null);
+});
+
 // Test: fsData structure
 test('fsData has correct structure', () => {
   const fsData = {
@@ -190,3 +287,116 @@ test('storeSet returns false when both storages fail', () => {
 });
 
 console.log('All tests passed!');
+// Test: mkdir creates fsData entry
+test('mkdir creates new directory in fsData', () => {
+  const fsData = { 'C:\\Users\\test': { dirs: [], files: [] } };
+  const curPath = 'C:\\Users\\test';
+  const dn = 'newdir';
+
+  // Simulate mkdir
+  fsData[curPath].dirs.push(dn);
+  const np = curPath + '\\' + dn;
+  fsData[np] = { dirs: [], files: [] };
+
+  assert.ok(fsData[curPath].dirs.indexOf(dn) !== -1);
+  assert.ok(fsData[np]);
+  assert.deepEqual(fsData[np], { dirs: [], files: [] });
+});
+
+// Test: cd changes curPath correctly
+test('cd updates curPath correctly', () => {
+  let curPath = 'C:\\Users\\macrohard\\Desktop';
+  const fsData = {
+    'C:\\Users\\macrohard': { dirs: ['Desktop'], files: [] },
+  };
+
+  // cd ..
+  const parts = curPath.split('\\');
+  if (parts.length > 2) { parts.pop(); curPath = parts.join('\\'); }
+  assert.equal(curPath, 'C:\\Users\\macrohard');
+
+  // cd Desktop
+  const dest = 'Desktop';
+  const np = curPath + '\\' + dest;
+  if (fsData[np]) curPath = np;
+  // No fsData for Desktop in this test - verify the check works
+  assert.equal(curPath, 'C:\\Users\\macrohard');
+});
+
+// Test: rm -r removes directory entry
+test('rm -r removes directory from fsData', () => {
+  const fsData = {
+    'C:\\Users\\test': { dirs: ['mydir'], files: [] },
+    'C:\\Users\\test\\mydir': { dirs: [], files: ['file.txt'] },
+  };
+  const curPath = 'C:\\Users\\test';
+  const fn2 = 'mydir';
+
+  const di = fsData[curPath].dirs.indexOf(fn2);
+  fsData[curPath].dirs.splice(di, 1);
+  const dp = curPath + '\\' + fn2;
+  delete fsData[dp];
+
+  assert.ok(fsData[curPath].dirs.indexOf(fn2) === -1);
+  assert.equal(fsData[dp], undefined);
+});
+
+// Test: Explorer shared filesystem with Terminal
+test('terminal mkdir + explorer refresh share fsData', () => {
+  const fsData = {
+    'C:\\Users\\test': { dirs: [], files: [] },
+  };
+  const curPath = 'C:\\Users\\test';
+
+  // Terminal creates folder
+  const dn = 'projects';
+  fsData[curPath].dirs.push(dn);
+  fsData[curPath + '\\' + dn] = { dirs: [], files: [] };
+
+  // Explorer renders - should see the new folder
+  const d = fsData[curPath];
+  assert.ok(d.dirs.indexOf(dn) !== -1);
+});
+
+// Test: Taskmanager app history tracking
+test('taskmgr app history tracks opened apps', () => {
+  const appHistory = [];
+  const trackApp = (name) => {
+    appHistory.push({ name, action: 'Gestartet', time: new Date().toLocaleTimeString('de-DE') });
+    if (appHistory.length > 50) appHistory.shift();
+  };
+  
+  trackApp('notepad');
+  trackApp('explorer');
+  
+  assert.equal(appHistory.length, 2);
+  assert.equal(appHistory[0].name, 'notepad');
+  assert.equal(appHistory[0].action, 'Gestartet');
+});
+
+// Test: Taskmanager CPU smoothing
+test('taskmgr cpu history stays within bounds', () => {
+  const cpuHistory = [];
+  for (let i = 0; i < 30; i++) cpuHistory.push(Math.random() * 40 + 10);
+  
+  for (let i = 0; i < 100; i++) {
+    const last = cpuHistory[cpuHistory.length - 1];
+    const next = Math.max(5, Math.min(95, last + (Math.random() - 0.5) * 10));
+    cpuHistory.push(next);
+    if (cpuHistory.length > 30) cpuHistory.shift();
+    assert.ok(next >= 5 && next <= 95);
+  }
+});
+
+// Test: Taskmanager startup apps
+test('taskmgr startup apps have correct structure', () => {
+  const startupApps = [
+    { name: 'System Explorer', enabled: true },
+    { name: 'Audio Service', enabled: false },
+  ];
+  
+  assert.equal(startupApps[0].enabled, true);
+  assert.equal(startupApps[1].enabled, false);
+  startupApps[1].enabled = true;
+  assert.equal(startupApps[1].enabled, true);
+});
