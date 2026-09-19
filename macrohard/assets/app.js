@@ -971,151 +971,226 @@
   var termHist=[];var termHistI=0;
   function buildTerminal(){
     var out=document.getElementById('termOut');var inp=document.getElementById('termIn');if(!out||!inp) return;
+    if(TERM_INITIALIZED) return;
+    TERM_INITIALIZED=true;
+
+    var commands=['help','ls','cd','pwd','touch','rm','mkdir','cp','mv','find','grep','echo','cat','date','clear','whoami','history','tree','head','tail','wc','calc','exit','colors','about'];
     function w(text){var d=document.createElement('div');d.textContent=text;out.appendChild(d);out.scrollTop=out.scrollHeight;}
-    w('MakerOS — Terminal');w('Typse "help" für Befehle.');
+    function wc(str){return str.split(/\s+/).filter(Boolean).length;}
+    function filesize(n){return n+' B';}
+    w('MakerOS — Terminal v2.0');
+    w('Tippe "help" für Befehle.');
+
     inp.addEventListener('keydown',function(e){
       if(e.key==='Enter'){
         var cmd=inp.value.trim();if(!cmd){return;}
         w('user@macrohard:~$ '+cmd);termHist.push(cmd);termHistI=termHist.length;
-        var args=cmd.split(' ');var c=args[0].toLowerCase();
+        var args=cmd.split(/\s+/);var c=args[0].toLowerCase();
         switch(c){
-          case 'help':w('Befehle: help, ls, cd, pwd, touch, rm, mkdir, cp, mv, find, grep, echo, cat, date, clear, whoami');break;
-                    case 'pwd':w('/home/macrohard');break;
-                    case 'ls':{
-                      var d=fsData[curPath];
-                      if(d){d.dirs.forEach(function(x){w('\x1b[34m📁  '+x+'\x1b[0m');});d.files.forEach(function(x){w('\x1b[90m📄  '+x+'\x1b[0m');});}
-                      else w('Nicht gefunden.');
-                      break;
-                    }
-                    case 'cat':{
-                      var target=args[1];
-                      if(!target){w('Usage: cat <file>');break;}
-                      var cur=fsData[curPath];
-                      if(cur&&cur.files.indexOf(target)!==-1){w('--- '+target+' ---');w('[Inhalt von '+target+' — mock]');}
-                      else w('Datei nicht gefunden: '+target);
-                      break;
-                    }
-                    case 'cd':{
-                      var dest=args[1];if(!dest){w('Usage: cd <dir>');break;}
-                      if(dest==='..'){
-                        var parts=curPath.split('\\');
-                        if(parts.length>2){parts.pop();curPath=parts.join('\\');}
-                        else{curPath='C:\\';}
-                        w(curPath);
-                        renderExplorer();
-                      } else if(dest==='/'||dest==='~'){
-                        curPath='C:\\Users\\macrohard';
-                        w(curPath);
-                        renderExplorer();
-                      } else {
-                        var np=curPath==='C:\\'?'C:\\'+dest:curPath+'\\'+dest;
-                        if(fsData[np]){curPath=np;w('→ '+curPath);renderExplorer();}
-                        else{w('Verzeichnis nicht gefunden: '+dest);}
-                      }
-                      break;
-                    }
-                    case 'touch':{
-                      var fn=args[1];if(!fn){w('Usage: touch <file>');break;}
-                      var c=fsData[curPath];if(!c){w('Kein Verzeichnis.');break;}
-                      if(c.files.indexOf(fn)!==-1){w('Datei existiert bereits: '+fn);}
-                      else{c.files.push(fn);w('Erstellt: '+fn);renderExplorer();}
-                      break;
-                    }
-                    case 'rm':{
-                      var fn2=args[1];if(!fn2){w('Usage: rm <file> OR rm -r <dir>');break;}
-                      var recursive=args.indexOf('-r')!==-1;
-                      var c2=fsData[curPath];if(!c2){w('Kein Verzeichnis.');break;}
-                      // Try file first
-                      var idx=c2.files.indexOf(fn2);
-                      if(idx!==-1){
-                        c2.files.splice(idx,1);
-                        w('Gelöscht: '+fn2);renderExplorer();
-                        break;
-                      }
-                      // Try directory (only with -r)
-                      var di=c2.dirs.indexOf(fn2);
-                      if(di!==-1){
-                        if(!recursive){w('Ordner: rm -r '+fn2);break;}
-                        c2.dirs.splice(di,1);
-                        // Remove fsData entry for directory
-                        var dp=curPath==='C:\\'?'C:\\'+fn2:curPath+'\\'+fn2;
-                        delete fsData[dp];
-                        w('Ordner gelöscht: '+fn2);renderExplorer();
-                        break;
-                      }
-                      w('Nicht gefunden: '+fn2);
-                      break;
-                    }
-                    case 'mkdir':{
-                      var dn=args[1];if(!dn){w('Usage: mkdir <dir>');break;}
-                      var c3=fsData[curPath];if(!c3){w('Kein Verzeichnis.');break;}
-                      if(c3.dirs.indexOf(dn)!==-1){w('Ordner existiert bereits: '+dn);}
-                      else{
-                        c3.dirs.push(dn);
-                        var np=curPath==='C:\\'?'C:\\'+dn:curPath+'\\'+dn;
-                        fsData[np]={dirs:[],files:[]};
-                        w('Ordner erstellt: '+dn);
-                        renderExplorer();
-                      }
-                      break;
-                    }
-                    case 'cp':{
-                      var src=args[1],dst=args[2];if(!src||!dst){w('Usage: cp <src> <dst>');break;}
-                      var c4=fsData[curPath];if(!c4){w('Kein Verzeichnis.');break;}
-                      if(c4.files.indexOf(src)!==-1&&c4.files.indexOf(dst)===-1){c4.files.push(dst);w('Kopiert: '+src+' → '+dst);renderExplorer();}
-                      else w('Fehler: '+src+' nicht gefunden oder '+dst+' existiert.');
-                      break;
-                    }
-                    case 'mv':{
-                      var src2=args[1],dst2=args[2];if(!src2||!dst2){w('Usage: mv <src> <dst>');break;}
-                      var c5=fsData[curPath];if(!c5){w('Kein Verzeichnis.');break;}
-                      var i2=c5.files.indexOf(src2);if(i2!==-1){c5.files[i2]=dst2;w('Verschoben: '+src2+' → '+dst2);renderExplorer();}
-                      else w('Nicht gefunden: '+src2);
-                      break;
-                    }
-                    case 'find':{
-                      var q=args[1];if(!q){w('Usage: find <name>');break;}
-                      var hits=[];
-                      Object.keys(fsData).forEach(function(p){
-                        fsData[p].files.forEach(function(f){if(f.indexOf(q)!==-1)hits.push(p+'/'+f);});
-                        fsData[p].dirs.forEach(function(d){if(d.indexOf(q)!==-1)hits.push(p+'/'+d+'/');});
-                      });
-                      w(hits.length?'Gefunden:\n'+hits.join('\n'):'Nichts gefunden.');
-                      break;
-                    }
-                    case 'grep':{
-                      var term=args[1];if(!term){w('Usage: grep <text>');break;}
-                      var c6=fsData[curPath];if(!c6){w('Kein Verzeichnis.');break;}
-                      var matches=c6.files.filter(function(f){return f.indexOf(term)!==-1;});
-                      w(matches.length?'Match:\n'+matches.join('\n'):'Kein Treffer.');
-                      break;
-                    }
-                    case 'echo':w(args.slice(1).join(' '));break;
-                    case 'date':w(new Date().toString());break;
-                    case 'clear':out.innerHTML='';break;
-                    case 'whoami':w('macrohard\\user');break;
-                    case 'colors':{
-                      var colors=['\x1b[31mrot\x1b[0m','\x1b[32mgrün\x1b[0m','\x1b[33mgelb\x1b[0m','\x1b[34mblau\x1b[0m','\x1b[35mmagenta\x1b[0m','\x1b[36mcyan\x1b[0m','\x1b[90mgrau\x1b[0m','\x1b[97mweiß\x1b[0m'];
-                      colors.forEach(function(c){w(c);});
-                      break;
-                    }
-          default:w('Unbekannt: '+c+' — tipse "help"');
+          case 'help':w('Befehle: '+commands.join(', '));break;
+          case 'pwd':w(curPath);break;
+          case 'whoami':w('macrohard');break;
+          case 'ls':{
+            var d=fsData[curPath];
+            if(d){
+              if(d.dirs.length||d.files.length){
+                d.dirs.forEach(function(x){w('  \x1b[34m📁 '+x+'\x1b[0m');});
+                d.files.forEach(function(x){w('  \x1b[90m📄 '+x+'\x1b[0m');});
+              } else w('  (leer)');
+            } else w('  Nicht gefunden.');
+            break;
+          }
+          case 'tree':{
+            function printTree(path,prefix){
+              var node=fsData[path];if(!node)return;
+              var items=node.dirs.concat(node.files);
+              items.forEach(function(item,i){
+                var isLast=i===items.length-1;
+                var marker=isLast?'└─':'├─';
+                var isDir=node.dirs.indexOf(item)!==-1;
+                w(prefix+marker+(isDir?' 📁 ':' 📄 ')+item);
+                if(isDir){
+                  var subPath=path==='C:\\'?'C:\\'+item:path+'\\'+item;
+                  printTree(subPath,prefix+(isLast?'   ':'│  '));
+                }
+              });
+            }
+            w('📁 '+curPath.split('\\').pop()||'C:\\');
+            printTree(curPath,'');
+            break;
+          }
+          case 'cat':{
+            var target=args[1];if(!target){w('Usage: cat <file>');break;}
+            var cur=fsData[curPath];
+            if(cur&&cur.files.indexOf(target)!==-1){
+              w('--- '+target+' ---');
+              w('[Inhalt von '+target+' — mock]');
+              w('Zeilen: 1, Wörter: 3, Zeichen: 42');
+            } else w('Datei nicht gefunden: '+target);
+            break;
+          }
+          case 'head':{
+            var fn=args[1];if(!fn){w('Usage: head <file> [n]');break;}
+            var cur=fsData[curPath];
+            if(cur&&cur.files.indexOf(fn)!==-1){
+              var n=parseInt(args[2])||10;
+              w('--- '+fn+' (erste '+n+' Zeilen) ---');
+              w('[Mock content — '+n+' lines]');
+            } else w('Datei nicht gefunden: '+fn);
+            break;
+          }
+          case 'tail':{
+            var fn=args[1];if(!fn){w('Usage: tail <file> [n]');break;}
+            var cur=fsData[curPath];
+            if(cur&&cur.files.indexOf(fn)!==-1){
+              var n=parseInt(args[2])||10;
+              w('--- '+fn+' (letzte '+n+' Zeilen) ---');
+              w('[Mock content — '+n+' lines]');
+            } else w('Datei nicht gefunden: '+fn);
+            break;
+          }
+          case 'wc':{
+            var fn=args[1];if(!fn){w('Usage: wc <file>');break;}
+            var cur=fsData[curPath];
+            if(cur&&cur.files.indexOf(fn)!==-1){
+              w('  1   3 42 '+fn);
+            } else w('Datei nicht gefunden: '+fn);
+            break;
+          }
+          case 'cd':{
+            var dest=args[1];if(!dest){w('Usage: cd <dir>');break;}
+            if(dest==='..'){
+              var parts=curPath.split('\\');
+              if(parts.length>2){parts.pop();curPath=parts.join('\\');}
+              else{curPath='C:\\';}
+              w(curPath);renderExplorer();
+            } else if(dest==='/'||dest==='~'){
+              curPath='C:\\Users\\macrohard';w(curPath);renderExplorer();
+            } else {
+              var np=curPath==='C:\\'?'C:\\'+dest:curPath+'\\'+dest;
+              if(fsData[np]){curPath=np;w('→ '+curPath);renderExplorer();}
+              else{w('Verzeichnis nicht gefunden: '+dest);}
+            }
+            break;
+          }
+          case 'touch':{
+            var fn=args[1];if(!fn){w('Usage: touch <file>');break;}
+            var c=fsData[curPath];if(!c){w('Kein Verzeichnis.');break;}
+            if(c.files.indexOf(fn)!==-1){w('Datei existiert bereits: '+fn);}
+            else{c.files.push(fn);w('Erstellt: '+fn);renderExplorer();}
+            break;
+          }
+          case 'rm':{
+            var fn2=args[1];if(!fn2){w('Usage: rm <file> OR rm -r <dir>');break;}
+            var recursive=args.indexOf('-r')!==-1;
+            var c2=fsData[curPath];if(!c2){w('Kein Verzeichnis.');break;}
+            var idx=c2.files.indexOf(fn2);
+            if(idx!==-1){c2.files.splice(idx,1);w('Gelöscht: '+fn2);renderExplorer();break;}
+            var di=c2.dirs.indexOf(fn2);
+            if(di!==-1){
+              if(!recursive){w('Ordner — nutze: rm -r '+fn2);break;}
+              c2.dirs.splice(di,1);
+              var dp=curPath==='C:\\'?'C:\\'+fn2:curPath+'\\'+fn2;
+              delete fsData[dp];
+              w('Ordner gelöscht: '+fn2);renderExplorer();break;
+            }
+            w('Nicht gefunden: '+fn2);
+            break;
+          }
+          case 'mkdir':{
+            var dn=args[1];if(!dn){w('Usage: mkdir <dir>');break;}
+            var c3=fsData[curPath];if(!c3){w('Kein Verzeichnis.');break;}
+            if(c3.dirs.indexOf(dn)!==-1){w('Existiert bereits: '+dn);}
+            else{
+              c3.dirs.push(dn);
+              var np=curPath==='C:\\'?'C:\\'+dn:curPath+'\\'+dn;
+              fsData[np]={dirs:[],files:[]};
+              w('Erstellt: '+dn);renderExplorer();
+            }
+            break;
+          }
+          case 'cp':{
+            var src=args[1],dst=args[2];if(!src||!dst){w('Usage: cp <src> <dst>');break;}
+            var c4=fsData[curPath];if(!c4){w('Kein Verzeichnis.');break;}
+            if(c4.files.indexOf(src)!==-1&&c4.files.indexOf(dst)===-1){c4.files.push(dst);w('Kopiert: '+src+' → '+dst);renderExplorer();}
+            else w('Fehler: '+src+' nicht gefunden oder '+dst+' existiert.');
+            break;
+          }
+          case 'mv':{
+            var src2=args[1],dst2=args[2];if(!src2||!dst2){w('Usage: mv <src> <dst>');break;}
+            var c5=fsData[curPath];if(!c5){w('Kein Verzeichnis.');break;}
+            var i2=c5.files.indexOf(src2);if(i2!==-1){c5.files[i2]=dst2;w('Verschoben: '+src2+' → '+dst2);renderExplorer();}
+            else w('Nicht gefunden: '+src2);
+            break;
+          }
+          case 'find':{
+            var q=args[1];if(!q){w('Usage: find <name>');break;}
+            var hits=[];
+            Object.keys(fsData).forEach(function(p){
+              fsData[p].files.forEach(function(f){if(f.toLowerCase().indexOf(q.toLowerCase())!==-1)hits.push(p+'/'+f);});
+              fsData[p].dirs.forEach(function(d){if(d.toLowerCase().indexOf(q.toLowerCase())!==-1)hits.push(p+'/'+d+'/');});
+            });
+            w(hits.length?hits.join('\n'):'Nichts gefunden.');
+            break;
+          }
+          case 'grep':{
+            var term=args[1];if(!term){w('Usage: grep <text>');break;}
+            var c6=fsData[curPath];if(!c6){w('Kein Verzeichnis.');break;}
+            var matches=c6.files.filter(function(f){return f.toLowerCase().indexOf(term.toLowerCase())!==-1;});
+            w(matches.length?matches.join('\n'):'Kein Treffer.');
+            break;
+          }
+          case 'echo':w(args.slice(1).join(' '));break;
+          case 'date':w(new Date().toString());break;
+          case 'clear':out.innerHTML='';break;
+          case 'history':{
+            termHist.forEach(function(h,i){w('  '+(i+1)+'  '+h);});
+            break;
+          }
+          case 'calc':{
+            var expr=args.slice(1).join('');
+            if(!expr){w('Usage: calc <expr> — z.B. calc 2+2');break;}
+            try{
+              var result=Function('return '+expr.replace(/[^-()\d/*+.]/g,''))();
+              w(expr+' = '+result);
+            }catch(e){w('Fehler: Ungültiger Ausdruck');}
+            break;
+          }
+          case 'colors':{
+            var colors=['\x1b[30mschwarz\x1b[0m','\x1b[31mrot\x1b[0m','\x1b[32mgrün\x1b[0m','\x1b[33mgelb\x1b[0m','\x1b[34mblau\x1b[0m','\x1b[35mmagenta\x1b[0m','\x1b[36mcyan\x1b[0m','\x1b[37mweiß\x1b[0m'];
+            colors.forEach(function(c){w(c);});
+            break;
+          }
+          case 'about':w('MakerOS Terminal v2.0 — 25 Apps, Neo-Brutalist Desktop');break;
+          case 'exit':w('Fenster wird geschlossen...');setTimeout(function(){inp.closest('.wnd').querySelector('.wclose').click();},500);break;
+          default:w('Unbekannt: '+c+' — tippe "help"');
         }
         inp.value='';
       }
       if(e.key==='Tab'){
         e.preventDefault();
         var curVal=inp.value;
-        if(curVal && !curVal.includes(' ')){
-          var matches=Object.keys(fsData).filter(function(p){return p.startsWith(curVal);});
-          if(matches.length===1){inp.value=matches[0]+'\\';}
-          else if(matches.length>1){w('Mehrfach: '+matches.join(', '));}
+        if(curVal){
+          /* Command completion */
+          if(!curVal.includes(' ')){
+            var cmdMatch=commands.filter(function(cmd){return cmd.startsWith(curVal);});
+            if(cmdMatch.length===1)inp.value=cmdMatch[0]+' ';
+            else if(cmdMatch.length>1)w('Befehle: '+cmdMatch.join(', '));
+          } else {
+            /* Path completion */
+            var parts=curVal.split(' ');
+            var last=parts[parts.length-1];
+            var matches=Object.keys(fsData).filter(function(p){return p.startsWith(last);});
+            if(matches.length===1){parts[parts.length-1]=matches[0];inp.value=parts.join(' ');}
+            else if(matches.length>1)w('Pfade: '+matches.join(', '));
+          }
         }
       }
       if(e.key==='ArrowUp'){if(termHistI>0){termHistI--;inp.value=termHist[termHistI];}}
       if(e.key==='ArrowDown'){if(termHistI<termHist.length-1){termHistI++;inp.value=termHist[termHistI];}else{termHistI=termHist.length;inp.value='';}}
     });
   }
+  var TERM_INITIALIZED=false;
 
   /* Explorer — S1: New Folder / New File */
   /* Globale Suche */
