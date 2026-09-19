@@ -3584,9 +3584,24 @@ if(!document.getElementById('skipLink')){
   /* Init */
   window.addEventListener('DOMContentLoaded',function(){
     var desk=document.getElementById('deskIcons');
+    /* Lazy loading: Only init icons visible on screen */
+    var observer=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          entry.target.style.visibility='visible';
+          observer.unobserve(entry.target);
+        }
+      });
+    });
     desktopApps.forEach(function(a){
       a.iconSvg=svgIcon(a.icon);
-      desk.appendChild(makeIcon(a));
+      var icon=makeIcon(a);
+      desk.appendChild(icon);
+      /* Defer heavy apps */
+      if(['music','editor','imgeditor'].indexOf(a.id)!==-1){
+        icon.style.visibility='hidden';
+        observer.observe(icon);
+      }
     });
     var sm=document.getElementById('smList');
     var smSearch=document.getElementById('smSearch');
@@ -4156,8 +4171,88 @@ function buildImgeditor(){
   ctx.textAlign='center';
   ctx.fillText('Bild hierher ziehen oder laden',canvas.width/2,canvas.height/2);
 
-  /* Undo/Redo */
+  /* Undo/Redo + Layers */
   var ieUndoStack=[],ieRedoStack=[];
+  var ieLayers=[];
+  var ieCurrentLayer=0;
+  var ieSelectMode=false;
+  var ieSelectStart=null,ieSelectEnd=null;
+
+  function ieAddLayer(name){
+    var layerCanvas=document.createElement('canvas');
+    layerCanvas.width=canvas.width;
+    layerCanvas.height=canvas.height;
+    ieLayers.push({name:name||'Ebene '+(ieLayers.length+1),canvas:layerCanvas,visible:true});
+    ieCurrentLayer=ieLayers.length-1;
+    ieRenderLayers();
+  }
+
+  function ieRenderLayers(){
+    if(ieLayers.length===0){return;}
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ieLayers.forEach(function(layer){
+      if(layer.visible){
+        ctx.drawImage(layer.canvas,0,0);
+      }
+    });
+  }
+
+  function ieStamp(x,y){
+    /* Clone tool - copy from current layer and paste at offset */
+    if(ieLayers.length===0)return;
+    var src=ieLayers[ieCurrentLayer];
+    if(!src)return;
+    ieSaveState();
+    var stampSize=30;
+    var srcCtx=src.canvas.getContext('2d');
+    var stampData=srcCtx.getImageData(Math.max(0,x-stampSize/2),Math.max(0,y-stampSize/2),stampSize,stampSize);
+    ctx.putImageData(stampData,x-stampSize/2,y-stampSize/2);
+    ieRenderLayers();
+  }
+
+  canvas.addEventListener('mousedown',function(e){
+    if(e.shiftKey&&e.button===0){
+      /* Shift+Click for clone stamp */
+      var rect=canvas.getBoundingClientRect();
+      ieStamp(e.clientX-rect.left,e.clientY-rect.top);
+    }
+  });
+
+  /* Layer panel toggle */
+  var ieLayerBtn=document.createElement('button');
+  ieLayerBtn.className='cBtn';
+  ieLayerBtn.textContent='Ebenen';
+  ieLayerBtn.addEventListener('click',function(){
+    var panel=document.getElementById('ieLayersPanel');
+    if(panel){panel.remove();return;}
+    panel=document.createElement('div');
+    panel.id='ieLayersPanel';
+    panel.className='ieLayersPanel';
+    panel.innerHTML='<div class="iePanelHeader">Ebenen</div><div id="ieLayerList"></div><button class="cBtn" id="ieAddLayer">+ Ebene</button>';
+    canvas.parentNode.insertBefore(panel,canvas.nextSibling);
+    document.getElementById('ieAddLayer').addEventListener('click',function(){
+      ieAddLayer();
+      renderLayerList();
+    });
+    function renderLayerList(){
+      var list=document.getElementById('ieLayerList');
+      if(!list)return;
+      list.innerHTML='';
+      ieLayers.forEach(function(layer,i){
+        var item=document.createElement('div');
+        item.className='ieLayerItem'+(i===ieCurrentLayer?' active':'');
+        item.innerHTML='<input type="checkbox"'+(layer.visible?' checked="checked"':'')+'> '+layer.name;
+        item.querySelector('input').addEventListener('change',function(){
+          layer.visible=this.checked;
+          ieRenderLayers();
+        });
+        item.addEventListener('click',function(){ieCurrentLayer=i;renderLayerList();});
+        list.appendChild(item);
+      });
+    }
+    renderLayerList();
+  });
+  toolbar.appendChild(ieLayerBtn);
   function ieSaveState(){ieUndoStack.push(ctx.getImageData(0,0,canvas.width,canvas.height));if(ieUndoStack.length>30)ieUndoStack.shift();ieRedoStack=[];}
   function ieUndo(){if(ieUndoStack.length>1){ieRedoStack.push(ieUndoStack.pop());ctx.putImageData(ieUndoStack[ieUndoStack.length-1],0,0);toast('Rückgängig');}}
   function ieRedo(){if(ieRedoStack.length>0){var s=ieRedoStack.pop();ieUndoStack.push(s);ctx.putImageData(s,0,0);toast('Wiederhergestellt');}}
@@ -4438,6 +4533,7 @@ function buildPomodoro(){
         isWork=false;
         totalSeconds=(parseInt(breakMinInput.value)||5)*60;
         showNotif('Pomodoro','Zeit für eine Pause! 🍅','🍅');
+        showBreakExercise();
       } else {
         isWork=true;
         totalSeconds=(parseInt(workMinInput.value)||25)*60;
@@ -4447,6 +4543,30 @@ function buildPomodoro(){
       update();
     }
   }
+
+  function showBreakExercise(){
+    var exercises=['Tief ein- und ausatmen (5x)','Dehnen','Umhergehen','Augen entspannen','Wasser trinken'];
+    var ex=exercises[Math.floor(Math.random()*exercises.length)];
+    var exDiv=document.getElementById('poExercise');
+    if(!exDiv){
+      exDiv=document.createElement('div');
+      exDiv.id='poExercise';
+      exDiv.className='poExercise';
+      countEl.parentNode.appendChild(exDiv);
+    }
+    exDiv.textContent='Übung: '+ex;
+    setTimeout(function(){if(exDiv)exDiv.textContent='';},15000);
+  }
+
+  /* Break exercise button */
+  var exBtn=document.createElement('button');
+  exBtn.className='cBtn';
+  exBtn.textContent='Übung';
+  exBtn.title='Pausen-Übung anzeigen';
+  exBtn.addEventListener('click',function(){
+    showBreakExercise();
+  });
+  resetBtn.parentNode.insertBefore(exBtn,resetBtn.nextSibling);
 
   startBtn.addEventListener('click',function(){
     if(running){
@@ -4572,6 +4692,82 @@ function buildNotes(){
   var togglePrevBtn=document.querySelector('#ntTogglePreview');
   var newBtn=document.querySelector('#ntNew');
 
+  /* Encrypt button */
+  var encryptBtn=document.createElement('button');
+  encryptBtn.className='cBtn op';
+  encryptBtn.textContent='🔒';
+  encryptBtn.title='Notizen verschlüsseln';
+  encryptBtn.addEventListener('click',function(){
+    if(notesPassword){
+      if(confirm('Verschlüsselung aufheben?')){
+        notesPassword=null;
+        encryptBtn.textContent='🔒';
+        toast('Verschlüsselung aufgehoben');
+      }
+      return;
+    }
+    var pw=prompt('Passwort für Verschlüsselung:');
+    if(pw&&pw.length>=4){
+      notesPassword=pw;
+      saveNotes();
+      encryptBtn.textContent='🔓';
+      toast('Notizen verschlüsselt');
+    }else if(pw!==null){
+      alert('Passwort muss mind. 4 Zeichen sein.');
+    }
+  });
+  saveBtn.parentNode.appendChild(encryptBtn);
+
+  /* Drag & Drop Sort for note list items */
+  var dragItem=null;
+  listEl.addEventListener('dragstart',function(e){
+    if(e.target.classList.contains('ntItem')){
+      dragItem=e.target;
+      e.target.style.opacity='0.5';
+    }
+  });
+  listEl.addEventListener('dragend',function(e){
+    if(e.target.classList.contains('ntItem')){
+      e.target.style.opacity='1';
+      dragItem=null;
+      /* Reorder notes array based on DOM order */
+      var items=listEl.querySelectorAll('.ntItem');
+      var newOrder=[];
+      items.forEach(function(item){
+        var id=item.dataset.id;
+        if(id){
+          var n=notes.filter(function(x){return x.id===id;})[0];
+          if(n)newOrder.push(n);
+        }
+      });
+      if(newOrder.length===notes.length){
+        notes=newOrder;
+        saveNotes();
+      }
+    }
+  });
+  listEl.addEventListener('dragover',function(e){
+    e.preventDefault();
+    var afterElement=getDragAfterElement(listEl,e.clientY);
+    if(afterElement==null){
+      listEl.appendChild(dragItem);
+    }else{
+      listEl.insertBefore(dragItem,afterElement);
+    }
+  });
+  function getDragAfterElement(container,y){
+    var draggableElements=[].concat.apply([],container.querySelectorAll('.ntItem:not(.dragging)'));
+    return draggableElements.reduce(function(closest,child){
+      var box=child.getBoundingClientRect();
+      var offset=y-box.top-box.height/2;
+      if(offset<0&&offset>closest.offset){
+        return {offset:offset,element:child};
+      }else{
+        return closest;
+      }
+    },{offset:Number.NEGATIVE_INFINITY}).element;
+  }
+
   /* Share button */
   var shareBtn=document.createElement('button');
   shareBtn.className='cBtn op';
@@ -4616,19 +4812,34 @@ function buildNotes(){
   var filterTag='';
   var showPreview=false;
 
+  var notesPassword=null;
   function loadNotes(){
     try{
       notes=JSON.parse(localStorage.getItem(SK_NOTES)||'[]');
     }catch(e){notes=[];}
   }
   function saveNotes(){
-    try{localStorage.setItem(SK_NOTES,JSON.stringify(notes));}catch(e){}
+    try{
+      var data=notes;
+      if(notesPassword){
+        data=notes.map(function(n){
+          return {id:n.id,title:n.title,tags:n.tags,updated:n.updated,content:btoa(unescape(encodeURIComponent(n.content||'')))};
+        });
+      }
+      localStorage.setItem(SK_NOTES,JSON.stringify(data));
+    }catch(e){}
     var indicator=document.getElementById('ntSaved');
     if(indicator){
       indicator.textContent='Gespeichert';
       indicator.style.opacity='1';
       setTimeout(function(){indicator.style.opacity='0';},1000);
     }
+  }
+  function decryptNote(n){
+    if(!notesPassword||!n.content)return n;
+    try{
+      return {id:n.id,title:n.title,tags:n.tags,updated:n.updated,content:decodeURIComponent(escape(atob(n.content)))};
+    }catch(e){return n;}
   }
 
   /* Markdown-ish render */
