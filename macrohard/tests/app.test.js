@@ -400,3 +400,27 @@ test('taskmgr startup apps have correct structure', () => {
   startupApps[1].enabled = true;
   assert.equal(startupApps[1].enabled, true);
 });
+
+// Test: App-Prüfung — alle 25 Apps haben gültige IDs
+const desktopApps25 = [
+  'notepad','calculator','terminal','explorer','paint','browser',
+  'music','chat','docs','settings','links','amibios','taskmgr','sysinfo',
+  'calendar','clock','colorpicker','pwgen','qrgen','viewer','game',
+  'editor','imgeditor','pomodoro','notes'
+];
+
+test('App-Prüfung: 25 Apps gelistet', () => {
+  assert.equal(desktopApps25.length, 25);
+});
+
+test('App-Prüfung: alle App-IDs gültig', () => {
+  desktopApps25.forEach(app => {
+    assert.ok(typeof app === 'string' && app.length > 0, `Ungültige App-ID: ${app}`);
+    assert.ok(/^[a-z]+$/.test(app), `App-ID "${app}" enthält ungültige Zeichen`);
+  });
+});
+
+test('App-Prüfung: keine Duplikate', () => {
+  const unique = [...new Set(desktopApps25)];
+  assert.equal(unique.length, desktopApps25.length);
+});

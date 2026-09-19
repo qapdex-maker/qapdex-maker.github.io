@@ -14,6 +14,9 @@ Session 2026-09-19 · v2.11.40 (2026-09-19). Standalone subpage in `qapdex-maker
 - **DNS**: Einträge auf checkdomain.de entfernt, Domain leitet standardmäßig auf qapdex-maker.github.io
 - **Nächster Schritt**: GitHub Pages Custom Domain korrekt einrichten (CNAME + Settings → Pages → Custom Domain)
 
+## Contact
+- info@qapdex.com
+
 ## Structure
 - `index.html` — OS shell + desktop + boot/lock + i18n inline + CSS-Criticals + app cards grid
 - `assets/site.css` — design tokens, 4 themes, dark mode, components, animations, task view, help overlay, notifications

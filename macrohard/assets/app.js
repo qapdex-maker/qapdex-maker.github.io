@@ -277,7 +277,7 @@
     if(existing){existing.remove();return;}
     var d=document.createElement('div');
     d.id='aboutDialog';
-    d.innerHTML='<div class="aboutOverlay"></div><div class="aboutBox"><div class="aboutHeader">Über MakerOS<button class="aboutClose">×</button></div><div class="aboutBody"><div class="aboutLogo">MD</div><div class="aboutInfo"><h3>MakerOS</h3><p>Windows-Style Desktop OS im Browser</p><p>Version 2.11.23 (2026-09-18)</p><p>26 Apps · Neo-Brutalist · PWA</p><p style="margin-top:8px;font-size:11px;color:var(--muted)">Made by Alexander Kleine<br>qapdex-maker.github.io<br>MIT License</p><p style="margin-top:8px;font-size:10px;color:var(--muted)">Made with Hermes Agent<br>by Nous Research</p></div></div></div>';
+    d.innerHTML='<div class="aboutOverlay"></div><div class="aboutBox"><div class="aboutHeader">Über MakerOS<button class="aboutClose">×</button></div><div class="aboutBody"><div class="aboutLogo">MD</div><div class="aboutInfo"><h3>MakerOS</h3><p>Windows-Style Desktop OS im Browser</p><p>Version 2.11.40 (2026-09-19)</p><p>25 Apps · Neo-Brutalist · PWA</p><p style="margin-top:8px;font-size:11px;color:var(--muted)">Made by Alexander Kleine<br>info@qapdex.com<br>qapdex-maker.github.io<br>MIT License</p><p style="margin-top:8px;font-size:10px;color:var(--muted)">Made with Hermes Agent<br>by Nous Research</p></div></div></div>';
     document.body.appendChild(d);
     d.querySelector('.aboutOverlay').addEventListener('click',function(){d.remove();});
     d.querySelector('.aboutClose').addEventListener('click',function(){d.remove();});
