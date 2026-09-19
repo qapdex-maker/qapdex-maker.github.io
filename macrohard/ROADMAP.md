@@ -17,24 +17,21 @@ Stand: 2026-09-19 · v2.11.40 · 25 Apps · 27 Tests grün
 | Explorer | v2.11.35 | Shared FS mit Terminal, cd, mkdir, rm -r |
 | Sequencer | v2.11.34 | Synthesizer-Fallback, Lookahead-Scheduling, 31 Samples |
 | Editor | v2.11.40 | Undo/Redo, Suchen/Ersetzen, Font-Size, Shortcuts |
-| Notepad | v2.11.40 | Undo/Redo, Zeilennummern, Suchen/Ersetzen, Font-Size, Shortcuts |
-| Calculator | v2.11.40 | Speicher (M+/M-/MR/MC), Konstanten (π, e, φ), Toolbar |
+| Notepad | v2.11.41 | Undo/Redo, Zeilennummern, Suchen/Ersetzen, Font-Size, Shortcuts |
+| Calculator | v2.11.41 | Speicher (M+/M-/MR/MC), Konstanten (π, e, φ), Toolbar |
+| Clock | v2.11.41 | Weltzeit (8 Städte), Timer Min:Sek, Stoppuhr Reset, Ton |
+| PW-Gen | v2.11.41 | Stärke-Anzeige, 10x Generator |
+| QR-Gen | v2.11.41 | Farbe wählbar, Größe wählbar |
+| Viewer | v2.11.41 | Zoom +/-/Fit, Scale-Transform |
+| Game | v2.11.41 | vs CPU Modus (KI zufällig) |
+| Settings | v2.11.41 | Export/Import JSON |
+| Docs | v2.11.41 | Vollständige Toolbar (10 Buttons) |
 
 ### Stabil (nicht refaktoriert, funktionsfähig)
 | App | ID | Features |
 |-----|-----|----------|
-| Notepad | notepad | textarea, Suche, Wortzähler, Export, localStorage |
-| Calculator | calculator | eval, Tastatur, History, SCI-Modus |
-| Paint | paint | 24 Farben, Shapes, Export PNG, Undo/Redo |
-| Docs | docs | contenteditable, Export .md, Preview |
-| Settings | settings | 4 Tabs, Wallpaper-Galerie, Theme-Engine |
 | Links | links | CRUD, Kategorien, JSON Import/Export |
-| Clock | clock | Digital, Timer, Stoppuhr, Wecker |
 | Colorpicker | colorpicker | Color Picker + Hex |
-| Passwort-Generator | pwgen | 6-32 Zeichen, Kopieren |
-| QR-Generator | qrgen | Canvas QR-Code |
-| Bildbetrachter | viewer | Drag & Drop, Canvas |
-| Tic-Tac-Toe | game | Komplettes Spiel |
 | AMIBIOS | amibios | Boot-Sequenz, 7 Tabs, CRT-Style |
 
 ### Neu (2026-09-18, ungetestet)
