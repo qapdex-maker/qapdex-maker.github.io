@@ -688,7 +688,7 @@
     var title=t(id) + (allowMulti && instCounter[id] > 1 ? ' #' + instCounter[id] : '');
     var body='';
     switch(id){
-      case 'notepad': body='<textarea class="npArea" id="npArea" placeholder="Notepad — tippe hier..."></textarea><div class="npStats" id="npStats">0 Zeichen</div>';break;
+      case 'notepad': body='<div class="npLayout"><div class="npToolbar"><span class="npBrand">Notepad</span><select id="npFont" class="npSelect"><option value="12">12px</option><option value="14" selected>14px</option><option value="16">16px</option><option value="18">18px</option><option value="20">20px</option></select><button id="npFindBtn" class="cBtn op">Suchen</button><button id="npUndoBtn" class="cBtn op">↶</button><button id="npRedoBtn" class="cBtn op">↷</button><button id="npSaveBtn" class="cBtn op">💾</button><button id="npExportBtn" class="cBtn op">Export</button></div><div class="npContainer"><div class="npLines" id="npLines"></div><textarea class="npArea" id="npArea" placeholder="Tippe hier..." spellcheck="false"></textarea></div><div class="npStatus" id="npStatus">Bereit</div></div><div class="npSearchOverlay" id="npSearchOverlay"><input id="npSearchInput" placeholder="Suchen..."><button id="npSearchNext" class="cBtn op">Weiter</button><button id="npSearchPrev" class="cBtn op">Zurück</button><button id="npReplaceBtn" class="cBtn op">Ersetzen</button><input id="npReplaceInput" placeholder="Ersetzen durch..."><button id="npSearchClose" class="cBtn op">✕</button></div>';break;
       case 'calculator': body='<div class="calHead"><input class="cExpr" id="cExpr" readonly value="0"><span class="cCur" id="cCur">0</span></div><div class="calcHist" id="calcHist"></div><div class="calGrid" id="calGrid"></div>';break;
       case 'terminal': body='<div class="termOut" id="termOut"></div><div class="termIn"><span class="prompt">user@macrohard:~$</span><input id="termIn" autofocus></div>';break;
       case 'explorer': body='<div class="fePath"><span>📁</span><input id="fePath" value="C:\Users\macrohard\Desktop"></div><div class="feSide" id="feSide"></div><div class="feGrid" id="feGrid"></div>';break;
@@ -887,65 +887,192 @@
 
   /* Notepad — S3: Font + Export */
   function setupNotepad(){
-    var a=document.getElementById('npArea');
-    var s=document.getElementById('npStats');
-    if(!a) return;
+    var area=document.getElementById('npArea');
+    var lines=document.getElementById('npLines');
+    var status=document.getElementById('npStatus');
+    var fontSel=document.getElementById('npFont');
+    if(!area||!lines) return;
+
     var NS='np_save';
-    try{var sv=localStorage.getItem(NS);if(sv)a.value=sv;}catch(e){}
-    var saveTimer=null;
-    a.addEventListener('input',function(){
-      clearTimeout(saveTimer);
-      saveTimer=setTimeout(function(){try{localStorage.setItem(NS,a.value);}catch(e){}},300);
-      var wc=a.value.trim().split(/\s+/).filter(Boolean).length;
-      s.textContent=a.value.length+' Zeichen · '+wc+' Wörter';
-    });
-    /* Ctrl+F search overlay */
-    a.addEventListener('keydown',function(e){
-      if((e.ctrlKey||e.metaKey)&&e.key==='f'){
+    var undoStack=[];
+    var redoStack=[];
+    var lastContent='';
+
+    try{var sv=localStorage.getItem(NS);if(sv)area.value=sv;}catch(e){}
+    try{var fs=localStorage.getItem('np_fs');if(fs&&fontSel)fontSel.value=fs;}catch(e){}
+
+    lastContent=area.value;
+    undoStack.push(lastContent);
+
+    function updateLines(){
+      var content=area.value;
+      var lineCount=content.split('\n').length;
+      var html='';
+      for(var i=1;i<=lineCount;i++) html+='<div class="npLine">'+i+'</div>';
+      lines.innerHTML=html;
+      var words=content.trim().split(/\s+/).filter(Boolean).length;
+      status.textContent=lineCount+' Zeilen · '+words+' Wörter · '+content.length+' Zeichen';
+      try{localStorage.setItem(NS,content);}catch(e){}
+    }
+
+    function saveUndo(){
+      var content=area.value;
+      if(content!==lastContent){
+        undoStack.push(content);
+        if(undoStack.length>50) undoStack.shift();
+        redoStack=[];
+        lastContent=content;
+      }
+    }
+
+    area.addEventListener('input',function(){saveUndo();updateLines();});
+    area.addEventListener('scroll',function(){lines.scrollTop=area.scrollTop;});
+
+    area.addEventListener('keydown',function(e){
+      if(e.key==='Tab'){
         e.preventDefault();
-        var ov=document.getElementById('npSearch');
-        if(ov){ov.style.display=ov.style.display==='none'?'flex':'none';return;}
-        var overlay=document.createElement('div');
-        overlay.id='npSearch';overlay.className='npSearch';
-        overlay.innerHTML='<input id="npSQ" placeholder="Suchen… (Enter=weiter, Esc=schliessen)"><button id="npSC" class="cBtn op">✕</button>';
-        a.parentNode.insertBefore(overlay,a.nextSibling);
-        var qi=document.getElementById('npSQ');qi.focus();
-        qi.addEventListener('keydown',function(ev){
-          if(ev.key==='Escape'){overlay.style.display='none';return;}
-          if(ev.key==='Enter'){
-            var q=qi.value;if(!q)return;
-            var txt=a.value;var idx=txt.indexOf(q);
-            if(idx===-1){qi.style.background='#ffcccc';return;}
-            a.focus();a.setSelectionRange(idx,idx+q.length);
-            qi.style.background='var(--paper)';
-          }
-        });
-        document.getElementById('npSC').addEventListener('click',function(){overlay.remove();});
+        var start=area.selectionStart,end=area.selectionEnd;
+        area.value=area.value.substring(0,start)+'  '+area.value.substring(end);
+        area.selectionStart=area.selectionEnd=start+2;
+        updateLines();
+      }
+      if((e.ctrlKey||e.metaKey)&&e.key==='z'&&!e.shiftKey){
+        e.preventDefault();
+        if(undoStack.length>1){
+          redoStack.push(undoStack.pop());
+          area.value=undoStack[undoStack.length-1];
+          lastContent=area.value;
+          updateLines();
+          toast('Rückgängig');
+        }
+      }
+      if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.key==='z'&&e.shiftKey))){
+        e.preventDefault();
+        if(redoStack.length>0){
+          var next=redoStack.pop();
+          undoStack.push(next);
+          area.value=next;
+          lastContent=area.value;
+          updateLines();
+          toast('Wiederhergestellt');
+        }
+      }
+      if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();area.blur();toast('Gespeichert');}
+      if((e.ctrlKey||e.metaKey)&&e.key==='f'){e.preventDefault();document.getElementById('npFindBtn').click();}
+    });
+
+    if(fontSel) fontSel.addEventListener('change',function(){
+      area.style.fontSize=this.value+'px';
+      lines.style.fontSize=this.value+'px';
+      try{localStorage.setItem('np_fs',this.value);}catch(e){}
+    });
+
+    var undoBtn=document.getElementById('npUndoBtn');
+    if(undoBtn) undoBtn.addEventListener('click',function(){
+      if(undoStack.length>1){
+        redoStack.push(undoStack.pop());
+        area.value=undoStack[undoStack.length-1];
+        lastContent=area.value;
+        updateLines();
       }
     });
-    document.addEventListener('click',function(e){
-      var ov=document.getElementById('npSearch');
-      if(ov&&!ov.contains(e.target)&&e.target!==a)ov.style.display='none';
+
+    var redoBtn=document.getElementById('npRedoBtn');
+    if(redoBtn) redoBtn.addEventListener('click',function(){
+      if(redoStack.length>0){
+        var next=redoStack.pop();
+        undoStack.push(next);
+        area.value=next;
+        lastContent=area.value;
+        updateLines();
+      }
     });
-    var tb=document.createElement('div');tb.style.cssText='padding:4px 8px;display:flex;gap:4px;border-bottom:2px solid var(--line);background:var(--paper);align-items:center';
-    tb.innerHTML='<span style="font-size:10px;font-family:IBM Plex Mono">Size:</span><select id="npFS" style="font-family:IBM Plex Mono;font-size:10px;padding:2px"><option value="11">Klein</option><option value="13">Normal</option><option value="16">Groß</option></select><button id="npExp" class="cBtn" style="margin-left:auto">Export .txt</button>';
-    a.parentNode.insertBefore(tb,a);
-    document.getElementById('npFS').addEventListener('change',function(){var v=this.value;a.style.fontSize=v+'px';try{localStorage.setItem('np_fs',v);}catch(e){}});
-    document.getElementById('npExp').addEventListener('click',function(){var txt=a.value;var blob=new Blob([txt],{type:'text/plain'});var lnk=document.createElement('a');lnk.href=URL.createObjectURL(blob);lnk.download='notepad.txt';lnk.click();URL.revokeObjectURL(lnk.href);toast('.txt exportiert');});
+
+    var saveBtn=document.getElementById('npSaveBtn');
+    if(saveBtn) saveBtn.addEventListener('click',function(){
+      try{localStorage.setItem(NS,area.value);toast('Gespeichert');}catch(e){}
+    });
+
+    var exportBtn=document.getElementById('npExportBtn');
+    if(exportBtn) exportBtn.addEventListener('click',function(){
+      var blob=new Blob([area.value],{type:'text/plain'});
+      var a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='notepad.txt';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast('.txt exportiert');
+    });
+
+    var findBtn=document.getElementById('npFindBtn');
+    var overlay=document.getElementById('npSearchOverlay');
+    if(findBtn&&overlay) findBtn.addEventListener('click',function(){
+      overlay.style.display='flex';
+      var inp=document.getElementById('npSearchInput');
+      if(inp) inp.focus();
+    });
+
+    var searchClose=document.getElementById('npSearchClose');
+    if(searchClose) searchClose.addEventListener('click',function(){
+      overlay.style.display='none';
+    });
+
+    var searchInput=document.getElementById('npSearchInput');
+    function doSearch(){
+      var q=searchInput.value;if(!q)return;
+      var idx=area.value.indexOf(q);
+      if(idx>=0){area.focus();area.setSelectionRange(idx,idx+q.length);lines.scrollTop=area.scrollTop;}
+      else toast('Nicht gefunden');
+    }
+    if(searchInput) searchInput.addEventListener('keydown',function(e){
+      if(e.key==='Enter'){e.preventDefault();doSearch();}
+      if(e.key==='Escape'){overlay.style.display='none';}
+    });
+
+    var searchNext=document.getElementById('npSearchNext');
+    if(searchNext) searchNext.addEventListener('click',doSearch);
+
+    var searchPrev=document.getElementById('npSearchPrev');
+    if(searchPrev) searchPrev.addEventListener('click',function(){
+      var q=searchInput.value;if(!q)return;
+      var idx=area.value.lastIndexOf(q);
+      if(idx>=0){area.focus();area.setSelectionRange(idx,idx+q.length);}
+    });
+
+    var replaceBtn=document.getElementById('npReplaceBtn');
+    if(replaceBtn) replaceBtn.addEventListener('click',function(){
+      var search=searchInput.value;if(!search)return;
+      var replace=document.getElementById('npReplaceInput').value;
+      if(replace===null)return;
+      var count=(area.value.match(new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'))||[]).length;
+      if(count>0){
+        area.value=area.value.split(search).join(replace);
+        saveUndo();updateLines();
+        toast(count+' ersetzt');
+      }
+    });
+
+    updateLines();
   }
 
-  /* Calculator — S3: Scientific + History limit 12 */
-  var calcHist=[];var sciMode=false;
+  /* Calculator — S4: Memory + Constants */
+  var calcHist=[];var sciMode=false;var calcMemory=0;
   function buildCalc(){
     var grid=document.getElementById('calGrid');if(!grid) return;
-    var sci=['sin','cos','tan','sqrt','pow','log','abs','π','e','(',')'];
-    var tb=document.createElement('div');tb.style.cssText='padding:4px 6px;display:flex;gap:2px;flex-wrap:wrap;border-bottom:2px solid var(--line)';
+    var sci=['sin','cos','tan','sqrt','pow','log','abs','π','e','φ','(',')'];
+    var tb=document.createElement('div');tb.className='calcToolbar';
     var sciBtn=document.createElement('button');sciBtn.textContent='SCI';sciBtn.className='cBtn op';sciBtn.style.fontSize='10px';sciBtn.addEventListener('click',function(){sciMode=!sciMode;buildCalc();});
     tb.appendChild(sciBtn);
+    /* Memory buttons */
+    var memBtn=document.createElement('button');memBtn.textContent='M+';memBtn.className='cBtn op';memBtn.style.fontSize='10px';memBtn.addEventListener('click',function(){calcMemory+=parseFloat(document.getElementById('cExpr').value)||0;toast('Speicher: '+calcMemory);});
+    var mrBtn=document.createElement('button');mrBtn.textContent='MR';mrBtn.className='cBtn op';mrBtn.style.fontSize='10px';mrBtn.addEventListener('click',function(){var ex=document.getElementById('cExpr');if(ex){ex.value+=calcMemory;}});
+    var mcBtn=document.createElement('button');mcBtn.textContent='MC';mcBtn.className='cBtn op';mcBtn.style.fontSize='10px';mcBtn.addEventListener('click',function(){calcMemory=0;toast('Speicher gelöscht');});
+    var msBtn=document.createElement('button');msBtn.textContent='MS';msBtn.className='cBtn op';msBtn.style.fontSize='10px';msBtn.addEventListener('click',function(){calcMemory=parseFloat(document.getElementById('cExpr').value)||0;toast('Gespeichert: '+calcMemory);});
+    tb.appendChild(memBtn);tb.appendChild(mrBtn);tb.appendChild(mcBtn);tb.appendChild(msBtn);
     if(sciMode){sci.forEach(function(b){var btn=document.createElement('button');btn.textContent=b;btn.className='cBtn';btn.addEventListener('click',function(){calcPress(b);});tb.appendChild(btn);});}
     grid.parentNode.insertBefore(tb,grid);
     var btns=sciMode?['C','±','%','÷','(',')','7','8','9','×','4','5','6','−','1','2','3','+','0','.','=']:['C','±','%','÷','(',')','7','8','9','×','4','5','6','−','1','2','3','+','0','.','='];
-    var opClasses={'\u00f7':'op','\u00d7':'op','\u2212':'op','+':'op','=':'eq','C':'op','\u00b1':'op','%':'op'};
+    var opClasses={'\\u00f7':'op','\\u00d7':'op','\\u2212':'op','+':'op','=':'eq','C':'op','\\u00b1':'op','%':'op'};
     grid.innerHTML='';btns.forEach(function(b){var cls='cBtn'+(opClasses[b]?' '+opClasses[b]:'');var btn=document.createElement('button');btn.className=cls;btn.textContent=b;btn.addEventListener('click',function(){calcPress(b);});grid.appendChild(btn);});
     var wnd=document.getElementById('w-calculator');if(!wnd) return;
     wnd.addEventListener('keydown',function(e){
@@ -959,7 +1086,7 @@
   }
   function calcPress(b){
     var expr=document.getElementById('cExpr');if(!expr) return;
-    var map={'sin':'Math.sin','cos':'Math.cos','tan':'Math.tan','sqrt':'Math.sqrt','pow':'Math.pow','log':'Math.log','abs':'Math.abs','π':'Math.PI','e':'Math.E'};
+    var map={'sin':'Math.sin','cos':'Math.cos','tan':'Math.tan','sqrt':'Math.sqrt','pow':'Math.pow','log':'Math.log','abs':'Math.abs','π':'Math.PI','e':'Math.E','φ':'(1+Math.sqrt(5))/2'};
     if(map[b]){expr.value+=map[b]+'(';}
     else if(b==='C'){expr.value='0';document.getElementById('cCur').textContent='0';document.getElementById('calcHist').textContent='';}
     else if(b==='±'){expr.value=(parseFloat(expr.value||'0')*-1).toString();}

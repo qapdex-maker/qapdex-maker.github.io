@@ -17,6 +17,8 @@ Stand: 2026-09-19 · v2.11.40 · 25 Apps · 27 Tests grün
 | Explorer | v2.11.35 | Shared FS mit Terminal, cd, mkdir, rm -r |
 | Sequencer | v2.11.34 | Synthesizer-Fallback, Lookahead-Scheduling, 31 Samples |
 | Editor | v2.11.40 | Undo/Redo, Suchen/Ersetzen, Font-Size, Shortcuts |
+| Notepad | v2.11.40 | Undo/Redo, Zeilennummern, Suchen/Ersetzen, Font-Size, Shortcuts |
+| Calculator | v2.11.40 | Speicher (M+/M-/MR/MC), Konstanten (π, e, φ), Toolbar |
 
 ### Stabil (nicht refaktoriert, funktionsfähig)
 | App | ID | Features |
