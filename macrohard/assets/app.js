@@ -456,6 +456,17 @@
 
   /* Start menu — mit Fix für z-index und Click-Blockade durch Boot/Lock */
   document.addEventListener('DOMContentLoaded',function(){
+
+/* Add skip link for accessibility */
+if(!document.getElementById('skipLink')){
+  var skip=document.createElement('a');
+  skip.id='skipLink';
+  skip.href='#desktop';
+  skip.className='skip-link';
+  skip.textContent='Zum Hauptinhalt springen';
+  document.body.insertBefore(skip, document.body.firstChild);
+}
+
     var tbStart=document.getElementById('tbStart');
     var startMenu=document.getElementById('startMenu');
     if(tbStart&&startMenu){
@@ -3156,6 +3167,7 @@
     var stDarkEl=document.getElementById('stDark');
     if(stDarkEl) stDarkEl.addEventListener('change',function(){
       document.documentElement.dataset.theme=this.checked?'dark':'';
+    document.documentElement.lang=currentLang;
       try{localStorage.setItem('os_dark',this.checked?'1':'0');}catch(e){}
       updateThemeToggleBtn();
     });
@@ -3165,7 +3177,11 @@
       storeSet('os_scan',this.checked?'1':'0');
     });
     var stLangEl=document.getElementById('stLang');
-    if(stLangEl) stLangEl.addEventListener('change',function(){lang=this.value;refreshUI();});
+    if(stLangEl){
+      stLangEl.innerHTML='<option value="de">Deutsch</option><option value="en">English</option><option value="fr">Français</option>';
+      stLangEl.value=currentLang;
+      stLangEl.addEventListener('change',function(){setLang(this.value);});
+    }
     var regBtn=document.getElementById('stRegisterSW');
     if(regBtn){
       regBtn.addEventListener('click',function(){

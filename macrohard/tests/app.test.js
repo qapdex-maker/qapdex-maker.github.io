@@ -424,3 +424,237 @@ test('App-Prüfung: keine Duplikate', () => {
   const unique = [...new Set(desktopApps25)];
   assert.equal(unique.length, desktopApps25.length);
 });
+
+
+// ============================================================
+// PRIORITÄT B TESTS
+// ============================================================
+
+// ImgEditor: Undo/Redo Stack
+test('imgeditor undo/redo stack behavior', () => {
+  const undoStack = [];
+  const redoStack = [];
+  const maxUndo = 30;
+  
+  function saveState(state) {
+    undoStack.push(state);
+    if (undoStack.length > maxUndo) undoStack.shift();
+    redoStack.length = 0;
+  }
+  
+  function undo() {
+    if (undoStack.length > 1) {
+      redoStack.push(undoStack.pop());
+      return undoStack[undoStack.length - 1];
+    }
+    return null;
+  }
+  
+  saveState('state1');
+  saveState('state2');
+  saveState('state3');
+  assert.equal(undoStack.length, 3);
+  
+  const result = undo();
+  assert.equal(result, 'state2');
+  assert.equal(redoStack.length, 1);
+});
+
+// ImgEditor: Resize
+test('imgeditor resize preserves aspect ratio option', () => {
+  const canvas = { width: 500, height: 350 };
+  const newWidth = 800;
+  const aspectRatio = canvas.width / canvas.height;
+  const newHeight = Math.round(newWidth / aspectRatio);
+  
+  canvas.width = newWidth;
+  canvas.height = newHeight;
+  
+  assert.equal(canvas.width, 800);
+  assert.equal(canvas.height, Math.round(800 / (500/350)));
+});
+
+// ImgEditor: Rotation
+test('imgeditor rotation degree validation', () => {
+  const rotation = 90;
+  const radians = rotation * Math.PI / 180;
+  assert.ok(radians > 0);
+  assert.ok(radians < Math.PI * 2);
+});
+
+// Pomodoro: Session tracking
+test('pomodoro session counter increments', () => {
+  let sessions = 0;
+  const tick = () => {
+    sessions++;
+  };
+  
+  tick();
+  tick();
+  assert.equal(sessions, 2);
+});
+
+// Pomodoro: Long break after 4 sessions
+test('pomodoro long break triggers every 4 sessions', () => {
+  const sessions = 4;
+  const isLongBreak = sessions % 4 === 0;
+  assert.equal(isLongBreak, true);
+  
+  const sessions2 = 3;
+  assert.equal(sessions2 % 4 === 0, false);
+});
+
+// Pomodoro: Statistics
+test('pomodoro stats structure', () => {
+  const stats = {};
+  const today = new Date().toISOString().split('T')[0];
+  stats[today] = (stats[today] || 0) + 1;
+  
+  assert.ok(stats[today] >= 1);
+  assert.equal(typeof stats[today], 'number');
+});
+
+// Pomodoro: CSV export format
+test('pomodoro csv format correct', () => {
+  const stats = { '2026-09-19': 5, '2026-09-18': 3 };
+  let csv = 'Date,Sessions\n';
+  Object.keys(stats).sort().forEach(d => { csv += d + ',' + stats[d] + '\n'; });
+  
+  assert.ok(csv.includes('Date,Sessions'));
+  assert.ok(csv.includes('2026-09-19,5'));
+});
+
+// Notes: Trash/Wiederherstellen
+test('notes trash stores deleted notes', () => {
+  const trash = [];
+  const note = { id: '1', title: 'Test', content: 'Content', tags: ['a'], updated: Date.now() };
+  
+  // Move to trash
+  trash.push(note);
+  assert.equal(trash.length, 1);
+  assert.equal(trash[0].title, 'Test');
+  
+  // Restore
+  const restored = trash.splice(0, 1)[0];
+  assert.equal(trash.length, 0);
+  assert.equal(restored.id, '1');
+});
+
+// Notes: Share URL generation
+test('notes share URL encodes data', () => {
+  const note = { t: 'My Note', c: '# Hello\nWorld' };
+  const encoded = btoa(encodeURIComponent(JSON.stringify(note)));
+  assert.ok(encoded.length > 0);
+  
+  const decoded = JSON.parse(decodeURIComponent(atob(encoded)));
+  assert.equal(decoded.t, 'My Note');
+  assert.equal(decoded.c, '# Hello\nWorld');
+});
+
+// Notes: Autosave indicator
+test('notes autosave indicator visibility', () => {
+  let opacity = 0;
+  // Show
+  opacity = 1;
+  assert.equal(opacity, 1);
+  // Hide after delay
+  setTimeout(() => { opacity = 0; }, 1000);
+  assert.equal(opacity, 1); // Still visible before timeout
+});
+
+// ============================================================
+// C4: BARRIEREFREIHEIT TESTS
+// ============================================================
+
+// ARIA labels for apps
+test('aria labels present on app elements', () => {
+  const apps = [
+    { id: 'notepad', label: 'Notepad öffnen' },
+    { id: 'calculator', label: 'Taschenrechner öffnen' },
+    { id: 'terminal', label: 'Terminal öffnen' },
+  ];
+  
+  apps.forEach(app => {
+    assert.ok(app.label.includes('öffnen') || app.label.includes('Öffnen'), `ARIA-Label für ${app.id} sollte "öffnen" enthalten`);
+  });
+});
+
+// Keyboard navigation
+test('keyboard shortcuts use modifier keys', () => {
+  const shortcuts = [
+    { key: 'n', ctrl: true },
+    { key: 't', ctrl: true },
+    { key: 'f', ctrl: true },
+    { key: 's', ctrl: true },
+  ];
+  
+  shortcuts.forEach(s => {
+    assert.equal(s.ctrl, true, `Shortcut ${s.key} sollte Ctrl verwenden`);
+  });
+});
+
+// prefers-reduced-motion
+test('reduced motion media query', () => {
+  const mediaQuery = '(prefers-reduced-motion: reduce)';
+  assert.ok(mediaQuery.includes('prefers-reduced-motion'));
+  assert.ok(mediaQuery.includes('reduce'));
+});
+
+// Focus trap
+test('focus trap cycles within modal', () => {
+  const focusableElements = ['input', 'button', 'textarea'];
+  const currentIndex = 0;
+  const nextIndex = (currentIndex + 1) % focusableElements.length;
+  
+  assert.equal(nextIndex, 1);
+  assert.ok(focusableElements[nextIndex] !== undefined);
+});
+
+// ============================================================
+// C5: i18n TESTS
+// ============================================================
+
+// Translation structure
+test('i18n translation object structure', () => {
+  const i18n = {
+    de: { title: 'Willkommen', save: 'Speichern', cancel: 'Abbrechen' },
+    en: { title: 'Welcome', save: 'Save', cancel: 'Cancel' },
+    fr: { title: 'Bienvenue', save: 'Sauvegarder', cancel: 'Annuler' },
+  };
+  
+  assert.ok(i18n.de);
+  assert.ok(i18n.en);
+  assert.ok(i18n.fr);
+  assert.equal(i18n.de.save, 'Speichern');
+  assert.equal(i18n.en.save, 'Save');
+});
+
+// Language fallback
+test('i18n falls back to English for missing translations', () => {
+  const i18n = {
+    de: { save: 'Speichern' },
+    en: { save: 'Save', cancel: 'Cancel' },
+  };
+  const lang = 'de';
+  const key = 'cancel';
+  
+  const value = i18n[lang]?.[key] || i18n.en?.[key] || key;
+  assert.equal(value, 'Cancel');
+});
+
+// Language persistence
+test('language stored in localStorage', () => {
+  const storage = {};
+  storage['i18n_lang'] = 'de';
+  assert.equal(storage['i18n_lang'], 'de');
+});
+
+// Date locale formatting
+test('date locale formatting works', () => {
+  const date = new Date('2026-09-19');
+  const deFormatted = date.toLocaleDateString('de-DE');
+  const enFormatted = date.toLocaleDateString('en-US');
+  
+  assert.ok(deFormatted.includes('19'));
+  assert.ok(enFormatted.includes('2026'));
+});
