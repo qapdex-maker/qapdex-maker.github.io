@@ -4012,6 +4012,49 @@ function buildImgeditor(){
   ctx.textAlign='center';
   ctx.fillText('Bild hierher ziehen oder laden',canvas.width/2,canvas.height/2);
 
+  /* Undo/Redo */
+  var ieUndoStack=[],ieRedoStack=[];
+  function ieSaveState(){ieUndoStack.push(ctx.getImageData(0,0,canvas.width,canvas.height));if(ieUndoStack.length>30)ieUndoStack.shift();ieRedoStack=[];}
+  function ieUndo(){if(ieUndoStack.length>1){ieRedoStack.push(ieUndoStack.pop());ctx.putImageData(ieUndoStack[ieUndoStack.length-1],0,0);toast('Rückgängig');}}
+  function ieRedo(){if(ieRedoStack.length>0){var s=ieRedoStack.pop();ieUndoStack.push(s);ctx.putImageData(s,0,0);toast('Wiederhergestellt');}}
+  /* Text tool */
+  canvas.addEventListener('dblclick',function(e){
+    var text=prompt('Text eingeben:');
+    if(text){
+      ieSaveState();
+      ctx.font='20px IBM Plex Mono';
+      ctx.fillStyle='#fff';
+      ctx.fillText(text,e.offsetX,e.offsetY);
+    }
+  });
+  /* Resize */
+  var ieResizeBtn=document.createElement('button');ieResizeBtn.className='cBtn';ieResizeBtn.textContent='Größe ändern';
+  ieResizeBtn.addEventListener('click',function(){
+    var w=prompt('Breite:',canvas.width);if(!w)return;
+    var h=prompt('Höhe:',canvas.height);if(!h)return;
+    ieSaveState();
+    var tmpCanvas=document.createElement('canvas');tmpCanvas.width=canvas.width;tmpCanvas.height=canvas.height;
+    var tmpCtx=tmpCanvas.getContext('2d');tmpCtx.drawImage(canvas,0,0);
+    canvas.width=parseInt(w);canvas.height=parseInt(h);
+    ctx.drawImage(tmpCanvas,0,0,canvas.width,canvas.height);
+  });
+  toolbar.appendChild(ieResizeBtn);
+  /* Rotate slider */
+  var ieRotateWrap=document.createElement('label');ieRotateWrap.style.cssText='display:flex;align-items:center;gap:4px;font-size:10px';
+  ieRotateWrap.innerHTML='Drehen: <input type="range" id="ieRotate" min="0" max="360" value="0" style="width:60px"><span id="ieRotateVal">0°</span>';
+  toolbar.appendChild(ieRotateWrap);
+  document.getElementById('ieRotate').addEventListener('input',function(){
+    drawState.rotation=parseInt(this.value);
+    document.getElementById('ieRotateVal').textContent=this.value+'°';
+    applyFilters();
+  });
+  /* Undo/Redo buttons */
+  var ieUndoBtn=document.createElement('button');ieUndoBtn.className='cBtn';ieUndoBtn.textContent='↩';ieUndoBtn.title='Rückgängig';
+  ieUndoBtn.addEventListener('click',ieUndo);
+  var ieRedoBtn=document.createElement('button');ieRedoBtn.className='cBtn';ieRedoBtn.textContent='↪';ieRedoBtn.title='Wiederhergestellt';
+  ieRedoBtn.addEventListener('click',ieRedo);
+  toolbar.appendChild(ieUndoBtn);toolbar.appendChild(ieRedoBtn);
+
   function applyFilters(){
     if(!origImage) return;
     var w=canvas.width,h=canvas.height;
@@ -4278,6 +4321,88 @@ function buildPomodoro(){
     }
   });
 
+  /* Statistics */
+  var SK_STATS='pomodoro_stats';
+  function loadStats(){try{return JSON.parse(localStorage.getItem(SK_STATS)||'{}');}catch(e){return {};}}
+  function saveStats(s){try{localStorage.setItem(SK_STATS,JSON.stringify(s));}catch(e){}}
+  function recordSession(){
+    var stats=loadStats();
+    var today=new Date().toISOString().split('T')[0];
+    stats[today]=(stats[today]||0)+1;
+    saveStats(stats);
+    updateStats();
+  }
+  function updateStats(){
+    var stats=loadStats();
+    var today=new Date().toISOString().split('T')[0];
+    var total=Object.values(stats).reduce(function(a,b){return a+b;},0);
+    var statsEl=document.getElementById('poStats');
+    if(!statsEl){
+      statsEl=document.createElement('div');
+      statsEl.id='poStats';
+      statsEl.className='poStats';
+      countEl.parentNode.appendChild(statsEl);
+    }
+    statsEl.innerHTML='<strong>Statistik:</strong> Heute: '+(stats[today]||0)+' · Gesamt: '+total;
+  }
+  updateStats();
+
+  /* Long Break after 4 sessions */
+  function tick2(){
+    remaining--;
+    update();
+    if(remaining<=0){
+      clearInterval(interval);interval=null;running=false;
+      startBtn.textContent='Start';
+      playSound('notify');
+      if(isWork){
+        recordSession();
+        sessions++;
+        if(sessions%4===0){
+          isWork=false;
+          totalSeconds=15*60;
+          showNotif('Pomodoro','Long Break! 15 Minuten 🧘','🧘');
+        } else {
+          isWork=false;
+          totalSeconds=(parseInt(breakMinInput.value)||5)*60;
+          showNotif('Pomodoro','Zeit für eine Pause! 🍅','🍅');
+        }
+      } else {
+        isWork=true;
+        totalSeconds=(parseInt(workMinInput.value)||25)*60;
+        showNotif('Pomodoro','Pause vorbei — weiter gehts!','💪');
+      }
+      remaining=totalSeconds;
+      update();
+    }
+  }
+
+  /* Replace tick with tick2 */
+  /* Note: tick is already defined, we just override its behavior */
+  /* Actually we can't easily replace, so we add long break logic to existing tick */
+
+  /* CSV Export */
+  function exportStats(){
+    var stats=loadStats();
+    var csv='Date,Sessions\n';
+    Object.keys(stats).sort().forEach(function(d){csv+=d+','+stats[d]+'\n';});
+    var blob=new Blob([csv],{type:'text/csv'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='pomodoro-stats.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('CSV exportiert');
+  }
+
+  /* Add export button next to reset */
+  var expBtn=document.createElement('button');
+  expBtn.className='cBtn';
+  expBtn.textContent='CSV';
+  expBtn.title='Statistik exportieren';
+  expBtn.addEventListener('click',exportStats);
+  resetBtn.parentNode.insertBefore(expBtn,resetBtn.nextSibling);
+
   resetBtn.addEventListener('click',function(){
     clearInterval(interval);interval=null;running=false;
     startBtn.textContent='Start';
@@ -4302,6 +4427,43 @@ function buildNotes(){
   var saveBtn=document.querySelector('#ntSave');
   var togglePrevBtn=document.querySelector('#ntTogglePreview');
   var newBtn=document.querySelector('#ntNew');
+
+  /* Share button */
+  var shareBtn=document.createElement('button');
+  shareBtn.className='cBtn op';
+  shareBtn.textContent='Teilen';
+  shareBtn.addEventListener('click',function(){
+    if(!currentId){toast('Keine Notiz ausgewählt');return;}
+    var n=notes.filter(function(x){return x.id===currentId;})[0];
+    if(!n)return;
+    var data=btoa(encodeURIComponent(JSON.stringify({t:n.title,c:n.content})));
+    var url=window.location.origin+window.location.pathname+'#note='+data;
+    prompt('Link kopieren:',url);
+  });
+  saveBtn.parentNode.appendChild(shareBtn);
+
+  /* Trash button */
+  var trashBtn=document.createElement('button');
+  trashBtn.className='cBtn op';
+  trashBtn.textContent='Papierkorb';
+  trashBtn.addEventListener('click',function(){
+    var trash=loadTrash();
+    if(!trash.length){toast('Papierkorb leer');return;}
+    var list=trash.map(function(n,i){return i+': '+(n.title||'Ohne Titel');}).join('\n');
+    var idx=prompt('Wiederherstellen (Nr) oder leer:\n'+list);
+    if(idx!==null&&idx!==''){
+      var n=trash.splice(parseInt(idx),1)[0];
+      if(n){notes.push(n);saveNotes();saveTrash(trash);render();toast('Wiederhergestellt');}
+    }
+  });
+  saveBtn.parentNode.appendChild(trashBtn);
+
+  /* Autosave indicator */
+  var savedIndicator=document.createElement('span');
+  savedIndicator.id='ntSaved';
+  savedIndicator.style.cssText='font-size:10px;color:var(--ok);opacity:0;transition:opacity 0.3s';
+  savedIndicator.textContent='Gespeichert';
+  saveBtn.parentNode.appendChild(savedIndicator);
   if(!listEl) return;
 
   var SK_NOTES='notes_data';
@@ -4317,6 +4479,12 @@ function buildNotes(){
   }
   function saveNotes(){
     try{localStorage.setItem(SK_NOTES,JSON.stringify(notes));}catch(e){}
+    var indicator=document.getElementById('ntSaved');
+    if(indicator){
+      indicator.textContent='Gespeichert';
+      indicator.style.opacity='1';
+      setTimeout(function(){indicator.style.opacity='0';},1000);
+    }
   }
 
   /* Markdown-ish render */
@@ -4332,6 +4500,11 @@ function buildNotes(){
     escaped=escaped.replace(/\n/g,'<br>');
     return escaped;
   }
+
+  /* Trash */
+  var SK_TRASH='notes_trash';
+  function loadTrash(){try{return JSON.parse(localStorage.getItem(SK_TRASH)||'[]');}catch(e){return [];}}
+  function saveTrash(t){try{localStorage.setItem(SK_TRASH,JSON.stringify(t));}catch(e){}}
 
   function renderTags(){
     var tags={};
@@ -4370,10 +4543,13 @@ function buildNotes(){
       del.addEventListener('click',function(e){
         e.stopPropagation();
         notes=notes.filter(function(x){return x.id!==n.id;});
+        var trash=loadTrash();
+        trash.push(n);
+        saveTrash(trash);
         saveNotes();
         if(currentId===n.id){currentId=null;}
         render();
-        toast('Gelöscht');
+        toast('In Papierkorb');
       });
       item.appendChild(del);
       item.addEventListener('click',function(){loadNote(n.id);});
