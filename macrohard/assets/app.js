@@ -1402,34 +1402,83 @@ if(!document.getElementById('skipLink')){
   }
 
   function buildExplorer(){
-    // Only initialize event listeners once
-    if(EXPLOADER_INITIALIZED) {
-      renderExplorer();
-      return;
-    }
+    if(EXPLOADER_INITIALIZED) { renderExplorer(); return; }
     EXPLOADER_INITIALIZED = true;
 
+    /* History stack for Back/Forward */
+    var historyStack = [curPath];
+    var historyIndex = 0;
+
     var inp=document.getElementById('fePath');
-    if(inp) inp.addEventListener('keydown',function(e){if(e.key==='Enter'){curPath=inp.value;renderExplorer();}});
+    if(inp) inp.addEventListener('keydown',function(e){
+      if(e.key==='Enter'){ navigateTo(inp.value); }
+    });
 
     /* Toolbar */
     var tb=document.createElement('div');tb.className='feToolbar';
-    [{n:'Neu',a:'new-folder'},{n:'Datei',a:'new-file'},{n:'Suche',a:'search'}].forEach(function(t){
-      var b=document.createElement('button');b.className='cBtn';b.textContent=t.n;
+    var btns = [
+      {n:'⬆',a:'up',t:'Übergeordnetes Verzeichnis'},
+      {n:'◀',a:'back',t:'Zurück'},
+      {n:'▶',a:'forward',t:'Weiter'},
+      {n:'↻',a:'refresh',t:'Aktualisieren'},
+      {n:'📁+',a:'new-folder',t:'Neuer Ordner'},
+      {n:'📄+',a:'new-file',t:'Neue Datei'},
+      {n:'🔍',a:'search',t:'Suchen'},
+      {n:'📋',a:'view',t:'Ansicht wechseln'}
+    ];
+    btns.forEach(function(t){
+      var b=document.createElement('button');
+      b.className='cBtn';
+      b.textContent=t.n;
+      b.title=t.t;
       b.addEventListener('click',function(){
-        if(t.a==='new-folder')newExplorerItem('folder');
-        else if(t.a==='new-file')newExplorerItem('file');
-        else if(t.a==='search')toggleSearch();
+        if(t.a==='up') navigateUp();
+        else if(t.a==='back') navigateBack();
+        else if(t.a==='forward') navigateForward();
+        else if(t.a==='refresh') renderExplorer();
+        else if(t.a==='new-folder') newExplorerItem('folder');
+        else if(t.a==='new-file') newExplorerItem('file');
+        else if(t.a==='search') toggleSearch();
+        else if(t.a==='view') toggleView();
       });
       tb.appendChild(b);
     });
     var sideEl=document.getElementById('feSide');
     if(sideEl) sideEl.parentNode.insertBefore(tb,sideEl);
+
+    /* Sort selector */
+    var sortSel=document.createElement('select');
+    sortSel.id='feSort';
+    sortSel.className='feSort';
+    sortSel.innerHTML='<option value="name-asc">Name ↑</option><option value="name-desc">Name ↓</option><option value="type">Typ</option><option value="size">Größe</option>';
+    sortSel.addEventListener('change',function(){ renderExplorer(); });
+    tb.appendChild(sortSel);
+
+    function navigateTo(path){
+      if(fsData[path]){ curPath=path; renderExplorer(); }
+      else { toast('Pfad nicht gefunden'); }
+    }
+    function navigateUp(){
+      var parts=curPath.split('\\').filter(Boolean);
+      if(parts.length>1){ parts.pop(); curPath='C:\\'+parts.join('\\'); renderExplorer(); }
+    }
+    function navigateBack(){
+      if(historyIndex>0){ historyIndex--; curPath=historyStack[historyIndex]; renderExplorer(); }
+    }
+    function navigateForward(){
+      if(historyIndex<historyStack.length-1){ historyIndex++; curPath=historyStack[historyIndex]; renderExplorer(); }
+    }
+    function toggleView(){
+      var grid=document.getElementById('feGrid');
+      if(grid){ grid.classList.toggle('feListView'); toast(grid.classList.contains('feListView')?'Listenansicht':'Rasteransicht'); }
+    }
+
     renderExplorer();
   }
   var EXPLOADER_INITIALIZED=false;
   var BROWSER_INITIALIZED=false;
   var MUSIC_INITIALIZED=false;
+
   function newExplorerItem(type){
     var name=prompt(type==='folder'?'Ordnername:':'Dateiname:');
     if(!name) return;
@@ -1444,6 +1493,7 @@ if(!document.getElementById('skipLink')){
       c.files.push(name);renderExplorer();
     }
   }
+
   function toggleSearch(){
     var bar=document.getElementById('feSearchBar');
     if(!bar){
@@ -1451,34 +1501,42 @@ if(!document.getElementById('skipLink')){
       bar.innerHTML='<input type="text" id="feSearchInput" placeholder="Dateien suchen..."><button class="cBtn" id="feSearchClose">×</button>';
       var side=document.getElementById('feSide');
       if(side) side.parentNode.insertBefore(bar,side);
-      document.getElementById('feSearchInput').addEventListener('input',function(e){
-        renderExplorer(e.target.value);
-      });
+      document.getElementById('feSearchInput').addEventListener('input',function(e){ renderExplorer(e.target.value); });
       document.getElementById('feSearchClose').addEventListener('click',function(){bar.remove();renderExplorer();});
     } else {
       bar.remove();renderExplorer();
     }
   }
-    /**
-   * Rendert die Explorer-Ansicht
-   * @param {string} filter - Suchfilter für Dateien (optional)
-   */
+
   function renderExplorer(filter){
     var side=document.getElementById('feSide');var grid=document.getElementById('feGrid');var inp=document.getElementById('fePath');
     if(!side||!grid) return;
     if(inp) inp.value=curPath;
     var d=fsData[curPath]||{dirs:[],files:[]};
-    var dirs=d.dirs,files=d.files;
+    var dirs=d.dirs.slice(),files=d.files.slice();
+
+    /* Sort */
+    var sortBy=document.getElementById('feSort')?document.getElementById('feSort').value:'name-asc';
+    var sortFn={
+      'name-asc':function(a,b){return a.localeCompare(b);},
+      'name-desc':function(a,b){return b.localeCompare(a);},
+      'type':function(a,b){return a.split('.').pop().localeCompare(b.split('.').pop());},
+      'size':function(a,b){return a.length-b.length;}
+    };
+    dirs.sort(sortFn[sortBy]||sortFn['name-asc']);
+    files.sort(sortFn[sortBy]||sortFn['name-asc']);
+
     if(filter){
       var fl=filter.toLowerCase();
       dirs=dirs.filter(function(x){return x.toLowerCase().indexOf(fl)!==-1;});
       files=files.filter(function(x){return x.toLowerCase().indexOf(fl)!==-1;});
     }
+
+    /* Sidebar - Tree */
     side.innerHTML='';
     var parts=curPath.split('\\').filter(Boolean);
     var acc='C:\\';
-    side.innerHTML+='<div class="feDir">📁 Root</div>';
-    side.innerHTML+='<div class="feItem" data-path="C:\\">C:\\</div>';
+    side.innerHTML+='<div class="feItem'+(parts.length===0?' current':'')+'" data-path="C:\\">📁 Root</div>';
     if(trashPath&&fsData[trashPath]){
       side.innerHTML+='<div class="feItem" data-path="'+trashPath+'">🗑 Papierkorb</div>';
     }
@@ -1487,73 +1545,74 @@ if(!document.getElementById('skipLink')){
       side.innerHTML+='<div class="feItem'+(i===parts.length-1?' current':'')+'" data-path="'+acc+'">📁 '+p+'</div>';
       acc+='\\';
     });
-    side.querySelectorAll('.feItem').forEach(function(el){el.addEventListener('click',function(){curPath=el.dataset.path;renderExplorer();});});
+    side.querySelectorAll('.feItem').forEach(function(el){
+      el.addEventListener('click',function(){curPath=el.dataset.path;renderExplorer();});
+    });
+
+    /* Grid */
     grid.innerHTML='';
     if(!dirs.length&&!files.length){
-      grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-family:var(--font-mono);font-size:11px">'+(filter?'Keine Treffer':'Leer')+'</div>';
+      grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-family:var(--font-mono);font-size:11px">'+(filter?'Keine Treffer':'Leer — Rechtsklick für Optionen')+'</div>';
     }
+
     dirs.forEach(function(dir){
       var el=document.createElement('div');el.className='feFile feFolder';
       el.draggable=true;
       el.innerHTML='<span class="ico">📁</span><span class="fn">'+dir+'</span><span class="meta">Ordner</span>';
       el.addEventListener('click',function(e){
-        if(e.shiftKey||e.ctrlKey||e.metaKey){
-          this.classList.toggle('selected');
-          return;
-        }
+        if(e.shiftKey||e.ctrlKey||e.metaKey){this.classList.toggle('selected');return;}
         document.querySelectorAll('.feFile.selected').forEach(function(x){x.classList.remove('selected');});
         this.classList.add('selected');
         var newPath=curPath==='C:\\'?'C:\\'+dir:curPath+'\\'+dir;
-        curPath=newPath;
-        renderExplorer();
+        curPath=newPath;renderExplorer();
+      });
+      el.addEventListener('dblclick',function(){
+        var newPath=curPath==='C:\\'?'C:\\'+dir:curPath+'\\'+dir;
+        curPath=newPath;renderExplorer();
       });
       el.addEventListener('dragstart',function(e){
         e.dataTransfer.setData('text/plain',JSON.stringify({type:'folder',name:dir,path:curPath}));
         e.dataTransfer.effectAllowed='move';
       });
-      el.addEventListener('dragover',function(e){
-        e.preventDefault();
-        e.dataTransfer.dropEffect='move';
-        this.classList.add('dragover');
-      });
-      el.addEventListener('dragleave',function(e){
-        this.classList.remove('dragover');
-      });
+      el.addEventListener('dragover',function(e){e.preventDefault();this.classList.add('dragover');});
+      el.addEventListener('dragleave',function(e){this.classList.remove('dragover');});
       el.addEventListener('drop',function(e){
-        e.preventDefault();
-        this.classList.remove('dragover');
+        e.preventDefault();this.classList.remove('dragover');
         var data=JSON.parse(e.dataTransfer.getData('text/plain'));
         if(data.type==='file'){
-          var srcDir=fsData[data.path];
-          var dstDir=fsData[curPath];
+          var srcDir=fsData[data.path];var dstDir=fsData[curPath];
           if(srcDir&&dstDir){
             var idx=srcDir.files.indexOf(data.name);
-            if(idx!==-1){
-              srcDir.files.splice(idx,1);
-              dstDir.files.push(data.name);
-              renderExplorer();
-              toast('Verschoben: '+data.name);
+            if(idx!==-1){srcDir.files.splice(idx,1);dstDir.files.push(data.name);renderExplorer();toast('Verschoben: '+data.name);}
+          }
+        } else if(data.type==='folder'){
+          var srcDir2=fsData[data.path];var dstDir2=fsData[curPath];
+          if(srcDir2&&dstDir2){
+            var idx2=srcDir2.dirs.indexOf(data.name);
+            if(idx2!==-1){
+              srcDir2.dirs.splice(idx2,1);
+              dstDir2.dirs.push(data.name);
+              var oldPath=data.path+'\\'+data.name;
+              var newPath=curPath+'\\'+data.name;
+              fsData[newPath]=fsData[oldPath];
+              delete fsData[oldPath];
+              renderExplorer();toast('Ordner verschoben: '+data.name);
             }
           }
         }
       });
-      el.addEventListener('contextmenu',function(e){
-        e.preventDefault();
-        showFolderContextMenu(e,dir,curPath,dirs);
-      });
+      el.addEventListener('contextmenu',function(e){e.preventDefault();showFolderContextMenu(e,dir,curPath,dirs);});
       grid.appendChild(el);
     });
+
     files.forEach(function(f){
       var el=document.createElement('div');el.className='feFile feDocument';
       el.draggable=true;
       var ext=f.split('.').pop().toLowerCase();
-      var icon={txt:'📄',html:'🌐',css:'🎨',js:'⚡',png:'🖼',jpg:'🖼',csv:'📊',docx:'📝',zip:'📦',exe:'⚙',md:'📝'}[ext]||'📄';
+      var icon={txt:'📄',html:'🌐',css:'🎨',js:'⚡',png:'🖼',jpg:'🖼',csv:'📊',docx:'📝',zip:'📦',exe:'⚙',md:'📝',json:'📋',py:'🐍',sh:'⚡'}[ext]||'📄';
       el.innerHTML='<span class="ico">'+icon+'</span><span class="fn">'+f+'</span><span class="meta">'+ext.toUpperCase()+'</span>';
       el.addEventListener('click',function(e){
-        if(e.shiftKey||e.ctrlKey||e.metaKey){
-          this.classList.toggle('selected');
-          return;
-        }
+        if(e.shiftKey||e.ctrlKey||e.metaKey){this.classList.toggle('selected');return;}
         document.querySelectorAll('.feFile.selected').forEach(function(x){x.classList.remove('selected');});
         this.classList.add('selected');
       });
@@ -1561,10 +1620,7 @@ if(!document.getElementById('skipLink')){
         e.dataTransfer.setData('text/plain',JSON.stringify({type:'file',name:f,path:curPath}));
         e.dataTransfer.effectAllowed='move';
       });
-      el.addEventListener('contextmenu',function(e){
-        e.preventDefault();
-        showFileContextMenu(e,f,curPath,files);
-      });
+      el.addEventListener('contextmenu',function(e){e.preventDefault();showFileContextMenu(e,f,curPath,files);});
       grid.appendChild(el);
     });
   }
@@ -1580,7 +1636,7 @@ if(!document.getElementById('skipLink')){
     ctx.querySelectorAll('.ctxItem').forEach(function(item){
       item.addEventListener('click',function(){
         var act=item.dataset.act;
-        if(act==='open'){alert(f+' — (mock)');}
+        if(act==='open'){toast('Öffne: '+f);}
         else if(act==='rename'){
           var nn=prompt('Neuer Name:',f);
           if(nn&&nn!==f){
@@ -1588,10 +1644,22 @@ if(!document.getElementById('skipLink')){
             if(idx!==-1)files[idx]=nn;
             renderExplorer();
           }
+        }else if(act==='copy'){
+          var c=fsData[path];
+          if(c){var idx=c.files.indexOf(f);if(idx!==-1){c.files.push(f+' (Kopie)');renderExplorer();toast('Kopiert: '+f);}}
+        }else if(act==='move'){
+          var nn2=prompt('Zielpfad (z.B. C:\\Users\\macrohard\\Desktop):',curPath);
+          if(nn2&&fsData[nn2]){
+            var src=fsData[path];var dst=fsData[nn2];
+            if(src&&dst){
+              var idx2=src.files.indexOf(f);
+              if(idx2!==-1){src.files.splice(idx2,1);dst.files.push(f);renderExplorer();toast('Verschoben nach '+nn2);}
+            }
+          }
         }else if(act==='delete'){
-          var idx=files.indexOf(f);
-          if(idx!==-1){
-            files.splice(idx,1);
+          var idx3=files.indexOf(f);
+          if(idx3!==-1){
+            files.splice(idx3,1);
             var tp=fsData[trashPath];
             if(tp)tp.files.push(f);
             renderExplorer();
@@ -1602,12 +1670,13 @@ if(!document.getElementById('skipLink')){
     });
     setTimeout(function(){document.addEventListener('click',function close(){ctx.remove();document.removeEventListener('click',close);});},100);
   }
+
   function showFolderContextMenu(e,dir,path,dirs){
     var ctx=document.getElementById('fileCtx');
     if(ctx)ctx.remove();
     ctx=document.createElement('div');ctx.id='fileCtx';
     ctx.style.left=e.clientX+'px';ctx.style.top=e.clientY+'px';
-    ctx.innerHTML='<div class="ctxItem" data-act="open">Öffnen</div><div class="ctxItem" data-act="rename">Umbenennen</div><div class="ctxItem" data-act="delete">Löschen</div>';
+    ctx.innerHTML='<div class="ctxItem" data-act="open">Öffnen</div><div class="ctxItem" data-act="rename">Umbenennen</div><div class="ctxItem" data-act="copy">Kopieren</div><div class="ctxItem" data-act="delete">Löschen</div><div class="ctxSep"></div><div class="ctxItem" data-act="empty-trash">Papierkorb leeren</div>';
     document.body.appendChild(ctx);
     ctx.querySelectorAll('.ctxItem').forEach(function(item){
       item.addEventListener('click',function(){
@@ -1622,13 +1691,21 @@ if(!document.getElementById('skipLink')){
             if(idx!==-1)dirs[idx]=nn;
             renderExplorer();
           }
+        }else if(act==='copy'){
+          var c=fsData[path];
+          if(c){c.dirs.push(dir+' (Kopie)');renderExplorer();toast('Ordner kopiert: '+dir);}
         }else if(act==='delete'){
-          var idx=dirs.indexOf(dir);
-          if(idx!==-1){
-            dirs.splice(idx,1);
+          var idx2=dirs.indexOf(dir);
+          if(idx2!==-1){
+            dirs.splice(idx2,1);
             var delPath=path==='C:\\'?'C:\\'+dir:path+'\\'+dir;
             delete fsData[delPath];
             renderExplorer();
+          }
+        }else if(act==='empty-trash'){
+          if(confirm('Papierkorb leeren? Alle gelöschten Dateien werden entfernt.')){
+            var tp=fsData[trashPath];
+            if(tp){tp.files=[];tp.dirs=[];renderExplorer();toast('Papierkorb geleert');}
           }
         }
         ctx.remove();
@@ -1637,9 +1714,7 @@ if(!document.getElementById('skipLink')){
     setTimeout(function(){document.addEventListener('click',function close(){ctx.remove();document.removeEventListener('click',close);});},100);
   }
 
-  /* Paint — S4: Undo/Redo + Radiergummi + Linienbreite + Fill + Clear */
-  var paintColor='#000';var painting=false;var pCtx=null;var pTool='pen';var pStart=null;var pShape=null;
-  var undoStack=[],redoStack=[],maxUndo=20;
+
   function saveState(){undoStack.push(pCtx.getImageData(0,0,pCtx.canvas.width,pCtx.canvas.height));if(undoStack.length>maxUndo)undoStack.shift();redoStack=[];}
   function undo(){if(!undoStack.length)return;redoStack.push(pCtx.getImageData(0,0,pCtx.canvas.width,pCtx.canvas.height));pCtx.putImageData(undoStack.pop(),0,0);toast('Rückgängig');}
   function redo(){if(!redoStack.length)return;undoStack.push(pCtx.getImageData(0,0,pCtx.canvas.width,pCtx.canvas.height));pCtx.putImageData(redoStack.pop(),0,0);toast('Wiederholen');}

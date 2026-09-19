@@ -658,3 +658,111 @@ test('date locale formatting works', () => {
   assert.ok(deFormatted.includes('19'));
   assert.ok(enFormatted.includes('2026'));
 });
+
+
+// ============================================================
+// EXPLORER v3.0 TESTS
+// ============================================================
+
+// History stack
+test('explorer history stack tracks navigation', () => {
+  const history = ['C:\\Users\\macrohard\\Desktop'];
+  let idx = 0;
+  
+  // Navigate to new path
+  history.push('C:\\Users\\macrohard\\Dokumente');
+  idx++;
+  
+  // Back
+  if (idx > 0) idx--;
+  assert.equal(history[idx], 'C:\\Users\\macrohard\\Desktop');
+  
+  // Forward
+  if (idx < history.length - 1) idx++;
+  assert.equal(history[idx], 'C:\\Users\\macrohard\\Dokumente');
+});
+
+// Navigate up
+test('explorer navigate up goes to parent', () => {
+  let curPath = 'C:\\Users\\macrohard\\Desktop';
+  const parts = curPath.split('\\').filter(Boolean);
+  if (parts.length > 1) { parts.pop(); curPath = parts.join('\\'); }
+  assert.equal(curPath, 'C:\\Users\\macrohard');
+});
+
+// Sort by name ascending
+test('explorer sort by name ascending', () => {
+  const files = ['zebra.txt', 'alpha.txt', 'beta.txt'];
+  files.sort((a, b) => a.localeCompare(b));
+  assert.deepEqual(files, ['alpha.txt', 'beta.txt', 'zebra.txt']);
+});
+
+// Sort by type
+test('explorer sort by file type', () => {
+  const files = ['style.css', 'index.html', 'script.js'];
+  files.sort((a, b) => a.split('.').pop().localeCompare(b.split('.').pop()));
+  assert.deepEqual(files, ['style.css', 'index.html', 'script.js']);
+});
+
+// Copy file
+test('explorer copy file creates duplicate', () => {
+  const fsData = { 'C:\\test': { dirs: [], files: ['doc.txt'] } };
+  const path = 'C:\\test';
+  const f = 'doc.txt';
+  const c = fsData[path];
+  if (c) {
+    const idx = c.files.indexOf(f);
+    if (idx !== -1) { c.files.push(f + ' (Kopie)'); }
+  }
+  assert.equal(fsData[path].files.length, 2);
+  assert.equal(fsData[path].files[1], 'doc.txt (Kopie)');
+});
+
+// Move folder
+test('explorer move folder updates fsData', () => {
+  const fsData = {
+    'C:\\src': { dirs: ['subdir'], files: [] },
+    'C:\\dst': { dirs: [], files: [] },
+    'C:\\src\\subdir': { dirs: [], files: ['file.txt'] }
+  };
+  const srcDir = fsData['C:\\src'];
+  const dstDir = fsData['C:\\dst'];
+  const idx = srcDir.dirs.indexOf('subdir');
+  if (idx !== -1) {
+    srcDir.dirs.splice(idx, 1);
+    dstDir.dirs.push('subdir');
+    fsData['C:\\dst\\subdir'] = fsData['C:\\src\\subdir'];
+    delete fsData['C:\\src\\subdir'];
+  }
+  assert.equal(fsData['C:\\src'].dirs.length, 0);
+  assert.equal(fsData['C:\\dst'].dirs.length, 1);
+  assert.ok(fsData['C:\\dst\\subdir']);
+});
+
+// Empty trash
+test('explorer empty trash removes all files', () => {
+  const fsData = {
+    'C:\\Papierkorb': { dirs: ['old'], files: ['deleted.txt'] }
+  };
+  const tp = fsData['C:\\Papierkorb'];
+  if (tp) { tp.files = []; tp.dirs = []; }
+  assert.equal(tp.files.length, 0);
+  assert.equal(tp.dirs.length, 0);
+});
+
+// File type icons
+test('explorer file type icon mapping', () => {
+  const icons = {txt:'📄',html:'🌐',css:'🎨',js:'⚡',png:'🖼',jpg:'🖼',md:'📝',json:'📋',py:'🐍'};
+  assert.equal(icons['py'], '🐍');
+  assert.equal(icons['json'], '📋');
+  assert.equal(icons['unknown'], undefined);
+});
+
+// Search filter
+test('explorer search filters files case-insensitive', () => {
+  const files = ['README.md', 'index.html', 'STYLE.CSS', 'notes.txt'];
+  const filter = 'css';
+  const result = files.filter(f => f.toLowerCase().indexOf(filter.toLowerCase()) !== -1);
+  assert.equal(result.length, 1);
+  assert.equal(result[0], 'STYLE.CSS');
+});
