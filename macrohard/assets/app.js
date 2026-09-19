@@ -3610,6 +3610,24 @@ if(!document.getElementById('skipLink')){
         observer.observe(icon);
       }
     });
+
+    /* Static app cards (index.html) - add click handlers */
+    document.querySelectorAll('.os-app-card').forEach(function(card){
+      card.addEventListener('click',function(){
+        if(card.dataset.app) openApp(card.dataset.app);
+      });
+      card.addEventListener('keydown',function(e){
+        if(e.key==='Enter'||e.key===' '){
+          e.preventDefault();
+          if(card.dataset.app) openApp(card.dataset.app);
+        }
+      });
+      /* Set ARIA labels for static cards */
+      if(!card.getAttribute('aria-label')){
+        var lbl=card.querySelector('.lbl');
+        if(lbl){card.setAttribute('aria-label',lbl.textContent+' öffnen');card.setAttribute('role','button');card.setAttribute('tabindex','0');}
+      }
+    });
     var sm=document.getElementById('smList');
     var smSearch=document.getElementById('smSearch');
     desktopApps.forEach(function(a){
@@ -5570,11 +5588,11 @@ function buildClock(){
     if(!document.getElementById('clkBody')) return;
     if(mode==='clock'){
       var now=new Date();
-      body.innerHTML='<div class="clkDisplay">'+now.toLocaleTimeString('de-DE')+'</div><div class="clkDate">'+now.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'</div><div class="clkBtns"><button class="cBtn" data-mode="clock">Uhr</button><button class="cBtn" data-mode="timer">Timer</button><button class="cBtn" data-mode="stopwatch">Stoppuhr</button><button class="cBtn" data-mode="world">Weltzeit</button></div>';
+      body.innerHTML='<div class="clkDisplay">'+now.toLocaleTimeString('de-DE')+'</div><div class="clkDate">'+now.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'</div><div class="clkBtns"><button class="cBtn" data-mode="clock">Uhr</button><button class="cBtn" data-mode="timer">Timer</button><button class="cBtn" data-mode="stopwatch">Stoppuhr</button><button class="cBtn" data-mode="world">Weltzeit</button><button class="cBtn" data-mode="analog">Analog</button><button class="cBtn" data-mode="fullscreen">⛶</button></div>';
     } else if(mode==='timer'){
-      body.innerHTML='<div class="clkLabel">Timer (Min:Sek):</div><div class="clkTimerInputs"><input type="number" id="timerMin" value="5" min="0" max="99"><span>:</span><input type="number" id="timerSec" value="0" min="0" max="59"></div><button class="cBtn" id="timerStart">Start</button><div class="clkTimer" id="timerDisplay">05:00</div>';
+      body.innerHTML='<div class="clkLabel">Timer (Min:Sek):</div><div class="clkTimerInputs"><input type="number" id="timerMin" value="5" min="0" max="99"><span>:</span><input type="number" id="timerSec" value="0" min="0" max="59"></div><button class="cBtn" id="timerStart">Start</button><div class="clkTimer" id="timerDisplay">05:00</div><div class="clkBtns"><button class="cBtn" data-mode="clock">Uhr</button><button class="cBtn" data-mode="timer">Timer</button><button class="cBtn" data-mode="stopwatch">Stoppuhr</button><button class="cBtn" data-mode="world">Weltzeit</button><button class="cBtn" data-mode="analog">Analog</button><button class="cBtn" data-mode="fullscreen">⛶</button></div>';
     } else if(mode==='stopwatch'){
-      body.innerHTML='<div class="clkStopwatch" id="swDisplay">00:00.00</div><button class="cBtn" id="swStart">Start</button><button class="cBtn" id="swReset">Reset</button>';
+      body.innerHTML='<div class="clkStopwatch" id="swDisplay">00:00.00</div><button class="cBtn" id="swStart">Start</button><button class="cBtn" id="swReset">Reset</button><div class="clkBtns"><button class="cBtn" data-mode="clock">Uhr</button><button class="cBtn" data-mode="timer">Timer</button><button class="cBtn" data-mode="stopwatch">Stoppuhr</button><button class="cBtn" data-mode="world">Weltzeit</button><button class="cBtn" data-mode="analog">Analog</button><button class="cBtn" data-mode="fullscreen">⛶</button></div>';
     } else if(mode==='world'){
       var zones={Berlin:'Europe/Berlin',New_York:'America/New_York',Tokyo:'Asia/Tokyo',London:'Europe/London',Sydney:'Australia/Sydney',Dubai:'Asia/Dubai',Los_Angeles:'America/Los_Angeles',Paris:'Europe/Paris'};
       var html='<div class="clkWorldGrid">';
