@@ -696,7 +696,7 @@
       case 'browser': body='<div class="brTabs" id="brTabs"></div><div class="brBar"><button class="brBtn" id="brBack" title="Zurück">←</button><button class="brBtn" id="brFwd" title="Vor">→</button><button class="brBtn" id="brRefresh" title="Aktualisieren">↻</button><button class="brBtn" id="brHome" title="Startseite">⌂</button><input id="brAddr" value="https://duckduckgo.com" placeholder="URL oder Suche..."><button class="brBtn" id="brGo" title="Los">➜</button><button class="brBtn" id="brBm" title="Lesezeichen">☆</button><button class="brBtn" id="brNewTab" title="Neuer Tab">+</button></div><div class="brContent" id="brContent"></div>';break;
       case 'music': body='<div class="musPlayer"><div class="musHeader"><span class="musLogo">🎵 Music</span><button class="musToggle" id="musToggle">☰ Playlist</button></div><div class="musBody"><div class="musMain"><div class="musArt" id="musArt"><span id="musArtIcon">♪</span></div><div class="musMeta"><div class="musTitle" id="musTitle">Player</div><div class="musArtist" id="musArtist">Wähle einen Song</div><div class="musAlbum" id="musAlbum">—</div></div><div class="musSeek"><input type="range" id="musProg" min="0" max="100" step="1" value="0"><div class="musTimes"><span id="musProgL">0:00</span><span id="musProgR">0:00</span></div></div><div class="musControls"><button id="musShuffle" title="Shuffle">🔀</button><button id="musPrev" title="Zurück">⏮</button><button id="musPlayBtn" class="musPlay" title="Play">▶</button><button id="musNext" title="Weiter">⏭</button><button id="musRepeat" title="Repeat">🔁</button></div><div class="musVolWrap"><span>🔊</span><input type="range" id="musVol" min="0" max="1" step="0.05" value="0.7"><span id="musVolL">70%</span></div></div><div class="musSidebar" id="musSidebar"><div class="musTabs"><button data-tab="playlist" class="musTab active">🎵 Playlist</button><button data-tab="radio" class="musTab">📻 Radio</button><button data-tab="favs" class="musTab">★ Favs</button></div><div id="musPlaylist" class="musList"></div><div id="musRadio" class="musList" style="display:none"></div><div id="musFavs" class="musList" style="display:none"></div><div class="musSidebarFoot"><label class="musUploadBtn">⬆ Upload<input type="file" id="musUploadIn" accept="audio/*" multiple style="display:none"></label><span id="musRadioStatus" style="font-size:9px;color:var(--muted)"></span></div></div></div><div class="musExtraTabs"><button data-extra="beatpad" class="musExtraTab active">🥁 Beatpad</button><button data-extra="eq" class="musExtraTab">🎛 EQ</button><button data-extra="vis" class="musExtraTab">📊 Visualizer</button></div><div id="musBeatpadSection" class="musExtra"><div class="beatpad-header"><span class="beatpad-title">🥁 Beatpad</span><button id="beatpadPlay" class="beatpad-btn-lg" title="Play Loop">▶ Play</button><button id="beatpadStop" class="beatpad-btn-lg beatpad-stop" title="Stop">⏹ Stop</button><select id="beatpadBpm" class="beatpad-bpm"><option value="100">100 BPM</option><option value="120" selected>120 BPM</option><option value="140">140 BPM</option><option value="160">160 BPM</option><option value="180">180 BPM</option></select></div><div class="musBeatpad" id="musBeatpad"></div><div class="beatpad-vol-wrap"><span>🔊</span><input type="range" id="beatpadVol" min="0" max="100" value="50"><span id="beatpadVolL">50%</span></div></div><div id="musEq" class="musExtra" style="display:none"><canvas id="musVisualizer" width="280" height="60"></canvas><div class="musEq" id="musEq"></div></div><div id="musVis" class="musExtra" style="display:none"><canvas id="musVisCanvas" width="280" height="100"></canvas></div></div>';break;
       case 'chat': body='<div class="cpMsgs" id="cpMsgs"></div><div class="cpSugs" id="cpSugs"></div><div class="cpIn"><input id="cpIn" placeholder="Nachricht..."><button id="cpSend">Send</button></div>';break;
-      case 'docs': body='<div class="mdBody" id="mdBody"><h3>MakerOS Docs</h3><p>Neo-brutalist desktop OS — qapdex-maker.github.io edition.</p><p>13 Apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links, AMIBIOS.</p><p style="margin-top:12px;font-size:11px;color:var(--muted)">Made by Alexander Kleine</p></div>';break;
+      case 'docs': body='<div class="mdToolbar"><button class="cBtn" id="mdBold" title="Bold"><b>B</b></button><button class="cBtn" id="mdItalic" title="Italic"><i>I</i></button><button class="cBtn" id="mdHeading" title="Überschrift">H</button><button class="cBtn" id="mdLink" title="Link">Link</button><button class="cBtn" id="mdCode" title="Code">Code</button><button class="cBtn" id="mdQuote" title="Zitat">"</button><button class="cBtn" id="mdList" title="Liste">•</button><button class="cBtn" id="mdSave" title="Speichern">💾</button><button class="cBtn" id="mdExport" title="Export .md">📤</button><button class="cBtn" id="mdPreview" title="Preview">👁</button></div><div class="mdBody" id="mdBody" contenteditable="true" spellcheck="false"></div><div class="mdPreview" id="mdPreview"></div>';break;
       case 'settings': body='<div class="stGrid" id="stGrid"><div class="stNav"><button data-tab="general" class="active" data-de="Allgemein" data-en="General">Allgemein</button><button data-tab="appearance" data-de="Aussehen" data-en="Appearance">Aussehen</button><button data-tab="shortcuts" data-de="Tastenkürzel" data-en="Shortcuts">Tastenkürzel</button><button data-tab="privacy" data-de="Datenschutz" data-en="Privacy">Datenschutz</button></div><div class="stPane active" data-pane="general"><label><input type="checkbox" id="stDark"> Dark Mode</label><label><input type="checkbox" id="stScan" checked> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div><div class="stPane" data-pane="appearance" id="stAppearance"></div><div class="stPane" data-pane="shortcuts" id="stShortcuts"></div><div class="stPane" data-pane="privacy" id="stPrivacy"></div></div>';break;
       case 'links': body='<div class="clPane" id="clPane"></div>';break;
       case 'amibios': body='<div style="width:100%;height:100%" id="w-amibios"></div>';break;
@@ -3304,6 +3304,52 @@
           toast('Alle Daten gelöscht');
         }
       });
+
+      /* Export Settings */
+      var exportBtn=document.createElement('button');
+      exportBtn.className='cBtn op';
+      exportBtn.textContent='📤 Export Settings';
+      exportBtn.style.marginTop='6px';
+      exportBtn.addEventListener('click',function(){
+        var data={};
+        for(var i=0;i<localStorage.length;i++){
+          var key=localStorage.key(i);
+          if(key.startsWith('os_')||key.startsWith('macrohard_')||key.startsWith('np_')) data[key]=localStorage.getItem(key);
+        }
+        var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+        var a=document.createElement('a');
+        a.href=URL.createObjectURL(blob);
+        a.download='makeros-settings.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        toast('Settings exportiert');
+      });
+      info.appendChild(exportBtn);
+
+      /* Import Settings */
+      var importBtn=document.createElement('button');
+      importBtn.className='cBtn op';
+      importBtn.textContent='📥 Import Settings';
+      importBtn.style.marginLeft='4px';
+      importBtn.addEventListener('click',function(){
+        var inp=document.createElement('input');
+        inp.type='file';inp.accept='.json';
+        inp.addEventListener('change',function(){
+          var file=inp.files[0];if(!file) return;
+          var reader=new FileReader();
+          reader.onload=function(ev){
+            try{
+              var data=JSON.parse(ev.target.result);
+              Object.keys(data).forEach(function(k){localStorage.setItem(k,data[k]);});
+              toast('Settings importiert — Reload...');
+              setTimeout(function(){location.reload();},1000);
+            }catch(e){toast('Fehler: '+e.message);}
+          };
+          reader.readAsText(file);
+        });
+        inp.click();
+      });
+      info.appendChild(importBtn);
     }
     /* Restore dark/scan — auto-detect if no stored preference */
     try{
@@ -4969,6 +5015,7 @@ function buildClock(){
   var timerInterval=null;
   var stopwatchStart=null;
   var stopwatchElapsed=0;
+  var timerSound=new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQAA');
   if(!window.osIntervals) window.osIntervals = {};
   var clockIntervalId=setInterval(function(){if(mode==='clock')render();},1000);
   window.osIntervals['clock_app']=clockIntervalId;
@@ -4982,14 +5029,23 @@ function buildClock(){
   }
   window.osTimeouts['clock_cleanup']=cleanupClock;
   function render(){
-    if(!document.getElementById('clkBody')) return; // Window closed
+    if(!document.getElementById('clkBody')) return;
     if(mode==='clock'){
       var now=new Date();
-      body.innerHTML='<div class="clkDisplay">'+now.toLocaleTimeString('de-DE')+'</div><div class="clkDate">'+now.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'</div><div class="clkBtns"><button class="cBtn" data-mode="clock">Uhr</button><button class="cBtn" data-mode="timer">Timer</button><button class="cBtn" data-mode="stopwatch">Stoppuhr</button></div>';
+      body.innerHTML='<div class="clkDisplay">'+now.toLocaleTimeString('de-DE')+'</div><div class="clkDate">'+now.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'</div><div class="clkBtns"><button class="cBtn" data-mode="clock">Uhr</button><button class="cBtn" data-mode="timer">Timer</button><button class="cBtn" data-mode="stopwatch">Stoppuhr</button><button class="cBtn" data-mode="world">Weltzeit</button></div>';
     } else if(mode==='timer'){
-      body.innerHTML='<div class="clkLabel">Timer (Sekunden):</div><input type="number" id="timerSec" value="60" min="1"><button class="cBtn" id="timerStart">Start</button><div class="clkTimer" id="timerDisplay">00:00</div>';
+      body.innerHTML='<div class="clkLabel">Timer (Min:Sek):</div><div class="clkTimerInputs"><input type="number" id="timerMin" value="5" min="0" max="99"><span>:</span><input type="number" id="timerSec" value="0" min="0" max="59"></div><button class="cBtn" id="timerStart">Start</button><div class="clkTimer" id="timerDisplay">05:00</div>';
     } else if(mode==='stopwatch'){
       body.innerHTML='<div class="clkStopwatch" id="swDisplay">00:00.00</div><button class="cBtn" id="swStart">Start</button><button class="cBtn" id="swReset">Reset</button>';
+    } else if(mode==='world'){
+      var zones={Berlin:'Europe/Berlin',New_York:'America/New_York',Tokyo:'Asia/Tokyo',London:'Europe/London',Sydney:'Australia/Sydney',Dubai:'Asia/Dubai',Los_Angeles:'America/Los_Angeles',Paris:'Europe/Paris'};
+      var html='<div class="clkWorldGrid">';
+      Object.keys(zones).forEach(function(city){
+        var time=new Date().toLocaleTimeString('de-DE',{timeZone:zones[city],hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        html+='<div class="clkWorldItem"><div class="clkWorldCity">'+city.replace(/_/g,' ')+'</div><div class="clkWorldTime">'+time+'</div></div>';
+      });
+      html+='</div>';
+      body.innerHTML=html+'<div class="clkBtns"><button class="cBtn" data-mode="clock">Uhr</button><button class="cBtn" data-mode="timer">Timer</button><button class="cBtn" data-mode="stopwatch">Stoppuhr</button><button class="cBtn" data-mode="world">Weltzeit</button></div>';
     }
     body.querySelectorAll('[data-mode]').forEach(function(b){
       b.addEventListener('click',function(){mode=b.dataset.mode;render();});
@@ -4998,18 +5054,23 @@ function buildClock(){
       var tBtn=body.querySelector('#timerStart');
       if(tBtn) tBtn.addEventListener('click',function(){
         if(timerInterval)clearInterval(timerInterval);
-        var sec=parseInt(body.querySelector('#timerSec').value)||60;
+        var m=parseInt(body.querySelector('#timerMin').value)||5;
+        var s=parseInt(body.querySelector('#timerSec').value)||0;
+        var sec=m*60+s;
         var display=body.querySelector('#timerDisplay');
+        display.style.color='';
         timerInterval=setInterval(function(){
           sec--;
-          var m=Math.floor(sec/60);
-          var s=sec%60;
-          display.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+          var mm=Math.floor(sec/60);
+          var ss=sec%60;
+          display.textContent=(mm<10?'0':'')+mm+':'+(ss<10?'0':'')+ss;
           if(sec<=0){
             clearInterval(timerInterval);
             timerInterval=null;
             display.textContent='FERTIG!';
             display.style.color='var(--accent)';
+            try{timerSound.play();}catch(e){}
+            toast('Timer abgelaufen!');
           }
         },1000);
         window.osIntervals['clock_app_timer']=timerInterval;
@@ -5035,7 +5096,7 @@ function buildClock(){
         if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
         stopwatchElapsed=0;
         body.querySelector('#swDisplay').textContent='00:00.00';
-        swBtn.textContent='Start';
+        if(body.querySelector('#swStart')) body.querySelector('#swStart').textContent='Start';
       });
     }
   }
@@ -5076,17 +5137,36 @@ function buildPwgen(){
     for(var i=0;i<len;i++) pw+=chars[Math.floor(Math.random()*chars.length)];
     return pw;
   }
-  body.innerHTML='<div class="pwLen">Länge: <input type="range" id="pwLen" min="6" max="32" value="16"><span id="pwLenVal">16</span></div><div class="pwResult" id="pwResult"></div><button class="cBtn" id="pwBtn">Generieren</button><button class="cBtn" id="pwCopy">Kopieren</button>';
+  function strength(pw){
+    var s=0;
+    if(pw.length>=8)s++;
+    if(pw.length>=12)s++;
+    if(/[a-z]/.test(pw))s++;
+    if(/[A-Z]/.test(pw))s++;
+    if(/[0-9]/.test(pw))s++;
+    if(/[^a-zA-Z0-9]/.test(pw))s++;
+    return Math.min(5,Math.floor(s/1.2));
+  }
+  body.innerHTML='<div class="pwLen">Länge: <input type="range" id="pwLen" min="6" max="32" value="16"><span id="pwLenVal">16</span></div><div class="pwResult" id="pwResult"></div><div class="pwStrength" id="pwStrength"></div><button class="cBtn" id="pwBtn">Generieren</button><button class="cBtn" id="pwCopy">Kopieren</button><button class="cBtn" id="pwMulti">10x generieren</button>';
   var lenInput=body.querySelector('#pwLen');
   var lenVal=body.querySelector('#pwLenVal');
   lenInput.addEventListener('input',function(){lenVal.textContent=this.value;});
   body.querySelector('#pwBtn').addEventListener('click',function(){
-    body.querySelector('#pwResult').textContent=generate(parseInt(lenInput.value));
+    var pw=generate(parseInt(lenInput.value));
+    body.querySelector('#pwResult').textContent=pw;
+    var s=strength(pw);
+    body.querySelector('#pwStrength').innerHTML='<span style="color:'+(s<2?'var(--danger)':s<4?'var(--accent-2)':'var(--ok)')+'">Stärke: '+['Sehr schwach','Schwach','Mittel','Stark','Sehr stark'][s]+'</span>';
   });
   body.querySelector('#pwCopy').addEventListener('click',function(){
     var pw=body.querySelector('#pwResult').textContent;
     if(pw && navigator.clipboard) navigator.clipboard.writeText(pw);
   });
+  body.querySelector('#pwMulti').addEventListener('click',function(){
+    var pws=[];
+    for(var i=0;i<10;i++) pws.push(generate(parseInt(lenInput.value)));
+    body.querySelector('#pwResult').innerHTML=pws.join('<br>');
+  });
+  body.querySelector('#pwBtn').click();
 }
 
 /* QR-Generator */
@@ -5095,21 +5175,38 @@ function buildQrgen(){
   var input=document.getElementById('qrInput');
   var canvas=document.getElementById('qrCanvas');
   var btn=document.getElementById('qrBtn');
+  var colorInput=document.getElementById('qrColor');
+  var sizeSelect=document.getElementById('qrSize');
+  if(!colorInput){
+    colorInput=document.createElement('input');
+    colorInput.type='color';
+    colorInput.id='qrColor';
+    colorInput.value='#000000';
+    body.insertBefore(colorInput, canvas);
+  }
+  if(!sizeSelect){
+    sizeSelect=document.createElement('select');
+    sizeSelect.id='qrSize';
+    sizeSelect.innerHTML='<option value="12">Klein</option><option value="20" selected>Mittel</option><option value="30">Groß</option>';
+    body.insertBefore(sizeSelect, canvas);
+  }
   btn.addEventListener('click',function(){
     var text=input.value.trim();
     if(!text) return;
     canvas.innerHTML='';
-    var size=12;
+    var size=parseInt(sizeSelect.value)||20;
+    var fg=colorInput.value;
     var grid=[];
     for(var i=0;i<size;i++){grid[i]=[];for(var j=0;j<size;j++){grid[i][j]=Math.random()>.5?1:0;}}
     var c=document.createElement('canvas');
     c.width=size*8;c.height=size*8;
     var ctx=c.getContext('2d');
     ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);
-    ctx.fillStyle='#000';
+    ctx.fillStyle=fg;
     for(var y=0;y<size;y++)for(var x=0;x<size;x++){if(grid[y][x])ctx.fillRect(x*8,y*8,8,8);}
     c.style.cssText='width:100%;height:100%;image-rendering:pixelated';
     canvas.appendChild(c);
+    toast('QR-Code generiert');
   });
 }
 
@@ -5118,6 +5215,7 @@ function buildViewer(){
   var body=document.getElementById('vwBody');if(!body) return;
   var placeholder=document.getElementById('vwPlaceholder');
   var canvas=document.getElementById('vwCanvas');
+  var scale=1;
   body.addEventListener('dragover',function(e){e.preventDefault();});
   body.addEventListener('drop',function(e){
     e.preventDefault();
@@ -5130,9 +5228,21 @@ function buildViewer(){
       canvas.getContext('2d').drawImage(img,0,0);
       placeholder.style.display='none';
       canvas.style.display='block';
+      scale=1;
+      canvas.style.transform='scale(1)';
     };
     img.src=URL.createObjectURL(file);
   });
+  if(!document.getElementById('vwControls')){
+    var controls=document.createElement('div');
+    controls.id='vwControls';
+    controls.className='vwControls';
+    controls.innerHTML='<button class="cBtn" id="vwZoomIn">+</button><button class="cBtn" id="vwZoomOut">-</button><button class="cBtn" id="vwFit">Fit</button><span id="vwInfo"></span>';
+    body.insertBefore(controls, placeholder);
+    document.getElementById('vwZoomIn').addEventListener('click',function(){scale*=1.3;canvas.style.transform='scale('+scale+')';});
+    document.getElementById('vwZoomOut').addEventListener('click',function(){scale*=0.7;canvas.style.transform='scale('+scale+')';});
+    document.getElementById('vwFit').addEventListener('click',function(){scale=1;canvas.style.transform='scale(1)';});
+  }
 }
 
 /* Tic-Tac-Toe */
@@ -5141,6 +5251,7 @@ function buildGame(){
   var board=['','','','','','','','',''];
   var player='X';
   var gameOver=false;
+  var mode='pvp';
   var winCombos=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
   function checkWin(){
     for(var i=0;i<winCombos.length;i++){
@@ -5150,8 +5261,13 @@ function buildGame(){
     if(!board.includes('')) return 'tie';
     return null;
   }
+  function aiMove(){
+    var empty=board.map(function(c,i){return c===''?i:null;}).filter(function(i){return i!==null;});
+    if(empty.length) return empty[Math.floor(Math.random()*empty.length)];
+    return -1;
+  }
   function render(){
-    body.innerHTML='<div class="gmStatus">'+(gameOver?'Spiel vorbei!':'Spieler '+player+' ist dran')+'</div><div class="gmGrid"></div><button class="cBtn" id="gmReset">Neustart</button>';
+    body.innerHTML='<div class="gmStatus">'+(gameOver?'Spiel vorbei!':'Spieler '+player+' ist dran')+'</div><div class="gmMode"><button class="cBtn" id="gmPvP">PvP</button><button class="cBtn" id="gmPvE">vs CPU</button></div><div class="gmGrid"></div><button class="cBtn" id="gmReset">Neustart</button>';
     var grid=body.querySelector('.gmGrid');
     board.forEach(function(cell,i){
       var b=document.createElement('button');
@@ -5159,11 +5275,24 @@ function buildGame(){
       b.textContent=cell;
       b.disabled=!!cell||gameOver;
       b.addEventListener('click',function(){
+        if(gameOver||board[i]) return;
         board[i]=player;
         var win=checkWin();
         if(win){gameOver=true;render();return;}
         player=player==='X'?'O':'X';
         render();
+        if(mode==='pve'&&player==='O'&&!gameOver){
+          setTimeout(function(){
+            var move=aiMove();
+            if(move>=0){
+              board[move]='O';
+              var win2=checkWin();
+              if(win2){gameOver=true;render();return;}
+              player='X';
+              render();
+            }
+          },300);
+        }
       });
       grid.appendChild(b);
     });
@@ -5173,6 +5302,8 @@ function buildGame(){
       board=['','','','','','','','',''];
       player='X';gameOver=false;render();
     });
+    if(document.getElementById('gmPvP')) document.getElementById('gmPvP').addEventListener('click',function(){mode='pvp';document.querySelector('#gmReset').click();});
+    if(document.getElementById('gmPvE')) document.getElementById('gmPvE').addEventListener('click',function(){mode='pve';document.querySelector('#gmReset').click();});
   }
   render();
 }
