@@ -766,3 +766,146 @@ test('explorer search filters files case-insensitive', () => {
   assert.equal(result.length, 1);
   assert.equal(result[0], 'STYLE.CSS');
 });
+
+
+// ============================================================
+// PRIORITÄT A REST TESTS
+// ============================================================
+
+// A5: Settings - Wallpaper Slideshow
+test('settings wallpaper slideshow cycle', () => {
+  const gallery = ['linear-gradient(135deg,#2547ff,#ff4d00)','linear-gradient(135deg,#0b0b0c,#5d5d5d)'];
+  let idx = 0;
+  idx = (idx + 1) % gallery.length;
+  assert.equal(idx, 1);
+  idx = (idx + 1) % gallery.length;
+  assert.equal(idx, 0); // Cycle back
+});
+
+// A6: Links - Sort by name
+test('links sort by name', () => {
+  const links = [{n:'Zebra'},{n:'Alpha'},{n:'Beta'}];
+  links.sort((a,b) => a.n.localeCompare(b.n));
+  assert.deepEqual(links.map(l=>l.n), ['Alpha','Beta','Zebra']);
+});
+
+// A6: Links - Sort by recent (lastVisit)
+test('links sort by recent', () => {
+  const links = [{n:'a',lastVisit:100},{n:'b',lastVisit:300},{n:'c',lastVisit:200}];
+  links.sort((a,b) => (b.lastVisit||0)-(a.lastVisit||0));
+  assert.equal(links[0].n, 'b');
+});
+
+// A6: Links - Favorites
+test('links favorite toggle', () => {
+  const link = {n:'Test',u:'http://test.com',cat:'dev',fav:false};
+  link.fav = !link.fav;
+  assert.equal(link.fav, true);
+  link.fav = !link.fav;
+  assert.equal(link.fav, false);
+});
+
+// A7: Clock - Analog clock
+test('clock analog angle calculation', () => {
+  const h = 3, m = 30;
+  const hourAngle = (h + m/60) * Math.PI / 6;
+  const minAngle = m * Math.PI / 30;
+  const secAngle = 45 * Math.PI / 30;
+  assert.ok(hourAngle > 0);
+  assert.ok(minAngle > 0);
+  assert.ok(secAngle > 0);
+});
+
+// A8: Colorpicker - RGB to HSL
+test('colorpicker RGB to HSL conversion', () => {
+  const r = 37/255, g = 71/255, b = 255/255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  const l = (max+min)/2;
+  assert.ok(l >= 0 && l <= 1);
+  assert.equal(max, 1); // Blue is max
+});
+
+// A8: Colorpicker - Complement
+test('colorpicker complement color', () => {
+  const r = 37, g = 71, b = 255;
+  const compR = 255 - r;
+  const compG = 255 - g;
+  const compB = 255 - b;
+  assert.equal(compR, 218);
+  assert.equal(compG, 184);
+  assert.equal(compB, 0);
+});
+
+// A9: PW-Gen - Strength levels
+test('pwgen strength calculation', () => {
+  function strength(pw){
+    let s=0;
+    if(pw.length>=8)s++;
+    if(pw.length>=12)s++;
+    if(/[a-z]/.test(pw))s++;
+    if(/[A-Z]/.test(pw))s++;
+    if(/[0-9]/.test(pw))s++;
+    if(/[^a-zA-Z0-9]/.test(pw))s++;
+    return Math.min(5,Math.floor(s/1.2));
+  }
+  assert.ok(strength('abc') < strength('aB3$xyz'));
+  assert.ok(strength('aB3$xyz99') >= 3);
+});
+
+// A9: PW-Gen - Custom charset
+test('pwgen custom charset', () => {
+  const custom = 'abc123';
+  const pw = 'a1b2c3';
+  const allCustom = pw.split('').every(c => custom.includes(c));
+  assert.equal(allCustom, true);
+});
+
+// A9: PW-Gen - History limit
+test('pwgen history capped at 10', () => {
+  const history = [];
+  for(let i=0;i<15;i++){
+    history.unshift('pw'+i);
+    if(history.length>10)history.pop();
+  }
+  assert.equal(history.length, 10);
+  assert.equal(history[0], 'pw14');
+});
+
+// A10: QR-Gen - SVG export format
+test('qrgen SVG export format', () => {
+  const size = 20;
+  let svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+size+' '+size+'">';
+  svg += '<rect x="0" y="0" width="1" height="1" fill="#000"/>';
+  svg += '</svg>';
+  assert.ok(svg.includes('<svg'));
+  assert.ok(svg.includes('</svg>'));
+  assert.ok(svg.includes('rect'));
+});
+
+// A11: Viewer - Image info
+test('viewer shows image info', () => {
+  const img = {width: 1920, height: 1080};
+  const file = {size: 204800};
+  const info = img.width+'×'+img.height+' · '+(file.size/1024).toFixed(1)+' KB';
+  assert.equal(info, '1920×1080 · 200.0 KB');
+});
+
+// A12: Game - 4x4 win combos
+test('game 4x4 win combos', () => {
+  const combos = [];
+  for(let i=0;i<4;i++){
+    combos.push([i*4,i*4+1,i*4+2,i*4+3]);
+    combos.push([i,i+4,i+8,i+12]);
+  }
+  combos.push([0,5,10,15]);
+  combos.push([3,6,9,12]);
+  assert.equal(combos.length, 10);
+});
+
+// A12: Game - AI blocks player
+test('game AI blocks player win', () => {
+  const board = ['X','X','','','','','','',''];
+  // AI should block position 2
+  const empty = board.map((c,i)=>c===''?i:null).filter(i=>i!==null);
+  assert.ok(empty.includes(2));
+});

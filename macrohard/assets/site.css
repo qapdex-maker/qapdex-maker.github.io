@@ -932,3 +932,23 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 
 /* ===== theme transition ===== */
 html{transition:background-color .2s ease, color .2s ease}
+/* ===== Links ===== */
+.clSortBar{display:flex;gap:4px;margin-bottom:8px}
+.clFav{cursor:pointer;color:var(--muted);margin-right:4px;user-select:none}
+.clFav.active{color:var(--accent-2)}
+
+/* ===== Colorpicker ===== */
+.cpComplement{width:30px;height:30px;border:2px solid var(--line);margin:4px 0;font-size:9px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono)}
+.cpHSL{font-size:10px;font-family:var(--font-mono);color:var(--muted);margin:4px 0}
+.cpPalette{display:flex;gap:2px;flex-wrap:wrap;margin-top:4px}
+.cpSwatch{width:20px;height:20px;border:2px solid var(--line);cursor:pointer}
+.cpSwatch:hover{transform:scale(1.2)}
+
+/* ===== PW-Gen ===== */
+.pwCustom{font-size:10px;font-family:var(--font-mono);margin:4px 0}
+
+/* ===== Clock Analog ===== */
+#clkAnalogCanvas{background:var(--paper);border:3px solid var(--line);border-radius:50%}
+
+/* ===== Viewer ===== */
+.vwControls{display:flex;gap:4px;padding:4px;align-items:center}
