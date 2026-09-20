@@ -3025,11 +3025,9 @@ if(!document.getElementById('skipLink')){
 
     /* === Play === */
     function playAudio(){
-      setupAudio();
-      ensureResumed().then(function(){
-        var p=audioEl.play();
-        if(p&&p.catch)p.catch(function(e){console.error('Audio play error:',e.name,e.message);progL.textContent='⚠ '+e.name});
-      });
+      if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
+      var p=audioEl.play();
+      if(p&&p.catch)p.catch(function(e){console.error('Audio play error:',e.name,e.message);progL.textContent='⚠ '+e.name});
     }
     /* Radio routed through main audio pipeline (EQ + Visualizer) */
 
@@ -3037,7 +3035,7 @@ if(!document.getElementById('skipLink')){
       if(i<0||i>=songs.length)return;
       curIdx=i;curStation=null;isRadio=false;
       var s=songs[i];
-      setupAudio();
+      if(!setupDone) setupAudio();
       audioEl.src=s.u;audioEl.load();
       if(activeExtraTab==='vis')initVisualizer();
       playAudio();playing=true;
@@ -3045,7 +3043,7 @@ if(!document.getElementById('skipLink')){
     }
     function playRadio(station){
       curStation=station;isRadio=true;curIdx=-1;
-      setupAudio();
+      if(!setupDone) setupAudio();
       if(audioCtx.state==='suspended')audioCtx.resume();
       audioEl.crossOrigin='anonymous';
       audioEl.src=station.u;
@@ -3339,6 +3337,7 @@ if(!document.getElementById('skipLink')){
         activeTab=this.dataset.tab;
         player.querySelectorAll('.musTab').forEach(function(b){b.classList.remove('active')});
         btn.classList.add('active');
+        if(activeTab==='radio'&&radioStations.length>0)renderRadio();
         renderActiveTab();
         var fb=player.querySelector('[data-tab="favs"]');
         if(fb)fb.textContent='★ Favs ('+favIds.length+')';
@@ -5824,23 +5823,23 @@ var CALENDAR_INITIALIZED=false;
 
 /* Uhr/Wecker */
 /* Sound-Effekte */
-var AudioCtx = window.AudioContext || window.webkitAudioContext;
-var audioCtx = null;
+var SoundCtx = window.AudioContext || window.webkitAudioContext;
+var soundCtx = null;
 
 function playSound(type) {
   try {
-    if (!audioCtx){
-      audioCtx = new AudioCtx();
+    if (!soundCtx){
+      soundCtx = new SoundCtx();
     }
-    if (audioCtx.state === 'suspended'){
-      audioCtx.resume();
+    if (soundCtx.state === 'suspended'){
+      soundCtx.resume();
       return; // Skip this call, will work next time
     }
-    var osc = audioCtx.createOscillator();
-    var gain = audioCtx.createGain();
+    var osc = soundCtx.createOscillator();
+    var gain = soundCtx.createGain();
     osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    var now = audioCtx.currentTime;
+    gain.connect(soundCtx.destination);
+    var now = soundCtx.currentTime;
     if (type === 'click') {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(800, now);
