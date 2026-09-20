@@ -2564,6 +2564,34 @@ if(!document.getElementById('skipLink')){
       var stopBtn = header.querySelector('#beatpadStop');
       if (stopBtn) stopBtn.addEventListener('click', stopSequencer);
 
+      // BPM Input
+      var bpmWrap = document.createElement('span');
+      bpmWrap.style.display = 'inline-flex';
+      bpmWrap.style.alignItems = 'center';
+      bpmWrap.style.gap = '2px';
+      bpmWrap.style.marginLeft = '6px';
+      var bpmLabel = document.createElement('span');
+      bpmLabel.textContent = 'BPM';
+      bpmLabel.style.fontSize = '9px';
+      bpmLabel.style.color = 'var(--muted)';
+      bpmWrap.appendChild(bpmLabel);
+      var bpmInput = document.createElement('input');
+      bpmInput.type = 'number';
+      bpmInput.id = 'beatpadBpm';
+      bpmInput.className = 'beatpad-bpm';
+      bpmInput.value = SEQ.bpm;
+      bpmInput.min = 40;
+      bpmInput.max = 300;
+      bpmInput.style.width = '50px';
+      bpmInput.style.fontSize = '10px';
+      bpmInput.addEventListener('change', function() {
+        var v = parseInt(this.value);
+        if (v >= 40 && v <= 300) SEQ.bpm = v;
+        this.value = SEQ.bpm;
+      });
+      bpmWrap.appendChild(bpmInput);
+      header.appendChild(bpmWrap);
+
       // Shuffle
       var shuffleBtn = document.createElement('button');
       shuffleBtn.className = 'beatpad-btn-lg seq-shuffle';
