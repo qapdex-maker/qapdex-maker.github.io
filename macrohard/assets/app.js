@@ -655,7 +655,7 @@ if(!document.getElementById('skipLink')){
    * @param {string} id - App-ID (z.B. 'notepad', 'calculator')
    */
   function openApp(id){playSound('open');
-    var multiInstApps=['notepad','terminal','editor','explorer'];
+    var multiInstApps=['notepad','terminal','editor'];
     var allowMulti = multiInstApps.indexOf(id) >= 0;
     var instCounter = window.osInstCounter || (window.osInstCounter = {});
     var instId = id;
@@ -779,7 +779,7 @@ if(!document.getElementById('skipLink')){
         if(wId==='music'){
           if(visRafId){cancelAnimationFrame(visRafId);visRafId=null;}
           if(typeof stopSequencer==='function')stopSequencer();
-          if(isRadio)cleanupRadio();
+          /* Radio cleanup via main pipeline */
           if(SEQ){SEQ.playing=false;SEQ.controlsInitialized=false;}
           EQ_INITIALIZED=false;
         }
@@ -1909,14 +1909,19 @@ if(!document.getElementById('skipLink')){
       }catch(e){}
     }
     function saveRadios(){try{localStorage.setItem(SK_RADIO,JSON.stringify(radioStations))}catch(e){}}
+    loadCustomSamples();
 
     /* === Audio Graph === */
     function setupAudio(){
       if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-      if(audioEl) {
-        // Resume AudioContext if suspended
-        if(audioCtx.state==='suspended'){try{audioCtx.resume();}catch(e){}}
-        return;
+      // Always rebuild pipeline (MediaElementSource is one-time-use per element)
+      if(sourceNode){try{sourceNode.disconnect();}catch(e){}}
+      if(audioEl){
+        audioEl.pause();
+        audioEl.src='';
+        audioEl.removeEventListener('timeupdate',onTimeUpdate);
+        audioEl.removeEventListener('ended',onEnded);
+        audioEl.removeEventListener('error',onError);
       }
       audioEl=new Audio();
       audioEl.volume=0.7;
@@ -1969,6 +1974,7 @@ if(!document.getElementById('skipLink')){
       playing: false,
       bpm: 120,
       vol: 0.7,
+      swing: 0,
       step: 0,
       timer: null,
       buffers: {},
@@ -1980,7 +1986,10 @@ if(!document.getElementById('skipLink')){
       lookahead: 0.1,
       scheduleInterval: 25,
       muted: [],
-      solo: -1
+      solo: -1,
+      undoStack: [],
+      redoStack: [],
+      clipboard: null
     };
 
     var SEQ_STEPS = 16;
@@ -2018,7 +2027,62 @@ if(!document.getElementById('skipLink')){
       {f:'808tom', n:'808 Tom', c:'#f2f'}
     ];
 
-    // Default 8 tracks (first from library)
+    
+    var SEQ_CUSTOM_KEY = 'seq_custom_samples';
+    var customSamples = [];
+
+    function loadCustomSamples(){
+      try{
+        var raw = localStorage.getItem(SEQ_CUSTOM_KEY);
+        if(raw) customSamples = JSON.parse(raw);
+      }catch(e){ customSamples = []; }
+    }
+
+    function saveCustomSamples(){
+      try{ localStorage.setItem(SEQ_CUSTOM_KEY, JSON.stringify(customSamples)); }catch(e){}
+    }
+
+    function addCustomSample(file){
+      return new Promise(function(resolve, reject){
+        var reader = new FileReader();
+        reader.onload = function(ev){
+          var dataUrl = ev.target.result;
+          var id = 'custom_' + Date.now();
+          var name = file.name.replace(/\.[^.]+$/, '').substring(0, 20);
+          customSamples.push({id:id, name:name, data:dataUrl});
+          saveCustomSamples();
+          resolve({id:id, name:name});
+        };
+        reader.onerror = function(){ reject('Read error'); };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function removeCustomSample(id){
+      customSamples = customSamples.filter(function(s){return s.id !== id;});
+      saveCustomSamples();
+    }
+
+    function getAllSamples(){
+      return SAMPLE_LIBRARY.concat(customSamples.map(function(c){
+        return {f:'_custom_'+c.id, n:c.name, c:'#0aa', _custom:true};
+      }));
+    }
+
+    function fetchSample(libEntry){
+      if(libEntry._custom){
+        var id = libEntry.f.replace('_custom_','');
+        var cs = customSamples.filter(function(s){return s.id===id;})[0];
+        if(!cs) return Promise.reject('Custom sample not found');
+        return new Promise(function(resolve, reject){
+          fetch(cs.data).then(function(r){return r.arrayBuffer();}).then(resolve).catch(reject);
+        });
+      }
+      return fetch('./assets/samples/' + libEntry.f + '.mp3')
+        .then(function(r){return r.arrayBuffer();});
+    }
+
+// Default 8 tracks (first from library)
     var seqTracks = [0, 1, 2, 3, 4, 5, 6, 7];
 
     function initSequencer() {
@@ -2067,7 +2131,7 @@ if(!document.getElementById('skipLink')){
           var libIdx = seqTracks[trackIdx];
           var sample = SAMPLE_LIBRARY[libIdx];
           promises.push(
-            fetch('./assets/samples/' + sample.f + '.mp3')
+            fetchSample(sample)
               .then(function(r) { return r.arrayBuffer(); })
               .then(function(buf) { return SEQ.ctx.decodeAudioData(buf); })
               .then(function(decoded) { return {idx: trackIdx, decoded: decoded}; })
@@ -2180,7 +2244,12 @@ if(!document.getElementById('skipLink')){
 
       while (SEQ.nextNoteTime < SEQ.ctx.currentTime + SEQ.lookahead) {
         var stepDur = (60.0 / SEQ.bpm) / 4.0;
-        scheduleNote(SEQ.nextNoteTime, SEQ.current16th);
+        // Apply swing to odd steps
+        var swingOffset = 0;
+        if (SEQ.swing > 0 && SEQ.current16th % 2 === 1) {
+          swingOffset = stepDur * SEQ.swing * 0.5;
+        }
+        scheduleNote(SEQ.nextNoteTime + swingOffset, SEQ.current16th);
         SEQ.nextNoteTime += stepDur;
         SEQ.current16th = (SEQ.current16th + 1) % SEQ_STEPS;
       }
@@ -2291,7 +2360,7 @@ if(!document.getElementById('skipLink')){
           var select = document.createElement('select');
           select.className = 'seq-sample-select';
           select.dataset.track = trackIdx;
-          SAMPLE_LIBRARY.forEach(function(s, si) {
+          getAllSamples().forEach(function(s, si) {
             var opt = document.createElement('option');
             opt.value = si;
             opt.textContent = s.n;
@@ -2304,8 +2373,7 @@ if(!document.getElementById('skipLink')){
             var newSample = SAMPLE_LIBRARY[newLibIdx];
             label.textContent = newSample.n;
             label.style.background = newSample.c;
-            fetch('./assets/samples/' + newSample.f + '.mp3')
-              .then(function(r) { return r.arrayBuffer(); })
+            fetchSample(newSample)
               .then(function(buf) { return SEQ.ctx.decodeAudioData(buf); })
               .then(function(decoded) { SEQ.buffers[trackIdx] = decoded; })
               .catch(function() { SEQ.buffers[trackIdx] = null; });
@@ -2325,6 +2393,28 @@ if(!document.getElementById('skipLink')){
             this.classList.toggle('active', SEQ.muted[trackIdx]);
           });
           row.appendChild(muteBtn);
+
+          // Solo button
+          var soloBtn = document.createElement('button');
+          soloBtn.className = 'seq-solo';
+          soloBtn.textContent = 'S';
+          soloBtn.title = 'Solo';
+          soloBtn.dataset.track = trackIdx;
+          soloBtn.addEventListener('click', function() {
+            if (SEQ.solo === trackIdx) {
+              SEQ.solo = -1;
+              this.classList.remove('active');
+            } else {
+              SEQ.solo = trackIdx;
+              this.classList.add('active');
+              // Remove active from other solo buttons
+              var allSolo = document.querySelectorAll('.seq-solo');
+              allSolo.forEach(function(b) {
+                if (b !== soloBtn) b.classList.remove('active');
+              });
+            }
+          });
+          row.appendChild(soloBtn);
 
           // Steps
           for (var j = 0; j < SEQ_STEPS; j++) {
@@ -2351,6 +2441,85 @@ if(!document.getElementById('skipLink')){
       }
     }
 
+    function savePatternState() {
+      SEQ.undoStack.push(JSON.parse(JSON.stringify(SEQ.pattern)));
+      if (SEQ.undoStack.length > 20) SEQ.undoStack.shift();
+      SEQ.redoStack = [];
+    }
+
+    function undoPattern() {
+      if (!SEQ.undoStack.length) return;
+      SEQ.redoStack.push(JSON.parse(JSON.stringify(SEQ.pattern)));
+      SEQ.pattern = SEQ.undoStack.pop();
+      rebuildGrid();
+    }
+
+    function redoPattern() {
+      if (!SEQ.redoStack.length) return;
+      SEQ.undoStack.push(JSON.parse(JSON.stringify(SEQ.pattern)));
+      SEQ.pattern = SEQ.redoStack.pop();
+      rebuildGrid();
+    }
+
+    function copyPattern() {
+      SEQ.clipboard = JSON.parse(JSON.stringify(SEQ.pattern));
+      showNotif('Pattern kopiert');
+    }
+
+    function pastePattern() {
+      if (!SEQ.clipboard) { showNotif('Kein Pattern in Zwischenablage'); return; }
+      savePatternState();
+      SEQ.pattern = JSON.parse(JSON.stringify(SEQ.clipboard));
+      rebuildGrid();
+      showNotif('Pattern eingefügt');
+    }
+
+    function savePatternSlot(slot) {
+      try {
+        var key = 'seq_pattern_' + slot;
+        localStorage.setItem(key, JSON.stringify({
+          pattern: SEQ.pattern,
+          tracks: seqTracks,
+          bpm: SEQ.bpm
+        }));
+      } catch(e) {}
+    }
+
+    function loadPatternSlot(slot) {
+      try {
+        var key = 'seq_pattern_' + slot;
+        var data = JSON.parse(localStorage.getItem(key) || 'null');
+        if (data) {
+          savePatternState();
+          SEQ.pattern = data.pattern;
+          seqTracks = data.tracks.slice(0, 8);
+          SEQ.bpm = data.bpm || 120;
+          var bpmSel = document.getElementById('beatpadBpm');
+          if (bpmSel) bpmSel.value = SEQ.bpm;
+          rebuildGrid();
+          showNotif('Pattern Slot ' + (slot + 1) + ' geladen');
+        } else {
+          showNotif('Slot ' + (slot + 1) + ' leer');
+        }
+      } catch(e) { showNotif('Fehler beim Laden'); }
+    }
+
+    function setPatternLength(len) {
+      savePatternState();
+      SEQ_STEPS = len;
+      // Resize pattern
+      var oldPattern = SEQ.pattern;
+      SEQ.pattern = [];
+      for (var i = 0; i < 8; i++) {
+        SEQ.pattern[i] = [];
+        for (var j = 0; j < len; j++) {
+          SEQ.pattern[i][j] = oldPattern[i] ? (oldPattern[i][j] || false) : false;
+        }
+      }
+      var pad = document.getElementById('musBeatpad');
+      if (pad) buildSeqUI(pad);
+    }
+
     function buildSeqControls(pad) {
       var header = pad.parentElement.querySelector('.beatpad-header');
       if (!header) return;
@@ -2360,8 +2529,8 @@ if(!document.getElementById('skipLink')){
         bpmSel.addEventListener('change', function() { SEQ.bpm = parseInt(this.value); });
       }
 
-      var volSlider = header.querySelector('#beatpadVol');
-      var volLabel = header.querySelector('#beatpadVolL');
+      var volSlider = document.getElementById('beatpadVol');
+      var volLabel = document.getElementById('beatpadVolL');
       if (volSlider) {
         volSlider.addEventListener('input', function() {
           SEQ.vol = parseInt(this.value) / 100;
@@ -2386,6 +2555,51 @@ if(!document.getElementById('skipLink')){
       shuffleBtn.addEventListener('click', shufflePattern);
       header.appendChild(shuffleBtn);
 
+      // Sample Upload
+      var uploadWrap = document.createElement('span');
+      uploadWrap.style.display = 'inline-flex';
+      uploadWrap.style.alignItems = 'center';
+      uploadWrap.style.gap = '4px';
+      uploadWrap.style.marginLeft = '6px';
+      var uploadLabel = document.createElement('label');
+      uploadLabel.className = 'beatpad-btn-lg seq-upload';
+      uploadLabel.style.cursor = 'pointer';
+      uploadLabel.style.fontSize = '10px';
+      uploadLabel.style.padding = '4px 6px';
+      uploadLabel.textContent = '⬆ Sample';
+      uploadLabel.title = 'Eigenes Sample hochladen';
+      var uploadInput = document.createElement('input');
+      uploadInput.type = 'file';
+      uploadInput.accept = 'audio/*';
+      uploadInput.style.display = 'none';
+      uploadInput.addEventListener('change', function(){
+        if(!this.files.length) return;
+        addCustomSample(this.files[0]).then(function(s){
+          showNotif('Sample "' + s.name + '" hinzugefügt');
+          var pad = document.getElementById('musBeatpad');
+          if(pad) buildSeqUI(pad);
+        }).catch(function(e){ showNotif('Fehler: '+e); });
+        this.value = '';
+      });
+      uploadLabel.appendChild(uploadInput);
+      uploadWrap.appendChild(uploadLabel);
+      header.appendChild(uploadWrap);
+
+      // Custom sample remove (last one)
+      var removeBtn = document.createElement('button');
+      removeBtn.className = 'beatpad-btn-lg seq-remove-custom';
+      removeBtn.textContent = '✕';
+      removeBtn.title = 'Letztes Custom-Sample entfernen';
+      removeBtn.addEventListener('click', function(){
+        if(!customSamples.length){ showNotif('Keine Custom-Samples'); return; }
+        var last = customSamples[customSamples.length-1];
+        removeCustomSample(last.id);
+        showNotif('Sample "'+last.name+'" entfernt');
+        var pad = document.getElementById('musBeatpad');
+        if(pad) buildSeqUI(pad);
+      });
+      uploadWrap.appendChild(removeBtn);
+
       // Clear
       var clearBtn = document.createElement('button');
       clearBtn.className = 'beatpad-btn-lg seq-clear';
@@ -2394,26 +2608,136 @@ if(!document.getElementById('skipLink')){
       clearBtn.addEventListener('click', clearPattern);
       header.appendChild(clearBtn);
 
-      // Preset
-      var presetBtn = document.createElement('button');
-      presetBtn.className = 'beatpad-btn-lg seq-preset';
-      presetBtn.textContent = '📋';
-      presetBtn.title = 'Load preset';
-      presetBtn.addEventListener('click', loadPresetPattern);
-      header.appendChild(presetBtn);
+      // Pattern Bank (4 slots)
+      var bankWrap = document.createElement('span');
+      bankWrap.style.display = 'inline-flex';
+      bankWrap.style.alignItems = 'center';
+      bankWrap.style.gap = '2px';
+      bankWrap.style.marginLeft = '6px';
+      for (var slot = 0; slot < 4; slot++) {
+        (function(s) {
+          var slotBtn = document.createElement('button');
+          slotBtn.className = 'beatpad-btn-lg seq-bank';
+          slotBtn.textContent = (s + 1).toString();
+          slotBtn.title = 'Pattern Slot ' + (s + 1);
+          slotBtn.dataset.slot = s;
+          slotBtn.addEventListener('click', function() {
+            loadPatternSlot(s);
+          });
+          bankWrap.appendChild(slotBtn);
+        })(slot);
+      }
+      header.appendChild(bankWrap);
 
-      // Save
-      var saveBtn = document.createElement('button');
-      saveBtn.className = 'beatpad-btn-lg seq-save';
-      saveBtn.textContent = '💾';
-      saveBtn.title = 'Save pattern';
-      saveBtn.addEventListener('click', savePattern);
-      header.appendChild(saveBtn);
+      // Save to slot
+      var saveBankBtn = document.createElement('button');
+      saveBankBtn.className = 'beatpad-btn-lg seq-save-bank';
+      saveBankBtn.textContent = '💾';
+      saveBankBtn.title = 'Save to slot';
+      saveBankBtn.addEventListener('click', function() {
+        // Cycle through slots
+        var slot = saveBankBtn.dataset.slot || 0;
+        savePatternSlot(parseInt(slot));
+        saveBankBtn.dataset.slot = (parseInt(slot) + 1) % 4;
+        showNotif('Pattern in Slot ' + (parseInt(slot) + 1) + ' gespeichert');
+      });
+      header.appendChild(saveBankBtn);
+
+      // Swing control
+      var swingWrap = document.createElement('span');
+      swingWrap.style.display = 'inline-flex';
+      swingWrap.style.alignItems = 'center';
+      swingWrap.style.gap = '2px';
+      swingWrap.style.marginLeft = '6px';
+      var swingLabel = document.createElement('span');
+      swingLabel.textContent = 'Swing';
+      swingLabel.style.fontSize = '9px';
+      swingLabel.style.color = 'var(--muted)';
+      swingWrap.appendChild(swingLabel);
+      var swingSelect = document.createElement('select');
+      swingSelect.className = 'beatpad-bpm';
+      swingSelect.id = 'seqSwing';
+      swingSelect.style.width = '50px';
+      swingSelect.style.fontSize = '10px';
+      [0, 10, 20, 30, 40, 50, 60, 70].forEach(function(v) {
+        var opt = document.createElement('option');
+        opt.value = v;
+        opt.textContent = v + '%';
+        if (v === 0) opt.selected = true;
+        swingSelect.appendChild(opt);
+      });
+      swingSelect.addEventListener('change', function() {
+        SEQ.swing = parseInt(this.value) / 100;
+      });
+      swingSelect.title = 'Swing amount';
+      swingWrap.appendChild(swingSelect);
+      header.appendChild(swingWrap);
+
+      // Pattern length
+      var lenWrap = document.createElement('span');
+      lenWrap.style.display = 'inline-flex';
+      lenWrap.style.alignItems = 'center';
+      lenWrap.style.gap = '2px';
+      lenWrap.style.marginLeft = '6px';
+      var lenLabel = document.createElement('span');
+      lenLabel.textContent = 'Steps';
+      lenLabel.style.fontSize = '9px';
+      lenLabel.style.color = 'var(--muted)';
+      lenWrap.appendChild(lenLabel);
+      var lenSelect = document.createElement('select');
+      lenSelect.className = 'beatpad-bpm';
+      lenSelect.id = 'seqLength';
+      lenSelect.style.width = '45px';
+      lenSelect.style.fontSize = '10px';
+      [8, 16, 32].forEach(function(v) {
+        var opt = document.createElement('option');
+        opt.value = v;
+        opt.textContent = v;
+        if (v === 16) opt.selected = true;
+        lenSelect.appendChild(opt);
+      });
+      lenSelect.addEventListener('change', function() {
+        setPatternLength(parseInt(this.value));
+      });
+      lenSelect.title = 'Pattern length';
+      lenWrap.appendChild(lenSelect);
+      header.appendChild(lenWrap);
+
+      // Undo/Redo
+      var undoBtn = document.createElement('button');
+      undoBtn.className = 'beatpad-btn-lg seq-undo';
+      undoBtn.textContent = '↶';
+      undoBtn.title = 'Undo';
+      undoBtn.addEventListener('click', undoPattern);
+      header.appendChild(undoBtn);
+
+      var redoBtn = document.createElement('button');
+      redoBtn.className = 'beatpad-btn-lg seq-redo';
+      redoBtn.textContent = '↷';
+      redoBtn.title = 'Redo';
+      redoBtn.addEventListener('click', redoPattern);
+      header.appendChild(redoBtn);
+
+      // Copy/Paste
+      var copyBtn = document.createElement('button');
+      copyBtn.className = 'beatpad-btn-lg seq-copy';
+      copyBtn.textContent = '📋';
+      copyBtn.title = 'Copy pattern';
+      copyBtn.addEventListener('click', copyPattern);
+      header.appendChild(copyBtn);
+
+      var pasteBtn = document.createElement('button');
+      pasteBtn.className = 'beatpad-btn-lg seq-paste';
+      pasteBtn.textContent = '📌';
+      pasteBtn.title = 'Paste pattern';
+      pasteBtn.addEventListener('click', pastePattern);
+      header.appendChild(pasteBtn);
     }
 
     function toggleStep() {
       var row = parseInt(this.dataset.row);
       var col = parseInt(this.dataset.col);
+      savePatternState();
       SEQ.pattern[row][col] = !SEQ.pattern[row][col];
       this.classList.toggle('active');
       playSample(row);
@@ -2688,14 +3012,10 @@ if(!document.getElementById('skipLink')){
       var p=audioEl.play();
       if(p&&p.catch)p.catch(function(e){progL.textContent='⚠ Blocked'});
     }
-    /* Audio Context for Radio (separate to avoid MediaElementSource lock) */
-    var radioCtx=null;
-    var radioSource=null;
+    /* Radio routed through main audio pipeline (EQ + Visualizer) */
 
     function playTrack(i){
       if(i<0||i>=songs.length)return;
-      // Clean up Radio if switching from Radio to track
-      if(isRadio&&radioSource){cleanupRadio();}
       curIdx=i;curStation=null;isRadio=false;
       var s=songs[i];
       setupAudio();
@@ -2706,43 +3026,22 @@ if(!document.getElementById('skipLink')){
     }
     function playRadio(station){
       curStation=station;isRadio=true;curIdx=-1;
-      // Stop any current playback first
-      if(audioEl&&!audioEl.paused){audioEl.pause();audioEl.src='';}
-      // Create separate AudioContext for Radio
-      if(!radioCtx) radioCtx=new (window.AudioContext||window.webkitAudioContext)();
-      if(radioCtx.state==='suspended')radioCtx.resume();
-      // Clean up old source
-      if(radioSource){try{radioSource.disconnect();}catch(e){}}
-      // Create new Audio element for Radio
-      var radioEl=new Audio();
-      radioEl.crossOrigin='anonymous';
-      radioEl.volume=0.7;
-      // Create MediaElementSource for Radio
-      radioSource=radioCtx.createMediaElementSource(radioEl);
-      // Connect directly to destination (no EQ/Analyser for Radio streams)
-      radioSource.connect(radioCtx.destination);
-      // Set source and play
-      radioEl.src=station.u;
-      radioEl.play().then(function(){
-        // Success
-      }).catch(function(e){
-        progL.textContent='⚠ Fehler';
-      });
-      // Also update main audioEl reference for progress display
-      audioEl=radioEl;
-      playing=true;
+      setupAudio();
+      if(audioCtx.state==='suspended')audioCtx.resume();
+      audioEl.crossOrigin='anonymous';
+      audioEl.src=station.u;
+      audioEl.load();
+      if(activeExtraTab==='vis')initVisualizer();
+      playAudio();playing=true;
       updateUI();
-      // Don't use visualizer for Radio (streams don't provide freq data)
-      if(visRafId){cancelAnimationFrame(visRafId);visRafId=null;}
     }
-    // Cleanup Radio context
     function cleanupRadio(){
-      if(radioSource){try{radioSource.disconnect();}catch(e){radioSource=null;}}
-      if(radioCtx&&radioCtx.state==='running'){try{radioCtx.suspend();}catch(e){}}
+      // Main pipeline handles all cleanup via setupAudio on next source switch
     }
     function stop(){
-      if(isRadio){cleanupRadio();}
-      setupAudio();audioEl.pause();playing=false;updateUI()
+      if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
+      if(audioEl){audioEl.pause();}
+      playing=false;updateUI();
     }
     function togglePlay(){
       if(playing){stop();}
@@ -2752,7 +3051,6 @@ if(!document.getElementById('skipLink')){
     }
     function nextTrack(){
       if(isRadio&&radioStations.length){
-        cleanupRadio();
         var ni=curStation?radioStations.indexOf(curStation)+1:0;
         playRadio(radioStations[ni%radioStations.length]);return
       }
@@ -2762,7 +3060,6 @@ if(!document.getElementById('skipLink')){
     }
     function prevTrack(){
       if(isRadio&&radioStations.length){
-        cleanupRadio();
         var ci=curStation?radioStations.indexOf(curStation):0;
         var pi=(ci-1+radioStations.length)%radioStations.length;
         playRadio(radioStations[pi]);return
@@ -5016,7 +5313,10 @@ window.addEventListener('beforeunload',function(){
     if(typeof v==='number')clearTimeout(v);
     else if(typeof v==='function'){try{v();}catch(e){}}
   });
-});})();
+});
+  window.openApp = openApp;
+
+})();
 
 /* AMIBIOS Setup — iframe window */
 function buildAMIBIOS(){
@@ -5215,16 +5515,18 @@ function buildTaskmgr(){
     currentBody.appendChild(content);
   }
 
-  // Track app opens
-  if(window._tmOpenAppWrapper) openApp=window._tmOpenAppWrapper;
-  window._tmOpenAppWrapper=openApp;
-  openApp=function(id){
-    window._tmOpenAppWrapper(id);
-    if(id!=='taskmgr'){
-      appHistory.push({name:id,action:'Gestartet',time:new Date().toLocaleTimeString('de-DE')});
-      if(appHistory.length>50) appHistory.shift();
-    }
-  };
+  // Track app opens (wrap once)
+  if(!window._tmOpenAppWrapper){
+    window._tmOpenAppWrapper = window.openApp;
+    window._tmAppHistory = appHistory;
+    window.openApp = function(id){
+      window._tmOpenAppWrapper(id);
+      if(id!=='taskmgr'){
+        appHistory.push({name:id,action:'Gestartet',time:new Date().toLocaleTimeString('de-DE')});
+        if(appHistory.length>50) appHistory.shift();
+      }
+    };
+  }
 
   renderContent();
   if(!window.osIntervals['taskmgr']) window.osIntervals['taskmgr']=setInterval(function(){

@@ -1,12 +1,12 @@
 # MakerOS — qapdex-maker.github.io/macrohard/
 
-Session 2026-09-19 · v2.11.42 (2026-09-19). Standalone subpage in `qapdex-maker.github.io`.
+Session 2026-09-20 · v2.11.42.1 (2026-09-20). Standalone subpage in `qapdex-maker.github.io`.
 
 ## Live
 - **URL**: https://qapdex-maker.github.io/macrohard/
 - **Branch**: `main`
-- **Tests**: 66/66 passing (`node tests/app.test.js`)
-- **Cache-Bust**: `?v=42`
+- **Tests**: 68/68 passing (`node tests/app.test.js`)
+- **Cache-Bust**: `?v=43`
 
 ## Domain
 - **qapdex.com**: Gekauft am 2026-09-19 (0,87 Cent für 1 Jahr, checkdomain.de)
@@ -20,23 +20,23 @@ Session 2026-09-19 · v2.11.42 (2026-09-19). Standalone subpage in `qapdex-maker
 ## Structure
 - `index.html` — OS shell + desktop + boot/lock + i18n inline + CSS-Criticals + app cards grid
 - `assets/site.css` — design tokens, 4 themes, dark mode, components, animations, task view, help overlay, notifications, transitions, a11y
-- `assets/app.js` — boot→lock→desktop, 25 apps, multi-instance, drag & drop, task view, help overlay, notification center, i18n, lazy loading (~5800 lines)
+- `assets/app.js` — boot→lock→desktop, 25 apps, multi-instance, drag & drop, task view, help overlay, notification center, i18n, lazy loading (~6300 lines)
 - `manifest.json` — PWA manifest
 - `sw.js` — service worker (stale-while-revalidate, network-first, quota check, offline fallback)
 - `assets/ami-bios-setup.html` — AMIBIOS Setup utility (Award BIOS simulation, CRT-style)
 - `assets/samples/` — 31 drum samples (MP3 + WAV) für Pattern Sequencer
-- `tests/app.test.js` — 66 unit tests (Node.js test runner)
+- `tests/app.test.js` — 68 unit tests (Node.js test runner)
 
-## Apps (v2.11.42 — 25 Apps)
+## Apps (v2.11.42.1 — 25 Apps)
 
 ### Foundation (11 Apps)
 1. **Notepad** — Undo/Redo (50 Schritte), Zeilennummern, Suchen & Ersetzen Overlay, Font-Size Selector, Ctrl+S/F, Export .txt
 2. **Calculator** — Speicher (M+/M-/MR/MC), Konstanten (π, e, φ), SCI-Modus, Tastatur, History (12)
 3. **Terminal** — 25 Befehle (help/ls/cd/pwd/touch/rm/mkdir/cp/mv/find/grep/echo/date/clear/whoami/cat/colors/tree/head/tail/wc/calc/history/exit/about), Tab-Completion, colored output, Shared FS mit Explorer
-4. **Explorer** — Breadcrumb-Navigation (Zurück/Weiter/Up), Sortierung (Name/Typ/Größe), Listen/Raster-Ansicht, Kopieren/Verschieben, Papierkorb leeren, Shared FS mit Terminal
+4. **Explorer** — Breadcrumb-Navigation (Zurück/Weiter/Up), Sortierung (Name/Typ/Größe), Listen/Raster-Ansicht, Kopieren/Verschieben, Papierkorb leeren, Shared FS mit Terminal, Kontextmenü, Single-Instanz
 5. **Paint** — 24 Farben, Shape-Tools, Export PNG, Undo/Redo, Radiergummi, Linienbreite, Fill, Clear, Touch
 6. **Browser** — Bookmarks (localStorage), History, Home-Seite mit Quick-Links, Tab-System, iframe-Fallback
-7. **Music** — Pattern Sequencer (8 Tracks, 16 Steps, Lookahead, 31 Samples), Radio (48 Fallback-Stationen, Multi-Server, Suche), Upload, Favoriten, Sadee-UI, EQ 6-Band, Visualizer
+7. **Music** — Pattern Sequencer (8 Tracks, 8/16/32 Steps, Lookahead, 31+ Samples, Custom Sample Upload, Synthesizer-Fallback, Solo/Mute per Track, Pattern Bank 4 Slots, Swing, Undo/Redo/Copy/Paste), Radio (48 Fallback-Stationen durch EQ+Visualizer Pipeline), Upload, Favoriten, EQ 6-Band, Visualizer
 8. **Chat** — Bot-Antworten (Keywords), Typing-Indicator, Kontakt-Status, Emoji-Bar, Suggestion-Chips, localStorage
 9. **Docs** — Markdown-Toolbar (Bold/Italic/Heading/Link/Code/Quote/List), Export .md, Preview, localStorage
 10. **Settings** — 4 Tabs, Wallpaper-Slideshow (5-60s), Accent-Color Picker (live), Theme-Engine, Icon-Größe, Export/Import JSON, Privacy-Clear
@@ -58,7 +58,19 @@ Session 2026-09-19 · v2.11.42 (2026-09-19). Standalone subpage in `qapdex-maker
 24. **Pomodoro** — Statistik (heute/gesamt), Long Break (alle 4 Sessions), CSV Export, Pausen-Übungen, Ton
 25. **Notes** — Verschlüsselung (Base64), Papierkorb (Wiederherstellen), Teilen (URL), Autosave-Indikator, Drag & Drop Sortierung
 
-## New in v2.11.42
+## New in v2.11.42.1 (2026-09-20)
+- **Sequencer Volume Fix**: `#beatpadVol` liegt außerhalb von `.beatpad-header` → `document.getElementById` statt `header.querySelector`
+- **Sequencer Custom Sample Upload**: `⬆ Sample` Button, localStorage Persistenz, Dropdown zeigt 31+ Samples
+- **Sequencer Solo/Mute**: Pro Track Solo-Toggle (schaltet andere stumm)
+- **Sequencer Pattern Bank**: 4 Slots zum Speichern/Laden von Patterns
+- **Sequencer Swing**: 0-70% Swing-Control für shuffle-feel
+- **Sequencer Steps**: 8/16/32 Steps wählbar
+- **Sequencer Undo/Redo/Copy/Paste**: 20-Schritte-Verlauf, Pattern-Zwischenablage
+- **Radio + EQ + Visualizer**: Radio geht jetzt durch main Audio-Pipeline (EQ 6-Band + Visualizer aktiv)
+- **Explorer Single-Instanz**: Multi-Instanz entfernt (Template-IDs kollidierten)
+- **Tests**: 68/68 grün
+
+## New in v2.11.42 (2026-09-19)
 - **Alle 25 Apps** refaktoriert mit Undo/Redo, Suchen, Font-Size, Zoom, Sortierung
 - **66 Tests** mit App-Prüfung, ImgEditor, Pomodoro, Notes, C4, C5
 - **Explorer v3.0**: Breadcrumb, Sortierung, Ansicht, Kopieren, Papierkorb
@@ -101,6 +113,7 @@ Session 2026-09-19 · v2.11.42 (2026-09-19). Standalone subpage in `qapdex-maker
 - Neo-Brutalist Komponenten (.btn, .input, .card, .pill)
 
 ## Version History
+- v2.11.42.1 (2026-09-20): Sequencer Volume/Upload/Solo/Bank/Swing, Radio+EQ+Visualizer Pipeline, Explorer Single-Instanz, 68 Tests
 - v2.11.42 (2026-09-19): Alle 25 Apps refaktoriert, 66 Tests, i18n, A11y, Performance, Explorer v3.0
 - v2.11.41 (2026-09-19): Notepad + Calculator v2.0 (Undo/Redo, Zeilennummern, Speicher)
 - v2.11.40 (2026-09-19): Systeminfo (Battery/Geo/Media), Kalender (Events), Chat (Bot), Browser (Bookmarks), Radio (48 Stationen)
