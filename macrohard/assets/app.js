@@ -823,7 +823,8 @@ if(!document.getElementById('skipLink')){
       focused=null;
       updateFocus();
     });
-    mk.querySelector('.wmax').addEventListener('click',function(e){e.stopPropagation();
+    var maxBtn=mk.querySelector('.wmax');
+    if(maxBtn) maxBtn.addEventListener('click',function(e){e.stopPropagation();
       var tbIcon=document.getElementById('tb-'+instId);
       if(mk.dataset.max==='true'){
         mk.style.left=mk.dataset.origLeft;mk.style.top=mk.dataset.origTop;
@@ -1727,13 +1728,13 @@ if(!document.getElementById('skipLink')){
   }
 
 
-  function saveState(){undoStack.push(pCtx.getImageData(0,0,pCtx.canvas.width,pCtx.canvas.height));if(undoStack.length>maxUndo)undoStack.shift();redoStack=[];}
-  function undo(){if(!undoStack.length)return;redoStack.push(pCtx.getImageData(0,0,pCtx.canvas.width,pCtx.canvas.height));pCtx.putImageData(undoStack.pop(),0,0);toast('Rückgängig');}
-  function redo(){if(!redoStack.length)return;undoStack.push(pCtx.getImageData(0,0,pCtx.canvas.width,pCtx.canvas.height));pCtx.putImageData(redoStack.pop(),0,0);toast('Wiederholen');}
   function buildPaint(){
     var colors=document.getElementById('ptColors');var canvas=document.getElementById('ptCanvas');if(!colors||!canvas) return;
     var paintColor='#000',pTool='pen',painting=false,pStart=null,undoStack=[],redoStack=[],maxUndo=50;
     var pCtx=canvas.getContext('2d');pCtx.fillStyle='#fff';pCtx.fillRect(0,0,canvas.width,canvas.height);
+    function saveState(){undoStack.push(pCtx.getImageData(0,0,pCtx.canvas.width,pCtx.canvas.height));if(undoStack.length>maxUndo)undoStack.shift();redoStack=[];}
+    function undo(){if(!undoStack.length)return;redoStack.push(pCtx.getImageData(0,0,pCtx.canvas.width,pCtx.canvas.height));pCtx.putImageData(undoStack.pop(),0,0);toast('Rückgängig');}
+    function redo(){if(!redoStack.length)return;undoStack.push(pCtx.getImageData(0,0,pCtx.canvas.width,pCtx.canvas.height));pCtx.putImageData(redoStack.pop(),0,0);toast('Wiederholen');}
     colors.innerHTML='';
     var cls=['#000','#fff','#ff0','#f00','#0f0','#00f','#f0f','#ff8000','#800','#080','#008','#808','#f90','#09f','#90f','#0ff','#f09','#9f0','#636','#666','#333','#ccc','#fee','#cff'];
     cls.forEach(function(c){
