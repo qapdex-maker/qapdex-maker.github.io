@@ -1864,6 +1864,7 @@ if(!document.getElementById('skipLink')){
     var activeTab='playlist';
     var curIdx=-1,curStation=null,playing=false,repeat=false,shuffled=[];
     var audioCtx=null,sourceNode=null,analyser=null,biquadFilters=[];
+    window.audioCtx = null; // expose to global scope for resumeMusic
     var seqBiquadFilters=[];
     var eqBands=[60,150,400,1000,3000,8000];
     var eqValues={60:0,150:0,400:0,1000:0,3000:0,8000:0};
@@ -1929,7 +1930,7 @@ if(!document.getElementById('skipLink')){
     var setupDone=false;
     function setupAudio(){
       if(setupDone) return;
-      if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+      if(!audioCtx){ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); window.audioCtx=audioCtx; }
       // Always rebuild pipeline (MediaElementSource is one-time-use per element)
       if(sourceNode){try{sourceNode.disconnect();}catch(e){}}
       if(audioEl){
@@ -3439,7 +3440,7 @@ if(!document.getElementById('skipLink')){
   window.osTimeouts['chat_cleanup']=cleanupChat;
 
   function resumeMusic(){
-    if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
+    if(typeof window.audioCtx !== 'undefined' && window.audioCtx && window.audioCtx.state === 'suspended') window.audioCtx.resume();
   }
 
   /* Chat — S3: Timestamps in every message */
