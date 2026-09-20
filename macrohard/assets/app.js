@@ -1954,7 +1954,7 @@ if(!document.getElementById('skipLink')){
       audioEl.addEventListener('ended',onEnded);
       audioEl.addEventListener('error',onError);
     }
-    function ensureResumed(){if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume()}
+    function ensureResumed(){if(audioCtx&&audioCtx.state==='suspended')return audioCtx.resume();return Promise.resolve()}
 
     /* === Visualizer === */
     function initVisualizer(){
@@ -3022,9 +3022,11 @@ if(!document.getElementById('skipLink')){
 
     /* === Play === */
     function playAudio(){
-      setupAudio();ensureResumed();
-      var p=audioEl.play();
-      if(p&&p.catch)p.catch(function(e){console.error('Audio play error:',e.name,e.message);progL.textContent='⚠ '+e.name});
+      setupAudio();
+      ensureResumed().then(function(){
+        var p=audioEl.play();
+        if(p&&p.catch)p.catch(function(e){console.error('Audio play error:',e.name,e.message);progL.textContent='⚠ '+e.name});
+      });
     }
     /* Radio routed through main audio pipeline (EQ + Visualizer) */
 
@@ -3328,12 +3330,12 @@ if(!document.getElementById('skipLink')){
     });
 
     /* === Tab Navigation === */
+    fetchRadios();
     player.querySelectorAll('.musTab[data-tab]').forEach(function(btn){
       btn.addEventListener('click',function(){
         activeTab=this.dataset.tab;
         player.querySelectorAll('.musTab').forEach(function(b){b.classList.remove('active')});
         btn.classList.add('active');
-        if(activeTab==='radio')fetchRadios();
         renderActiveTab();
         var fb=player.querySelector('[data-tab="favs"]');
         if(fb)fb.textContent='★ Favs ('+favIds.length+')';
