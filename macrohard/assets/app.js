@@ -814,7 +814,8 @@ if(!document.getElementById('skipLink')){
       updateFocus();
       saveSession();
     });
-    mk.querySelector('.wmin').addEventListener('click',function(e){e.stopPropagation();
+    var minBtn=mk.querySelector('.wmin');
+    if(minBtn) minBtn.addEventListener('click',function(e){e.stopPropagation();
       var tbIcon=document.getElementById('tb-'+instId);
       mk.classList.add('minimized');
       mk.style.display='none';
@@ -1731,6 +1732,8 @@ if(!document.getElementById('skipLink')){
   function redo(){if(!redoStack.length)return;undoStack.push(pCtx.getImageData(0,0,pCtx.canvas.width,pCtx.canvas.height));pCtx.putImageData(redoStack.pop(),0,0);toast('Wiederholen');}
   function buildPaint(){
     var colors=document.getElementById('ptColors');var canvas=document.getElementById('ptCanvas');if(!colors||!canvas) return;
+    var paintColor='#000',pTool='pen',painting=false,pStart=null,undoStack=[],redoStack=[],maxUndo=50;
+    var pCtx=canvas.getContext('2d');pCtx.fillStyle='#fff';pCtx.fillRect(0,0,canvas.width,canvas.height);
     colors.innerHTML='';
     var cls=['#000','#fff','#ff0','#f00','#0f0','#00f','#f0f','#ff8000','#800','#080','#008','#808','#f90','#09f','#90f','#0ff','#f09','#9f0','#636','#666','#333','#ccc','#fee','#cff'];
     cls.forEach(function(c){
@@ -1751,7 +1754,6 @@ if(!document.getElementById('skipLink')){
     var lwWrap=document.createElement('label');lwWrap.style.cssText='display:flex;align-items:center;gap:4px;font-size:10px';
     lwWrap.innerHTML='Strich: <input type="range" id="ptLW" min="1" max="20" value="3" style="width:60px">';
     tb.appendChild(lwWrap);
-    var pCtx=canvas.getContext('2d');pCtx.fillStyle='#fff';pCtx.fillRect(0,0,canvas.width,canvas.height);
     /* Actions */
     var undoBtn=document.createElement('button');undoBtn.className='cBtn';undoBtn.textContent='↩';undoBtn.title='Rückgängig';undoBtn.addEventListener('click',undo);
     var redoBtn=document.createElement('button');redoBtn.className='cBtn';redoBtn.textContent='↪';redoBtn.title='Wiederholen';redoBtn.addEventListener('click',redo);
@@ -3579,7 +3581,7 @@ if(!document.getElementById('skipLink')){
       var accentLabel=document.createElement('label');accentLabel.innerHTML='Accent: <input type="color" id="stAccent" value="#2547ff" style="width:40px;height:24px;border:2px solid var(--line)">';
       var accentBtn=document.createElement('button');accentBtn.className='cBtn';accentBtn.textContent='Apply Accent';
       accentBtn.addEventListener('click',function(){var v=document.getElementById('stAccent').value;document.documentElement.style.setProperty('--accent',v);try{localStorage.setItem('os_accent',v);}catch(e){}toast('Accent gesetzt');});
-      document.getElementById('stAccent').addEventListener('input',function(){document.documentElement.style.setProperty('--accent',this.value);});
+      accentLabel.querySelector('#stAccent').addEventListener('input',function(){document.documentElement.style.setProperty('--accent',this.value);});
       accentLabel.appendChild(accentBtn);grid.appendChild(accentLabel);
       /* Font size */
       var fsLabel=document.createElement('label');fsLabel.innerHTML='Font-Größe: <select id="stFS"><option value="13">Normal</option><option value="15">Groß</option><option value="11">Klein</option></select>';
