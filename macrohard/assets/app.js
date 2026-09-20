@@ -2117,24 +2117,25 @@ if(!document.getElementById('skipLink')){
         }
       }
 
-      // Ensure AudioContext exists (synthesized fallback always available)
-      if (!SEQ.ctx) {
+      // Create dedicated AudioContext for sequencer
+      if (!SEQ.ctx || SEQ.ctx.state === 'closed') {
         var AC = window.AudioContext || window.webkitAudioContext;
-        if (AC) SEQ.ctx = new AC();
+        if (AC) {
+          SEQ.ctx = new AC();
+        }
       }
 
-      // Always build full sequencer UI first (so it's usable even if samples fail)
+      // Always build full sequencer UI first
       buildSeqUI(pad);
       SEQ.loaded = true;
 
-      // Then try to load samples in background (non-blocking)
-      if (!SEQ.loaded || SEQ.loaded) {
-        loadSamples().then(function() {
-          // Samples loaded — buffers updated in-place
-        }).catch(function() {
-          // Samples failed — synthesized fallback already active
+      // Then try to load samples in background
+      if (SEQ.ctx) {
+        loadSamples().catch(function() {
           console.warn('Sequencer: samples unavailable, using synthesized sounds');
         });
+      } else {
+        console.warn('Sequencer: no AudioContext, using synthesized sounds');
       }
     }
 
@@ -2160,9 +2161,11 @@ if(!document.getElementById('skipLink')){
         results.forEach(function(r) {
           SEQ.buffers[r.idx] = r.decoded;
         });
-        // If ALL samples failed, trigger fallback
         var anyLoaded = results.some(function(r){ return r.decoded; });
         if (!anyLoaded) return Promise.reject('All samples failed');
+      }).catch(function(e) {
+        console.warn('Sequencer: samples unavailable, using synthesized sounds');
+        return Promise.reject(e);
       });
     }
 
@@ -2208,39 +2211,31 @@ if(!document.getElementById('skipLink')){
       }
 
       var t = when || ctx.currentTime;
-      var trackType = trackIdx % 4;
+      var sample = SAMPLE_LIBRARY[seqTracks[trackIdx]] || SAMPLE_LIBRARY[trackIdx % SAMPLE_LIBRARY.length];
       var o = ctx.createOscillator();
       var g = ctx.createGain();
 
-      if (trackType === 0) { // Kick
-        o.type = 'sine';
-        o.frequency.setValueAtTime(120, t);
-        o.frequency.exponentialRampToValueAtTime(30, t + 0.15);
-        g.gain.setValueAtTime(0.8, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+      if (sample) {
+        // Use sample frequency and color for synthesized fallback
+        var freq = sample.f || 440;
+        o.type = freq < 100 ? 'sine' : (freq < 1000 ? 'triangle' : 'square');
+        o.frequency.setValueAtTime(freq, t);
+        if (freq < 100) {
+          o.frequency.exponentialRampToValueAtTime(freq * 0.3, t + 0.15);
+          g.gain.setValueAtTime(0.8, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+          o.stop(t + 0.2);
+        } else if (freq < 1000) {
+          g.gain.setValueAtTime(0.5, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+          o.stop(t + 0.1);
+        } else {
+          g.gain.setValueAtTime(0.2, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+          o.stop(t + 0.05);
+        }
+        g.gain.setValueAtTime(0, t + 0.3);
         o.start(t);
-        o.stop(t + 0.2);
-      } else if (trackType === 1) { // Snare
-        o.type = 'triangle';
-        o.frequency.setValueAtTime(200, t);
-        g.gain.setValueAtTime(0.5, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-        o.start(t);
-        o.stop(t + 0.1);
-      } else if (trackType === 2) { // HiHat
-        o.type = 'square';
-        o.frequency.setValueAtTime(8000, t);
-        g.gain.setValueAtTime(0.2, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-        o.start(t);
-        o.stop(t + 0.05);
-      } else { // Bass
-        o.type = 'sawtooth';
-        o.frequency.setValueAtTime(60 + trackIdx * 10, t);
-        g.gain.setValueAtTime(0.4, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-        o.start(t);
-        o.stop(t + 0.15);
       }
 
       o.connect(g);
@@ -2259,7 +2254,10 @@ if(!document.getElementById('skipLink')){
       if (!SEQ.playing) return;
       if (!SEQ.ctx) return;
 
-      while (SEQ.nextNoteTime < SEQ.ctx.currentTime + SEQ.lookahead) {
+      var safety = 0;
+      var maxSteps = 32;
+      while (SEQ.nextNoteTime < SEQ.ctx.currentTime + SEQ.lookahead && safety < maxSteps) {
+        safety++;
         var stepDur = (60.0 / SEQ.bpm) / 4.0;
         // Apply swing to odd steps
         var swingOffset = 0;
@@ -2278,7 +2276,7 @@ if(!document.getElementById('skipLink')){
     function updateVisual(step) {
       var currentSteps = document.querySelectorAll('.seq-step[data-col="' + step + '"]');
       document.querySelectorAll('.seq-step.playing').forEach(function(el) {
-        el.classList.remove('playing');
+        if (parseInt(el.dataset.col) !== step) el.classList.remove('playing');
       });
       currentSteps.forEach(function(el) {
         el.classList.add('playing');
@@ -2390,10 +2388,13 @@ if(!document.getElementById('skipLink')){
             var newSample = SAMPLE_LIBRARY[newLibIdx];
             label.textContent = newSample.n;
             label.style.background = newSample.c;
-            fetchSample(newSample)
-              .then(function(buf) { return SEQ.ctx.decodeAudioData(buf); })
-              .then(function(decoded) { SEQ.buffers[trackIdx] = decoded; })
-              .catch(function() { SEQ.buffers[trackIdx] = null; });
+            // Only update buffer — do NOT rebuild UI
+            if (SEQ.ctx) {
+              fetchSample(newSample)
+                .then(function(buf) { return SEQ.ctx.decodeAudioData(buf); })
+                .then(function(decoded) { SEQ.buffers[trackIdx] = decoded; })
+                .catch(function() { SEQ.buffers[trackIdx] = null; });
+            }
           });
           labelWrap.appendChild(select);
           row.appendChild(labelWrap);
@@ -3438,7 +3439,6 @@ if(!document.getElementById('skipLink')){
   window.osTimeouts['chat_cleanup']=cleanupChat;
 
   function resumeMusic(){
-    if(SEQ.ctx&&SEQ.ctx.state==='suspended')SEQ.ctx.resume();
     if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
   }
 
