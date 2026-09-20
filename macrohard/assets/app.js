@@ -1478,6 +1478,8 @@ if(!document.getElementById('skipLink')){
   var EXPLOADER_INITIALIZED=false;
   var BROWSER_INITIALIZED=false;
   var MUSIC_INITIALIZED=false;
+  var TASKMGR_INITIALIZED=false;
+  var EQ_INITIALIZED=false;
 
   function newExplorerItem(type){
     var name=prompt(type==='folder'?'Ordnername:':'Dateiname:');
