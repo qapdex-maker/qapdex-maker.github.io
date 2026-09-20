@@ -782,7 +782,7 @@ if(!document.getElementById('skipLink')){
       if(wId==='taskmgr'){TASKMGR_INITIALIZED=false;}
       if(wId==='explorer'){EXPLOADER_INITIALIZED=false;}
       if(wId==='browser'){BROWSER_INITIALIZED=false;}
-      if(wId==='music'){MUSIC_INITIALIZED=false;}
+      if(wId==='music'){MUSIC_INITIALIZED=false;setupDone=false;}
       // Stop music-specific resources
       try{
         if(wId==='music'){
@@ -1926,7 +1926,9 @@ if(!document.getElementById('skipLink')){
     loadCustomSamples();
 
     /* === Audio Graph === */
+    var setupDone=false;
     function setupAudio(){
+      if(setupDone) return;
       if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
       // Always rebuild pipeline (MediaElementSource is one-time-use per element)
       if(sourceNode){try{sourceNode.disconnect();}catch(e){}}
@@ -1953,6 +1955,7 @@ if(!document.getElementById('skipLink')){
       audioEl.addEventListener('timeupdate',onTimeUpdate);
       audioEl.addEventListener('ended',onEnded);
       audioEl.addEventListener('error',onError);
+      setupDone=true;
     }
     function ensureResumed(){if(audioCtx&&audioCtx.state==='suspended')return audioCtx.resume();return Promise.resolve()}
 
