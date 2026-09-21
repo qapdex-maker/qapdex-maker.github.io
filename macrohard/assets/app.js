@@ -3948,15 +3948,6 @@ if(!document.getElementById('skipLink')){
   /* Init */
   window.addEventListener('DOMContentLoaded',function(){
     var desk=document.getElementById('deskIcons');
-    /* Lazy loading: Only init icons visible on screen */
-    var observer=new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        if(entry.isIntersecting){
-          entry.target.style.visibility='visible';
-          observer.unobserve(entry.target);
-        }
-      });
-    });
     desktopApps.forEach(function(a){
       a.iconSvg=svgIcon(a.icon);
       var icon=makeIcon(a);
@@ -3968,11 +3959,6 @@ if(!document.getElementById('skipLink')){
           openApp(a.id);
         }
       });
-      /* Defer heavy apps */
-      if(['editor','imgeditor'].indexOf(a.id)!==-1){
-        icon.style.visibility='hidden';
-        observer.observe(icon);
-      }
     });
 
     /* Static app cards (index.html) - add click handlers */
