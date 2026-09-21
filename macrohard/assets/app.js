@@ -2236,9 +2236,7 @@ if(!document.getElementById('skipLink')){
           o.stop(t + 0.05);
         }
         g.gain.setValueAtTime(0, t + 0.3);
-        o.start(t);
-      } catch(e) {
-        // ignore oscillator errors, don't crash scheduler
+        try { o.start(t); } catch(e) {}
       }
 
       try { o.connect(g); g.connect(SEQ.master); } catch(e) {}
@@ -2289,12 +2287,11 @@ if(!document.getElementById('skipLink')){
 
     function startSequencer() {
       if (!SEQ.loaded) return;
-      if (!SEQ.ctx) {
+      if (!SEQ.ctx || SEQ.ctx.state === 'closed') {
         var AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return;
         SEQ.ctx = new AC();
       }
-      if (SEQ.ctx.state === 'suspended') SEQ.ctx.resume();
 
       if (!SEQ.master) {
         SEQ.master = SEQ.ctx.createGain();
@@ -2306,7 +2303,7 @@ if(!document.getElementById('skipLink')){
 
       SEQ.playing = true;
       SEQ.current16th = 0;
-      SEQ.nextNoteTime = SEQ.ctx.currentTime;
+      SEQ.nextNoteTime = SEQ.ctx.currentTime + 0.1;
 
       var playBtn = document.getElementById('beatpadPlay');
       if (playBtn) {
@@ -2314,7 +2311,26 @@ if(!document.getElementById('skipLink')){
         playBtn.style.background = 'var(--accent-2)';
       }
 
-      scheduler();
+      // Resume and wait for running state before starting scheduler
+      if (SEQ.ctx.state === 'suspended') {
+        SEQ.ctx.resume().catch(function(){});
+        // Poll until running (max 2 seconds)
+        var pollCount = 0;
+        var poll = function() {
+          if (!SEQ.playing) return;
+          if (SEQ.ctx.state === 'running') {
+            scheduler();
+          } else if (pollCount < 40) {
+            pollCount++;
+            setTimeout(poll, 50);
+          } else {
+            console.warn('Sequencer: AudioContext did not start');
+          }
+        };
+        setTimeout(poll, 50);
+      } else {
+        scheduler();
+      }
     }
 
     function stopSequencer() {
@@ -3433,6 +3449,7 @@ if(!document.getElementById('skipLink')){
       try{if(SEQ&&SEQ.ctx&&SEQ.ctx.state!=='closed')SEQ.ctx.suspend();}catch(e){}
     };
     window.SEQ = SEQ; /* expose for debugging */
+    window.SEQ = SEQ;
     initSequencer();initEqualizer();
     loadFavs();loadCustom();loadRadios();
     renderActiveTab();updateUI();
