@@ -528,6 +528,8 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .musLogo{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--accent)}
 .musToggle{padding:4px 10px;border:2px solid var(--line);background:var(--paper);font-family:var(--font-mono);font-size:10px;cursor:pointer;box-shadow:var(--shadow-sm)}
 .musToggle:hover{background:var(--accent);color:#fff}
+.musCloseBtn{padding:4px 10px;border:2px solid var(--line);background:var(--paper);font-family:var(--font-mono);font-size:10px;cursor:pointer;box-shadow:var(--shadow-sm);color:var(--text);margin-left:4px}
+.musCloseBtn:hover{background:#ff3b3b;color:#fff}
 
 /* Body — Main + Sidebar */
 .musBody{flex:1;display:flex;overflow:hidden;min-height:0}
