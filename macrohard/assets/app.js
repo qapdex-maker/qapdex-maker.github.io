@@ -2283,9 +2283,10 @@ if(!document.getElementById('skipLink')){
       // Get or create AudioContext - MUST be resumed synchronously in click handler
       if (window.audioCtx) {
         SEQ.ctx = window.audioCtx;
-      } else if (!SEQ.ctx || SEQ.ctx.state === 'closed') {
+      } else {
         var AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return;
+        // Create new context and expose globally so Radio/Tracks reuse it
         SEQ.ctx = new AC();
         window.audioCtx = SEQ.ctx;
       }
