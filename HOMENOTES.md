@@ -3,7 +3,7 @@ https://docs.github.com/de/pages/quickstart
 
 ## Seiten
 - Portal-Root `index.html` = Portal
-- `macrohard/` = MakerOS Doors OS v2.11.44 (Neo-Brutalist Desktop OS, 25 Apps, Mobile-optimiert)
+- `macrohard/` = MakerOS Doors OS v2.11.45 (Neo-Brutalist Desktop OS, 25 Apps, Mobile-optimiert)
 - `idun/` = idun console
 - `msgraph/react/` = Graph Metadata Hub
 - `catpop/` = CatPop Meme/Announcement

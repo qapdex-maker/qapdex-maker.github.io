@@ -1,6 +1,6 @@
 # ROADMAP — macrohard/ (MakerOS)
 
-Stand: 2026-09-21 · v2.11.44 · 25 Apps · 68 Tests grün
+Stand: 2026-09-21 · v2.11.45 · 25 Apps · 68 Tests grün
 
 ## 1. Aktueller Status (v2.11.43)
 
@@ -112,6 +112,10 @@ Stand: 2026-09-21 · v2.11.44 · 25 Apps · 68 Tests grün
 ---
 
 ## 4. Changelog
+
+### v2.11.45 (2026-09-21)
+- Fix: Explorer Mobile Sidebar-Drawer overflow:hidden überschrieben
+- 68 Tests grün
 
 ### v2.11.44 (2026-09-21)
 - Mobile UX: Touch-Resize (20px Hitbox + Pinch-to-Zoom)

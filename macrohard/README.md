@@ -1,6 +1,6 @@
 # MakerOS — qapdex-maker.github.io/macrohard/
 
-Stand 2026-09-21 · v2.11.44 · Cache `?v=52`.
+Stand 2026-09-21 · v2.11.45 · Cache `?v=52` / `?v=40`.
 
 ## Live
 - **URL**: https://qapdex-maker.github.io/macrohard/
@@ -106,6 +106,7 @@ Stand 2026-09-21 · v2.11.44 · Cache `?v=52`.
 - Neo-Brutalist Komponenten (.btn, .input, .card, .pill)
 
 ## Version History
+- v2.11.45 (2026-09-21): Fix Explorer Mobile Sidebar-Drawer (overflow:visible)
 - v2.11.44 (2026-09-21): Mobile UX — Touch-Resize (20px Hitbox + Pinch), Window-Drag, 85vw Fenster, Explorer Drawer + Listenansicht, Terminal große Eingabe
 - v2.11.43 (2026-09-21): Audio Pipeline Cleanup, Beatpad BPM Input, Radio API-Load, Console-Fehler behoben, 68 Tests
 - v2.11.42.1 (2026-09-20): Sequencer Volume/Upload/Solo/Bank/Swing, Radio+EQ+Visualizer Pipeline, Explorer Single-Instanz, 68 Tests
