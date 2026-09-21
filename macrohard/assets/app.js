@@ -2294,6 +2294,14 @@ if(!document.getElementById('skipLink')){
       // Resume synchronously (must be in call stack of user gesture)
       if (SEQ.ctx.state === 'suspended') {
         SEQ.ctx.resume();
+        // Fallback: if still suspended after 100ms, try again
+        if (SEQ.ctx.state === 'suspended') {
+          setTimeout(function(){
+            if (SEQ.ctx && SEQ.ctx.state === 'suspended') {
+              SEQ.ctx.resume();
+            }
+          }, 100);
+        }
       }
 
       if (!SEQ.master) {
