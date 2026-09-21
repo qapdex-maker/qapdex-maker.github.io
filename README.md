@@ -4,6 +4,9 @@ https://docs.github.com/de/pages/quickstart
 ## Navigation
 - **Vision & Fahrpläne**: [VISION.md](VISION.md)
 - **Projektnotizen**: [PROJECT_NOTES.md](PROJECT_NOTES.md)
+- **Mitmachen**: [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Code of Conduct**: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- **Lizenz**: [LICENSE](LICENSE) (MIT)
 
 ## Seiten
 - Portal-Root `index.html` = Portal
