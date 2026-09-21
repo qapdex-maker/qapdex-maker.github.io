@@ -3966,7 +3966,8 @@ if(!document.getElementById('skipLink')){
           clearInterval(hideShellInterval);
         }
       }, 200);
-      setTimeout(function(){ clearInterval(hideShellInterval); hideShell(); }, 10000);
+      /* Boot sequence: 1.5s + 0.6s + 3.6s = ~5.7s. Use 6s fallback. */
+      setTimeout(function(){ clearInterval(hideShellInterval); hideShell(); }, 6000);
     }
 
     desktopApps.forEach(function(a){
