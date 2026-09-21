@@ -2289,14 +2289,13 @@ if(!document.getElementById('skipLink')){
 
     function startSequencer() {
       if (!SEQ.loaded) return;
-      if (!SEQ.ctx || SEQ.ctx.state === 'closed') {
-        if (window.audioCtx) {
-          SEQ.ctx = window.audioCtx;
-        } else {
-          var AC = window.AudioContext || window.webkitAudioContext;
-          if (!AC) return;
-          SEQ.ctx = new AC();
-        }
+      // Always prefer the global audioCtx if available (already resumed by user gesture)
+      if (window.audioCtx) {
+        SEQ.ctx = window.audioCtx;
+      } else if (!SEQ.ctx || SEQ.ctx.state === 'closed') {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        SEQ.ctx = new AC();
       }
 
       if (!SEQ.master) {
