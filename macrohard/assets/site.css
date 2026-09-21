@@ -970,3 +970,42 @@ html{transition:background-color .2s ease, color .2s ease}
 
 /* ===== Viewer ===== */
 .vwControls{display:flex;gap:4px;padding:4px;align-items:center}
+
+
+
+/* ===== MOBILE MUSIC + TASKBAR (missing from base) ===== */
+@media (max-width: 768px) {
+  #taskbar {
+    overflow-x: auto;
+  }
+  .musBody {
+    flex-direction: column;
+  }
+  .musSidebar {
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .musExtra {
+    flex-wrap: wrap;
+  }
+  .musBeatpad {
+    overflow-x: auto;
+  }
+  #bootLogo {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .musControls button {
+    min-width: 36px;
+    min-height: 36px;
+  }
+  .seq-step {
+    width: 14px;
+    height: 14px;
+  }
+}

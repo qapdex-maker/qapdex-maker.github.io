@@ -2012,37 +2012,37 @@ if(!document.getElementById('skipLink')){
 
     var SEQ_STEPS = 16;
     var SAMPLE_LIBRARY = [
-      {f:'909kick1', n:'909 Kick', c:'#ff4000'},
-      {f:'909snare1', n:'909 Snare', c:'#2547ff'},
-      {f:'909closehat', n:'909 HiHat', c:'#ffd400'},
-      {f:'808openhat', n:'808 OpHat', c:'#ff8000'},
-      {f:'punch', n:'Punch', c:'#0f0'},
-      {f:'jubass1', n:'JuBass', c:'#f0f'},
-      {f:'subbass', n:'Sub Bass', c:'#800'},
-      {f:'cowbell', n:'Cowbell', c:'#666'},
-      {f:'acidic', n:'Acidic', c:'#0ff'},
-      {f:'barrel', n:'Barrel', c:'#808'},
-      {f:'boom echo', n:'Boom Echo', c:'#f80'},
-      {f:'choose now', n:'Choose', c:'#08f'},
-      {f:'dive1', n:'Dive', c:'#8f0'},
-      {f:'door', n:'Door', c:'#f08'},
-      {f:'dry blow', n:'Dry Blow', c:'#888'},
-      {f:'explosion', n:'Explosion', c:'#ff0'},
-      {f:'fireguard', n:'Fireguard', c:'#f40'},
-      {f:'fm bellsy', n:'FM Bells', c:'#4f0'},
-      {f:'fretnoise01', n:'FretNoise', c:'#0f4'},
-      {f:'hard hit', n:'Hard Hit', c:'#40f'},
-      {f:'harsh wind', n:'HarshWind', c:'#f0f'},
-      {f:'high band', n:'High Band', c:'#ff8'},
-      {f:'high sticks', n:'HiSticks', c:'#8ff'},
-      {f:'insect death', n:'Insect', c:'#f88'},
-      {f:'metal filter', n:'MetalFlt', c:'#8f8'},
-      {f:'triangle sust', n:'Triangle', c:'#88f'},
-      {f:'wave crash', n:'WaveCrash', c:'#f44'},
-      {f:'wind sweep', n:'WindSweep', c:'#4f4'},
-      {f:'80horn', n:'80 Horn', c:'#ff2'},
-      {f:'bad earth', n:'BadEarth', c:'#2ff'},
-      {f:'808tom', n:'808 Tom', c:'#f2f'}
+      {f:60, n:'909 Kick', c:'#ff4000'},
+      {f:200, n:'909 Snare', c:'#2547ff'},
+      {f:8000, n:'909 HiHat', c:'#ffd400'},
+      {f:9000, n:'808 OpHat', c:'#ff8000'},
+      {f:150, n:'Punch', c:'#0f0'},
+      {f:50, n:'JuBass', c:'#f0f'},
+      {f:40, n:'Sub Bass', c:'#800'},
+      {f:800, n:'Cowbell', c:'#666'},
+      {f:440, n:'Acidic', c:'#0ff'},
+      {f:250, n:'Barrel', c:'#808'},
+      {f:50, n:'Boom Echo', c:'#f80'},
+      {f:600, n:'Choose', c:'#08f'},
+      {f:100, n:'Dive', c:'#8f0'},
+      {f:300, n:'Door', c:'#f08'},
+      {f:1000, n:'Dry Blow', c:'#888'},
+      {f:30, n:'Explosion', c:'#ff0'},
+      {f:200, n:'Fireguard', c:'#f40'},
+      {f:1200, n:'FM Bells', c:'#4f0'},
+      {f:1500, n:'FretNoise', c:'#0f4'},
+      {f:150, n:'Hard Hit', c:'#40f'},
+      {f:2000, n:'HarshWind', c:'#f0f'},
+      {f:4000, n:'High Band', c:'#ff8'},
+      {f:6000, n:'HiSticks', c:'#8ff'},
+      {f:800, n:'Insect', c:'#f88'},
+      {f:3000, n:'MetalFlt', c:'#8f8'},
+      {f:1000, n:'Triangle', c:'#88f'},
+      {f:80, n:'WaveCrash', c:'#f44'},
+      {f:2500, n:'WindSweep', c:'#4f4'},
+      {f:400, n:'80 Horn', c:'#ff2'},
+      {f:150, n:'BadEarth', c:'#2ff'},
+      {f:100, n:'808 Tom', c:'#f2f'}
     ];
 
     
@@ -2237,16 +2237,17 @@ if(!document.getElementById('skipLink')){
         }
         g.gain.setValueAtTime(0, t + 0.3);
         o.start(t);
+      } catch(e) {
+        // ignore oscillator errors, don't crash scheduler
       }
 
-      o.connect(g);
-      g.connect(SEQ.master);
+      try { o.connect(g); g.connect(SEQ.master); } catch(e) {}
     }
 
     function scheduleNote(stepTime, step) {
       for (var i = 0; i < 8; i++) {
         if (SEQ.pattern[i][step]) {
-          playSample(i, stepTime);
+          try { playSample(i, stepTime); } catch(e) {}
         }
       }
     }
@@ -2255,6 +2256,7 @@ if(!document.getElementById('skipLink')){
       if (!SEQ.playing) return;
       if (!SEQ.ctx) return;
 
+      try {
       var safety = 0;
       var maxSteps = 32;
       while (SEQ.nextNoteTime < SEQ.ctx.currentTime + SEQ.lookahead && safety < maxSteps) {
@@ -2272,6 +2274,7 @@ if(!document.getElementById('skipLink')){
 
       updateVisual(SEQ.current16th);
       SEQ.timer = setTimeout(scheduler, SEQ.scheduleInterval);
+      } catch(e) { console.warn('Scheduler error:', e); SEQ.timer = setTimeout(scheduler, SEQ.scheduleInterval); }
     }
 
     function updateVisual(step) {
@@ -3429,6 +3432,7 @@ if(!document.getElementById('skipLink')){
       try{if(audioCtx&&audioCtx.state!=='closed')audioCtx.suspend();}catch(e){}
       try{if(SEQ&&SEQ.ctx&&SEQ.ctx.state!=='closed')SEQ.ctx.suspend();}catch(e){}
     };
+    window.SEQ = SEQ; /* expose for debugging */
     initSequencer();initEqualizer();
     loadFavs();loadCustom();loadRadios();
     renderActiveTab();updateUI();
