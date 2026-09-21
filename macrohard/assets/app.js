@@ -3950,15 +3950,24 @@ if(!document.getElementById('skipLink')){
     var desk=document.getElementById('deskIcons');
 
     /* Hide landing page (os-shell) once lock screen is dismissed */
-    var hideShellInterval = setInterval(function(){
-      var lockEl = document.getElementById('lock');
+    var hideShell = function() {
       var shellEl = document.querySelector('.os-shell');
-      if (lockEl && lockEl.classList.contains('hide') && shellEl && shellEl.style.display !== 'none') {
-        shellEl.style.display = 'none';
-        clearInterval(hideShellInterval);
-      }
-    }, 200);
-    setTimeout(function(){ clearInterval(hideShellInterval); }, 10000);
+      if (shellEl) shellEl.style.display = 'none';
+    };
+    var lockEl = document.getElementById('lock');
+    if (lockEl && lockEl.classList.contains('hide')) {
+      hideShell();
+    } else {
+      var hideShellInterval = setInterval(function(){
+        var lockEl2 = document.getElementById('lock');
+        var shellEl2 = document.querySelector('.os-shell');
+        if (lockEl2 && lockEl2.classList.contains('hide') && shellEl2 && shellEl2.style.display !== 'none') {
+          hideShell();
+          clearInterval(hideShellInterval);
+        }
+      }, 200);
+      setTimeout(function(){ clearInterval(hideShellInterval); hideShell(); }, 10000);
+    }
 
     desktopApps.forEach(function(a){
       a.iconSvg=svgIcon(a.icon);
