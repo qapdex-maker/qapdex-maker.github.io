@@ -3,12 +3,12 @@ https://docs.github.com/de/pages/quickstart
 
 ## Seiten
 - Portal-Root `index.html` = Portal
+- `macrohard/` = MakerOS Doors OS v2.11.44 (Neo-Brutalist Desktop OS, 25 Apps, Mobile-optimiert)
 - `idun/` = idun console
 - `msgraph/react/` = Graph Metadata Hub
 - `catpop/` = CatPop Meme/Announcement
 - `pepemem/` = MEMEPEPE Linktree-Backup
 - `pepememe/` = PEPEMEME Linktree-Backup
-- `macrohard/` = MakerOS Doors OS v2.5 (Neo-Brutalist Desktop OS, 11 Apps + Extension-Pack)
 
 ## MakerOS v2.5 — Änderungen
 - Phase 1: Notepad (localStorage, Suche, Wortzähler, Export), Calculator (Tastatur, History, SCI), Terminal (7 neue Befehle, colored output, Tab-Completion), Explorer (New Folder/File), Platform (toast, Shortcuts, Kontextmenu)

@@ -1,12 +1,12 @@
 # MakerOS — qapdex-maker.github.io/macrohard/
 
-Stand 2026-09-21 · v2.11.43 · Cache `?v=50`.
+Stand 2026-09-21 · v2.11.44 · Cache `?v=52`.
 
 ## Live
 - **URL**: https://qapdex-maker.github.io/macrohard/
 - **Branch**: `main`
 - **Tests**: 68/68 passing (`node tests/app.test.js`)
-- **Cache-Bust**: `?v=50`
+- **Cache-Bust**: `?v=52`
 
 ## Domain
 - **qapdex.com**: Gekauft am 2026-09-19 (0,87 Cent für 1 Jahr, checkdomain.de)
@@ -106,6 +106,7 @@ Stand 2026-09-21 · v2.11.43 · Cache `?v=50`.
 - Neo-Brutalist Komponenten (.btn, .input, .card, .pill)
 
 ## Version History
+- v2.11.44 (2026-09-21): Mobile UX — Touch-Resize (20px Hitbox + Pinch), Window-Drag, 85vw Fenster, Explorer Drawer + Listenansicht, Terminal große Eingabe
 - v2.11.43 (2026-09-21): Audio Pipeline Cleanup, Beatpad BPM Input, Radio API-Load, Console-Fehler behoben, 68 Tests
 - v2.11.42.1 (2026-09-20): Sequencer Volume/Upload/Solo/Bank/Swing, Radio+EQ+Visualizer Pipeline, Explorer Single-Instanz, 68 Tests
 - v2.11.42 (2026-09-19): Alle 25 Apps refaktoriert, 66 Tests, i18n, A11y, Performance, Explorer v3.0

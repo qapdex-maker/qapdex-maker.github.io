@@ -1,6 +1,6 @@
 # ROADMAP — macrohard/ (MakerOS)
 
-Stand: 2026-09-21 · v2.11.43 · 25 Apps · 68 Tests grün
+Stand: 2026-09-21 · v2.11.44 · 25 Apps · 68 Tests grün
 
 ## 1. Aktueller Status (v2.11.43)
 
@@ -10,8 +10,8 @@ Stand: 2026-09-21 · v2.11.43 · 25 Apps · 68 Tests grün
 |-----|----|---------|----------|
 | Notepad | notepad | v2.11.41 | Undo/Redo, Zeilennummern, Suchen/Ersetzen, Font-Size, Shortcuts, Export |
 | Calculator | calculator | v2.11.41 | Speicher (M+/M-/MR/MC), Konstanten (π, e, φ), SCI-Modus, History |
-| Terminal | terminal | v2.11.40 | 25 Befehle, Tab-Completion, Shared FS mit Explorer |
-| Explorer | explorer | v2.11.35 | Breadcrumb, Sortierung, Kopieren/Verschieben, Papierkorb |
+| Terminal | terminal | v2.11.44 | 25 Befehle, Tab-Completion, Shared FS, **Mobile große Eingabe (44px)** |
+| Explorer | explorer | v2.11.44 | Breadcrumb, Sortierung, Kopieren/Verschieben, Papierkorb, **Mobile Drawer + Listenansicht** |
 | Paint | paint | v2.11.12 | 24 Farben, Shape-Tools, Export PNG, Undo/Redo, Fill, Eraser |
 | Browser | browser | v2.11.38 | Bookmarks, History, Home-Seite, iframe-Fallback |
 | Music | music | v2.11.43 | Sequencer (8 Tracks, 8/16/32 Steps, Lookahead, 31+ Samples, BPM Input 40-300, Pattern Bank, Swing, Solo/Mute), Radio (30 Stationen API + 30 Fallback), EQ 6-Band, Visualizer |
@@ -113,16 +113,14 @@ Stand: 2026-09-21 · v2.11.43 · 25 Apps · 68 Tests grün
 
 ## 4. Changelog
 
-### v2.11.43 (2026-09-21)
-- Audio Pipeline Cleanup: soundCtx vs audioCtx getrennt
-- AudioContext Guard: setupAudio() nur EINMAL
-- Audio Resume: Sync resume() + play()
-- Beatpad BPM Input: Number (40-300)
-- Beatpad Dropdown-Change: Nur Buffer aktualisieren
-- Beatpad Scheduler: Safety-Counter
-- Beatpad Synth: Sample-aware Fallback
-- Radio: Lädt 30 Sender via API beim Öffnen
-- Console: 0 Fehler
+### v2.11.44 (2026-09-21)
+- Mobile UX: Touch-Resize (20px Hitbox + Pinch-to-Zoom)
+- Mobile UX: Window-Drag auf Mobile aktiviert
+- Mobile UX: Fenster starten auf 85vw × 75vh (vergrößer-/verkleinerbar)
+- Explorer Mobile: Sidebar als Drawer (☰ Toggle), Listenansicht als Default
+- Explorer Mobile: Toolbar-Buttons mit 36px Touch-Targets
+- Terminal Mobile: Eingabefeld 44px Höhe, 16px Schrift (verhindert iOS-Zoom)
+- Desktop-Icon-Grid mobil: 88×98px statt 68×78px, größere Icons
 - 68 Tests grün
 
 ### v2.11.42.1 (2026-09-20)
