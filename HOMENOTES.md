@@ -1,6 +1,9 @@
 # qapdex-maker.github.io
 https://docs.github.com/de/pages/quickstart
 
+## Vision & Fahrpläne
+Siehe [VISION.md](VISION.md) — Gesamtübersicht, neue Apps, Roadmap, Go-to-Market.
+
 ## Seiten
 - Portal-Root `index.html` = Portal
 - `macrohard/` = MakerOS Doors OS v2.11.45 (Neo-Brutalist Desktop OS, 25 Apps, Mobile-optimiert)
