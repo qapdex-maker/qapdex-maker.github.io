@@ -529,6 +529,10 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 
 /* ===== explorer ===== */
 .feBody{display:flex;flex:1;overflow:hidden;position:relative}
+/* Mobile: Sidebar als Drawer außerhalb des overflow-Containers */
+@media(max-width:760px){
+  .feBody{overflow:visible}
+}
 .feSidebarToggle{display:none;position:absolute;top:6px;left:6px;width:36px;height:36px;border:2px solid var(--line);background:var(--surface);font-size:16px;cursor:pointer;z-index:1000}
 .feToolbar{display:flex;gap:4px;padding:4px 10px;border-bottom:2px solid var(--line);background:var(--paper)}
 .feSearchBar{display:flex;gap:4px;padding:4px 10px;border-bottom:2px solid var(--line);background:var(--surface)}
