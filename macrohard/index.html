@@ -296,6 +296,11 @@
     /* Boot → Lock → Desktop sequence */
     setTimeout(function(){
       document.getElementById('boot').classList.add('hide');
+      setTimeout(function(){
+        document.getElementById('boot').style.display='none';
+        var shell=document.querySelector('.os-shell');
+        if(shell) shell.style.display='none';
+      }, 700);
       setTimeout(function(){document.getElementById('lock').classList.remove('hide');},600);
       setTimeout(function(){document.getElementById('lock').classList.add('hide');},4200);
     },1500);
