@@ -3969,7 +3969,7 @@ if(!document.getElementById('skipLink')){
         }
       });
       /* Defer heavy apps */
-      if(['music','editor','imgeditor'].indexOf(a.id)!==-1){
+      if(['editor','imgeditor'].indexOf(a.id)!==-1){
         icon.style.visibility='hidden';
         observer.observe(icon);
       }
