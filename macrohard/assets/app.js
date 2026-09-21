@@ -2118,8 +2118,10 @@ if(!document.getElementById('skipLink')){
         }
       }
 
-      // Create dedicated AudioContext for sequencer
-      if (!SEQ.ctx || SEQ.ctx.state === 'closed') {
+      // Reuse global audioCtx if available, otherwise create dedicated
+      if (window.audioCtx) {
+        SEQ.ctx = window.audioCtx;
+      } else if (!SEQ.ctx || SEQ.ctx.state === 'closed') {
         var AC = window.AudioContext || window.webkitAudioContext;
         if (AC) {
           SEQ.ctx = new AC();
