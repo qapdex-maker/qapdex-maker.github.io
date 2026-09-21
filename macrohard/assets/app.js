@@ -2118,28 +2118,18 @@ if(!document.getElementById('skipLink')){
         }
       }
 
-      // Reuse global audioCtx if available, otherwise create dedicated
-      if (window.audioCtx) {
-        SEQ.ctx = window.audioCtx;
-      } else if (!SEQ.ctx || SEQ.ctx.state === 'closed') {
-        var AC = window.AudioContext || window.webkitAudioContext;
-        if (AC) {
-          SEQ.ctx = new AC();
-        }
-      }
+      // Don't create AudioContext here - it will be suspended
+      // Will be created on first play (user gesture)
+      SEQ.ctx = null;
 
       // Always build full sequencer UI first
       buildSeqUI(pad);
       SEQ.loaded = true;
 
-      // Then try to load samples in background
-      if (SEQ.ctx) {
-        loadSamples().catch(function() {
-          console.warn('Sequencer: samples unavailable, using synthesized sounds');
-        });
-      } else {
-        console.warn('Sequencer: no AudioContext, using synthesized sounds');
-      }
+      // Try to load samples in background (will create temp ctx)
+      loadSamples().catch(function() {
+        console.warn('Sequencer: samples unavailable, using synthesized sounds');
+      });
     }
 
     function loadSamples() {
@@ -2289,13 +2279,20 @@ if(!document.getElementById('skipLink')){
 
     function startSequencer() {
       if (!SEQ.loaded) return;
-      // Always prefer the global audioCtx if available (already resumed by user gesture)
+
+      // Get or create AudioContext - MUST be resumed synchronously in click handler
       if (window.audioCtx) {
         SEQ.ctx = window.audioCtx;
       } else if (!SEQ.ctx || SEQ.ctx.state === 'closed') {
         var AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return;
         SEQ.ctx = new AC();
+        window.audioCtx = SEQ.ctx;
+      }
+
+      // Resume synchronously (must be in call stack of user gesture)
+      if (SEQ.ctx.state === 'suspended') {
+        SEQ.ctx.resume();
       }
 
       if (!SEQ.master) {
@@ -2316,26 +2313,8 @@ if(!document.getElementById('skipLink')){
         playBtn.style.background = 'var(--accent-2)';
       }
 
-      // Resume and wait for running state before starting scheduler
-      if (SEQ.ctx.state === 'suspended') {
-        SEQ.ctx.resume().catch(function(){});
-        // Poll until running (max 2 seconds)
-        var pollCount = 0;
-        var poll = function() {
-          if (!SEQ.playing) return;
-          if (SEQ.ctx.state === 'running') {
-            scheduler();
-          } else if (pollCount < 40) {
-            pollCount++;
-            setTimeout(poll, 50);
-          } else {
-            console.warn('Sequencer: AudioContext did not start');
-          }
-        };
-        setTimeout(poll, 50);
-      } else {
-        scheduler();
-      }
+      // Start scheduler immediately - context is resumed
+      scheduler();
     }
 
     function stopSequencer() {
