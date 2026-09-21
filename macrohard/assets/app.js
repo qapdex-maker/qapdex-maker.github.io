@@ -3948,6 +3948,18 @@ if(!document.getElementById('skipLink')){
   /* Init */
   window.addEventListener('DOMContentLoaded',function(){
     var desk=document.getElementById('deskIcons');
+
+    /* Hide landing page (os-shell) once lock screen is dismissed */
+    var hideShellInterval = setInterval(function(){
+      var lockEl = document.getElementById('lock');
+      var shellEl = document.querySelector('.os-shell');
+      if (lockEl && lockEl.classList.contains('hide') && shellEl && shellEl.style.display !== 'none') {
+        shellEl.style.display = 'none';
+        clearInterval(hideShellInterval);
+      }
+    }, 200);
+    setTimeout(function(){ clearInterval(hideShellInterval); }, 10000);
+
     desktopApps.forEach(function(a){
       a.iconSvg=svgIcon(a.icon);
       var icon=makeIcon(a);
