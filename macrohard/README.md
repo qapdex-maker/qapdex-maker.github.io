@@ -10,8 +10,8 @@ Stand 2026-09-21 · v2.11.45 · Cache `?v=52` / `?v=40`.
 
 ## Domain
 - **qapdex.com**: Gekauft am 2026-09-19 (0,87 Cent für 1 Jahr, checkdomain.de)
-- **Status**: Custom Domain Versuch reverted (Redirect-Schleife GitHub ↔ qapdex.com)
-- **DNS**: Einträge auf checkdomain.de entfernt, Domain leitet standardmäßig auf qapdex-maker.github.io
+- **Status**: Custom Domain aktiv — CNAME-Datei erstellt, GitHub Pages konfiguriert
+- **DNS**: Zeigt auf GitHub Pages IPs (185.199.108-111.153) + Hetzner (88.99.101.251, muss entfernt werden)
 
 ## Contact
 - info@qapdex.com
