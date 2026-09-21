@@ -115,16 +115,22 @@ Stand: 2026-09-21 · v2.11.45 · 25 Apps · 68 Tests grün
 
 ### v2.11.45 (2026-09-21)
 - Fix: Explorer Mobile Sidebar-Drawer overflow:hidden überschrieben
-- 68 Tests grün
 
 ### v2.11.44 (2026-09-21)
 - Mobile UX: Touch-Resize (20px Hitbox + Pinch-to-Zoom)
 - Mobile UX: Window-Drag auf Mobile aktiviert
-- Mobile UX: Fenster starten auf 85vw × 75vh (vergrößer-/verkleinerbar)
-- Explorer Mobile: Sidebar als Drawer (☰ Toggle), Listenansicht als Default
+- Mobile UX: Fenster starten auf 85vw × 75vh
+- Explorer Mobile: Sidebar als Drawer (☰ Toggle), Listenansicht
 - Explorer Mobile: Toolbar-Buttons mit 36px Touch-Targets
-- Terminal Mobile: Eingabefeld 44px Höhe, 16px Schrift (verhindert iOS-Zoom)
-- Desktop-Icon-Grid mobil: 88×98px statt 68×78px, größere Icons
+- Terminal Mobile: Eingabefeld 44px Höhe, 16px Schrift
+- Desktop-Icon-Grid mobil: 88×98px statt 68×78px
+- 68 Tests grün
+
+### v2.11.43 (2026-09-21)
+- Audio Pipeline Cleanup: soundCtx vs audioCtx getrennt
+- Beatpad BPM Input: Number-Input (40-300) statt Dropdown
+- Beatpad Dropdown-Change: Nur Buffer aktualisieren
+- Radio: Lädt 30 Sender via API beim Öffnen
 - 68 Tests grün
 
 ### v2.11.42.1 (2026-09-20)

@@ -46,6 +46,8 @@ Stand: 2026-09-21 · qapdex-maker/qapdex-maker.github.io (Branch `main`)
 
 ## 3. Fahrplan — MakerOS (macrohard/) Weiterentwicklung
 
+**Neueste Version**: v2.11.45 (2026-09-21) — Mobile UX, Explorer Drawer Fix
+
 ### Phase A: Mobile UX Vertiefung (nächste Schritte)
 | # | Feature | Aufwand | Impact |
 |---|---------|---------|--------|

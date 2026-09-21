@@ -57,18 +57,29 @@ Stand 2026-09-21 · v2.11.45 · Cache `?v=52` / `?v=40`.
 24. **Pomodoro** — Statistik (heute/gesamt), Long Break (alle 4 Sessions), CSV Export, Pausen-Übungen, Ton
 25. **Notes** — Verschlüsselung (Base64), Papierkorb (Wiederherstellen), Teilen (URL), Autosave-Indikator, Drag & Drop Sortierung
 
+## New in v2.11.45 (2026-09-21)
+- Fix: Explorer Mobile Sidebar-Drawer (overflow:visible)
+
+## New in v2.11.44 (2026-09-21)
+- Mobile UX: Touch-Resize (20px Hitbox + Pinch-to-Zoom)
+- Mobile UX: Window-Drag auf Mobile aktiviert
+- Mobile UX: Fenster starten auf 85vw × 75vh
+- Explorer Mobile: Sidebar als Drawer (☰ Toggle), Listenansicht
+- Explorer Mobile: Toolbar-Buttons mit 36px Touch-Targets
+- Terminal Mobile: Eingabefeld 44px Höhe, 16px Schrift
+- Desktop-Icon-Grid mobil: 88×98px statt 68×78px
+- Console: 0 Fehler
+- Tests: 68/68 grün
+
 ## New in v2.11.43 (2026-09-21)
-- **Audio Pipeline Cleanup**: `soundCtx` (Sound-Effekte) vs `audioCtx` (Player) getrennt — keine Kollision mehr
-- **AudioContext Guard**: `setupAudio()` nur EINMAL ausführen (MediaElementSource ist one-time-use)
-- **Audio Resume**: Sync `resume()` + `play()` — kein User-Activation-Loss (NotAllowedError behoben)
-- **Beatpad BPM Input**: Number-Input (40-300) statt Dropdown
-- **Beatpad Dropdown-Change**: Nur Buffer aktualisieren, NICHT UI neu bauen (stoppt nicht den Sequencer)
-- **Beatpad Scheduler**: Safety-Counter gegen Endlosschleife
-- **Beatpad Synth**: Sample-aware Fallback basierend auf SAMPLE_LIBRARY
-- **Beatpad AudioContext**: Dedizierter `AudioContext` für Sequencer (nicht geteilt mit Player)
-- **Radio**: Lädt 30 Sender via radio-browser.info API beim Öffnen (nicht erst bei Tab-Klick)
-- **Console**: 0 Fehler (nur erwartete Sequencer-Warnung im Headless-Modus)
-- **Tests**: 68/68 grün
+- Audio Pipeline Cleanup: soundCtx vs audioCtx getrennt
+- AudioContext Guard: setupAudio() nur EINMAL
+- Beatpad BPM Input: Number-Input (40-300) statt Dropdown
+- Beatpad Dropdown-Change: Nur Buffer aktualisieren
+- Beatpad Scheduler: Safety-Counter gegen Endlosschleife
+- Beatpad Synth: Sample-aware Fallback
+- Radio: Lädt 30 Sender via radio-browser.info API
+- Tests: 68/68 grün
 
 ## New in v2.11.42.1 (2026-09-20)
 - Sequencer Volume Fix, Custom Sample Upload, Solo/Mute, Pattern Bank, Swing, Steps
@@ -106,17 +117,13 @@ Stand 2026-09-21 · v2.11.45 · Cache `?v=52` / `?v=40`.
 - Neo-Brutalist Komponenten (.btn, .input, .card, .pill)
 
 ## Version History
-- v2.11.45 (2026-09-21): Fix Explorer Mobile Sidebar-Drawer (overflow:visible)
-- v2.11.44 (2026-09-21): Mobile UX — Touch-Resize (20px Hitbox + Pinch), Window-Drag, 85vw Fenster, Explorer Drawer + Listenansicht, Terminal große Eingabe
-- v2.11.43 (2026-09-21): Audio Pipeline Cleanup, Beatpad BPM Input, Radio API-Load, Console-Fehler behoben, 68 Tests
-- v2.11.42.1 (2026-09-20): Sequencer Volume/Upload/Solo/Bank/Swing, Radio+EQ+Visualizer Pipeline, Explorer Single-Instanz, 68 Tests
-- v2.11.42 (2026-09-19): Alle 25 Apps refaktoriert, 66 Tests, i18n, A11y, Performance, Explorer v3.0
-- v2.11.41 (2026-09-19): Notepad + Calculator v2.0 (Undo/Redo, Zeilennummern, Speicher)
+- v2.11.45 (2026-09-21): Fix Explorer Mobile Sidebar-Drawer
+- v2.11.44 (2026-09-21): Mobile UX — Touch-Resize, Pinch, Window-Drag, Explorer Drawer, Terminal große Eingabe
+- v2.11.43 (2026-09-21): Audio Pipeline Cleanup, Beatpad BPM Input, Radio API-Load
+- v2.11.42.1 (2026-09-20): Sequencer Volume/Upload/Solo/Bank/Swing, Radio+EQ+Visualizer Pipeline
+- v2.11.42 (2026-09-19): Alle 25 Apps refaktoriert, i18n, A11y, Performance, Explorer v3.0
+- v2.11.41 (2026-09-19): Notepad + Calculator v2.0
 - v2.11.40 (2026-09-19): Systeminfo, Kalender, Chat, Browser, Radio
-- v2.11.39-v2.11.30: Refaktoren, Sequencer, Music Player Sadee-UI
-- v2.11.29-v2.11.18: Mobile, Audio Fixes, Multi-Instanz, Bug-Hunting
-- v2.11.1-v2.10: Extension-Pack, Browser-Fix, Start-Button-Fix
-- v2.9-v2.7: AMIBIOS, Service Worker
 
 ## License
 MIT License
