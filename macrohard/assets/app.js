@@ -719,7 +719,7 @@ if(!document.getElementById('skipLink')){
       case 'docs': body='<div class="mdToolbar"><button class="cBtn" id="mdBold" title="Bold"><b>B</b></button><button class="cBtn" id="mdItalic" title="Italic"><i>I</i></button><button class="cBtn" id="mdHeading" title="Überschrift">H</button><button class="cBtn" id="mdLink" title="Link">Link</button><button class="cBtn" id="mdCode" title="Code">Code</button><button class="cBtn" id="mdQuote" title="Zitat">"</button><button class="cBtn" id="mdList" title="Liste">•</button><button class="cBtn" id="mdSave" title="Speichern">💾</button><button class="cBtn" id="mdExport" title="Export .md">📤</button><button class="cBtn" id="mdPreview" title="Preview">👁</button></div><div class="mdBody" id="mdBody" contenteditable="true" spellcheck="false"></div><div class="mdPreview" id="mdPreview"></div>';break;
       case 'settings': body='<div class="stGrid" id="stGrid"><div class="stNav"><button data-tab="general" class="active" data-de="Allgemein" data-en="General">Allgemein</button><button data-tab="appearance" data-de="Aussehen" data-en="Appearance">Aussehen</button><button data-tab="shortcuts" data-de="Tastenkürzel" data-en="Shortcuts">Tastenkürzel</button><button data-tab="privacy" data-de="Datenschutz" data-en="Privacy">Datenschutz</button></div><div class="stPane active" data-pane="general"><label><input type="checkbox" id="stDark"> Dark Mode</label><label><input type="checkbox" id="stScan" checked> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div><div class="stPane" data-pane="appearance" id="stAppearance"></div><div class="stPane" data-pane="shortcuts" id="stShortcuts"></div><div class="stPane" data-pane="privacy" id="stPrivacy"></div></div>';break;
       case 'links': body='<div class="clPane" id="clPane"></div>';break;
-      case 'amibios': body='<div style="width:100%;height:100%" id="w-amibios"></div>';break;
+      case 'amibios': body='<div style="width:100%;height:100%" id="ami-bios-wrap"></div>';break;
       case 'taskmgr': body='<div class="tmBody" id="tmBody"></div>';break;
       case 'sysinfo': body='<div class="siBody" id="siBody"></div>';break;
       case 'calendar': body='<div class="calBody" id="calBody"></div>';break;
@@ -780,7 +780,10 @@ if(!document.getElementById('skipLink')){
         }
       }catch(err){}
       // App-specific cleanup flags (reset on close so re-init works)
-      if(wId==='taskmgr'){TASKMGR_INITIALIZED=false;}
+      if(wId==='taskmgr'){
+        TASKMGR_INITIALIZED=false;
+        if(window.osIntervals['taskmgr']){clearInterval(window.osIntervals['taskmgr']);delete window.osIntervals['taskmgr'];}
+      }
       if(wId==='explorer'){EXPLOADER_INITIALIZED=false;}
       if(wId==='browser'){BROWSER_INITIALIZED=false;}
       if(wId==='music'){MUSIC_INITIALIZED=false;setupDone=false;}
@@ -1080,6 +1083,21 @@ if(!document.getElementById('skipLink')){
 
   /* Calculator — S4: Memory + Constants */
   var calcHist=[];var sciMode=false;var calcMemory=0;
+
+  /* Safe Calculator Evaluator (ersetzt eval) — Recursive Descent Parser */
+  function safeEvalCalc(expr){
+    if(!/^[-+*/().,\s\d_a-zA-Zπφ]+$/.test(expr)){throw new Error('Invalid');}
+    var p=0,s=expr;
+    function pk(){return s[p];}function gt(){return s[p++];}
+    function ws(){while(p<s.length&&/\s/.test(s[p]))p++;}
+    function num(){ws();var n='';if(pk()==='-')n+=gt();while(p<s.length&&(/[0-9]/.test(pk())||pk()==='.'))n+=gt();var v=parseFloat(n);if(isNaN(v))throw new Error('NaN');return v;}
+    function mathfn(){ws();if(s.substr(p,5)==='Math.'){p+=5;var m=s.substr(p).match(/^(PI|E|sin|cos|tan|sqrt|pow|log|abs)/);if(m){p+=m[0].length;return m[1];}}return null;}
+    function primary(){ws();var fn=mathfn();if(fn){if(fn==='PI')return Math.PI;if(fn==='E')return Math.E;ws();if(gt()!=='(')throw new Error('(');var a=[];ws();if(pk()!==')'){a.push(exprparse());while(pk()===','){gt();a.push(exprparse());}}ws();if(gt()!==')')throw new Error(')');switch(fn){case'sin':return Math.sin(a[0]);case'cos':return Math.cos(a[0]);case'tan':return Math.tan(a[0]);case'sqrt':return Math.sqrt(a[0]);case'pow':return Math.pow(a[0],a[1]);case'log':return Math.log(a[0]);case'abs':return Math.abs(a[0]);}}var ch=pk();if(ch==='π'){gt();return Math.PI;}if(ch==='φ'){gt();return(1+Math.sqrt(5))/2;}if(ch==='('){gt();var v=exprparse();ws();if(gt()!==')')throw new Error(')');return v;}if(/[0-9]/.test(ch)||ch==='.')return num();throw new Error('?');}
+    function unary(){ws();if(pk()==='-'){gt();return-primary();}if(pk()==='+'){gt();return primary();}return primary();}
+    function muldiv(){var l=unary();ws();while(pk()==='*'||pk()==='/'){var o=gt(),r=unary();l=o==='*'?l*r:l/r;ws();}return l;}
+    function exprparse(){var l=muldiv();ws();while(pk()==='+'||pk()==='-'){var o=gt(),r=muldiv();l=o==='+'?l+r:l-r;ws();}return l;}
+    var res=exprparse();ws();if(p<s.length)throw new Error('End');return res;
+  }
   function buildCalc(){
     var grid=document.getElementById('calGrid');if(!grid) return;
     var sci=['sin','cos','tan','sqrt','pow','log','abs','π','e','φ','(',')'];
@@ -1114,7 +1132,7 @@ if(!document.getElementById('skipLink')){
     else if(b==='C'){expr.value='0';document.getElementById('cCur').textContent='0';document.getElementById('calcHist').textContent='';}
     else if(b==='±'){expr.value=(parseFloat(expr.value||'0')*-1).toString();}
     else if(b==='%'){expr.value=(parseFloat(expr.value||'0')/100).toString();}
-    else if(b==='='){try{var r=eval(expr.value.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-'));calcHist.unshift(expr.value+' = '+r);if(calcHist.length>12)calcHist.pop();document.getElementById('cCur').textContent='';expr.value=r;renderHist();}catch(e){expr.value='Error';}}
+    else if(b==='='){try{var r=safeEvalCalc(expr.value.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-'));calcHist.unshift(expr.value+' = '+r);if(calcHist.length>12)calcHist.pop();document.getElementById('cCur').textContent='';expr.value=r;renderHist();}catch(e){expr.value='Error';}}
     else{if(expr.value==='0')expr.value=b;else expr.value+=b;}
   }
   window.calcPress=calcPress;
@@ -5435,7 +5453,7 @@ window.addEventListener('beforeunload',function(){
 
 /* AMIBIOS Setup — iframe window */
 function buildAMIBIOS(){
-  var wrap=document.getElementById('w-amibios');
+  var wrap=document.getElementById('ami-bios-wrap');
   if(!wrap) return;
   wrap.innerHTML='<iframe src="./assets/ami-bios-setup.html" style="width:100%;height:100%;border:none;background:#0d0e0f" sandbox="allow-scripts allow-same-origin"></iframe>';
 }
