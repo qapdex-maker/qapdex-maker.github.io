@@ -2274,6 +2274,13 @@ if(!document.getElementById('skipLink')){
       if (!SEQ.playing) return;
       if (!SEQ.ctx) return;
 
+      // Only schedule if context is actually running (handles async resume)
+      if (SEQ.ctx.state !== 'running') {
+        if (SEQ.ctx.state === 'suspended') SEQ.ctx.resume();
+        SEQ.timer = setTimeout(scheduler, SEQ.scheduleInterval);
+        return;
+      }
+
       try {
       var safety = 0;
       var maxSteps = 32;
@@ -3411,8 +3418,9 @@ if(!document.getElementById('skipLink')){
       if(audioCtx){try{audioCtx.suspend();}catch(e){}}
       setupDone=false;
       MUSIC_INITIALIZED=false;
-      var p=document.querySelector('.musPlayer');
-      if(p)p.remove();
+      // Trigger standard window close (removes .wnd + taskbar icon + cleanup)
+      var wnd=this.closest('.wnd');
+      if(wnd){var wc=wnd.querySelector('.wclose');if(wc)wc.click();}
     });
 
     /* === Tab Navigation === */
