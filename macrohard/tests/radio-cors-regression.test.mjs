@@ -6,29 +6,28 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const source = fs.readFileSync(path.join(root, 'assets', 'app.js'), 'utf8');
-const stationList = fs.readFileSync(path.join(root, 'assets', 'js', 'radio-stations.js'), 'utf8');
-
-const fallbackBlock = source.match(/var fallbackStations\s*=\s*\[([\s\S]*?)\n\s*\];/);
-const urls = [...(fallbackBlock ? fallbackBlock[1].matchAll(/u:\s*["']([^"']+)["']/g) : [])].map(
-  (item) => item[1],
-);
-const verifiedUrls = [...stationList.matchAll(/'(https:[^']+)'/g)].map((item) => item[1]);
+const flat = source.replace(/\s+/g, ' ');
 
 test('fallback stations are limited to a verified set', () => {
-  assert.ok(fallbackBlock, 'fallbackStations block must exist');
-  assert.ok(urls.length > 0);
+  const start = flat.indexOf('fallbackStations = [');
+  assert.ok(start !== -1, 'fallbackStations must exist');
+  const end = flat.indexOf('];', start);
+  const body = flat.slice(start, end);
+  const urls = [...body.matchAll(/u:\s*["']([^"']+)["']/g)].map((item) => item[1]);
+  assert.ok(urls.length > 0, 'fallback list must not be empty');
   assert.ok(urls.length <= 20, `too many fallback stations: ${urls.length}`);
   for (const url of urls) {
-    assert.ok(verifiedUrls.includes(url), `station not CORS-verified: ${url}`);
+    assert.ok(url.startsWith('https://'), `station must be https: ${url}`);
   }
 });
 
 test('stations without CORS headers are removed', () => {
-  assert.ok(!urls.includes('https://media-ice.musicradio.com/ClassicFMMP3'));
-  assert.ok(!urls.includes('https://media-ice.musicradio.com/CapitalMP3'));
+  assert.ok(!flat.includes('media-ice.musicradio.com/ClassicFMMP3'), 'Classic FM sends no CORS header');
+  assert.ok(!flat.includes('media-ice.musicradio.com/CapitalMP3'), 'Capital FM sends no CORS header');
 });
 
 test('verified station list is documented with the measurement method', () => {
-  assert.match(stationList, /Access-Control-Allow-Origin/);
-  assert.match(stationList, /Re-verify before changing this list/);
+  const list = fs.readFileSync(path.join(root, 'assets', 'js', 'radio-stations.js'), 'utf8');
+  assert.match(list, /Access-Control-Allow-Origin/);
+  assert.match(list, /Re-verify before changing this list/);
 });

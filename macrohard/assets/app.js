@@ -5,10 +5,10 @@
     console.error('MakerOS Error:', msg, 'at', url + ':' + line);
     return true;
   };
-  var lang = 'de';
+  let lang = 'de';
   function setLang(l) {
     lang = l;
-    var html = document.documentElement;
+    const html = document.documentElement;
     html.classList.remove('lang-de', 'lang-en');
     html.classList.add('lang-' + l);
     html.lang = l;
@@ -16,15 +16,15 @@
       localStorage.setItem('os_lang', l);
     } catch (e) {}
   }
-  var apps = {};
-  var focused = null;
-  var zIdx = 100;
-  var bootDone = false;
+  const apps = {};
+  let focused = null;
+  let zIdx = 100;
+  let bootDone = false;
   window.osIntervals = window.osIntervals || {};
   window.osTimeouts = window.osTimeouts || {};
 
   /* Globale Dateistruktur — geteilt zwischen Terminal und Explorer */
-  var fsData = {
+  const fsData = {
     'C:\\Users': { dirs: ['macrohard', 'Public'], files: [] },
     'C:\\Users\\macrohard': { dirs: ['Desktop', 'Dokumente', 'Downloads'], files: ['notes.txt'] },
     'C:\\Users\\macrohard\\Desktop': {
@@ -40,12 +40,12 @@
     'C:\\Windows': { dirs: ['System32'], files: ['system.ini'] },
     'C:\\Papierkorb': { dirs: [], files: [] },
   };
-  var trashPath = 'C:\\Papierkorb';
-  var curPath = 'C:\\Users\\macrohard\\Desktop';
+  const trashPath = 'C:\\Papierkorb';
+  let curPath = 'C:\\Users\\macrohard\\Desktop';
 
   /* localStorage wrapper lives in assets/js/storage.js and is loaded before app.js. */
 
-  var I18N = {
+  const I18N = {
     de: {
       desktop: 'Desktop',
       clock: '',
@@ -163,22 +163,22 @@
    * Wird jede Sekunde aufgerufen (setInterval)
    */
   function tickClock() {
-    var d = new Date();
-    var el = document.getElementById('lockTime');
+    const d = new Date();
+    const el = document.getElementById('lockTime');
     if (el)
       el.textContent = d.toLocaleTimeString(lang === 'de' ? 'de-DE' : 'en-US', {
         hour: '2-digit',
         minute: '2-digit',
       });
-    var d2 = d.toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-US', {
+    const d2 = d.toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     });
-    var de = document.getElementById('lockDate');
+    const de = document.getElementById('lockDate');
     if (de) de.textContent = d2;
-    var tc = document.getElementById('tbClock');
+    const tc = document.getElementById('tbClock');
     if (tc)
       tc.textContent = d.toLocaleTimeString(lang === 'de' ? 'de-DE' : 'en-US', {
         hour: '2-digit',
@@ -190,23 +190,23 @@
 
   /* Boot → Lock → Desktop */
   window.startOS = function () {
-    var boot = document.getElementById('boot');
+    const boot = document.getElementById('boot');
     if (boot) boot.classList.add('hide');
     setTimeout(function () {
-      var lock = document.getElementById('lock');
+      const lock = document.getElementById('lock');
       if (lock) lock.classList.remove('hide');
     }, 600);
     setTimeout(function () {
-      var lock = document.getElementById('lock');
+      const lock = document.getElementById('lock');
       if (lock) lock.classList.add('hide');
       bootDone = true;
     }, 4200);
   };
 
   /* Session Restore + Wallpaper + Snapping — platform-level S1 */
-  var SESSION_KEY = 'os_session';
+  const SESSION_KEY = 'os_session';
   function saveSession() {
-    var wins = [];
+    const wins = [];
     document.querySelectorAll('.wnd').forEach(function (w) {
       wins.push({
         id: w.getAttribute('data-app'),
@@ -228,11 +228,11 @@
     } catch (e) {
       return;
     }
-    var _isMobile = window.innerWidth <= 760;
+    const _isMobile = window.innerWidth <= 760;
     saved.forEach(function (s) {
       if (s.visible) {
         openApp(s.id);
-        var w = document.getElementById('w-' + s.id);
+        const w = document.getElementById('w-' + s.id);
         if (w) {
           if (_isMobile) {
             w.style.left = '0';
@@ -251,7 +251,7 @@
   }
   /* Wallpaper */
   function setWallpaper(url) {
-    var desk = document.getElementById('desktop');
+    const desk = document.getElementById('desktop');
     if (!desk) return;
     desk.style.backgroundImage = 'url(' + url + ')';
     desk.style.backgroundSize = 'cover';
@@ -260,7 +260,7 @@
     } catch (e) {}
   }
   try {
-    var savedWall = localStorage.getItem('os_wall');
+    const savedWall = localStorage.getItem('os_wall');
     if (savedWall) setWallpaper(savedWall);
   } catch (e) {}
   /* Snapping */
@@ -270,9 +270,9 @@
    * @param {string} direction - 'left'|'right'|'max'|'restore'
    */
   function snapWindow(w, direction) {
-    var wW = window.innerWidth;
-    var wH = window.innerHeight;
-    var _isMobile = wW <= 760;
+    const wW = window.innerWidth;
+    const wH = window.innerHeight;
+    const _isMobile = wW <= 760;
     if (direction === 'left') {
       w.style.left = '0';
       w.style.top = '0';
@@ -304,17 +304,17 @@
     saveSession();
   }
   /* Accessibility: reduced motion */
-  var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (prefersReduced) {
     document.documentElement.style.setProperty('--shadow', '0 0 0 var(--ink)');
     document.documentElement.style.setProperty('--shadow-hover', '0 0 0 var(--accent)');
   }
 
-  var desktopEl = document.getElementById('desktop');
+  const desktopEl = document.getElementById('desktop');
   if (desktopEl)
     desktopEl.addEventListener('contextmenu', function (e) {
       e.preventDefault();
-      var m = document.getElementById('deskCtx');
+      let m = document.getElementById('deskCtx');
       if (!m) {
         m = document.createElement('div');
         m.id = 'deskCtx';
@@ -323,8 +323,8 @@
         document.body.appendChild(m);
         m.querySelectorAll('.ctxItem').forEach(function (it) {
           it.addEventListener('click', function () {
-            var a = it.dataset.a;
-            var act = it.dataset.action;
+            const a = it.dataset.a;
+            const act = it.dataset.action;
             if (a) openApp(a);
             if (act === 'theme') {
               toggleTheme();
@@ -351,21 +351,21 @@
 
   /* Wallpaper Upload — FileReader to data URL */
   function uploadWallpaper() {
-    var inp = document.createElement('input');
+    const inp = document.createElement('input');
     inp.type = 'file';
     inp.accept = 'image/*';
     inp.style.display = 'none';
     document.body.appendChild(inp);
     inp.addEventListener('change', function () {
-      var file = inp.files[0];
+      const file = inp.files[0];
       if (!file) return;
       if (file.size > 5 * 1024 * 1024) {
         alert('Datei zu groß (max 5 MB)');
         return;
       }
-      var reader = new FileReader();
+      const reader = new FileReader();
       reader.onload = function (ev) {
-        var url = ev.target.result;
+        const url = ev.target.result;
         setWallpaper(url);
         toast('Wallpaper hochgeladen');
       };
@@ -377,14 +377,14 @@
 
   /* Close all windows */
   function closeAllWindows() {
-    var wins = document.querySelectorAll('.wnd');
+    const wins = document.querySelectorAll('.wnd');
     if (!wins.length) {
       toast('Keine Fenster offen');
       return;
     }
     wins.forEach(function (w) {
-      var wId = w.getAttribute('data-app');
-      var instId = w.getAttribute('data-inst') || wId;
+      const wId = w.getAttribute('data-app');
+      const instId = w.getAttribute('data-inst') || wId;
       if (instId && window.osIntervals) {
         Object.keys(window.osIntervals).forEach(function (k) {
           if (k === instId || k === wId) {
@@ -397,7 +397,7 @@
       setTimeout(function () {
         w.remove();
       }, 200);
-      var tbIcon = document.getElementById('tb-' + instId);
+      const tbIcon = document.getElementById('tb-' + instId);
       if (tbIcon) tbIcon.remove();
     });
     focused = null;
@@ -407,7 +407,7 @@
 
   /* Minimize all windows (show desktop) */
   function minimizeAllWindows() {
-    var wins = document.querySelectorAll('.wnd');
+    const wins = document.querySelectorAll('.wnd');
     if (!wins.length) {
       toast('Keine Fenster offen');
       return;
@@ -415,8 +415,8 @@
     wins.forEach(function (w) {
       w.classList.add('minimized');
       w.style.display = 'none';
-      var wId = w.getAttribute('data-app');
-      var tbIcon = document.getElementById('tb-' + wId);
+      const wId = w.getAttribute('data-app');
+      const tbIcon = document.getElementById('tb-' + wId);
       if (tbIcon) tbIcon.classList.add('minimized');
     });
     focused = null;
@@ -426,12 +426,12 @@
 
   /* About Dialog */
   function showAboutDialog() {
-    var existing = document.getElementById('aboutDialog');
+    const existing = document.getElementById('aboutDialog');
     if (existing) {
       existing.remove();
       return;
     }
-    var d = document.createElement('div');
+    const d = document.createElement('div');
     d.id = 'aboutDialog';
     d.innerHTML =
       '<div class="aboutOverlay"></div><div class="aboutBox"><div class="aboutHeader">Über MakerOS<button class="aboutClose">×</button></div><div class="aboutBody"><div class="aboutLogo">MD</div><div class="aboutInfo"><h3>MakerOS</h3><p>Windows-Style Desktop OS im Browser</p><p>Version 2.11.40 (2026-09-19)</p><p>25 Apps · Neo-Brutalist · PWA</p><p style="margin-top:8px;font-size:11px;color:var(--muted)">Made by Alexander Kleine<br>info@qapdex.com<br>qapdex-maker.github.io<br>MIT License</p><p style="margin-top:8px;font-size:10px;color:var(--muted)">Made with Hermes Agent<br>by Nous Research</p></div></div></div>';
@@ -446,7 +446,7 @@
 
   /* Restore minimized windows (click on taskbar icon) */
   function restoreFromTaskbar(wId) {
-    var w = document.getElementById('w-' + wId);
+    const w = document.getElementById('w-' + wId);
     if (w) {
       w.classList.remove('minimized');
       w.style.display = 'flex';
@@ -454,18 +454,18 @@
       w.style.zIndex = ++zIdx;
       focused = wId;
       updateFocus();
-      var tbIcon = document.getElementById('tb-' + wId);
+      const tbIcon = document.getElementById('tb-' + wId);
       if (tbIcon) tbIcon.classList.remove('minimized');
     }
   }
 
   function sortDeskIcons(by) {
-    var c = document.getElementById('deskIcons');
+    const c = document.getElementById('deskIcons');
     if (!c) return;
-    var items = Array.from(c.children);
+    const items = Array.from(c.children);
     items.sort(function (a, b) {
-      var la = a.querySelector('.lbl').textContent.toLowerCase();
-      var lb = b.querySelector('.lbl').textContent.toLowerCase();
+      const la = a.querySelector('.lbl').textContent.toLowerCase();
+      const lb = b.querySelector('.lbl').textContent.toLowerCase();
       return la.localeCompare(lb);
     });
     items.forEach(function (i) {
@@ -473,10 +473,10 @@
     });
   }
   document.addEventListener('click', function (e) {
-    var m = document.getElementById('deskCtx');
+    const m = document.getElementById('deskCtx');
     if (m && !m.contains(e.target)) m.classList.remove('open');
   });
-  var desktopApps = [
+  const desktopApps = [
     { id: 'notepad', label: 'Notepad', icon: 'notepad' },
     { id: 'calculator', label: 'Calculator', icon: 'calc' },
     { id: 'terminal', label: 'Terminal', icon: 'term' },
@@ -505,7 +505,7 @@
   ];
 
   function makeIcon(a) {
-    var div = document.createElement('div');
+    const div = document.createElement('div');
     div.className = 'dskApp';
     div.setAttribute('data-app', a.id);
     div.innerHTML =
@@ -526,7 +526,7 @@
   }
 
   function svgIcon(name) {
-    var s = {
+    const s = {
       notepad:
         '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>',
       calc: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/><line x1="14" y1="18" x2="16" y2="18"/><line x1="10" y1="6" x2="14" y2="6"/></svg>',
@@ -573,8 +573,8 @@
   }
 
   /* Notifikationen-System */
-  var notifQueue = [];
-  var notifCenter = [];
+  const notifQueue = [];
+  const notifCenter = [];
   /**
    * Zeigt eine Desktop-Benachrichtigung
    * @param {string} title - Überschrift
@@ -582,7 +582,7 @@
    * @param {string} icon - Emoji (optional)
    */
   function showNotif(title, body, icon) {
-    var n = document.createElement('div');
+    const n = document.createElement('div');
     n.className = 'osNotif';
     n.innerHTML =
       '<span class="notifIcon">' +
@@ -612,9 +612,9 @@
   }
 
   /* Notification Center toggle */
-  var notifCenterOpen = false;
+  let notifCenterOpen = false;
   function toggleNotifCenter() {
-    var nc = document.getElementById('notifCenter');
+    let nc = document.getElementById('notifCenter');
     if (notifCenterOpen) {
       if (nc) nc.remove();
       notifCenterOpen = false;
@@ -623,13 +623,13 @@
     notifCenterOpen = true;
     nc = document.createElement('div');
     nc.id = 'notifCenter';
-    var html =
+    let html =
       '<div class="ncOverlay"></div><div class="ncBox"><div class="ncHeader">Benachrichtigungen<button class="ncClose">×</button></div><div class="ncList">';
     if (!notifCenter.length) {
       html += '<div class="ncEmpty">Keine Benachrichtigungen</div>';
     } else {
       notifCenter.forEach(function (n) {
-        var timeStr = new Date(n.time).toLocaleTimeString(lang === 'de' ? 'de-DE' : 'en-US', {
+        const timeStr = new Date(n.time).toLocaleTimeString(lang === 'de' ? 'de-DE' : 'en-US', {
           hour: '2-digit',
           minute: '2-digit',
         });
@@ -657,9 +657,9 @@
   }
 
   function updateNotifBadge() {
-    var badge = document.getElementById('tbNotifBadge');
+    let badge = document.getElementById('tbNotifBadge');
     if (!badge && notifCenter.length > 0) {
-      var tbRight = document.getElementById('tbRight');
+      const tbRight = document.getElementById('tbRight');
       if (tbRight) {
         badge = document.createElement('div');
         badge.id = 'tbNotifBadge';
@@ -682,7 +682,7 @@
   function initShell() {
     /* Add skip link for accessibility */
     if (!document.getElementById('skipLink')) {
-      var skip = document.createElement('a');
+      const skip = document.createElement('a');
       skip.id = 'skipLink';
       skip.href = '#desktop';
       skip.className = 'skip-link';
@@ -690,8 +690,8 @@
       document.body.insertBefore(skip, document.body.firstChild);
     }
 
-    var tbStart = document.getElementById('tbStart');
-    var startMenu = document.getElementById('startMenu');
+    const tbStart = document.getElementById('tbStart');
+    const startMenu = document.getElementById('startMenu');
     if (tbStart && startMenu) {
       tbStart.style.zIndex = '100003';
       tbStart.addEventListener('click', function (e) {
@@ -700,7 +700,7 @@
       });
     }
     document.addEventListener('click', function (e) {
-      var sm = document.getElementById('startMenu');
+      const sm = document.getElementById('startMenu');
       if (
         sm &&
         sm.classList.contains('open') &&
@@ -713,7 +713,7 @@
     /* Esc-Close */
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
-        var sm = document.getElementById('startMenu');
+        const sm = document.getElementById('startMenu');
         if (sm && sm.classList.contains('open')) {
           sm.classList.remove('open');
           return;
@@ -732,12 +732,12 @@
   }
 
   /* Lock → Desktop */
-  var lockEl = document.getElementById('lock');
+  const lockEl = document.getElementById('lock');
   if (lockEl)
     lockEl.addEventListener('click', function () {
       this.classList.add('unlocking');
       setTimeout(function () {
-        var lk = document.getElementById('lock');
+        const lk = document.getElementById('lock');
         if (lk) {
           lk.classList.add('hide');
           lk.classList.remove('unlocking');
@@ -747,10 +747,10 @@
 
   /* Fisher-Yates shuffle helper */
   function shuffleArray(arr) {
-    var a = arr.slice();
-    for (var i = a.length - 1; i > 0; i--) {
-      var j = Math.floor(Math.random() * (i + 1));
-      var tmp = a[i];
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = a[i];
       a[i] = a[j];
       a[j] = tmp;
     }
@@ -759,7 +759,7 @@
 
   /* Window management — toast helper */
   function toast(msg) {
-    var t = document.getElementById('osToast');
+    const t = document.getElementById('osToast');
     if (t) {
       t.textContent = msg;
       t.classList.remove('hiding');
@@ -775,7 +775,7 @@
       }, 2200);
       return;
     }
-    var el = document.createElement('div');
+    const el = document.createElement('div');
     el.id = 'osToast';
     el.textContent = msg;
     el.className = 'osToast show';
@@ -791,7 +791,7 @@
   /* Keyboard shortcuts — global when no input focused */
   document.addEventListener('keydown', function (e) {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-    var key = e.ctrlKey || e.metaKey ? e.key.toLowerCase() : '';
+    const key = e.ctrlKey || e.metaKey ? e.key.toLowerCase() : '';
     if (key === 'n') {
       e.preventDefault();
       openApp('notepad');
@@ -852,8 +852,8 @@
 
   /* Theme Toggle — Ctrl+Shift+L + Button */
   function toggleTheme() {
-    var cur = document.documentElement.dataset.theme;
-    var next = cur === 'dark' ? '' : 'dark';
+    const cur = document.documentElement.dataset.theme;
+    const next = cur === 'dark' ? '' : 'dark';
     document.documentElement.dataset.theme = next;
     try {
       localStorage.setItem('os_dark', next === 'dark' ? '1' : '0');
@@ -862,14 +862,14 @@
     toast(next === 'dark' ? 'Dark Mode' : 'Light Mode');
   }
   function updateThemeToggleBtn() {
-    var btn = document.getElementById('tbThemeToggle');
+    const btn = document.getElementById('tbThemeToggle');
     if (btn) btn.textContent = document.documentElement.dataset.theme === 'dark' ? '☀️' : '🌙';
   }
 
   /* Task View (Win+Tab) - shows all open windows */
   var taskViewOpen = false;
   function toggleTaskView() {
-    var tv = document.getElementById('taskView');
+    let tv = document.getElementById('taskView');
     if (taskViewOpen) {
       if (tv) tv.remove();
       taskViewOpen = false;
@@ -884,17 +884,17 @@
     tv.querySelector('.tvOverlay').addEventListener('click', function () {
       toggleTaskView();
     });
-    var grid = document.getElementById('tvGrid');
-    var wins = document.querySelectorAll('.wnd');
+    const grid = document.getElementById('tvGrid');
+    const wins = document.querySelectorAll('.wnd');
     if (!wins.length) {
       grid.innerHTML = '<div class="tvEmpty">Keine offenen Fenster</div>';
     } else {
       wins.forEach(function (w) {
-        var wId = w.getAttribute('data-app');
-        var instId = w.getAttribute('data-inst') || wId;
-        var title = t(wId);
-        var isMin = w.classList.contains('minimized');
-        var thumb = document.createElement('div');
+        const wId = w.getAttribute('data-app');
+        const instId = w.getAttribute('data-inst') || wId;
+        const title = t(wId);
+        const isMin = w.classList.contains('minimized');
+        const thumb = document.createElement('div');
         thumb.className = 'tvThumb' + (isMin ? ' minimized' : '');
         thumb.innerHTML =
           '<div class="tvThumbTitle">' +
@@ -907,7 +907,7 @@
           if (isMin) {
             w.classList.remove('minimized');
             w.style.display = '';
-            var tbIcon = document.getElementById('tb-' + instId);
+            const tbIcon = document.getElementById('tb-' + instId);
             if (tbIcon) tbIcon.classList.remove('minimized');
           }
           w.classList.add('focused');
@@ -924,7 +924,7 @@
   /* Help Overlay (Ctrl+?) */
   var helpOverlayOpen = false;
   function toggleHelpOverlay() {
-    var ho = document.getElementById('helpOverlay');
+    let ho = document.getElementById('helpOverlay');
     if (helpOverlayOpen) {
       if (ho) ho.remove();
       helpOverlayOpen = false;
@@ -933,7 +933,7 @@
     helpOverlayOpen = true;
     ho = document.createElement('div');
     ho.id = 'helpOverlay';
-    var shortcuts = [
+    const shortcuts = [
       ['Ctrl+N', 'Notepad'],
       ['Ctrl+T', 'Terminal'],
       ['Ctrl+E', 'Explorer'],
@@ -950,7 +950,7 @@
       ['Ctrl+?', 'Diese Hilfe'],
       ['Esc', 'Fenster/Menu schließen'],
     ];
-    var html =
+    let html =
       '<div class="helpOverlay-bg"></div><div class="helpBox"><div class="helpHeader">Tastenkürzel<button class="helpClose">×</button></div><div class="helpGrid">';
     shortcuts.forEach(function (s) {
       html += '<div class="helpKey">' + s[0] + '</div><div class="helpDesc">' + s[1] + '</div>';
@@ -967,10 +967,10 @@
   }
 
   function snapActive() {
-    var w = document.querySelector('.wnd.focused');
+    const w = document.querySelector('.wnd.focused');
     if (!w) return;
-    var curLeft = w.style.left || '0';
-    var wW = window.innerWidth;
+    const curLeft = w.style.left || '0';
+    const wW = window.innerWidth;
     if (curLeft === '0') {
       snapWindow(w, 'right');
       toast('Right snap');
@@ -986,15 +986,15 @@
    */
   function openApp(id) {
     playSound('open');
-    var multiInstApps = ['notepad', 'terminal', 'editor'];
-    var allowMulti = multiInstApps.indexOf(id) >= 0;
-    var instCounter = window.osInstCounter || (window.osInstCounter = {});
-    var instId = id;
+    const multiInstApps = ['notepad', 'terminal', 'editor'];
+    const allowMulti = multiInstApps.indexOf(id) >= 0;
+    const instCounter = window.osInstCounter || (window.osInstCounter = {});
+    let instId = id;
     if (allowMulti) {
       instCounter[id] = (instCounter[id] || 0) + 1;
       instId = id + '-inst-' + instCounter[id];
     }
-    var w = document.getElementById('w-' + instId);
+    const w = document.getElementById('w-' + instId);
     if (w && !w.classList.contains('minimized')) {
       w.classList.add('focused');
       w.style.zIndex = ++zIdx;
@@ -1014,12 +1014,12 @@
       if (tbIcon) tbIcon.classList.remove('minimized');
       return;
     }
-    var mk = document.createElement('div');
+    const mk = document.createElement('div');
     mk.className = 'wnd';
     mk.id = 'w-' + instId;
     mk.setAttribute('data-app', id);
     mk.setAttribute('data-inst', instId);
-    var _isMobile = window.innerWidth <= 760;
+    const _isMobile = window.innerWidth <= 760;
     if (_isMobile) {
       // Start smaller than fullscreen so user can both grow and shrink
       mk.style.left = '7.5vw';
@@ -1033,101 +1033,101 @@
       mk.style.height = '420px';
     }
     mk.style.zIndex = ++zIdx;
-    var title = t(id) + (allowMulti && instCounter[id] > 1 ? ' #' + instCounter[id] : '');
-    var body = '';
+    const title = t(id) + (allowMulti && instCounter[id] > 1 ? ' #' + instCounter[id] : '');
+    let body = '';
     switch (id) {
-      case 'notepad':
-        body =
+    case 'notepad':
+      body =
           '<div class="npLayout"><div class="npToolbar"><span class="npBrand">Notepad</span><select id="npFont" class="npSelect"><option value="12">12px</option><option value="14" selected>14px</option><option value="16">16px</option><option value="18">18px</option><option value="20">20px</option></select><button id="npFindBtn" class="cBtn op">Suchen</button><button id="npUndoBtn" class="cBtn op">↶</button><button id="npRedoBtn" class="cBtn op">↷</button><button id="npSaveBtn" class="cBtn op">💾</button><button id="npExportBtn" class="cBtn op">Export</button></div><div class="npContainer"><div class="npLines" id="npLines"></div><textarea class="npArea" id="npArea" placeholder="Tippe hier..." spellcheck="false"></textarea></div><div class="npStatus" id="npStatus">Bereit</div></div><div class="npSearchOverlay" id="npSearchOverlay"><input id="npSearchInput" placeholder="Suchen..."><button id="npSearchNext" class="cBtn op">Weiter</button><button id="npSearchPrev" class="cBtn op">Zurück</button><button id="npReplaceBtn" class="cBtn op">Ersetzen</button><input id="npReplaceInput" placeholder="Ersetzen durch..."><button id="npSearchClose" class="cBtn op">✕</button></div>';
-        break;
-      case 'calculator':
-        body =
+      break;
+    case 'calculator':
+      body =
           '<div class="calHead"><input class="cExpr" id="cExpr" readonly value="0"><span class="cCur" id="cCur">0</span></div><div class="calcHist" id="calcHist"></div><div class="calGrid" id="calGrid"></div>';
-        break;
-      case 'terminal':
-        body =
+      break;
+    case 'terminal':
+      body =
           '<div class="termOut" id="termOut"></div><div class="termIn"><span class="prompt">user@macrohard:~$</span><input id="termIn" autofocus></div>';
-        break;
-      case 'explorer':
-        body =
+      break;
+    case 'explorer':
+      body =
           '<div class="feBody"><button class="feSidebarToggle" id="feSidebarToggle" title="Seitenleiste">☰</button><div class="fePath"><span>📁</span><input id="fePath" value="C:\Users\macrohard\Desktop"></div><div class="feSide" id="feSide"></div><div class="feGrid" id="feGrid"></div></div>';
-        break;
-      case 'paint':
-        body =
+      break;
+    case 'paint':
+      body =
           '<div class="ptColors" id="ptColors"></div><canvas class="ptCanvas" id="ptCanvas" width="400" height="260"></canvas>';
-        break;
-      case 'browser':
-        body =
+      break;
+    case 'browser':
+      body =
           '<div class="brTabs" id="brTabs"></div><div class="brBar"><button class="brBtn" id="brBack" title="Zurück">←</button><button class="brBtn" id="brFwd" title="Vor">→</button><button class="brBtn" id="brRefresh" title="Aktualisieren">↻</button><button class="brBtn" id="brHome" title="Startseite">⌂</button><input id="brAddr" value="https://duckduckgo.com" placeholder="URL oder Suche..."><button class="brBtn" id="brGo" title="Los">➜</button><button class="brBtn" id="brBm" title="Lesezeichen">☆</button><button class="brBtn" id="brNewTab" title="Neuer Tab">+</button></div><div class="brContent" id="brContent"></div>';
-        break;
-      case 'music':
-        body =
+      break;
+    case 'music':
+      body =
           '<div class="musPlayer"><div class="musHeader"><span class="musLogo">🎵 Music</span><button class="musToggle" id="musToggle">☰ Playlist</button><button id="musCloseBtn" class="musCloseBtn" title="Schließen">✕</button></div><div class="musBody"><div class="musMain"><div class="musArt" id="musArt"><span id="musArtIcon">♪</span></div><div class="musMeta"><div class="musTitle" id="musTitle">Player</div><div class="musArtist" id="musArtist">Wähle einen Song</div><div class="musAlbum" id="musAlbum">—</div></div><div class="musSeek"><input type="range" id="musProg" min="0" max="100" step="1" value="0"><div class="musTimes"><span id="musProgL">0:00</span><span id="musProgR">0:00</span></div></div><div class="musControls"><button id="musShuffle" title="Shuffle">🔀</button><button id="musPrev" title="Zurück">⏮</button><button id="musPlayBtn" class="musPlay" title="Play">▶</button><button id="musNext" title="Weiter">⏭</button><button id="musRepeat" title="Repeat">🔁</button></div><div class="musVolWrap"><span>🔊</span><input type="range" id="musVol" min="0" max="1" step="0.05" value="0.7"><span id="musVolL">70%</span></div></div><div class="musSidebar" id="musSidebar"><div class="musTabs"><button data-tab="playlist" class="musTab active">🎵 Playlist</button><button data-tab="radio" class="musTab">📻 Radio</button><button data-tab="favs" class="musTab">★ Favs</button></div><div id="musPlaylist" class="musList"></div><div id="musRadio" class="musList" style="display:none"></div><div id="musFavs" class="musList" style="display:none"></div><div class="musSidebarFoot"><label class="musUploadBtn">⬆ Upload<input type="file" id="musUploadIn" accept="audio/*" multiple style="display:none"></label><span id="musRadioStatus" style="font-size:9px;color:var(--muted)"></span></div></div></div><div class="musExtraTabs"><button data-extra="beatpad" class="musExtraTab active">🥁 Beatpad</button><button data-extra="eq" class="musExtraTab">🎛 EQ</button><button data-extra="vis" class="musExtraTab">📊 Visualizer</button></div><div id="musBeatpadSection" class="musExtra"><div class="beatpad-header"><span class="beatpad-title">🥁 Beatpad</span><button id="beatpadPlay" class="beatpad-btn-lg" title="Play Loop">▶ Play</button><button id="beatpadStop" class="beatpad-btn-lg beatpad-stop" title="Stop">⏹ Stop</button><select id="beatpadBpm" class="beatpad-bpm"><option value="100">100 BPM</option><option value="120" selected>120 BPM</option><option value="140">140 BPM</option><option value="160">160 BPM</option><option value="180">180 BPM</option></select></div><div class="musBeatpad" id="musBeatpad"></div><div class="beatpad-vol-wrap"><span>🔊</span><input type="range" id="beatpadVol" min="0" max="100" value="50"><span id="beatpadVolL">50%</span></div></div><div id="musEq" class="musExtra" style="display:none"><canvas id="musVisualizer" width="280" height="60"></canvas><div class="musEq" id="musEq"></div></div><div id="musVis" class="musExtra" style="display:none"><canvas id="musVisCanvas" width="280" height="100"></canvas></div></div>';
-        break;
-      case 'chat':
-        body =
+      break;
+    case 'chat':
+      body =
           '<div class="cpMsgs" id="cpMsgs"></div><div class="cpSugs" id="cpSugs"></div><div class="cpIn"><input id="cpIn" placeholder="Nachricht..."><button id="cpSend">Send</button></div>';
-        break;
-      case 'docs':
-        body =
+      break;
+    case 'docs':
+      body =
           '<div class="mdToolbar"><button class="cBtn" id="mdBold" title="Bold"><b>B</b></button><button class="cBtn" id="mdItalic" title="Italic"><i>I</i></button><button class="cBtn" id="mdHeading" title="Überschrift">H</button><button class="cBtn" id="mdLink" title="Link">Link</button><button class="cBtn" id="mdCode" title="Code">Code</button><button class="cBtn" id="mdQuote" title="Zitat">"</button><button class="cBtn" id="mdList" title="Liste">•</button><button class="cBtn" id="mdSave" title="Speichern">💾</button><button class="cBtn" id="mdExport" title="Export .md">📤</button><button class="cBtn" id="mdPreview" title="Preview">👁</button></div><div class="mdBody" id="mdBody" contenteditable="true" spellcheck="false"></div><div class="mdPreview" id="mdPreview"></div>';
-        break;
-      case 'settings':
-        body =
+      break;
+    case 'settings':
+      body =
           '<div class="stGrid" id="stGrid"><div class="stNav"><button data-tab="general" class="active" data-de="Allgemein" data-en="General">Allgemein</button><button data-tab="appearance" data-de="Aussehen" data-en="Appearance">Aussehen</button><button data-tab="shortcuts" data-de="Tastenkürzel" data-en="Shortcuts">Tastenkürzel</button><button data-tab="privacy" data-de="Datenschutz" data-en="Privacy">Datenschutz</button></div><div class="stPane active" data-pane="general"><label><input type="checkbox" id="stDark"> Dark Mode</label><label><input type="checkbox" id="stScan" checked> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div><div class="stPane" data-pane="appearance" id="stAppearance"></div><div class="stPane" data-pane="shortcuts" id="stShortcuts"></div><div class="stPane" data-pane="privacy" id="stPrivacy"></div></div>';
-        break;
-      case 'links':
-        body = '<div class="clPane" id="clPane"></div>';
-        break;
-      case 'amibios':
-        body = '<div style="width:100%;height:100%" id="ami-bios-wrap"></div>';
-        break;
-      case 'taskmgr':
-        body = '<div class="tmBody" id="tmBody"></div>';
-        break;
-      case 'sysinfo':
-        body = '<div class="siBody" id="siBody"></div>';
-        break;
-      case 'calendar':
-        body = '<div class="calBody" id="calBody"></div>';
-        break;
-      case 'clock':
-        body = '<div class="clkBody" id="clkBody"></div>';
-        break;
-      case 'colorpicker':
-        body =
+      break;
+    case 'links':
+      body = '<div class="clPane" id="clPane"></div>';
+      break;
+    case 'amibios':
+      body = '<div style="width:100%;height:100%" id="ami-bios-wrap"></div>';
+      break;
+    case 'taskmgr':
+      body = '<div class="tmBody" id="tmBody"></div>';
+      break;
+    case 'sysinfo':
+      body = '<div class="siBody" id="siBody"></div>';
+      break;
+    case 'calendar':
+      body = '<div class="calBody" id="calBody"></div>';
+      break;
+    case 'clock':
+      body = '<div class="clkBody" id="clkBody"></div>';
+      break;
+    case 'colorpicker':
+      body =
           '<div class="cpBody" id="cpBody"><div class="cpPreview" id="cpPreview"></div><input type="color" id="cpInput" value="#2547ff"><input type="text" id="cpHex" value="#2547ff" readonly></div>';
-        break;
-      case 'pwgen':
-        body = '<div class="pwBody" id="pwBody"></div>';
-        break;
-      case 'qrgen':
-        body =
+      break;
+    case 'pwgen':
+      body = '<div class="pwBody" id="pwBody"></div>';
+      break;
+    case 'qrgen':
+      body =
           '<div class="qrBody" id="qrBody"><input type="text" id="qrInput" placeholder="Text oder URL..."><div class="qrCanvas" id="qrCanvas"></div><button class="cBtn" id="qrBtn">Generieren</button></div>';
-        break;
-      case 'viewer':
-        body =
+      break;
+    case 'viewer':
+      body =
           '<div class="vwBody" id="vwBody"><div id="vwPlaceholder">Bild hierher ziehen</div><canvas id="vwCanvas"></canvas></div>';
-        break;
-      case 'game':
-        body = '<div class="gmBody" id="gmBody"></div>';
-        break;
-      case 'editor':
-        body =
+      break;
+    case 'game':
+      body = '<div class="gmBody" id="gmBody"></div>';
+      break;
+    case 'editor':
+      body =
           '<div class="edToolbar"><button class="cBtn" id="edNew">Neu</button><button class="cBtn" id="edOpen">Öffnen</button><button class="cBtn" id="edSave">Speichern</button><select id="edLang"><option value="js">JavaScript</option><option value="html">HTML</option><option value="css">CSS</option><option value="md">Markdown</option></select><span class="edStats" id="edStats">0 Zeilen</span></div><div class="edContainer"><div class="edLines" id="edLines"></div><textarea class="edArea" id="edArea" spellcheck="false"></textarea></div>';
-        break;
-      case 'imgeditor':
-        body =
+      break;
+    case 'imgeditor':
+      body =
           '<div class="ieToolbar"><button class="cBtn" id="ieLoad">Bild laden</button><button class="cBtn" id="ieCrop">Crop</button><button class="cBtn" id="ieRotate">Rotate</button><button class="cBtn" id="ieResize">Resize</button><select id="ieFilter"><option value="none">Kein Filter</option><option value="grayscale">Grayscale</option><option value="sepia">Sepia</option><option value="blur">Blur</option><option value="invert">Invert</option></select><button class="cBtn" id="ieExportPNG">PNG</button><button class="cBtn" id="ieExportJPG">JPG</button></div><div class="ieContainer"><canvas id="ieCanvas"></canvas></div>';
-        break;
-      case 'pomodoro':
-        body =
+      break;
+    case 'pomodoro':
+      body =
           '<div class="poBody"><div class="poProgress"><svg class="poRing" viewBox="0 0 120 120"><circle class="poRingBg" cx="60" cy="60" r="54"/><circle class="poRingFg" id="poRingFg" cx="60" cy="60" r="54"/></svg><div class="poTime" id="poTime">25:00</div></div><div class="poLabel" id="poLabel">Arbeit</div><div class="poControls"><button class="cBtn" id="poStart">Start</button><button class="cBtn" id="poReset">Reset</button></div><div class="poSettings"><label>Dauer: <input type="number" id="poWorkMin" value="25" min="1" max="60"> min</label><label>Pause: <input type="number" id="poBreakMin" value="5" min="1" max="30"> min</label></div><div class="poCount" id="poCount">Sessions: 0</div></div>';
-        break;
-      case 'notes':
-        body =
+      break;
+    case 'notes':
+      body =
           '<div class="ntLayout"><div class="ntSidebar"><input type="text" id="ntSearch" placeholder="Suchen..."><div class="ntTags" id="ntTags"></div><div class="ntList" id="ntList"></div><button class="cBtn" id="ntNew">+ Neue Notiz</button></div><div class="ntEditor"><input type="text" id="ntTitle" placeholder="Titel"><input type="text" id="ntTagInput" placeholder="Tags (kommagetrennt)"><textarea id="ntContent" placeholder="Markdown..."></textarea><div class="ntPreview" id="ntPreview"></div><div class="ntSaveRow"><button class="cBtn" id="ntSave">Speichern</button><button class="cBtn op" id="ntTogglePreview">Preview</button></div></div></div>';
-        break;
+      break;
     }
     mk.innerHTML =
       '<div class="wtitle"><span class="wact"></span><span class="wtxt">' +
@@ -1135,7 +1135,7 @@
       '</span><button class="wmin" title="Minimize">_</button><button class="wmax" title="Maximize">□</button><button class="wclose" title="Close">×</button></div><div class="wbody">' +
       body +
       '</div><div class="wnd-resize" data-dot="⬢"></div>';
-    var desktopEl2 = document.getElementById('desktop');
+    const desktopEl2 = document.getElementById('desktop');
     if (desktopEl2) desktopEl2.appendChild(mk);
     if (id === 'calculator') buildCalc();
     if (id === 'explorer') buildExplorer();
@@ -1170,13 +1170,13 @@
       updateFocus();
       saveSession();
     });
-    var closeBtn = mk.querySelector('.wclose');
+    const closeBtn = mk.querySelector('.wclose');
     if (closeBtn)
       closeBtn.addEventListener('click', function (e) {
         e.stopPropagation();
-        var wnd = this.closest('.wnd');
-        var wId = wnd.getAttribute('data-app');
-        var instId = wnd.getAttribute('data-inst') || wId;
+        const wnd = this.closest('.wnd');
+        const wId = wnd.getAttribute('data-app');
+        const instId = wnd.getAttribute('data-inst') || wId;
         // Generic interval cleanup
         try {
           if (instId && window.osIntervals) {
@@ -1247,28 +1247,28 @@
         setTimeout(function () {
           wnd.remove();
         }, 200);
-        var tbIconClose = document.getElementById('tb-' + instId);
+        const tbIconClose = document.getElementById('tb-' + instId);
         if (tbIconClose) tbIconClose.remove();
         focused = null;
         updateFocus();
         saveSession();
       });
-    var minBtn = mk.querySelector('.wmin');
+    const minBtn = mk.querySelector('.wmin');
     if (minBtn)
       minBtn.addEventListener('click', function (e) {
         e.stopPropagation();
-        var tbIcon = document.getElementById('tb-' + instId);
+        const tbIcon = document.getElementById('tb-' + instId);
         mk.classList.add('minimized');
         mk.style.display = 'none';
         if (tbIcon) tbIcon.classList.add('minimized');
         focused = null;
         updateFocus();
       });
-    var maxBtn = mk.querySelector('.wmax');
+    const maxBtn = mk.querySelector('.wmax');
     if (maxBtn)
       maxBtn.addEventListener('click', function (e) {
         e.stopPropagation();
-        var tbIcon = document.getElementById('tb-' + instId);
+        const tbIcon = document.getElementById('tb-' + instId);
         if (mk.dataset.max === 'true') {
           mk.style.left = mk.dataset.origLeft;
           mk.style.top = mk.dataset.origTop;
@@ -1291,7 +1291,7 @@
         }
       });
     /* titlebar drag */
-    var titlebar = mk.querySelector('.wtitle');
+    const titlebar = mk.querySelector('.wtitle');
     if (titlebar) {
       titlebar.addEventListener('mousedown', function (e) {
         if (e.target.closest('button')) return;
@@ -1309,10 +1309,10 @@
       tbIcon.title = t(id);
       tbIcon.dataset.app = id;
       tbIcon.dataset.inst = instId;
-      var lbl = t(id) + (allowMulti && instCounter[id] > 1 ? ' #' + instCounter[id] : '');
+      const lbl = t(id) + (allowMulti && instCounter[id] > 1 ? ' #' + instCounter[id] : '');
       tbIcon.innerHTML = '<span>' + lbl + '</span><span class="tbRun"></span>';
       tbIcon.addEventListener('click', function (e) {
-        var w = document.getElementById('w-' + instId);
+        const w = document.getElementById('w-' + instId);
         if (!w) return;
         if (w.classList.contains('minimized')) {
           w.classList.remove('minimized');
@@ -1339,10 +1339,10 @@
           updateFocus();
         }
       });
-      var tbCenterEl = document.getElementById('tbCenter');
+      const tbCenterEl = document.getElementById('tbCenter');
       if (tbCenterEl) tbCenterEl.appendChild(tbIcon);
     } else {
-      var existingIcon = document.getElementById('tb-' + instId);
+      const existingIcon = document.getElementById('tb-' + instId);
       if (existingIcon) {
         existingIcon.classList.add('running', 'focused');
       }
@@ -1355,7 +1355,7 @@
       t.classList.remove('focused');
     });
     if (focused) {
-      var f = document.getElementById('tb-' + focused);
+      const f = document.getElementById('tb-' + focused);
       if (f) f.classList.add('focused');
     }
   }
@@ -1364,29 +1364,29 @@
     document.querySelectorAll('.wnd').forEach(function (w) {
       w.classList.remove('focused');
     });
-    var f = document.getElementById('w-' + focused);
+    const f = document.getElementById('w-' + focused);
     if (f) f.classList.add('focused');
   }
 
   /* Notepad — S3: Font + Export */
   function setupNotepad() {
-    var area = document.getElementById('npArea');
-    var lines = document.getElementById('npLines');
-    var status = document.getElementById('npStatus');
-    var fontSel = document.getElementById('npFont');
+    const area = document.getElementById('npArea');
+    const lines = document.getElementById('npLines');
+    const status = document.getElementById('npStatus');
+    const fontSel = document.getElementById('npFont');
     if (!area || !lines) return;
 
-    var NS = 'np_save';
-    var undoStack = [];
-    var redoStack = [];
-    var lastContent = '';
+    const NS = 'np_save';
+    const undoStack = [];
+    let redoStack = [];
+    let lastContent = '';
 
     try {
-      var sv = localStorage.getItem(NS);
+      const sv = localStorage.getItem(NS);
       if (sv) area.value = sv;
     } catch (e) {}
     try {
-      var fs = localStorage.getItem('np_fs');
+      const fs = localStorage.getItem('np_fs');
       if (fs && fontSel) fontSel.value = fs;
     } catch (e) {}
 
@@ -1394,12 +1394,12 @@
     undoStack.push(lastContent);
 
     function updateLines() {
-      var content = area.value;
-      var lineCount = content.split('\n').length;
-      var html = '';
-      for (var i = 1; i <= lineCount; i++) html += '<div class="npLine">' + i + '</div>';
+      const content = area.value;
+      const lineCount = content.split('\n').length;
+      let html = '';
+      for (let i = 1; i <= lineCount; i++) html += '<div class="npLine">' + i + '</div>';
       lines.innerHTML = html;
-      var words = content.trim().split(/\s+/).filter(Boolean).length;
+      const words = content.trim().split(/\s+/).filter(Boolean).length;
       status.textContent =
         lineCount + ' Zeilen · ' + words + ' Wörter · ' + content.length + ' Zeichen';
       try {
@@ -1408,7 +1408,7 @@
     }
 
     function saveUndo() {
-      var content = area.value;
+      const content = area.value;
       if (content !== lastContent) {
         undoStack.push(content);
         if (undoStack.length > 50) undoStack.shift();
@@ -1428,7 +1428,7 @@
     area.addEventListener('keydown', function (e) {
       if (e.key === 'Tab') {
         e.preventDefault();
-        var start = area.selectionStart,
+        const start = area.selectionStart,
           end = area.selectionEnd;
         area.value = area.value.substring(0, start) + '  ' + area.value.substring(end);
         area.selectionStart = area.selectionEnd = start + 2;
@@ -1447,7 +1447,7 @@
       if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
         e.preventDefault();
         if (redoStack.length > 0) {
-          var next = redoStack.pop();
+          const next = redoStack.pop();
           undoStack.push(next);
           area.value = next;
           lastContent = area.value;
@@ -1475,7 +1475,7 @@
         } catch (e) {}
       });
 
-    var undoBtn = document.getElementById('npUndoBtn');
+    const undoBtn = document.getElementById('npUndoBtn');
     if (undoBtn)
       undoBtn.addEventListener('click', function () {
         if (undoStack.length > 1) {
@@ -1486,11 +1486,11 @@
         }
       });
 
-    var redoBtn = document.getElementById('npRedoBtn');
+    const redoBtn = document.getElementById('npRedoBtn');
     if (redoBtn)
       redoBtn.addEventListener('click', function () {
         if (redoStack.length > 0) {
-          var next = redoStack.pop();
+          const next = redoStack.pop();
           undoStack.push(next);
           area.value = next;
           lastContent = area.value;
@@ -1498,7 +1498,7 @@
         }
       });
 
-    var saveBtn = document.getElementById('npSaveBtn');
+    const saveBtn = document.getElementById('npSaveBtn');
     if (saveBtn)
       saveBtn.addEventListener('click', function () {
         try {
@@ -1507,11 +1507,11 @@
         } catch (e) {}
       });
 
-    var exportBtn = document.getElementById('npExportBtn');
+    const exportBtn = document.getElementById('npExportBtn');
     if (exportBtn)
       exportBtn.addEventListener('click', function () {
-        var blob = new Blob([area.value], { type: 'text/plain' });
-        var a = document.createElement('a');
+        const blob = new Blob([area.value], { type: 'text/plain' });
+        const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = 'notepad.txt';
         a.click();
@@ -1519,26 +1519,26 @@
         toast('.txt exportiert');
       });
 
-    var findBtn = document.getElementById('npFindBtn');
-    var overlay = document.getElementById('npSearchOverlay');
+    const findBtn = document.getElementById('npFindBtn');
+    const overlay = document.getElementById('npSearchOverlay');
     if (findBtn && overlay)
       findBtn.addEventListener('click', function () {
         overlay.style.display = 'flex';
-        var inp = document.getElementById('npSearchInput');
+        const inp = document.getElementById('npSearchInput');
         if (inp) inp.focus();
       });
 
-    var searchClose = document.getElementById('npSearchClose');
+    const searchClose = document.getElementById('npSearchClose');
     if (searchClose)
       searchClose.addEventListener('click', function () {
         overlay.style.display = 'none';
       });
 
-    var searchInput = document.getElementById('npSearchInput');
+    const searchInput = document.getElementById('npSearchInput');
     function doSearch() {
-      var q = searchInput.value;
+      const q = searchInput.value;
       if (!q) return;
-      var idx = area.value.indexOf(q);
+      const idx = area.value.indexOf(q);
       if (idx >= 0) {
         area.focus();
         area.setSelectionRange(idx, idx + q.length);
@@ -1556,29 +1556,29 @@
         }
       });
 
-    var searchNext = document.getElementById('npSearchNext');
+    const searchNext = document.getElementById('npSearchNext');
     if (searchNext) searchNext.addEventListener('click', doSearch);
 
-    var searchPrev = document.getElementById('npSearchPrev');
+    const searchPrev = document.getElementById('npSearchPrev');
     if (searchPrev)
       searchPrev.addEventListener('click', function () {
-        var q = searchInput.value;
+        const q = searchInput.value;
         if (!q) return;
-        var idx = area.value.lastIndexOf(q);
+        const idx = area.value.lastIndexOf(q);
         if (idx >= 0) {
           area.focus();
           area.setSelectionRange(idx, idx + q.length);
         }
       });
 
-    var replaceBtn = document.getElementById('npReplaceBtn');
+    const replaceBtn = document.getElementById('npReplaceBtn');
     if (replaceBtn)
       replaceBtn.addEventListener('click', function () {
-        var search = searchInput.value;
+        const search = searchInput.value;
         if (!search) return;
-        var replace = document.getElementById('npReplaceInput').value;
+        const replace = document.getElementById('npReplaceInput').value;
         if (replace === null) return;
-        var count = (
+        const count = (
           area.value.match(new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []
         ).length;
         if (count > 0) {
@@ -1593,16 +1593,16 @@
   }
 
   /* Calculator — S4: Memory + Constants */
-  var calcHist = [];
-  var sciMode = false;
-  var calcMemory = 0;
+  const calcHist = [];
+  let sciMode = false;
+  let calcMemory = 0;
 
   /* Safe Calculator Evaluator (ersetzt eval) — Recursive Descent Parser */
   function safeEvalCalc(expr) {
     if (!/^[-+*/().,\s\d_a-zA-Zπφ]+$/.test(expr)) {
       throw new Error('Invalid');
     }
-    var p = 0,
+    let p = 0,
       s = expr;
     function pk() {
       return s[p];
@@ -1615,10 +1615,10 @@
     }
     function num() {
       ws();
-      var n = '';
+      let n = '';
       if (pk() === '-') n += gt();
       while (p < s.length && (/[0-9]/.test(pk()) || pk() === '.')) n += gt();
-      var v = parseFloat(n);
+      const v = parseFloat(n);
       if (isNaN(v)) throw new Error('NaN');
       return v;
     }
@@ -1626,7 +1626,7 @@
       ws();
       if (s.substr(p, 5) === 'Math.') {
         p += 5;
-        var m = s.substr(p).match(/^(PI|E|sin|cos|tan|sqrt|pow|log|abs)/);
+        const m = s.substr(p).match(/^(PI|E|sin|cos|tan|sqrt|pow|log|abs)/);
         if (m) {
           p += m[0].length;
           return m[1];
@@ -1636,13 +1636,13 @@
     }
     function primary() {
       ws();
-      var fn = mathfn();
+      const fn = mathfn();
       if (fn) {
         if (fn === 'PI') return Math.PI;
         if (fn === 'E') return Math.E;
         ws();
         if (gt() !== '(') throw new Error('(');
-        var a = [];
+        const a = [];
         ws();
         if (pk() !== ')') {
           a.push(exprparse());
@@ -1654,23 +1654,23 @@
         ws();
         if (gt() !== ')') throw new Error(')');
         switch (fn) {
-          case 'sin':
-            return Math.sin(a[0]);
-          case 'cos':
-            return Math.cos(a[0]);
-          case 'tan':
-            return Math.tan(a[0]);
-          case 'sqrt':
-            return Math.sqrt(a[0]);
-          case 'pow':
-            return Math.pow(a[0], a[1]);
-          case 'log':
-            return Math.log(a[0]);
-          case 'abs':
-            return Math.abs(a[0]);
+        case 'sin':
+          return Math.sin(a[0]);
+        case 'cos':
+          return Math.cos(a[0]);
+        case 'tan':
+          return Math.tan(a[0]);
+        case 'sqrt':
+          return Math.sqrt(a[0]);
+        case 'pow':
+          return Math.pow(a[0], a[1]);
+        case 'log':
+          return Math.log(a[0]);
+        case 'abs':
+          return Math.abs(a[0]);
         }
       }
-      var ch = pk();
+      const ch = pk();
       if (ch === 'π') {
         gt();
         return Math.PI;
@@ -1681,7 +1681,7 @@
       }
       if (ch === '(') {
         gt();
-        var v = exprparse();
+        const v = exprparse();
         ws();
         if (gt() !== ')') throw new Error(')');
         return v;
@@ -1702,10 +1702,10 @@
       return primary();
     }
     function muldiv() {
-      var l = unary();
+      let l = unary();
       ws();
       while (pk() === '*' || pk() === '/') {
-        var o = gt(),
+        const o = gt(),
           r = unary();
         l = o === '*' ? l * r : l / r;
         ws();
@@ -1713,28 +1713,28 @@
       return l;
     }
     function exprparse() {
-      var l = muldiv();
+      let l = muldiv();
       ws();
       while (pk() === '+' || pk() === '-') {
-        var o = gt(),
+        const o = gt(),
           r = muldiv();
         l = o === '+' ? l + r : l - r;
         ws();
       }
       return l;
     }
-    var res = exprparse();
+    const res = exprparse();
     ws();
     if (p < s.length) throw new Error('End');
     return res;
   }
   function buildCalc() {
-    var grid = document.getElementById('calGrid');
+    const grid = document.getElementById('calGrid');
     if (!grid) return;
-    var sci = ['sin', 'cos', 'tan', 'sqrt', 'pow', 'log', 'abs', 'π', 'e', 'φ', '(', ')'];
-    var tb = document.createElement('div');
+    const sci = ['sin', 'cos', 'tan', 'sqrt', 'pow', 'log', 'abs', 'π', 'e', 'φ', '(', ')'];
+    const tb = document.createElement('div');
     tb.className = 'calcToolbar';
-    var sciBtn = document.createElement('button');
+    const sciBtn = document.createElement('button');
     sciBtn.textContent = 'SCI';
     sciBtn.className = 'cBtn op';
     sciBtn.style.fontSize = '10px';
@@ -1744,7 +1744,7 @@
     });
     tb.appendChild(sciBtn);
     /* Memory buttons */
-    var memBtn = document.createElement('button');
+    const memBtn = document.createElement('button');
     memBtn.textContent = 'M+';
     memBtn.className = 'cBtn op';
     memBtn.style.fontSize = '10px';
@@ -1752,17 +1752,17 @@
       calcMemory += parseFloat(document.getElementById('cExpr').value) || 0;
       toast('Speicher: ' + calcMemory);
     });
-    var mrBtn = document.createElement('button');
+    const mrBtn = document.createElement('button');
     mrBtn.textContent = 'MR';
     mrBtn.className = 'cBtn op';
     mrBtn.style.fontSize = '10px';
     mrBtn.addEventListener('click', function () {
-      var ex = document.getElementById('cExpr');
+      const ex = document.getElementById('cExpr');
       if (ex) {
         ex.value += calcMemory;
       }
     });
-    var mcBtn = document.createElement('button');
+    const mcBtn = document.createElement('button');
     mcBtn.textContent = 'MC';
     mcBtn.className = 'cBtn op';
     mcBtn.style.fontSize = '10px';
@@ -1770,7 +1770,7 @@
       calcMemory = 0;
       toast('Speicher gelöscht');
     });
-    var msBtn = document.createElement('button');
+    const msBtn = document.createElement('button');
     msBtn.textContent = 'MS';
     msBtn.className = 'cBtn op';
     msBtn.style.fontSize = '10px';
@@ -1784,7 +1784,7 @@
     tb.appendChild(msBtn);
     if (sciMode) {
       sci.forEach(function (b) {
-        var btn = document.createElement('button');
+        const btn = document.createElement('button');
         btn.textContent = b;
         btn.className = 'cBtn';
         btn.addEventListener('click', function () {
@@ -1794,54 +1794,54 @@
       });
     }
     grid.parentNode.insertBefore(tb, grid);
-    var btns = sciMode
+    const btns = sciMode
       ? [
-          'C',
-          '±',
-          '%',
-          '÷',
-          '(',
-          ')',
-          '7',
-          '8',
-          '9',
-          '×',
-          '4',
-          '5',
-          '6',
-          '−',
-          '1',
-          '2',
-          '3',
-          '+',
-          '0',
-          '.',
-          '=',
-        ]
+        'C',
+        '±',
+        '%',
+        '÷',
+        '(',
+        ')',
+        '7',
+        '8',
+        '9',
+        '×',
+        '4',
+        '5',
+        '6',
+        '−',
+        '1',
+        '2',
+        '3',
+        '+',
+        '0',
+        '.',
+        '=',
+      ]
       : [
-          'C',
-          '±',
-          '%',
-          '÷',
-          '(',
-          ')',
-          '7',
-          '8',
-          '9',
-          '×',
-          '4',
-          '5',
-          '6',
-          '−',
-          '1',
-          '2',
-          '3',
-          '+',
-          '0',
-          '.',
-          '=',
-        ];
-    var opClasses = {
+        'C',
+        '±',
+        '%',
+        '÷',
+        '(',
+        ')',
+        '7',
+        '8',
+        '9',
+        '×',
+        '4',
+        '5',
+        '6',
+        '−',
+        '1',
+        '2',
+        '3',
+        '+',
+        '0',
+        '.',
+        '=',
+      ];
+    const opClasses = {
       '\\u00f7': 'op',
       '\\u00d7': 'op',
       '\\u2212': 'op',
@@ -1853,8 +1853,8 @@
     };
     grid.innerHTML = '';
     btns.forEach(function (b) {
-      var cls = 'cBtn' + (opClasses[b] ? ' ' + opClasses[b] : '');
-      var btn = document.createElement('button');
+      const cls = 'cBtn' + (opClasses[b] ? ' ' + opClasses[b] : '');
+      const btn = document.createElement('button');
       btn.className = cls;
       btn.textContent = b;
       btn.addEventListener('click', function () {
@@ -1862,10 +1862,10 @@
       });
       grid.appendChild(btn);
     });
-    var wnd = document.getElementById('w-calculator');
+    const wnd = document.getElementById('w-calculator');
     if (!wnd) return;
     wnd.addEventListener('keydown', function (e) {
-      var key = e.key;
+      const key = e.key;
       if (key === 'Enter') {
         e.preventDefault();
         calcPress('=');
@@ -1874,11 +1874,11 @@
         calcPress('C');
       } else if (key === 'Backspace') {
         e.preventDefault();
-        var ex = document.getElementById('cExpr');
+        const ex = document.getElementById('cExpr');
         if (ex) ex.value = ex.value.slice(0, -1) || '0';
       } else if (/^[0-9.+\-*/()]$/.test(key)) {
         e.preventDefault();
-        var ex2 = document.getElementById('cExpr');
+        const ex2 = document.getElementById('cExpr');
         if (ex2) {
           if (ex2.value === '0') ex2.value = key;
           else ex2.value += key;
@@ -1889,9 +1889,9 @@
     wnd.setAttribute('tabindex', '-1');
   }
   function calcPress(b) {
-    var expr = document.getElementById('cExpr');
+    const expr = document.getElementById('cExpr');
     if (!expr) return;
-    var map = {
+    const map = {
       sin: 'Math.sin',
       cos: 'Math.cos',
       tan: 'Math.tan',
@@ -1915,7 +1915,7 @@
       expr.value = (parseFloat(expr.value || '0') / 100).toString();
     } else if (b === '=') {
       try {
-        var r = safeEvalCalc(expr.value.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-'));
+        const r = safeEvalCalc(expr.value.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-'));
         calcHist.unshift(expr.value + ' = ' + r);
         if (calcHist.length > 12) calcHist.pop();
         document.getElementById('cCur').textContent = '';
@@ -1931,7 +1931,7 @@
   }
   window.calcPress = calcPress;
   function renderHist() {
-    var hist = document.getElementById('calcHist');
+    const hist = document.getElementById('calcHist');
     if (!hist) return;
     hist.innerHTML = calcHist
       .map(function (h) {
@@ -1941,23 +1941,23 @@
     hist.querySelectorAll('.chItem').forEach(function (el, idx) {
       el.style.cursor = 'pointer';
       el.addEventListener('click', function () {
-        var parts = el.textContent.split(' = ');
+        const parts = el.textContent.split(' = ');
         if (parts[0]) document.getElementById('cExpr').value = parts[0];
       });
     });
   }
 
   /* Terminal */
-  var termHist = [];
-  var termHistI = 0;
+  const termHist = [];
+  let termHistI = 0;
   function buildTerminal() {
-    var out = document.getElementById('termOut');
-    var inp = document.getElementById('termIn');
+    const out = document.getElementById('termOut');
+    const inp = document.getElementById('termIn');
     if (!out || !inp) return;
     if (TERM_INITIALIZED) return;
     TERM_INITIALIZED = true;
 
-    var commands = [
+    const commands = [
       'help',
       'ls',
       'cd',
@@ -1985,7 +1985,7 @@
       'about',
     ];
     function w(text) {
-      var d = document.createElement('div');
+      const d = document.createElement('div');
       d.textContent = text;
       out.appendChild(d);
       out.scrollTop = out.scrollHeight;
@@ -2001,362 +2001,362 @@
 
     inp.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') {
-        var cmd = inp.value.trim();
+        const cmd = inp.value.trim();
         if (!cmd) {
           return;
         }
         w('user@macrohard:~$ ' + cmd);
         termHist.push(cmd);
         termHistI = termHist.length;
-        var args = cmd.split(/\s+/);
+        const args = cmd.split(/\s+/);
         var c = args[0].toLowerCase();
         switch (c) {
-          case 'help':
-            w('Befehle: ' + commands.join(', '));
+        case 'help':
+          w('Befehle: ' + commands.join(', '));
+          break;
+        case 'pwd':
+          w(curPath);
+          break;
+        case 'whoami':
+          w('macrohard');
+          break;
+        case 'ls': {
+          const d = fsData[curPath];
+          if (d) {
+            if (d.dirs.length || d.files.length) {
+              d.dirs.forEach(function (x) {
+                w('  \x1b[34m📁 ' + x + '\x1b[0m');
+              });
+              d.files.forEach(function (x) {
+                w('  \x1b[90m📄 ' + x + '\x1b[0m');
+              });
+            } else w('  (leer)');
+          } else w('  Nicht gefunden.');
+          break;
+        }
+        case 'tree': {
+          function printTree(path, prefix) {
+            const node = fsData[path];
+            if (!node) return;
+            const items = node.dirs.concat(node.files);
+            items.forEach(function (item, i) {
+              const isLast = i === items.length - 1;
+              const marker = isLast ? '└─' : '├─';
+              const isDir = node.dirs.indexOf(item) !== -1;
+              w(prefix + marker + (isDir ? ' 📁 ' : ' 📄 ') + item);
+              if (isDir) {
+                const subPath = path === 'C:\\' ? 'C:\\' + item : path + '\\' + item;
+                printTree(subPath, prefix + (isLast ? '   ' : '│  '));
+              }
+            });
+          }
+          w('📁 ' + curPath.split('\\').pop() || 'C:\\');
+          printTree(curPath, '');
+          break;
+        }
+        case 'cat': {
+          const target = args[1];
+          if (!target) {
+            w('Usage: cat <file>');
             break;
-          case 'pwd':
+          }
+          var cur = fsData[curPath];
+          if (cur && cur.files.indexOf(target) !== -1) {
+            w('--- ' + target + ' ---');
+            w('[Inhalt von ' + target + ' — mock]');
+            w('Zeilen: 1, Wörter: 3, Zeichen: 42');
+          } else w('Datei nicht gefunden: ' + target);
+          break;
+        }
+        case 'head': {
+          var fn = args[1];
+          if (!fn) {
+            w('Usage: head <file> [n]');
+            break;
+          }
+          var cur = fsData[curPath];
+          if (cur && cur.files.indexOf(fn) !== -1) {
+            var n = parseInt(args[2]) || 10;
+            w('--- ' + fn + ' (erste ' + n + ' Zeilen) ---');
+            w('[Mock content — ' + n + ' lines]');
+          } else w('Datei nicht gefunden: ' + fn);
+          break;
+        }
+        case 'tail': {
+          var fn = args[1];
+          if (!fn) {
+            w('Usage: tail <file> [n]');
+            break;
+          }
+          var cur = fsData[curPath];
+          if (cur && cur.files.indexOf(fn) !== -1) {
+            var n = parseInt(args[2]) || 10;
+            w('--- ' + fn + ' (letzte ' + n + ' Zeilen) ---');
+            w('[Mock content — ' + n + ' lines]');
+          } else w('Datei nicht gefunden: ' + fn);
+          break;
+        }
+        case 'wc': {
+          var fn = args[1];
+          if (!fn) {
+            w('Usage: wc <file>');
+            break;
+          }
+          var cur = fsData[curPath];
+          if (cur && cur.files.indexOf(fn) !== -1) {
+            w('  1   3 42 ' + fn);
+          } else w('Datei nicht gefunden: ' + fn);
+          break;
+        }
+        case 'cd': {
+          const dest = args[1];
+          if (!dest) {
+            w('Usage: cd <dir>');
+            break;
+          }
+          if (dest === '..') {
+            var parts = curPath.split('\\');
+            if (parts.length > 2) {
+              parts.pop();
+              curPath = parts.join('\\');
+            } else {
+              curPath = 'C:\\';
+            }
             w(curPath);
-            break;
-          case 'whoami':
-            w('macrohard');
-            break;
-          case 'ls': {
-            var d = fsData[curPath];
-            if (d) {
-              if (d.dirs.length || d.files.length) {
-                d.dirs.forEach(function (x) {
-                  w('  \x1b[34m📁 ' + x + '\x1b[0m');
-                });
-                d.files.forEach(function (x) {
-                  w('  \x1b[90m📄 ' + x + '\x1b[0m');
-                });
-              } else w('  (leer)');
-            } else w('  Nicht gefunden.');
-            break;
-          }
-          case 'tree': {
-            function printTree(path, prefix) {
-              var node = fsData[path];
-              if (!node) return;
-              var items = node.dirs.concat(node.files);
-              items.forEach(function (item, i) {
-                var isLast = i === items.length - 1;
-                var marker = isLast ? '└─' : '├─';
-                var isDir = node.dirs.indexOf(item) !== -1;
-                w(prefix + marker + (isDir ? ' 📁 ' : ' 📄 ') + item);
-                if (isDir) {
-                  var subPath = path === 'C:\\' ? 'C:\\' + item : path + '\\' + item;
-                  printTree(subPath, prefix + (isLast ? '   ' : '│  '));
-                }
-              });
-            }
-            w('📁 ' + curPath.split('\\').pop() || 'C:\\');
-            printTree(curPath, '');
-            break;
-          }
-          case 'cat': {
-            var target = args[1];
-            if (!target) {
-              w('Usage: cat <file>');
-              break;
-            }
-            var cur = fsData[curPath];
-            if (cur && cur.files.indexOf(target) !== -1) {
-              w('--- ' + target + ' ---');
-              w('[Inhalt von ' + target + ' — mock]');
-              w('Zeilen: 1, Wörter: 3, Zeichen: 42');
-            } else w('Datei nicht gefunden: ' + target);
-            break;
-          }
-          case 'head': {
-            var fn = args[1];
-            if (!fn) {
-              w('Usage: head <file> [n]');
-              break;
-            }
-            var cur = fsData[curPath];
-            if (cur && cur.files.indexOf(fn) !== -1) {
-              var n = parseInt(args[2]) || 10;
-              w('--- ' + fn + ' (erste ' + n + ' Zeilen) ---');
-              w('[Mock content — ' + n + ' lines]');
-            } else w('Datei nicht gefunden: ' + fn);
-            break;
-          }
-          case 'tail': {
-            var fn = args[1];
-            if (!fn) {
-              w('Usage: tail <file> [n]');
-              break;
-            }
-            var cur = fsData[curPath];
-            if (cur && cur.files.indexOf(fn) !== -1) {
-              var n = parseInt(args[2]) || 10;
-              w('--- ' + fn + ' (letzte ' + n + ' Zeilen) ---');
-              w('[Mock content — ' + n + ' lines]');
-            } else w('Datei nicht gefunden: ' + fn);
-            break;
-          }
-          case 'wc': {
-            var fn = args[1];
-            if (!fn) {
-              w('Usage: wc <file>');
-              break;
-            }
-            var cur = fsData[curPath];
-            if (cur && cur.files.indexOf(fn) !== -1) {
-              w('  1   3 42 ' + fn);
-            } else w('Datei nicht gefunden: ' + fn);
-            break;
-          }
-          case 'cd': {
-            var dest = args[1];
-            if (!dest) {
-              w('Usage: cd <dir>');
-              break;
-            }
-            if (dest === '..') {
-              var parts = curPath.split('\\');
-              if (parts.length > 2) {
-                parts.pop();
-                curPath = parts.join('\\');
-              } else {
-                curPath = 'C:\\';
-              }
-              w(curPath);
-              renderExplorer();
-            } else if (dest === '/' || dest === '~') {
-              curPath = 'C:\\Users\\macrohard';
-              w(curPath);
+            renderExplorer();
+          } else if (dest === '/' || dest === '~') {
+            curPath = 'C:\\Users\\macrohard';
+            w(curPath);
+            renderExplorer();
+          } else {
+            var np = curPath === 'C:\\' ? 'C:\\' + dest : curPath + '\\' + dest;
+            if (fsData[np]) {
+              curPath = np;
+              w('→ ' + curPath);
               renderExplorer();
             } else {
-              var np = curPath === 'C:\\' ? 'C:\\' + dest : curPath + '\\' + dest;
-              if (fsData[np]) {
-                curPath = np;
-                w('→ ' + curPath);
-                renderExplorer();
-              } else {
-                w('Verzeichnis nicht gefunden: ' + dest);
-              }
+              w('Verzeichnis nicht gefunden: ' + dest);
             }
+          }
+          break;
+        }
+        case 'touch': {
+          var fn = args[1];
+          if (!fn) {
+            w('Usage: touch <file>');
             break;
           }
-          case 'touch': {
-            var fn = args[1];
-            if (!fn) {
-              w('Usage: touch <file>');
-              break;
-            }
-            var c = fsData[curPath];
-            if (!c) {
-              w('Kein Verzeichnis.');
-              break;
-            }
-            if (c.files.indexOf(fn) !== -1) {
-              w('Datei existiert bereits: ' + fn);
-            } else {
-              c.files.push(fn);
-              w('Erstellt: ' + fn);
-              renderExplorer();
-            }
+          var c = fsData[curPath];
+          if (!c) {
+            w('Kein Verzeichnis.');
             break;
           }
-          case 'rm': {
-            var fn2 = args[1];
-            if (!fn2) {
-              w('Usage: rm <file> OR rm -r <dir>');
-              break;
-            }
-            var recursive = args.indexOf('-r') !== -1;
-            var c2 = fsData[curPath];
-            if (!c2) {
-              w('Kein Verzeichnis.');
-              break;
-            }
-            var idx = c2.files.indexOf(fn2);
-            if (idx !== -1) {
-              c2.files.splice(idx, 1);
-              w('Gelöscht: ' + fn2);
-              renderExplorer();
-              break;
-            }
-            var di = c2.dirs.indexOf(fn2);
-            if (di !== -1) {
-              if (!recursive) {
-                w('Ordner — nutze: rm -r ' + fn2);
-                break;
-              }
-              c2.dirs.splice(di, 1);
-              var dp = curPath === 'C:\\' ? 'C:\\' + fn2 : curPath + '\\' + fn2;
-              delete fsData[dp];
-              w('Ordner gelöscht: ' + fn2);
-              renderExplorer();
-              break;
-            }
-            w('Nicht gefunden: ' + fn2);
+          if (c.files.indexOf(fn) !== -1) {
+            w('Datei existiert bereits: ' + fn);
+          } else {
+            c.files.push(fn);
+            w('Erstellt: ' + fn);
+            renderExplorer();
+          }
+          break;
+        }
+        case 'rm': {
+          const fn2 = args[1];
+          if (!fn2) {
+            w('Usage: rm <file> OR rm -r <dir>');
             break;
           }
-          case 'mkdir': {
-            var dn = args[1];
-            if (!dn) {
-              w('Usage: mkdir <dir>');
-              break;
-            }
-            var c3 = fsData[curPath];
-            if (!c3) {
-              w('Kein Verzeichnis.');
-              break;
-            }
-            if (c3.dirs.indexOf(dn) !== -1) {
-              w('Existiert bereits: ' + dn);
-            } else {
-              c3.dirs.push(dn);
-              var np = curPath === 'C:\\' ? 'C:\\' + dn : curPath + '\\' + dn;
-              fsData[np] = { dirs: [], files: [] };
-              w('Erstellt: ' + dn);
-              renderExplorer();
-            }
+          const recursive = args.indexOf('-r') !== -1;
+          const c2 = fsData[curPath];
+          if (!c2) {
+            w('Kein Verzeichnis.');
             break;
           }
-          case 'cp': {
-            var src = args[1],
-              dst = args[2];
-            if (!src || !dst) {
-              w('Usage: cp <src> <dst>');
-              break;
-            }
-            var c4 = fsData[curPath];
-            if (!c4) {
-              w('Kein Verzeichnis.');
-              break;
-            }
-            if (c4.files.indexOf(src) !== -1 && c4.files.indexOf(dst) === -1) {
-              c4.files.push(dst);
-              w('Kopiert: ' + src + ' → ' + dst);
-              renderExplorer();
-            } else w('Fehler: ' + src + ' nicht gefunden oder ' + dst + ' existiert.');
+          const idx = c2.files.indexOf(fn2);
+          if (idx !== -1) {
+            c2.files.splice(idx, 1);
+            w('Gelöscht: ' + fn2);
+            renderExplorer();
             break;
           }
-          case 'mv': {
-            var src2 = args[1],
-              dst2 = args[2];
-            if (!src2 || !dst2) {
-              w('Usage: mv <src> <dst>');
+          const di = c2.dirs.indexOf(fn2);
+          if (di !== -1) {
+            if (!recursive) {
+              w('Ordner — nutze: rm -r ' + fn2);
               break;
             }
-            var c5 = fsData[curPath];
-            if (!c5) {
-              w('Kein Verzeichnis.');
-              break;
-            }
-            var i2 = c5.files.indexOf(src2);
-            if (i2 !== -1) {
-              c5.files[i2] = dst2;
-              w('Verschoben: ' + src2 + ' → ' + dst2);
-              renderExplorer();
-            } else w('Nicht gefunden: ' + src2);
+            c2.dirs.splice(di, 1);
+            const dp = curPath === 'C:\\' ? 'C:\\' + fn2 : curPath + '\\' + fn2;
+            delete fsData[dp];
+            w('Ordner gelöscht: ' + fn2);
+            renderExplorer();
             break;
           }
-          case 'find': {
-            var q = args[1];
-            if (!q) {
-              w('Usage: find <name>');
-              break;
-            }
-            var hits = [];
-            Object.keys(fsData).forEach(function (p) {
-              fsData[p].files.forEach(function (f) {
-                if (f.toLowerCase().indexOf(q.toLowerCase()) !== -1) hits.push(p + '/' + f);
-              });
-              fsData[p].dirs.forEach(function (d) {
-                if (d.toLowerCase().indexOf(q.toLowerCase()) !== -1) hits.push(p + '/' + d + '/');
-              });
+          w('Nicht gefunden: ' + fn2);
+          break;
+        }
+        case 'mkdir': {
+          const dn = args[1];
+          if (!dn) {
+            w('Usage: mkdir <dir>');
+            break;
+          }
+          const c3 = fsData[curPath];
+          if (!c3) {
+            w('Kein Verzeichnis.');
+            break;
+          }
+          if (c3.dirs.indexOf(dn) !== -1) {
+            w('Existiert bereits: ' + dn);
+          } else {
+            c3.dirs.push(dn);
+            var np = curPath === 'C:\\' ? 'C:\\' + dn : curPath + '\\' + dn;
+            fsData[np] = { dirs: [], files: [] };
+            w('Erstellt: ' + dn);
+            renderExplorer();
+          }
+          break;
+        }
+        case 'cp': {
+          const src = args[1],
+            dst = args[2];
+          if (!src || !dst) {
+            w('Usage: cp <src> <dst>');
+            break;
+          }
+          const c4 = fsData[curPath];
+          if (!c4) {
+            w('Kein Verzeichnis.');
+            break;
+          }
+          if (c4.files.indexOf(src) !== -1 && c4.files.indexOf(dst) === -1) {
+            c4.files.push(dst);
+            w('Kopiert: ' + src + ' → ' + dst);
+            renderExplorer();
+          } else w('Fehler: ' + src + ' nicht gefunden oder ' + dst + ' existiert.');
+          break;
+        }
+        case 'mv': {
+          const src2 = args[1],
+            dst2 = args[2];
+          if (!src2 || !dst2) {
+            w('Usage: mv <src> <dst>');
+            break;
+          }
+          const c5 = fsData[curPath];
+          if (!c5) {
+            w('Kein Verzeichnis.');
+            break;
+          }
+          const i2 = c5.files.indexOf(src2);
+          if (i2 !== -1) {
+            c5.files[i2] = dst2;
+            w('Verschoben: ' + src2 + ' → ' + dst2);
+            renderExplorer();
+          } else w('Nicht gefunden: ' + src2);
+          break;
+        }
+        case 'find': {
+          const q = args[1];
+          if (!q) {
+            w('Usage: find <name>');
+            break;
+          }
+          const hits = [];
+          Object.keys(fsData).forEach(function (p) {
+            fsData[p].files.forEach(function (f) {
+              if (f.toLowerCase().indexOf(q.toLowerCase()) !== -1) hits.push(p + '/' + f);
             });
-            w(hits.length ? hits.join('\n') : 'Nichts gefunden.');
-            break;
-          }
-          case 'grep': {
-            var term = args[1];
-            if (!term) {
-              w('Usage: grep <text>');
-              break;
-            }
-            var c6 = fsData[curPath];
-            if (!c6) {
-              w('Kein Verzeichnis.');
-              break;
-            }
-            var matches = c6.files.filter(function (f) {
-              return f.toLowerCase().indexOf(term.toLowerCase()) !== -1;
+            fsData[p].dirs.forEach(function (d) {
+              if (d.toLowerCase().indexOf(q.toLowerCase()) !== -1) hits.push(p + '/' + d + '/');
             });
-            w(matches.length ? matches.join('\n') : 'Kein Treffer.');
+          });
+          w(hits.length ? hits.join('\n') : 'Nichts gefunden.');
+          break;
+        }
+        case 'grep': {
+          const term = args[1];
+          if (!term) {
+            w('Usage: grep <text>');
             break;
           }
-          case 'echo':
-            w(args.slice(1).join(' '));
-            break;
-          case 'date':
-            w(new Date().toString());
-            break;
-          case 'clear':
-            out.innerHTML = '';
-            break;
-          case 'history': {
-            termHist.forEach(function (h, i) {
-              w('  ' + (i + 1) + '  ' + h);
-            });
+          const c6 = fsData[curPath];
+          if (!c6) {
+            w('Kein Verzeichnis.');
             break;
           }
-          case 'calc': {
-            var expr = args.slice(1).join('');
-            if (!expr) {
-              w('Usage: calc <expr> — z.B. calc 2+2');
-              break;
-            }
-            try {
-              var result = Function('return ' + expr.replace(/[^-()\d/*+.]/g, ''))();
-              w(expr + ' = ' + result);
-            } catch (e) {
-              w('Fehler: Ungültiger Ausdruck');
-            }
+          var matches = c6.files.filter(function (f) {
+            return f.toLowerCase().indexOf(term.toLowerCase()) !== -1;
+          });
+          w(matches.length ? matches.join('\n') : 'Kein Treffer.');
+          break;
+        }
+        case 'echo':
+          w(args.slice(1).join(' '));
+          break;
+        case 'date':
+          w(new Date().toString());
+          break;
+        case 'clear':
+          out.innerHTML = '';
+          break;
+        case 'history': {
+          termHist.forEach(function (h, i) {
+            w('  ' + (i + 1) + '  ' + h);
+          });
+          break;
+        }
+        case 'calc': {
+          const expr = args.slice(1).join('');
+          if (!expr) {
+            w('Usage: calc <expr> — z.B. calc 2+2');
             break;
           }
-          case 'colors': {
-            var colors = [
-              '\x1b[30mschwarz\x1b[0m',
-              '\x1b[31mrot\x1b[0m',
-              '\x1b[32mgrün\x1b[0m',
-              '\x1b[33mgelb\x1b[0m',
-              '\x1b[34mblau\x1b[0m',
-              '\x1b[35mmagenta\x1b[0m',
-              '\x1b[36mcyan\x1b[0m',
-              '\x1b[37mweiß\x1b[0m',
-            ];
-            colors.forEach(function (c) {
-              w(c);
-            });
-            break;
+          try {
+            const result = Function('return ' + expr.replace(/[^-()\d/*+.]/g, ''))();
+            w(expr + ' = ' + result);
+          } catch (e) {
+            w('Fehler: Ungültiger Ausdruck');
           }
-          case 'about':
-            w('MakerOS Terminal v2.0 — 25 Apps, Neo-Brutalist Desktop');
-            break;
-          case 'exit':
-            w('Fenster wird geschlossen...');
-            setTimeout(function () {
-              inp.closest('.wnd').querySelector('.wclose').click();
-            }, 500);
-            break;
-          default:
-            w('Unbekannt: ' + c + ' — tippe "help"');
+          break;
+        }
+        case 'colors': {
+          const colors = [
+            '\x1b[30mschwarz\x1b[0m',
+            '\x1b[31mrot\x1b[0m',
+            '\x1b[32mgrün\x1b[0m',
+            '\x1b[33mgelb\x1b[0m',
+            '\x1b[34mblau\x1b[0m',
+            '\x1b[35mmagenta\x1b[0m',
+            '\x1b[36mcyan\x1b[0m',
+            '\x1b[37mweiß\x1b[0m',
+          ];
+          colors.forEach(function (c) {
+            w(c);
+          });
+          break;
+        }
+        case 'about':
+          w('MakerOS Terminal v2.0 — 25 Apps, Neo-Brutalist Desktop');
+          break;
+        case 'exit':
+          w('Fenster wird geschlossen...');
+          setTimeout(function () {
+            inp.closest('.wnd').querySelector('.wclose').click();
+          }, 500);
+          break;
+        default:
+          w('Unbekannt: ' + c + ' — tippe "help"');
         }
         inp.value = '';
       }
       if (e.key === 'Tab') {
         e.preventDefault();
-        var curVal = inp.value;
+        const curVal = inp.value;
         if (curVal) {
           /* Command completion */
           if (!curVal.includes(' ')) {
-            var cmdMatch = commands.filter(function (cmd) {
+            const cmdMatch = commands.filter(function (cmd) {
               return cmd.startsWith(curVal);
             });
             if (cmdMatch.length === 1) inp.value = cmdMatch[0] + ' ';
@@ -2364,7 +2364,7 @@
           } else {
             /* Path completion */
             var parts = curVal.split(' ');
-            var last = parts[parts.length - 1];
+            const last = parts[parts.length - 1];
             var matches = Object.keys(fsData).filter(function (p) {
               return p.startsWith(last);
             });
@@ -2401,7 +2401,7 @@
    * Keyboard-Shortcut: Ctrl+K
    */
   function globaleSuche() {
-    var ov = document.getElementById('globalSearch');
+    let ov = document.getElementById('globalSearch');
     if (!ov) {
       ov = document.createElement('div');
       ov.id = 'globalSearch';
@@ -2411,10 +2411,10 @@
       ov.querySelector('.gsOverlay').addEventListener('click', function () {
         ov.remove();
       });
-      var inp = ov.querySelector('#gsInput');
+      const inp = ov.querySelector('#gsInput');
       inp.addEventListener('input', function () {
-        var q = this.value.toLowerCase();
-        var results = [];
+        const q = this.value.toLowerCase();
+        const results = [];
         if (q.length < 2) {
           ov.querySelector('#gsResults').innerHTML =
             '<div class="gsEmpty">Mindestens 2 Zeichen</div>';
@@ -2436,7 +2436,7 @@
         });
         /* Dateien */
         Object.keys(fsData).forEach(function (path) {
-          var d = fsData[path];
+          const d = fsData[path];
           d.dirs.forEach(function (dir) {
             if (dir.toLowerCase().indexOf(q) !== -1) {
               results.push({
@@ -2486,7 +2486,7 @@
           ov.querySelector('#gsResults').innerHTML = '<div class="gsEmpty">Keine Treffer</div>';
           return;
         }
-        var html = results
+        const html = results
           .map(function (r, i) {
             return (
               '<div class="gsResult" data-i="' +
@@ -2501,11 +2501,11 @@
             );
           })
           .join('');
-        var resDiv = ov.querySelector('#gsResults');
+        const resDiv = ov.querySelector('#gsResults');
         resDiv.innerHTML = html;
         resDiv.querySelectorAll('.gsResult').forEach(function (el) {
           el.addEventListener('click', function () {
-            var idx = parseInt(el.dataset.i);
+            const idx = parseInt(el.dataset.i);
             if (results[idx]) results[idx].action();
           });
         });
@@ -2522,10 +2522,10 @@
     EXPLOADER_INITIALIZED = true;
 
     /* History stack for Back/Forward */
-    var historyStack = [curPath];
-    var historyIndex = 0;
+    const historyStack = [curPath];
+    let historyIndex = 0;
 
-    var inp = document.getElementById('fePath');
+    const inp = document.getElementById('fePath');
     if (inp)
       inp.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') {
@@ -2534,9 +2534,9 @@
       });
 
     /* Toolbar */
-    var tb = document.createElement('div');
+    const tb = document.createElement('div');
     tb.className = 'feToolbar';
-    var btns = [
+    const btns = [
       { n: '⬆', a: 'up', t: 'Übergeordnetes Verzeichnis' },
       { n: '◀', a: 'back', t: 'Zurück' },
       { n: '▶', a: 'forward', t: 'Weiter' },
@@ -2547,7 +2547,7 @@
       { n: '📋', a: 'view', t: 'Ansicht wechseln' },
     ];
     btns.forEach(function (t) {
-      var b = document.createElement('button');
+      const b = document.createElement('button');
       b.className = 'cBtn';
       b.textContent = t.n;
       b.title = t.t;
@@ -2563,20 +2563,20 @@
       });
       tb.appendChild(b);
     });
-    var sideEl = document.getElementById('feSide');
+    const sideEl = document.getElementById('feSide');
     if (sideEl) sideEl.parentNode.insertBefore(tb, sideEl);
 
     /* Mobile sidebar toggle */
-    var toggleBtn = document.getElementById('feSidebarToggle');
+    const toggleBtn = document.getElementById('feSidebarToggle');
     if (toggleBtn) {
       toggleBtn.addEventListener('click', function () {
-        var sd = document.getElementById('feSide');
+        const sd = document.getElementById('feSide');
         if (sd) sd.classList.toggle('open');
       });
     }
 
     /* Sort selector */
-    var sortSel = document.createElement('select');
+    const sortSel = document.createElement('select');
     sortSel.id = 'feSort';
     sortSel.className = 'feSort';
     sortSel.innerHTML =
@@ -2595,7 +2595,7 @@
       }
     }
     function navigateUp() {
-      var parts = curPath.split('\\').filter(Boolean);
+      const parts = curPath.split('\\').filter(Boolean);
       if (parts.length > 1) {
         parts.pop();
         curPath = 'C:\\' + parts.join('\\');
@@ -2617,7 +2617,7 @@
       }
     }
     function toggleView() {
-      var grid = document.getElementById('feGrid');
+      const grid = document.getElementById('feGrid');
       if (grid) {
         grid.classList.toggle('feListView');
         toast(grid.classList.contains('feListView') ? 'Listenansicht' : 'Rasteransicht');
@@ -2633,9 +2633,9 @@
   var EQ_INITIALIZED = false;
 
   function newExplorerItem(type) {
-    var name = prompt(type === 'folder' ? 'Ordnername:' : 'Dateiname:');
+    const name = prompt(type === 'folder' ? 'Ordnername:' : 'Dateiname:');
     if (!name) return;
-    var c = fsData[curPath];
+    const c = fsData[curPath];
     if (!c) {
       alert('Kein Verzeichnis.');
       return;
@@ -2646,7 +2646,7 @@
         return;
       }
       c.dirs.push(name);
-      var np = curPath === 'C:\\' ? 'C:\\' + name : curPath + '\\' + name;
+      const np = curPath === 'C:\\' ? 'C:\\' + name : curPath + '\\' + name;
       fsData[np] = { dirs: [], files: [] };
       renderExplorer();
     } else {
@@ -2660,13 +2660,13 @@
   }
 
   function toggleSearch() {
-    var bar = document.getElementById('feSearchBar');
+    let bar = document.getElementById('feSearchBar');
     if (!bar) {
       bar = document.createElement('div');
       bar.id = 'feSearchBar';
       bar.innerHTML =
         '<input type="text" id="feSearchInput" placeholder="Dateien suchen..."><button class="cBtn" id="feSearchClose">×</button>';
-      var side = document.getElementById('feSide');
+      const side = document.getElementById('feSide');
       if (side) side.parentNode.insertBefore(bar, side);
       document.getElementById('feSearchInput').addEventListener('input', function (e) {
         renderExplorer(e.target.value);
@@ -2682,20 +2682,20 @@
   }
 
   function renderExplorer(filter) {
-    var side = document.getElementById('feSide');
-    var grid = document.getElementById('feGrid');
-    var inp = document.getElementById('fePath');
+    const side = document.getElementById('feSide');
+    const grid = document.getElementById('feGrid');
+    const inp = document.getElementById('fePath');
     if (!side || !grid) return;
     if (inp) inp.value = curPath;
-    var d = fsData[curPath] || { dirs: [], files: [] };
-    var dirs = d.dirs.slice(),
+    const d = fsData[curPath] || { dirs: [], files: [] };
+    let dirs = d.dirs.slice(),
       files = d.files.slice();
 
     /* Sort */
-    var sortBy = document.getElementById('feSort')
+    const sortBy = document.getElementById('feSort')
       ? document.getElementById('feSort').value
       : 'name-asc';
-    var sortFn = {
+    const sortFn = {
       'name-asc': function (a, b) {
         return a.localeCompare(b);
       },
@@ -2713,7 +2713,7 @@
     files.sort(sortFn[sortBy] || sortFn['name-asc']);
 
     if (filter) {
-      var fl = filter.toLowerCase();
+      const fl = filter.toLowerCase();
       dirs = dirs.filter(function (x) {
         return x.toLowerCase().indexOf(fl) !== -1;
       });
@@ -2724,8 +2724,8 @@
 
     /* Sidebar - Tree */
     side.innerHTML = '';
-    var parts = curPath.split('\\').filter(Boolean);
-    var acc = 'C:\\';
+    const parts = curPath.split('\\').filter(Boolean);
+    let acc = 'C:\\';
     side.innerHTML +=
       '<div class="feItem' +
       (parts.length === 0 ? ' current' : '') +
@@ -2762,7 +2762,7 @@
     }
 
     dirs.forEach(function (dir) {
-      var el = document.createElement('div');
+      const el = document.createElement('div');
       el.className = 'feFile feFolder';
       el.draggable = true;
       el.innerHTML =
@@ -2778,12 +2778,12 @@
           x.classList.remove('selected');
         });
         this.classList.add('selected');
-        var newPath = curPath === 'C:\\' ? 'C:\\' + dir : curPath + '\\' + dir;
+        const newPath = curPath === 'C:\\' ? 'C:\\' + dir : curPath + '\\' + dir;
         curPath = newPath;
         renderExplorer();
       });
       el.addEventListener('dblclick', function () {
-        var newPath = curPath === 'C:\\' ? 'C:\\' + dir : curPath + '\\' + dir;
+        const newPath = curPath === 'C:\\' ? 'C:\\' + dir : curPath + '\\' + dir;
         curPath = newPath;
         renderExplorer();
       });
@@ -2804,12 +2804,12 @@
       el.addEventListener('drop', function (e) {
         e.preventDefault();
         this.classList.remove('dragover');
-        var data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
         if (data.type === 'file') {
-          var srcDir = fsData[data.path];
-          var dstDir = fsData[curPath];
+          const srcDir = fsData[data.path];
+          const dstDir = fsData[curPath];
           if (srcDir && dstDir) {
-            var idx = srcDir.files.indexOf(data.name);
+            const idx = srcDir.files.indexOf(data.name);
             if (idx !== -1) {
               srcDir.files.splice(idx, 1);
               dstDir.files.push(data.name);
@@ -2818,15 +2818,15 @@
             }
           }
         } else if (data.type === 'folder') {
-          var srcDir2 = fsData[data.path];
-          var dstDir2 = fsData[curPath];
+          const srcDir2 = fsData[data.path];
+          const dstDir2 = fsData[curPath];
           if (srcDir2 && dstDir2) {
-            var idx2 = srcDir2.dirs.indexOf(data.name);
+            const idx2 = srcDir2.dirs.indexOf(data.name);
             if (idx2 !== -1) {
               srcDir2.dirs.splice(idx2, 1);
               dstDir2.dirs.push(data.name);
-              var oldPath = data.path + '\\' + data.name;
-              var newPath = curPath + '\\' + data.name;
+              const oldPath = data.path + '\\' + data.name;
+              const newPath = curPath + '\\' + data.name;
               fsData[newPath] = fsData[oldPath];
               delete fsData[oldPath];
               renderExplorer();
@@ -2843,11 +2843,11 @@
     });
 
     files.forEach(function (f) {
-      var el = document.createElement('div');
+      const el = document.createElement('div');
       el.className = 'feFile feDocument';
       el.draggable = true;
-      var ext = f.split('.').pop().toLowerCase();
-      var icon =
+      const ext = f.split('.').pop().toLowerCase();
+      const icon =
         {
           txt: '📄',
           html: '🌐',
@@ -2899,7 +2899,7 @@
 
   /* Kontextmenü für Dateien */
   function showFileContextMenu(e, f, path, files) {
-    var ctx = document.getElementById('fileCtx');
+    let ctx = document.getElementById('fileCtx');
     if (ctx) ctx.remove();
     ctx = document.createElement('div');
     ctx.id = 'fileCtx';
@@ -2910,18 +2910,18 @@
     document.body.appendChild(ctx);
     ctx.querySelectorAll('.ctxItem').forEach(function (item) {
       item.addEventListener('click', function () {
-        var act = item.dataset.act;
+        const act = item.dataset.act;
         if (act === 'open') {
           toast('Öffne: ' + f);
         } else if (act === 'rename') {
-          var nn = prompt('Neuer Name:', f);
+          const nn = prompt('Neuer Name:', f);
           if (nn && nn !== f) {
             var idx = files.indexOf(f);
             if (idx !== -1) files[idx] = nn;
             renderExplorer();
           }
         } else if (act === 'copy') {
-          var c = fsData[path];
+          const c = fsData[path];
           if (c) {
             var idx = c.files.indexOf(f);
             if (idx !== -1) {
@@ -2931,12 +2931,12 @@
             }
           }
         } else if (act === 'move') {
-          var nn2 = prompt('Zielpfad (z.B. C:\\Users\\macrohard\\Desktop):', curPath);
+          const nn2 = prompt('Zielpfad (z.B. C:\\Users\\macrohard\\Desktop):', curPath);
           if (nn2 && fsData[nn2]) {
-            var src = fsData[path];
-            var dst = fsData[nn2];
+            const src = fsData[path];
+            const dst = fsData[nn2];
             if (src && dst) {
-              var idx2 = src.files.indexOf(f);
+              const idx2 = src.files.indexOf(f);
               if (idx2 !== -1) {
                 src.files.splice(idx2, 1);
                 dst.files.push(f);
@@ -2946,10 +2946,10 @@
             }
           }
         } else if (act === 'delete') {
-          var idx3 = files.indexOf(f);
+          const idx3 = files.indexOf(f);
           if (idx3 !== -1) {
             files.splice(idx3, 1);
-            var tp = fsData[trashPath];
+            const tp = fsData[trashPath];
             if (tp) tp.files.push(f);
             renderExplorer();
           }
@@ -2966,7 +2966,7 @@
   }
 
   function showFolderContextMenu(e, dir, path, dirs) {
-    var ctx = document.getElementById('fileCtx');
+    let ctx = document.getElementById('fileCtx');
     if (ctx) ctx.remove();
     ctx = document.createElement('div');
     ctx.id = 'fileCtx';
@@ -2977,35 +2977,35 @@
     document.body.appendChild(ctx);
     ctx.querySelectorAll('.ctxItem').forEach(function (item) {
       item.addEventListener('click', function () {
-        var act = item.dataset.act;
+        const act = item.dataset.act;
         if (act === 'open') {
           curPath = path === 'C:\\' ? 'C:\\' + dir : path + '\\' + dir;
           renderExplorer();
         } else if (act === 'rename') {
-          var nn = prompt('Neuer Name:', dir);
+          const nn = prompt('Neuer Name:', dir);
           if (nn && nn !== dir) {
-            var idx = dirs.indexOf(dir);
+            const idx = dirs.indexOf(dir);
             if (idx !== -1) dirs[idx] = nn;
             renderExplorer();
           }
         } else if (act === 'copy') {
-          var c = fsData[path];
+          const c = fsData[path];
           if (c) {
             c.dirs.push(dir + ' (Kopie)');
             renderExplorer();
             toast('Ordner kopiert: ' + dir);
           }
         } else if (act === 'delete') {
-          var idx2 = dirs.indexOf(dir);
+          const idx2 = dirs.indexOf(dir);
           if (idx2 !== -1) {
             dirs.splice(idx2, 1);
-            var delPath = path === 'C:\\' ? 'C:\\' + dir : path + '\\' + dir;
+            const delPath = path === 'C:\\' ? 'C:\\' + dir : path + '\\' + dir;
             delete fsData[delPath];
             renderExplorer();
           }
         } else if (act === 'empty-trash') {
           if (confirm('Papierkorb leeren? Alle gelöschten Dateien werden entfernt.')) {
-            var tp = fsData[trashPath];
+            const tp = fsData[trashPath];
             if (tp) {
               tp.files = [];
               tp.dirs = [];
@@ -3026,17 +3026,17 @@
   }
 
   function buildPaint() {
-    var colors = document.getElementById('ptColors');
-    var canvas = document.getElementById('ptCanvas');
+    const colors = document.getElementById('ptColors');
+    const canvas = document.getElementById('ptCanvas');
     if (!colors || !canvas) return;
-    var paintColor = '#000',
+    let paintColor = '#000',
       pTool = 'pen',
       painting = false,
       pStart = null,
       undoStack = [],
       redoStack = [],
       maxUndo = 50;
-    var pCtx = canvas.getContext('2d');
+    const pCtx = canvas.getContext('2d');
     pCtx.fillStyle = '#fff';
     pCtx.fillRect(0, 0, canvas.width, canvas.height);
     function saveState() {
@@ -3057,7 +3057,7 @@
       toast('Wiederholen');
     }
     colors.innerHTML = '';
-    var cls = [
+    const cls = [
       '#000',
       '#fff',
       '#ff0',
@@ -3084,7 +3084,7 @@
       '#cff',
     ];
     cls.forEach(function (c) {
-      var b = document.createElement('button');
+      const b = document.createElement('button');
       b.style.background = c;
       b.title = c;
       if (c === '#000') b.classList.add('active');
@@ -3098,7 +3098,7 @@
       colors.appendChild(b);
     });
     /* Toolbar */
-    var tb = document.createElement('div');
+    const tb = document.createElement('div');
     tb.className = 'ptToolbar';
     [
       { t: 'pen', i: '✏' },
@@ -3108,7 +3108,7 @@
       { t: 'fill', i: '🪣' },
       { t: 'eraser', i: '🧽' },
     ].forEach(function (x) {
-      var b = document.createElement('button');
+      const b = document.createElement('button');
       b.textContent = x.i;
       b.dataset.tool = x.t;
       if (x.t === 'pen') b.classList.add('active');
@@ -3122,23 +3122,23 @@
       tb.appendChild(b);
     });
     /* Line width slider */
-    var lwWrap = document.createElement('label');
+    const lwWrap = document.createElement('label');
     lwWrap.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:10px';
     lwWrap.innerHTML =
       'Strich: <input type="range" id="ptLW" min="1" max="20" value="3" style="width:60px">';
     tb.appendChild(lwWrap);
     /* Actions */
-    var undoBtn = document.createElement('button');
+    const undoBtn = document.createElement('button');
     undoBtn.className = 'cBtn';
     undoBtn.textContent = '↩';
     undoBtn.title = 'Rückgängig';
     undoBtn.addEventListener('click', undo);
-    var redoBtn = document.createElement('button');
+    const redoBtn = document.createElement('button');
     redoBtn.className = 'cBtn';
     redoBtn.textContent = '↪';
     redoBtn.title = 'Wiederholen';
     redoBtn.addEventListener('click', redo);
-    var clearBtn = document.createElement('button');
+    const clearBtn = document.createElement('button');
     clearBtn.className = 'cBtn';
     clearBtn.textContent = '🗑';
     clearBtn.title = 'Leeren';
@@ -3157,8 +3157,8 @@
     pCtx.lineCap = 'round';
     saveState();
     function getPos(e) {
-      var r = canvas.getBoundingClientRect();
-      var t = e.touches ? e.touches[0] : e;
+      const r = canvas.getBoundingClientRect();
+      const t = e.touches ? e.touches[0] : e;
       return { x: t.clientX - r.left, y: t.clientY - r.top };
     }
     canvas.addEventListener('mousedown', function (e) {
@@ -3175,7 +3175,7 @@
     });
     canvas.addEventListener('mousemove', function (e) {
       if (!painting) return;
-      var pos = getPos(e);
+      const pos = getPos(e);
       if (pTool === 'pen') {
         pCtx.strokeStyle = paintColor;
         pCtx.lineWidth = parseInt(document.getElementById('ptLW').value) || 3;
@@ -3193,7 +3193,7 @@
     canvas.addEventListener('mouseup', function (e) {
       if (!painting) return;
       if (pTool !== 'pen' && pTool !== 'eraser' && pTool !== 'fill' && pStart) {
-        var pos = getPos(e);
+        const pos = getPos(e);
         commitShape(pStart, pos);
       }
       painting = false;
@@ -3225,7 +3225,7 @@
       function (e) {
         e.preventDefault();
         if (!painting) return;
-        var pos = getPos(e);
+        const pos = getPos(e);
         if (pTool === 'pen') {
           pCtx.strokeStyle = paintColor;
           pCtx.lineWidth = parseInt(document.getElementById('ptLW').value) || 3;
@@ -3247,9 +3247,9 @@
       function (e) {
         if (!painting) return;
         if (pTool !== 'pen' && pTool !== 'eraser' && pTool !== 'fill' && pStart) {
-          var t = e.changedTouches[0];
-          var r = canvas.getBoundingClientRect();
-          var pos = { x: t.clientX - r.left, y: t.clientY - r.top };
+          const t = e.changedTouches[0];
+          const r = canvas.getBoundingClientRect();
+          const pos = { x: t.clientX - r.left, y: t.clientY - r.top };
           commitShape(pStart, pos);
         }
         painting = false;
@@ -3262,32 +3262,32 @@
     });
   }
   function floodFill(start) {
-    var w = pCtx.canvas.width,
+    const w = pCtx.canvas.width,
       h = pCtx.canvas.height;
-    var imgData = pCtx.getImageData(0, 0, w, h);
-    var data = imgData.data;
-    var x = Math.floor(start.x),
+    const imgData = pCtx.getImageData(0, 0, w, h);
+    const data = imgData.data;
+    const x = Math.floor(start.x),
       y = Math.floor(start.y);
     if (x < 0 || x >= w || y < 0 || y >= h) return;
-    var startIdx = (y * w + x) * 4;
-    var startR = data[startIdx],
+    const startIdx = (y * w + x) * 4;
+    const startR = data[startIdx],
       startG = data[startIdx + 1],
       startB = data[startIdx + 2];
-    var hex = paintColor.replace('#', '');
-    var fillR = parseInt(hex.substr(0, 2), 16),
+    const hex = paintColor.replace('#', '');
+    const fillR = parseInt(hex.substr(0, 2), 16),
       fillG = parseInt(hex.substr(2, 2), 16),
       fillB = parseInt(hex.substr(4, 2), 16);
     if (startR === fillR && startG === fillG && startB === fillB) return;
-    var stack = [[x, y]];
-    var visited = {};
+    const stack = [[x, y]];
+    const visited = {};
     while (stack.length) {
-      var pos = stack.pop();
-      var px = pos[0],
+      const pos = stack.pop();
+      const px = pos[0],
         py = pos[1];
-      var key = px + ',' + py;
+      const key = px + ',' + py;
       if (visited[key]) continue;
       visited[key] = true;
-      var idx = (py * w + px) * 4;
+      const idx = (py * w + px) * 4;
       if (
         Math.abs(data[idx] - startR) > 30 ||
         Math.abs(data[idx + 1] - startG) > 30 ||
@@ -3364,9 +3364,9 @@
   }
   /* Paint — S3: Export PNG */
   function exportPaintPNG() {
-    var canvas = document.getElementById('ptCanvas');
+    const canvas = document.getElementById('ptCanvas');
     if (!canvas) return;
-    var link = document.createElement('a');
+    const link = document.createElement('a');
     link.download = 'paint.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
@@ -3375,37 +3375,37 @@
 
   /* Music — Refactored: Sadee-Inspired UI + MakerOS Features */
   function buildMusic() {
-    var player = document.querySelector('.musPlayer');
+    const player = document.querySelector('.musPlayer');
     if (!player) return;
     if (MUSIC_INITIALIZED) return;
     MUSIC_INITIALIZED = true;
-    var art = document.getElementById('musArt');
-    var artIcon = document.getElementById('musArtIcon');
-    var titleEl = document.getElementById('musTitle');
-    var artistEl = document.getElementById('musArtist');
-    var albumEl = document.getElementById('musAlbum');
-    var prog = document.getElementById('musProg');
-    var progL = document.getElementById('musProgL');
-    var progR = document.getElementById('musProgR');
-    var playBtn = document.getElementById('musPlayBtn');
-    var shuffleBtn = document.getElementById('musShuffle');
-    var prevBtn = document.getElementById('musPrev');
-    var nextBtn = document.getElementById('musNext');
-    var repeatBtn = document.getElementById('musRepeat');
-    var volEl = document.getElementById('musVol');
-    var volL = document.getElementById('musVolL');
-    var toggleBtn = document.getElementById('musToggle');
-    var sidebar = document.getElementById('musSidebar');
-    var uploadIn = document.getElementById('musUploadIn');
-    var radioStatus = document.getElementById('musRadioStatus');
+    const art = document.getElementById('musArt');
+    const artIcon = document.getElementById('musArtIcon');
+    const titleEl = document.getElementById('musTitle');
+    const artistEl = document.getElementById('musArtist');
+    const albumEl = document.getElementById('musAlbum');
+    const prog = document.getElementById('musProg');
+    const progL = document.getElementById('musProgL');
+    const progR = document.getElementById('musProgR');
+    const playBtn = document.getElementById('musPlayBtn');
+    const shuffleBtn = document.getElementById('musShuffle');
+    const prevBtn = document.getElementById('musPrev');
+    const nextBtn = document.getElementById('musNext');
+    const repeatBtn = document.getElementById('musRepeat');
+    const volEl = document.getElementById('musVol');
+    const volL = document.getElementById('musVolL');
+    const toggleBtn = document.getElementById('musToggle');
+    const sidebar = document.getElementById('musSidebar');
+    const uploadIn = document.getElementById('musUploadIn');
+    const radioStatus = document.getElementById('musRadioStatus');
 
     /* Storage Keys */
-    var SK_FAV = 'mus_favs',
+    const SK_FAV = 'mus_favs',
       SK_CUSTOM = 'mus_custom',
       SK_RADIO = 'mus_radio_v2';
 
     /* State */
-    var songs = [
+    const songs = [
       {
         n: 'Macrohard Anthems',
         a: 'IDUN Studio',
@@ -3426,28 +3426,28 @@
       },
       { n: 'IDUN Tone', a: 'IDUN Studio', u: './assets/music/SoundHelix-Song-4.mp3', src: 'local' },
     ];
-    var favIds = [];
-    var radioStations = [];
-    var activeTab = 'playlist';
-    var curIdx = -1,
+    let favIds = [];
+    let radioStations = [];
+    let activeTab = 'playlist';
+    let curIdx = -1,
       curStation = null,
       playing = false,
       repeat = false,
       shuffled = [];
-    var audioCtx = null,
+    let audioCtx = null,
       sourceNode = null,
       analyser = null,
       biquadFilters = [];
     window.audioCtx = null; // expose to global scope for resumeMusic
-    var seqBiquadFilters = [];
-    var eqBands = [60, 150, 400, 1000, 3000, 8000];
-    var eqValues = { 60: 0, 150: 0, 400: 0, 1000: 0, 3000: 0, 8000: 0 };
-    var isRadio = false;
-    var activeExtraTab = 'beatpad';
+    let seqBiquadFilters = [];
+    const eqBands = [60, 150, 400, 1000, 3000, 8000];
+    const eqValues = { 60: 0, 150: 0, 400: 0, 1000: 0, 3000: 0, 8000: 0 };
+    let isRadio = false;
+    let activeExtraTab = 'beatpad';
 
     function applyEQValues() {
       eqBands.forEach(function (freq, i) {
-        var v = eqValues[freq] || 0;
+        const v = eqValues[freq] || 0;
         if (biquadFilters[i] && audioCtx && audioCtx.state === 'running') {
           biquadFilters[i].gain.setValueAtTime(v, audioCtx.currentTime);
         }
@@ -3471,7 +3471,7 @@
         seqBiquadFilters = [];
       }
       seqBiquadFilters = eqBands.map(function (freq, i) {
-        var f = SEQ.ctx.createBiquadFilter();
+        const f = SEQ.ctx.createBiquadFilter();
         f.type = i === 0 ? 'lowshelf' : i === eqBands.length - 1 ? 'highshelf' : 'peaking';
         f.frequency.value = freq;
         f.gain.value = eqValues[freq] || 0;
@@ -3481,7 +3481,7 @@
       if (SEQ.master && seqBiquadFilters.length > 0) {
         try {
           SEQ.master.disconnect();
-          var chain = SEQ.master;
+          let chain = SEQ.master;
           seqBiquadFilters.forEach(function (f) {
             chain.connect(f);
             chain = f;
@@ -3490,8 +3490,8 @@
         } catch (e) {}
       }
     }
-    var audioEl = null;
-    var visRafId = null;
+    let audioEl = null;
+    let visRafId = null;
 
     /* === Storage Helpers === */
     function loadFavs() {
@@ -3508,7 +3508,7 @@
     }
     function loadCustom() {
       try {
-        var c = JSON.parse(localStorage.getItem(SK_CUSTOM) || '[]');
+        const c = JSON.parse(localStorage.getItem(SK_CUSTOM) || '[]');
         c.forEach(function (s) {
           s.src = 'custom';
           s._lob = true;
@@ -3518,7 +3518,7 @@
     }
     function loadRadios() {
       try {
-        var r = JSON.parse(localStorage.getItem(SK_RADIO) || '[]');
+        const r = JSON.parse(localStorage.getItem(SK_RADIO) || '[]');
         if (r.length) radioStations = r;
       } catch (e) {}
     }
@@ -3529,7 +3529,7 @@
     }
 
     /* === Audio Graph === */
-    var setupDone = false;
+    let setupDone = false;
     function setupAudio() {
       if (setupDone) return;
       if (!audioCtx) {
@@ -3555,13 +3555,13 @@
       analyser = audioCtx.createAnalyser();
       analyser.fftSize = 128;
       biquadFilters = eqBands.map(function (freq, i) {
-        var f = audioCtx.createBiquadFilter();
+        const f = audioCtx.createBiquadFilter();
         f.type = i === 0 ? 'lowshelf' : i === eqBands.length - 1 ? 'highshelf' : 'peaking';
         f.frequency.value = freq;
         f.gain.value = 0;
         return f;
       });
-      var node = sourceNode;
+      let node = sourceNode;
       biquadFilters.forEach(function (f) {
         node.connect(f);
         node = f;
@@ -3580,15 +3580,15 @@
 
     /* === Visualizer === */
     function initVisualizer() {
-      var canvas = document.getElementById('musVisCanvas');
+      const canvas = document.getElementById('musVisCanvas');
       if (!canvas) return;
       if (visRafId) {
         cancelAnimationFrame(visRafId);
         visRafId = null;
       }
-      var ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d');
       if (!ctx) return;
-      var buf = new Uint8Array(analyser ? analyser.frequencyBinCount : 64);
+      const buf = new Uint8Array(analyser ? analyser.frequencyBinCount : 64);
       function draw() {
         if (!document.getElementById('musVisCanvas')) {
           visRafId = null;
@@ -3599,10 +3599,10 @@
         analyser.getByteFrequencyData(buf);
         ctx.fillStyle = '#0b0b0c';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        var bw = canvas.width / buf.length;
-        for (var i = 0; i < buf.length; i++) {
-          var h = (buf[i] / 255) * canvas.height;
-          var g = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - h);
+        const bw = canvas.width / buf.length;
+        for (let i = 0; i < buf.length; i++) {
+          const h = (buf[i] / 255) * canvas.height;
+          const g = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - h);
           g.addColorStop(0, '#ffd400');
           g.addColorStop(1, '#2547ff');
           ctx.fillStyle = g;
@@ -3638,8 +3638,8 @@
       clipboard: null,
     };
 
-    var SEQ_STEPS = 16;
-    var SAMPLE_LIBRARY = [
+    let SEQ_STEPS = 16;
+    const SAMPLE_LIBRARY = [
       { f: 60, n: '909 Kick', c: '#ff4000', file: '909kick1' },
       { f: 200, n: '909 Snare', c: '#2547ff', file: '909snare1' },
       { f: 8000, n: '909 HiHat', c: '#ffd400', file: '909closehat' },
@@ -3679,7 +3679,7 @@
 
     function loadCustomSamples() {
       try {
-        var raw = localStorage.getItem(SEQ_CUSTOM_KEY);
+        const raw = localStorage.getItem(SEQ_CUSTOM_KEY);
         if (raw) customSamples = JSON.parse(raw);
       } catch (e) {
         customSamples = [];
@@ -3694,11 +3694,11 @@
 
     function addCustomSample(file) {
       return new Promise(function (resolve, reject) {
-        var reader = new FileReader();
+        const reader = new FileReader();
         reader.onload = function (ev) {
-          var dataUrl = ev.target.result;
-          var id = 'custom_' + Date.now();
-          var name = file.name.replace(/\.[^.]+$/, '').substring(0, 20);
+          const dataUrl = ev.target.result;
+          const id = 'custom_' + Date.now();
+          const name = file.name.replace(/\.[^.]+$/, '').substring(0, 20);
           customSamples.push({ id: id, name: name, data: dataUrl });
           saveCustomSamples();
           resolve({ id: id, name: name });
@@ -3727,8 +3727,8 @@
 
     function fetchSample(libEntry) {
       if (libEntry._custom) {
-        var id = libEntry.f.replace('_custom_', '');
-        var cs = customSamples.filter(function (s) {
+        const id = libEntry.f.replace('_custom_', '');
+        const cs = customSamples.filter(function (s) {
           return s.id === id;
         })[0];
         if (!cs) return Promise.reject('Custom sample not found');
@@ -3749,19 +3749,19 @@
     }
 
     // Default 8 tracks (first from library)
-    var seqTracks = [0, 1, 2, 3, 4, 5, 6, 7];
+    let seqTracks = [0, 1, 2, 3, 4, 5, 6, 7];
 
     function initSequencer() {
-      var pad = document.getElementById('musBeatpad');
+      const pad = document.getElementById('musBeatpad');
       if (!pad) return;
 
       // Reset pattern state
       SEQ.pattern = [];
       SEQ.muted = [];
-      for (var i = 0; i < 8; i++) {
+      for (let i = 0; i < 8; i++) {
         SEQ.pattern[i] = [];
         SEQ.muted[i] = false;
-        for (var j = 0; j < SEQ_STEPS; j++) {
+        for (let j = 0; j < SEQ_STEPS; j++) {
           SEQ.pattern[i][j] = false;
         }
       }
@@ -3781,14 +3781,14 @@
     }
 
     function loadSamples() {
-      var AudioContext = window.AudioContext || window.webkitAudioContext;
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) return Promise.reject('No AudioContext');
       if (!SEQ.ctx) SEQ.ctx = new AudioContext();
-      var promises = [];
-      for (var t = 0; t < 8; t++) {
+      const promises = [];
+      for (let t = 0; t < 8; t++) {
         (function (trackIdx) {
-          var libIdx = seqTracks[trackIdx];
-          var sample = SAMPLE_LIBRARY[libIdx];
+          const libIdx = seqTracks[trackIdx];
+          const sample = SAMPLE_LIBRARY[libIdx];
           promises.push(
             fetchSample(sample)
               .then(function (buf) {
@@ -3808,7 +3808,7 @@
           results.forEach(function (r) {
             SEQ.buffers[r.idx] = r.decoded;
           });
-          var anyLoaded = results.some(function (r) {
+          const anyLoaded = results.some(function (r) {
             return r.decoded;
           });
           if (!anyLoaded) return Promise.reject('All samples failed');
@@ -3831,8 +3831,8 @@
           SEQ.master.connect(SEQ.ctx.destination);
         }
 
-        var src = SEQ.ctx.createBufferSource();
-        var gain = SEQ.ctx.createGain();
+        const src = SEQ.ctx.createBufferSource();
+        const gain = SEQ.ctx.createGain();
         src.buffer = SEQ.buffers[trackIdx];
         gain.gain.value = 0.8;
         src.connect(gain);
@@ -3845,9 +3845,9 @@
       if (SEQ.muted[trackIdx]) return;
       if (SEQ.solo >= 0 && SEQ.solo !== trackIdx) return;
 
-      var ctx = SEQ.ctx;
+      let ctx = SEQ.ctx;
       if (!ctx) {
-        var AC = window.AudioContext || window.webkitAudioContext;
+        const AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return;
         SEQ.ctx = new AC();
         ctx = SEQ.ctx;
@@ -3860,15 +3860,15 @@
         SEQ.master.connect(ctx.destination);
       }
 
-      var t = when || ctx.currentTime;
-      var sample =
+      const t = when || ctx.currentTime;
+      const sample =
         SAMPLE_LIBRARY[seqTracks[trackIdx]] || SAMPLE_LIBRARY[trackIdx % SAMPLE_LIBRARY.length];
-      var o = ctx.createOscillator();
-      var g = ctx.createGain();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
 
       if (sample) {
         // Use sample frequency and color for synthesized fallback
-        var freq = sample.f || 440;
+        const freq = sample.f || 440;
         o.type = freq < 100 ? 'sine' : freq < 1000 ? 'triangle' : 'square';
         o.frequency.setValueAtTime(freq, t);
         if (freq < 100) {
@@ -3899,7 +3899,7 @@
     }
 
     function scheduleNote(stepTime, step) {
-      for (var i = 0; i < 8; i++) {
+      for (let i = 0; i < 8; i++) {
         if (SEQ.pattern[i][step]) {
           try {
             playSample(i, stepTime);
@@ -3920,13 +3920,13 @@
       }
 
       try {
-        var safety = 0;
-        var maxSteps = 32;
+        let safety = 0;
+        const maxSteps = 32;
         while (SEQ.nextNoteTime < SEQ.ctx.currentTime + SEQ.lookahead && safety < maxSteps) {
           safety++;
-          var stepDur = 60.0 / SEQ.bpm / 4.0;
+          const stepDur = 60.0 / SEQ.bpm / 4.0;
           // Apply swing to odd steps
-          var swingOffset = 0;
+          let swingOffset = 0;
           if (SEQ.swing > 0 && SEQ.current16th % 2 === 1) {
             swingOffset = stepDur * SEQ.swing * 0.5;
           }
@@ -3944,7 +3944,7 @@
     }
 
     function updateVisual(step) {
-      var currentSteps = document.querySelectorAll('.seq-step[data-col="' + step + '"]');
+      const currentSteps = document.querySelectorAll('.seq-step[data-col="' + step + '"]');
       document.querySelectorAll('.seq-step.playing').forEach(function (el) {
         if (parseInt(el.dataset.col) !== step) el.classList.remove('playing');
       });
@@ -3958,7 +3958,7 @@
 
       // Get or create AudioContext - keep the context used to decode samples
       if (!SEQ.ctx) {
-        var AC = window.AudioContext || window.webkitAudioContext;
+        const AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return;
         SEQ.ctx = new AC();
       }
@@ -3988,7 +3988,7 @@
       SEQ.current16th = 0;
       SEQ.nextNoteTime = SEQ.ctx.currentTime + 0.1;
 
-      var playBtn = document.getElementById('beatpadPlay');
+      const playBtn = document.getElementById('beatpadPlay');
       if (playBtn) {
         playBtn.textContent = '⏸ Pause';
         playBtn.style.background = 'var(--accent-2)';
@@ -4011,7 +4011,7 @@
         });
       } catch (e) {}
 
-      var playBtn = document.getElementById('beatpadPlay');
+      const playBtn = document.getElementById('beatpadPlay');
       if (playBtn) {
         playBtn.textContent = '▶ Play';
         playBtn.style.background = '';
@@ -4024,14 +4024,14 @@
     }
 
     function buildSeqUI(pad) {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       container.className = 'seq-container';
 
       // Step numbers
-      var stepRow = document.createElement('div');
+      const stepRow = document.createElement('div');
       stepRow.className = 'seq-step-row';
-      for (var j = 0; j < SEQ_STEPS; j++) {
-        var stepNum = document.createElement('span');
+      for (let j = 0; j < SEQ_STEPS; j++) {
+        const stepNum = document.createElement('span');
         stepNum.className = 'seq-step-num' + (j % 4 === 0 ? ' beat' : '');
         stepNum.textContent = (j + 1).toString();
         stepRow.appendChild(stepNum);
@@ -4039,38 +4039,38 @@
       container.appendChild(stepRow);
 
       // Grid rows
-      for (var i = 0; i < 8; i++) {
+      for (let i = 0; i < 8; i++) {
         (function (trackIdx) {
-          var row = document.createElement('div');
+          const row = document.createElement('div');
           row.className = 'seq-row';
 
-          var libIdx = seqTracks[trackIdx];
-          var sample = SAMPLE_LIBRARY[libIdx];
+          const libIdx = seqTracks[trackIdx];
+          const sample = SAMPLE_LIBRARY[libIdx];
 
           // Label with dropdown
-          var labelWrap = document.createElement('div');
+          const labelWrap = document.createElement('div');
           labelWrap.className = 'seq-label-wrap';
 
-          var label = document.createElement('span');
+          const label = document.createElement('span');
           label.className = 'seq-label';
           label.textContent = sample.n;
           label.style.background = sample.c;
           labelWrap.appendChild(label);
 
-          var select = document.createElement('select');
+          const select = document.createElement('select');
           select.className = 'seq-sample-select';
           select.dataset.track = trackIdx;
           getAllSamples().forEach(function (s, si) {
-            var opt = document.createElement('option');
+            const opt = document.createElement('option');
             opt.value = si;
             opt.textContent = s.n;
             if (si === libIdx) opt.selected = true;
             select.appendChild(opt);
           });
           select.addEventListener('change', function () {
-            var newLibIdx = parseInt(this.value);
+            const newLibIdx = parseInt(this.value);
             seqTracks[trackIdx] = newLibIdx;
-            var newSample = SAMPLE_LIBRARY[newLibIdx];
+            const newSample = SAMPLE_LIBRARY[newLibIdx];
             label.textContent = newSample.n;
             label.style.background = newSample.c;
             // Only update buffer — do NOT rebuild UI
@@ -4091,7 +4091,7 @@
           row.appendChild(labelWrap);
 
           // Mute button
-          var muteBtn = document.createElement('button');
+          const muteBtn = document.createElement('button');
           muteBtn.className = 'seq-mute';
           muteBtn.textContent = '🔊';
           muteBtn.title = 'Mute';
@@ -4104,7 +4104,7 @@
           row.appendChild(muteBtn);
 
           // Solo button
-          var soloBtn = document.createElement('button');
+          const soloBtn = document.createElement('button');
           soloBtn.className = 'seq-solo';
           soloBtn.textContent = 'S';
           soloBtn.title = 'Solo';
@@ -4117,7 +4117,7 @@
               SEQ.solo = trackIdx;
               this.classList.add('active');
               // Remove active from other solo buttons
-              var allSolo = document.querySelectorAll('.seq-solo');
+              const allSolo = document.querySelectorAll('.seq-solo');
               allSolo.forEach(function (b) {
                 if (b !== soloBtn) b.classList.remove('active');
               });
@@ -4126,9 +4126,9 @@
           row.appendChild(soloBtn);
 
           // Steps
-          for (var j = 0; j < SEQ_STEPS; j++) {
+          for (let j = 0; j < SEQ_STEPS; j++) {
             (function (col) {
-              var step = document.createElement('button');
+              const step = document.createElement('button');
               step.className = 'seq-step' + (SEQ.pattern[trackIdx][col] ? ' active' : '');
               step.dataset.row = trackIdx;
               step.dataset.col = col;
@@ -4188,7 +4188,7 @@
 
     function savePatternSlot(slot) {
       try {
-        var key = 'seq_pattern_' + slot;
+        const key = 'seq_pattern_' + slot;
         localStorage.setItem(
           key,
           JSON.stringify({
@@ -4202,14 +4202,14 @@
 
     function loadPatternSlot(slot) {
       try {
-        var key = 'seq_pattern_' + slot;
-        var data = JSON.parse(localStorage.getItem(key) || 'null');
+        const key = 'seq_pattern_' + slot;
+        const data = JSON.parse(localStorage.getItem(key) || 'null');
         if (data) {
           savePatternState();
           SEQ.pattern = data.pattern;
           seqTracks = data.tracks.slice(0, 8);
           SEQ.bpm = data.bpm || 120;
-          var bpmSel = document.getElementById('beatpadBpm');
+          const bpmSel = document.getElementById('beatpadBpm');
           if (bpmSel) bpmSel.value = SEQ.bpm;
           rebuildGrid();
           showNotif('Pattern Slot ' + (slot + 1) + ' geladen');
@@ -4225,31 +4225,31 @@
       savePatternState();
       SEQ_STEPS = len;
       // Resize pattern
-      var oldPattern = SEQ.pattern;
+      const oldPattern = SEQ.pattern;
       SEQ.pattern = [];
-      for (var i = 0; i < 8; i++) {
+      for (let i = 0; i < 8; i++) {
         SEQ.pattern[i] = [];
-        for (var j = 0; j < len; j++) {
+        for (let j = 0; j < len; j++) {
           SEQ.pattern[i][j] = oldPattern[i] ? oldPattern[i][j] || false : false;
         }
       }
-      var pad = document.getElementById('musBeatpad');
+      const pad = document.getElementById('musBeatpad');
       if (pad) buildSeqUI(pad);
     }
 
     function buildSeqControls(pad) {
-      var header = pad.parentElement.querySelector('.beatpad-header');
+      const header = pad.parentElement.querySelector('.beatpad-header');
       if (!header) return;
 
-      var bpmSel = header.querySelector('#beatpadBpm');
+      const bpmSel = header.querySelector('#beatpadBpm');
       if (bpmSel) {
         bpmSel.addEventListener('change', function () {
           SEQ.bpm = parseInt(this.value);
         });
       }
 
-      var volSlider = document.getElementById('beatpadVol');
-      var volLabel = document.getElementById('beatpadVolL');
+      const volSlider = document.getElementById('beatpadVol');
+      const volLabel = document.getElementById('beatpadVolL');
       if (volSlider) {
         volSlider.addEventListener('input', function () {
           SEQ.vol = parseInt(this.value) / 100;
@@ -4258,26 +4258,26 @@
         });
       }
 
-      var playBtn = header.querySelector('#beatpadPlay');
+      const playBtn = header.querySelector('#beatpadPlay');
       if (playBtn) {
         playBtn.addEventListener('click', toggleSequencer);
       }
 
-      var stopBtn = header.querySelector('#beatpadStop');
+      const stopBtn = header.querySelector('#beatpadStop');
       if (stopBtn) stopBtn.addEventListener('click', stopSequencer);
 
       // BPM Input
-      var bpmWrap = document.createElement('span');
+      const bpmWrap = document.createElement('span');
       bpmWrap.style.display = 'inline-flex';
       bpmWrap.style.alignItems = 'center';
       bpmWrap.style.gap = '2px';
       bpmWrap.style.marginLeft = '6px';
-      var bpmLabel = document.createElement('span');
+      const bpmLabel = document.createElement('span');
       bpmLabel.textContent = 'BPM';
       bpmLabel.style.fontSize = '9px';
       bpmLabel.style.color = 'var(--muted)';
       bpmWrap.appendChild(bpmLabel);
-      var bpmInput = document.createElement('input');
+      const bpmInput = document.createElement('input');
       bpmInput.type = 'number';
       bpmInput.id = 'beatpadBpm';
       bpmInput.className = 'beatpad-bpm';
@@ -4287,7 +4287,7 @@
       bpmInput.style.width = '50px';
       bpmInput.style.fontSize = '10px';
       bpmInput.addEventListener('change', function () {
-        var v = parseInt(this.value);
+        const v = parseInt(this.value);
         if (v >= 40 && v <= 300) SEQ.bpm = v;
         this.value = SEQ.bpm;
       });
@@ -4295,7 +4295,7 @@
       header.appendChild(bpmWrap);
 
       // Shuffle
-      var shuffleBtn = document.createElement('button');
+      const shuffleBtn = document.createElement('button');
       shuffleBtn.className = 'beatpad-btn-lg seq-shuffle';
       shuffleBtn.textContent = '🔀';
       shuffleBtn.title = 'Random pattern';
@@ -4303,19 +4303,19 @@
       header.appendChild(shuffleBtn);
 
       // Sample Upload
-      var uploadWrap = document.createElement('span');
+      const uploadWrap = document.createElement('span');
       uploadWrap.style.display = 'inline-flex';
       uploadWrap.style.alignItems = 'center';
       uploadWrap.style.gap = '4px';
       uploadWrap.style.marginLeft = '6px';
-      var uploadLabel = document.createElement('label');
+      const uploadLabel = document.createElement('label');
       uploadLabel.className = 'beatpad-btn-lg seq-upload';
       uploadLabel.style.cursor = 'pointer';
       uploadLabel.style.fontSize = '10px';
       uploadLabel.style.padding = '4px 6px';
       uploadLabel.textContent = '⬆ Sample';
       uploadLabel.title = 'Eigenes Sample hochladen';
-      var uploadInput = document.createElement('input');
+      const uploadInput = document.createElement('input');
       uploadInput.type = 'file';
       uploadInput.accept = 'audio/*';
       uploadInput.style.display = 'none';
@@ -4324,7 +4324,7 @@
         addCustomSample(this.files[0])
           .then(function (s) {
             showNotif('Sample "' + s.name + '" hinzugefügt');
-            var pad = document.getElementById('musBeatpad');
+            const pad = document.getElementById('musBeatpad');
             if (pad) buildSeqUI(pad);
           })
           .catch(function (e) {
@@ -4337,7 +4337,7 @@
       header.appendChild(uploadWrap);
 
       // Custom sample remove (last one)
-      var removeBtn = document.createElement('button');
+      const removeBtn = document.createElement('button');
       removeBtn.className = 'beatpad-btn-lg seq-remove-custom';
       removeBtn.textContent = '✕';
       removeBtn.title = 'Letztes Custom-Sample entfernen';
@@ -4346,16 +4346,16 @@
           showNotif('Keine Custom-Samples');
           return;
         }
-        var last = customSamples[customSamples.length - 1];
+        const last = customSamples[customSamples.length - 1];
         removeCustomSample(last.id);
         showNotif('Sample "' + last.name + '" entfernt');
-        var pad = document.getElementById('musBeatpad');
+        const pad = document.getElementById('musBeatpad');
         if (pad) buildSeqUI(pad);
       });
       uploadWrap.appendChild(removeBtn);
 
       // Clear
-      var clearBtn = document.createElement('button');
+      const clearBtn = document.createElement('button');
       clearBtn.className = 'beatpad-btn-lg seq-clear';
       clearBtn.textContent = '🗑';
       clearBtn.title = 'Clear pattern';
@@ -4363,14 +4363,14 @@
       header.appendChild(clearBtn);
 
       // Pattern Bank (4 slots)
-      var bankWrap = document.createElement('span');
+      const bankWrap = document.createElement('span');
       bankWrap.style.display = 'inline-flex';
       bankWrap.style.alignItems = 'center';
       bankWrap.style.gap = '2px';
       bankWrap.style.marginLeft = '6px';
-      for (var slot = 0; slot < 4; slot++) {
+      for (let slot = 0; slot < 4; slot++) {
         (function (s) {
-          var slotBtn = document.createElement('button');
+          const slotBtn = document.createElement('button');
           slotBtn.className = 'beatpad-btn-lg seq-bank';
           slotBtn.textContent = (s + 1).toString();
           slotBtn.title = 'Pattern Slot ' + (s + 1);
@@ -4384,13 +4384,13 @@
       header.appendChild(bankWrap);
 
       // Save to slot
-      var saveBankBtn = document.createElement('button');
+      const saveBankBtn = document.createElement('button');
       saveBankBtn.className = 'beatpad-btn-lg seq-save-bank';
       saveBankBtn.textContent = '💾';
       saveBankBtn.title = 'Save to slot';
       saveBankBtn.addEventListener('click', function () {
         // Cycle through slots
-        var slot = saveBankBtn.dataset.slot || 0;
+        const slot = saveBankBtn.dataset.slot || 0;
         savePatternSlot(parseInt(slot));
         saveBankBtn.dataset.slot = (parseInt(slot) + 1) % 4;
         showNotif('Pattern in Slot ' + (parseInt(slot) + 1) + ' gespeichert');
@@ -4398,23 +4398,23 @@
       header.appendChild(saveBankBtn);
 
       // Swing control
-      var swingWrap = document.createElement('span');
+      const swingWrap = document.createElement('span');
       swingWrap.style.display = 'inline-flex';
       swingWrap.style.alignItems = 'center';
       swingWrap.style.gap = '2px';
       swingWrap.style.marginLeft = '6px';
-      var swingLabel = document.createElement('span');
+      const swingLabel = document.createElement('span');
       swingLabel.textContent = 'Swing';
       swingLabel.style.fontSize = '9px';
       swingLabel.style.color = 'var(--muted)';
       swingWrap.appendChild(swingLabel);
-      var swingSelect = document.createElement('select');
+      const swingSelect = document.createElement('select');
       swingSelect.className = 'beatpad-bpm';
       swingSelect.id = 'seqSwing';
       swingSelect.style.width = '50px';
       swingSelect.style.fontSize = '10px';
       [0, 10, 20, 30, 40, 50, 60, 70].forEach(function (v) {
-        var opt = document.createElement('option');
+        const opt = document.createElement('option');
         opt.value = v;
         opt.textContent = v + '%';
         if (v === 0) opt.selected = true;
@@ -4428,23 +4428,23 @@
       header.appendChild(swingWrap);
 
       // Pattern length
-      var lenWrap = document.createElement('span');
+      const lenWrap = document.createElement('span');
       lenWrap.style.display = 'inline-flex';
       lenWrap.style.alignItems = 'center';
       lenWrap.style.gap = '2px';
       lenWrap.style.marginLeft = '6px';
-      var lenLabel = document.createElement('span');
+      const lenLabel = document.createElement('span');
       lenLabel.textContent = 'Steps';
       lenLabel.style.fontSize = '9px';
       lenLabel.style.color = 'var(--muted)';
       lenWrap.appendChild(lenLabel);
-      var lenSelect = document.createElement('select');
+      const lenSelect = document.createElement('select');
       lenSelect.className = 'beatpad-bpm';
       lenSelect.id = 'seqLength';
       lenSelect.style.width = '45px';
       lenSelect.style.fontSize = '10px';
       [8, 16, 32].forEach(function (v) {
-        var opt = document.createElement('option');
+        const opt = document.createElement('option');
         opt.value = v;
         opt.textContent = v;
         if (v === 16) opt.selected = true;
@@ -4458,14 +4458,14 @@
       header.appendChild(lenWrap);
 
       // Undo/Redo
-      var undoBtn = document.createElement('button');
+      const undoBtn = document.createElement('button');
       undoBtn.className = 'beatpad-btn-lg seq-undo';
       undoBtn.textContent = '↶';
       undoBtn.title = 'Undo';
       undoBtn.addEventListener('click', undoPattern);
       header.appendChild(undoBtn);
 
-      var redoBtn = document.createElement('button');
+      const redoBtn = document.createElement('button');
       redoBtn.className = 'beatpad-btn-lg seq-redo';
       redoBtn.textContent = '↷';
       redoBtn.title = 'Redo';
@@ -4473,14 +4473,14 @@
       header.appendChild(redoBtn);
 
       // Copy/Paste
-      var copyBtn = document.createElement('button');
+      const copyBtn = document.createElement('button');
       copyBtn.className = 'beatpad-btn-lg seq-copy';
       copyBtn.textContent = '📋';
       copyBtn.title = 'Copy pattern';
       copyBtn.addEventListener('click', copyPattern);
       header.appendChild(copyBtn);
 
-      var pasteBtn = document.createElement('button');
+      const pasteBtn = document.createElement('button');
       pasteBtn.className = 'beatpad-btn-lg seq-paste';
       pasteBtn.textContent = '📌';
       pasteBtn.title = 'Paste pattern';
@@ -4489,8 +4489,8 @@
     }
 
     function toggleStep() {
-      var row = parseInt(this.dataset.row);
-      var col = parseInt(this.dataset.col);
+      const row = parseInt(this.dataset.row);
+      const col = parseInt(this.dataset.col);
       savePatternState();
       SEQ.pattern[row][col] = !SEQ.pattern[row][col];
       this.classList.toggle('active');
@@ -4499,10 +4499,10 @@
 
     function shufflePattern() {
       clearPattern();
-      var probs = [0.7, 0.4, 0.6, 0.3, 0.25, 0.15, 0.2, 0.15];
-      for (var i = 0; i < 8; i++) {
-        for (var j = 0; j < SEQ_STEPS; j++) {
-          var prob = probs[i] || 0.15;
+      const probs = [0.7, 0.4, 0.6, 0.3, 0.25, 0.15, 0.2, 0.15];
+      for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < SEQ_STEPS; j++) {
+          let prob = probs[i] || 0.15;
           if (i === 0 && j % 4 === 0) prob = 0.9;
           if (i === 1 && (j === 4 || j === 12)) prob = 0.8;
           if (i === 2) prob = 0.6;
@@ -4513,8 +4513,8 @@
     }
 
     function clearPattern() {
-      for (var i = 0; i < 8; i++) {
-        for (var j = 0; j < SEQ_STEPS; j++) {
+      for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < SEQ_STEPS; j++) {
           SEQ.pattern[i][j] = false;
         }
       }
@@ -4545,8 +4545,8 @@
 
     function loadSavedPattern() {
       try {
-        var p = JSON.parse(localStorage.getItem('macrohard_seq_pattern') || 'null');
-        var t = JSON.parse(localStorage.getItem('macrohard_seq_tracks') || 'null');
+        const p = JSON.parse(localStorage.getItem('macrohard_seq_pattern') || 'null');
+        const t = JSON.parse(localStorage.getItem('macrohard_seq_tracks') || 'null');
         if (p && t) {
           SEQ.pattern = p;
           seqTracks = t;
@@ -4555,19 +4555,19 @@
     }
 
     function rebuildGrid() {
-      var pad = document.getElementById('musBeatpad');
+      const pad = document.getElementById('musBeatpad');
       if (!pad) return;
-      var steps = pad.querySelectorAll('.seq-step');
+      const steps = pad.querySelectorAll('.seq-step');
       steps.forEach(function (el) {
-        var row = parseInt(el.dataset.row);
-        var col = parseInt(el.dataset.col);
+        const row = parseInt(el.dataset.row);
+        const col = parseInt(el.dataset.col);
         el.classList.toggle('active', SEQ.pattern[row] && SEQ.pattern[row][col]);
       });
     }
 
     function buildFallbackPad(pad) {
       pad.innerHTML = '';
-      var samples = [
+      const samples = [
         { n: 'Kick', f: 60, c: '#ff4000' },
         { n: 'Snare', f: 200, c: '#2547ff' },
         { n: 'Hat', f: 8000, c: '#ffd400' },
@@ -4578,13 +4578,13 @@
         { n: 'Crash', f: 5000, c: '#666' },
       ];
       samples.forEach(function (s, i) {
-        var b = document.createElement('button');
+        const b = document.createElement('button');
         b.className = 'beatpad-btn';
         b.textContent = s.n;
         b.style.background = s.c;
         b.addEventListener('click', function () {
           if (!SEQ.ctx) {
-            var AC = window.AudioContext || window.webkitAudioContext;
+            const AC = window.AudioContext || window.webkitAudioContext;
             if (!AC) return;
             SEQ.ctx = new AC();
           }
@@ -4607,7 +4607,7 @@
     loadSavedPattern();
 
     /* === Equalizer mit Presets und Visualisierung === */
-    var EQ_PRESETS = {
+    const EQ_PRESETS = {
       Flat: [0, 0, 0, 0, 0, 0],
       'Bass Boost': [6, 4, 2, 0, 0, 0],
       'Treble Boost': [0, 0, 0, 2, 4, 6],
@@ -4621,7 +4621,7 @@
     };
 
     function initEqualizer() {
-      var eq = document.getElementById('musEq');
+      const eq = document.getElementById('musEq');
       if (!eq) return;
       eq.innerHTML = '';
 
@@ -4630,10 +4630,10 @@
       EQ_INITIALIZED = true;
 
       // Header
-      var header = document.createElement('div');
+      const header = document.createElement('div');
       header.className = 'eq-header';
       header.innerHTML = '<span class="eq-title">🎛 Equalizer</span>';
-      var resetBtn = document.createElement('button');
+      const resetBtn = document.createElement('button');
       resetBtn.className = 'eq-reset';
       resetBtn.textContent = 'Reset';
       resetBtn.addEventListener('click', function () {
@@ -4647,10 +4647,10 @@
       eq.appendChild(header);
 
       // Presets
-      var presetWrap = document.createElement('div');
+      const presetWrap = document.createElement('div');
       presetWrap.className = 'eq-presets';
       Object.keys(EQ_PRESETS).forEach(function (name, idx) {
-        var btn = document.createElement('button');
+        const btn = document.createElement('button');
         btn.className = 'eq-preset-btn' + (name === 'Flat' ? ' active' : '');
         btn.textContent = name;
         btn.dataset.preset = name;
@@ -4666,23 +4666,23 @@
       eq.appendChild(presetWrap);
 
       // Bands
-      var bandsWrap = document.createElement('div');
+      const bandsWrap = document.createElement('div');
       bandsWrap.className = 'eq-bands';
 
       eqBands.forEach(function (freq, i) {
-        var band = document.createElement('div');
+        const band = document.createElement('div');
         band.className = 'eq-band';
 
         // Label
-        var label = document.createElement('span');
+        const label = document.createElement('span');
         label.textContent = freq >= 1000 ? freq / 1000 + 'k' : freq;
         band.appendChild(label);
 
         // Slider wrap
-        var sliderWrap = document.createElement('div');
+        const sliderWrap = document.createElement('div');
         sliderWrap.className = 'eq-slider-wrap';
 
-        var slider = document.createElement('input');
+        const slider = document.createElement('input');
         slider.type = 'range';
         slider.min = -12;
         slider.max = 12;
@@ -4691,7 +4691,7 @@
         slider.dataset.freq = freq;
         slider.dataset.idx = i;
         slider.addEventListener('input', function () {
-          var v = parseFloat(this.value);
+          const v = parseFloat(this.value);
           eqValues[freq] = v;
           if (biquadFilters[i] && audioCtx && audioCtx.state === 'running') {
             biquadFilters[i].gain.setValueAtTime(v, audioCtx.currentTime);
@@ -4702,27 +4702,27 @@
             } catch (e) {}
           }
           // Update value display
-          var valEl = this.parentNode.querySelector('.eq-value');
+          const valEl = this.parentNode.querySelector('.eq-value');
           if (valEl) valEl.textContent = (v >= 0 ? '+' : '') + v + 'dB';
           // Update meter
-          var meterFill = this.parentNode.querySelector('.eq-meter-fill');
+          const meterFill = this.parentNode.querySelector('.eq-meter-fill');
           if (meterFill) {
-            var pct = ((v + 12) / 24) * 100;
+            const pct = ((v + 12) / 24) * 100;
             meterFill.style.height = pct + '%';
           }
         });
         sliderWrap.appendChild(slider);
 
         // Value display
-        var valEl = document.createElement('span');
+        const valEl = document.createElement('span');
         valEl.className = 'eq-value';
         valEl.textContent = '0dB';
         sliderWrap.appendChild(valEl);
 
         // Meter (visual feedback)
-        var meter = document.createElement('div');
+        const meter = document.createElement('div');
         meter.className = 'eq-meter';
-        var meterFill = document.createElement('div');
+        const meterFill = document.createElement('div');
         meterFill.className = 'eq-meter-fill';
         meterFill.style.height = '50%';
         meter.appendChild(meterFill);
@@ -4736,7 +4736,7 @@
     }
 
     function applyEQPreset(name) {
-      var values = EQ_PRESETS[name];
+      const values = EQ_PRESETS[name];
       if (!values) return;
       eqBands.forEach(function (freq, i) {
         eqValues[freq] = values[i];
@@ -4749,14 +4749,14 @@
           } catch (e) {}
         }
         // Update UI
-        var slider = document.querySelector('.eq-range[data-freq="' + freq + '"]');
+        const slider = document.querySelector('.eq-range[data-freq="' + freq + '"]');
         if (slider) {
           slider.value = values[i];
-          var valEl = slider.parentNode.querySelector('.eq-value');
+          const valEl = slider.parentNode.querySelector('.eq-value');
           if (valEl) valEl.textContent = (values[i] >= 0 ? '+' : '') + values[i] + 'dB';
-          var meterFill = slider.parentNode.querySelector('.eq-meter-fill');
+          const meterFill = slider.parentNode.querySelector('.eq-meter-fill');
           if (meterFill) {
-            var pct = ((values[i] + 12) / 24) * 100;
+            const pct = ((values[i] + 12) / 24) * 100;
             meterFill.style.height = pct + '%';
           }
         }
@@ -4773,11 +4773,11 @@
       }
       if (audioEl.duration && audioEl.duration > 0) {
         prog.value = (audioEl.currentTime / audioEl.duration) * 100;
-        var m = Math.floor(audioEl.currentTime / 60);
-        var sec = Math.floor(audioEl.currentTime % 60);
+        const m = Math.floor(audioEl.currentTime / 60);
+        const sec = Math.floor(audioEl.currentTime % 60);
         progL.textContent = m + ':' + (sec < 10 ? '0' : '') + sec;
-        var rm = Math.floor(audioEl.duration / 60);
-        var rsec = Math.floor(audioEl.duration % 60);
+        const rm = Math.floor(audioEl.duration / 60);
+        const rsec = Math.floor(audioEl.duration % 60);
         progR.textContent = rm + ':' + (rsec < 10 ? '0' : '') + rsec;
       }
     }
@@ -4797,7 +4797,7 @@
     /* === Play === */
     function playAudio() {
       if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-      var p = audioEl.play();
+      const p = audioEl.play();
       if (p && p.catch)
         p.catch(function (e) {
           console.error('Audio play error:', e.name, e.message);
@@ -4811,7 +4811,7 @@
       curIdx = i;
       curStation = null;
       isRadio = false;
-      var s = songs[i];
+      const s = songs[i];
       if (!setupDone) setupAudio();
       audioEl.src = s.u;
       audioEl.load();
@@ -4854,30 +4854,30 @@
     }
     function nextTrack() {
       if (isRadio && radioStations.length) {
-        var ni = curStation ? radioStations.indexOf(curStation) + 1 : 0;
+        const ni = curStation ? radioStations.indexOf(curStation) + 1 : 0;
         playRadio(radioStations[ni % radioStations.length]);
         return;
       }
       if (!songs.length) return;
-      var next = (curIdx + 1) % songs.length;
+      const next = (curIdx + 1) % songs.length;
       playTrack(next);
     }
     function prevTrack() {
       if (isRadio && radioStations.length) {
-        var ci = curStation ? radioStations.indexOf(curStation) : 0;
-        var pi = (ci - 1 + radioStations.length) % radioStations.length;
+        const ci = curStation ? radioStations.indexOf(curStation) : 0;
+        const pi = (ci - 1 + radioStations.length) % radioStations.length;
         playRadio(radioStations[pi]);
         return;
       }
       if (!songs.length) return;
-      var prev = (curIdx - 1 + songs.length) % songs.length;
+      const prev = (curIdx - 1 + songs.length) % songs.length;
       playTrack(prev);
     }
 
     /* === Upload === */
-    var AUDIO_MAX_SIZE = 10 * 1024 * 1024; // 10 MB
-    var AUDIO_MIME = /^audio\/(mpeg|mp3|mp4|ogg|wav|webm|aac|flac|x-m4a)$/;
-    var AUDIO_EXT = /\.(mp3|mp4|ogg|wav|webm|aac|flac|m4a)$/i;
+    const AUDIO_MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+    const AUDIO_MIME = /^audio\/(mpeg|mp3|mp4|ogg|wav|webm|aac|flac|x-m4a)$/;
+    const AUDIO_EXT = /\.(mp3|mp4|ogg|wav|webm|aac|flac|m4a)$/i;
     function handleUpload(file) {
       if (!file) return;
       if (file.size > AUDIO_MAX_SIZE) {
@@ -4888,8 +4888,8 @@
         alert('Nicht unterstützt: ' + file.name + ' (nur Audio)');
         return;
       }
-      var url = URL.createObjectURL(file);
-      var s = {
+      const url = URL.createObjectURL(file);
+      const s = {
         n: file.name.replace(/\.[^.]+$/, ''),
         a: 'Upload',
         u: url,
@@ -4901,7 +4901,7 @@
     }
 
     /* === Radio Browser === */
-    var fallbackStations = [
+    const fallbackStations = [
       {
         name: 'SomaFM: DEF CON Radio',
         u: 'https://ice1.somafm.com/defcon-128-mp3',
@@ -5006,8 +5006,8 @@
         votes: 2000,
       },
     ];
-    var radioServers = ['de1', 'de2', 'nl1', 'at1', 'fr1', 'us1'];
-    var radioSearchTerm = '';
+    const radioServers = ['de1', 'de2', 'nl1', 'at1', 'fr1', 'us1'];
+    const radioSearchTerm = '';
     function fetchRadios(search, forceRefresh) {
       if (!forceRefresh && radioStations.length > 0 && !search) {
         renderRadio();
@@ -5017,26 +5017,26 @@
         radioStatus.textContent = 'Lade Sender...';
         radioStatus.style.color = 'var(--accent)';
       }
-      var query = search || '';
-      var server = radioServers[Math.floor(Math.random() * radioServers.length)];
-      var url =
+      const query = search || '';
+      const server = radioServers[Math.floor(Math.random() * radioServers.length)];
+      let url =
         'https://' +
         server +
         '.api.radio-browser.info/json/stations?limit=50&order=clickcount&reverse=true';
       if (query) url += '&name=' + encodeURIComponent(query);
-      var x = new XMLHttpRequest();
+      const x = new XMLHttpRequest();
       x.open('GET', url, true);
       x.timeout = 10000;
       x.onload = function () {
         try {
-          var arr = JSON.parse(x.responseText);
-          var seen = {};
-          var found = arr
+          const arr = JSON.parse(x.responseText);
+          const seen = {};
+          const found = arr
             .filter(function (s) {
               if (!s.url_resolved || s.url_resolved.length < 5) return false;
               if (!/^https:\/\//i.test(s.url_resolved)) return false;
               if (/\.(html?|m3u8|mpd)$/i.test(s.url_resolved)) return false;
-              var key = s.url_resolved.split('/')[2];
+              const key = s.url_resolved.split('/')[2];
               if (seen[key]) return false;
               seen[key] = true;
               return true;
@@ -5112,7 +5112,7 @@
       );
     }
     function toggleFav(id) {
-      var i = favIds.indexOf(id);
+      const i = favIds.indexOf(id);
       if (i >= 0) favIds.splice(i, 1);
       else favIds.push(id);
       saveFavs();
@@ -5120,7 +5120,7 @@
     }
 
     function renderPlaylist() {
-      var el = document.getElementById('musPlaylist');
+      const el = document.getElementById('musPlaylist');
       if (!el) return;
       el.innerHTML = '';
       if (!songs.length) {
@@ -5129,9 +5129,9 @@
         return;
       }
       songs.forEach(function (s, i) {
-        var isCur = !isRadio && curIdx === i;
-        var fav = favIds.indexOf(s.n) >= 0;
-        var item = document.createElement('div');
+        const isCur = !isRadio && curIdx === i;
+        const fav = favIds.indexOf(s.n) >= 0;
+        const item = document.createElement('div');
         item.className = 'musItem' + (isCur ? ' playing' : '');
         item.innerHTML =
           '<button class="musPlay" data-i="' +
@@ -5171,18 +5171,18 @@
     }
 
     function renderRadio() {
-      var el = document.getElementById('musRadio');
+      const el = document.getElementById('musRadio');
       if (!el) return;
       el.innerHTML = '';
       /* Search bar */
-      var searchWrap = document.createElement('div');
+      const searchWrap = document.createElement('div');
       searchWrap.className = 'radioSearchWrap';
       searchWrap.innerHTML =
         '<input type="text" id="radioSearchInput" placeholder="Sender suchen..." class="radioSearchInput"><button id="radioSearchBtn" class="radioSearchBtn">🔍</button><button id="radioRefreshBtn" class="radioRefreshBtn">↻</button>';
       el.appendChild(searchWrap);
-      var searchInput = document.getElementById('radioSearchInput');
-      var searchBtn = document.getElementById('radioSearchBtn');
-      var refreshBtn = document.getElementById('radioRefreshBtn');
+      const searchInput = document.getElementById('radioSearchInput');
+      const searchBtn = document.getElementById('radioSearchBtn');
+      const refreshBtn = document.getElementById('radioRefreshBtn');
       searchBtn.addEventListener('click', function () {
         fetchRadios(searchInput.value, true);
       });
@@ -5195,7 +5195,7 @@
       });
 
       /* Station count */
-      var count = document.createElement('div');
+      const count = document.createElement('div');
       count.className = 'radioCount';
       count.textContent = radioStations.length + ' Sender';
       el.appendChild(count);
@@ -5206,12 +5206,12 @@
         return;
       }
       radioStations.forEach(function (s, i) {
-        var isCur = isRadio && curStation === s;
-        var item = document.createElement('div');
+        const isCur = isRadio && curStation === s;
+        const item = document.createElement('div');
         item.className = 'musItem' + (isCur ? ' playing' : '');
-        var liveIndicator =
+        const liveIndicator =
           '<span class="radio-live' + (isCur && playing ? ' blinking' : '') + '">● LIVE</span>';
-        var meta = [s.codec, s.country, s.tags ? s.tags.split(',')[0] : '']
+        const meta = [s.codec, s.country, s.tags ? s.tags.split(',')[0] : '']
           .filter(Boolean)
           .join(' · ');
         item.innerHTML =
@@ -5235,11 +5235,11 @@
     }
     // Update LIVE indicator blinking state
     function updateRadioIndicator() {
-      var el = document.getElementById('musRadio');
+      const el = document.getElementById('musRadio');
       if (!el) return;
-      var liveEls = el.querySelectorAll('.radio-live');
+      const liveEls = el.querySelectorAll('.radio-live');
       liveEls.forEach(function (ind) {
-        var item = ind.closest('.musItem');
+        const item = ind.closest('.musItem');
         if (item && item.classList.contains('playing') && playing) {
           ind.classList.add('blinking');
         } else {
@@ -5249,10 +5249,10 @@
     }
 
     function renderFavs() {
-      var el = document.getElementById('musFavs');
+      const el = document.getElementById('musFavs');
       if (!el) return;
       el.innerHTML = '';
-      var favSongs = songs.filter(function (s) {
+      const favSongs = songs.filter(function (s) {
         return favIds.indexOf(s.n) >= 0;
       });
       if (!favSongs.length) {
@@ -5261,9 +5261,9 @@
         return;
       }
       favSongs.forEach(function (s) {
-        var i = songs.indexOf(s);
-        var isCur = !isRadio && curIdx === i;
-        var item = document.createElement('div');
+        const i = songs.indexOf(s);
+        const isCur = !isRadio && curIdx === i;
+        const item = document.createElement('div');
         item.className = 'musItem' + (isCur ? ' playing' : '');
         item.innerHTML =
           '<button class="musPlay" data-i="' +
@@ -5288,9 +5288,9 @@
     }
 
     function renderActiveTab() {
-      var p = document.getElementById('musPlaylist');
-      var r = document.getElementById('musRadio');
-      var f = document.getElementById('musFavs');
+      const p = document.getElementById('musPlaylist');
+      const r = document.getElementById('musRadio');
+      const f = document.getElementById('musFavs');
       if (!p || !r || !f) return;
       p.style.display = activeTab === 'playlist' ? 'block' : 'none';
       r.style.display = activeTab === 'radio' ? 'block' : 'none';
@@ -5299,7 +5299,7 @@
       if (activeTab === 'radio') renderRadio();
       if (activeTab === 'favs') renderFavs();
       // Trigger tab animation
-      var lists = [p, r, f];
+      const lists = [p, r, f];
       lists.forEach(function (l) {
         l.classList.remove('musTabAnim');
         void l.offsetWidth; // force reflow
@@ -5338,7 +5338,7 @@
       });
 
     /* === Close Button === */
-    var closeBtn = document.getElementById('musCloseBtn');
+    const closeBtn = document.getElementById('musCloseBtn');
     if (closeBtn)
       closeBtn.addEventListener('click', function () {
         stopSequencer();
@@ -5353,9 +5353,9 @@
         setupDone = false;
         MUSIC_INITIALIZED = false;
         // Trigger standard window close (removes .wnd + taskbar icon + cleanup)
-        var wnd = this.closest('.wnd');
+        const wnd = this.closest('.wnd');
         if (wnd) {
-          var wc = wnd.querySelector('.wclose');
+          const wc = wnd.querySelector('.wclose');
           if (wc) wc.click();
         }
       });
@@ -5371,7 +5371,7 @@
         btn.classList.add('active');
         if (activeTab === 'radio' && radioStations.length > 0) renderRadio();
         renderActiveTab();
-        var fb = player.querySelector('[data-tab="favs"]');
+        const fb = player.querySelector('[data-tab="favs"]');
         if (fb) fb.textContent = '★ Favs (' + favIds.length + ')';
       });
     });
@@ -5379,7 +5379,7 @@
     /* === Extra Tabs (Beatpad/EQ/Vis) === */
     player.querySelectorAll('.musExtraTab[data-extra]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var extra = this.dataset.extra;
+        const extra = this.dataset.extra;
         activeExtraTab = extra;
         // Stop visualizer when switching away
         if (extra !== 'vis' && visRafId) {
@@ -5394,11 +5394,11 @@
           p.style.display = 'none';
         });
         // Map extra name to section ID
-        var sectionId =
+        const sectionId =
           extra === 'beatpad'
             ? '#musBeatpadSection'
             : '#mus' + extra.charAt(0).toUpperCase() + extra.slice(1);
-        var target = player.querySelector(sectionId);
+        const target = player.querySelector(sectionId);
         if (target) target.style.display = 'block';
         if (extra === 'vis') initVisualizer();
       });
@@ -5407,7 +5407,7 @@
     /* === Upload === */
     if (uploadIn)
       uploadIn.addEventListener('change', function () {
-        for (var i = 0; i < this.files.length; i++) handleUpload(this.files[i]);
+        for (let i = 0; i < this.files.length; i++) handleUpload(this.files[i]);
         this.value = '';
       });
 
@@ -5492,33 +5492,33 @@
   }
 
   /* Chat — S3: Timestamps in every message */
-  var chatContacts = [
+  const chatContacts = [
     { name: 'Alice', color: '#2547ff' },
     { name: 'Bob', color: '#ff4d00' },
     { name: 'Carol', color: '#0f0' },
     { name: 'Dave', color: '#ffd400' },
   ];
-  var chatMsgKey = 'cp_msgs';
+  const chatMsgKey = 'cp_msgs';
   function buildChat() {
-    var msgs = document.getElementById('cpMsgs');
-    var sug = document.getElementById('cpSugs');
-    var inp = document.getElementById('cpIn');
-    var send = document.getElementById('cpSend');
+    const msgs = document.getElementById('cpMsgs');
+    const sug = document.getElementById('cpSugs');
+    const inp = document.getElementById('cpIn');
+    const send = document.getElementById('cpSend');
     if (!msgs || !sug || !inp || !send) return;
     if (CHAT_INITIALIZED) return;
     CHAT_INITIALIZED = true;
 
     /* Contact bar with active status */
-    var cb = document.createElement('div');
+    const cb = document.createElement('div');
     cb.className = 'chatBar';
-    var contacts = [
+    const contacts = [
       { name: 'Macro', status: 'online', avatar: '🤖' },
       { name: 'Sadee', status: 'online', avatar: '👨‍💻' },
       { name: 'Perchance', status: 'idle', avatar: '🎲' },
       { name: 'Bot', status: 'online', avatar: '⚡' },
     ];
     contacts.forEach(function (c) {
-      var b = document.createElement('button');
+      const b = document.createElement('button');
       b.className = 'chatContact';
       b.innerHTML =
         '<span class="chatAvatar">' +
@@ -5537,7 +5537,7 @@
     sug.parentNode.insertBefore(cb, sug);
 
     /* Emoji bar */
-    var eb = document.createElement('div');
+    const eb = document.createElement('div');
     eb.className = 'chatEmojiBar';
     [
       '😂',
@@ -5556,7 +5556,7 @@
       '⭐',
       '💪',
     ].forEach(function (e) {
-      var b = document.createElement('button');
+      const b = document.createElement('button');
       b.textContent = e;
       b.className = 'chatEmoji';
       b.addEventListener('click', function () {
@@ -5570,19 +5570,19 @@
     /* Load from localStorage */
     msgs.innerHTML = '';
     try {
-      var saved = JSON.parse(localStorage.getItem('cp_msgs') || '[]');
+      const saved = JSON.parse(localStorage.getItem('cp_msgs') || '[]');
       saved.forEach(function (m) {
         addChatBubble(msgs, m);
       });
     } catch (e) {}
 
     function addChatBubble(el, m) {
-      var d = document.createElement('div');
+      const d = document.createElement('div');
       d.className = 'cpMsg' + (m.self ? ' self' : '');
-      var textSpan = document.createElement('span');
+      const textSpan = document.createElement('span');
       textSpan.className = 'chatBubbleText';
       textSpan.textContent = String(m.text || '');
-      var timeSpan = document.createElement('span');
+      const timeSpan = document.createElement('span');
       timeSpan.className = 'chatBubbleTime';
       timeSpan.textContent = String(m.time || '');
       d.appendChild(textSpan);
@@ -5593,9 +5593,9 @@
 
     /* Smart bot replies with keyword matching */
     function botReply(text) {
-      var t = text.toLowerCase();
-      var replies = {
-        hallo: ['Hallo! Wie kann ich helfen?', 'Hey! Schön da zu sehen.', "Moin! Was gibt's?"],
+      const t = text.toLowerCase();
+      const replies = {
+        hallo: ['Hallo! Wie kann ich helfen?', 'Hey! Schön da zu sehen.', 'Moin! Was gibt\'s?'],
         hilfe: [
           'Ich kann: echo, time, joke, quote, calc',
           'Schreib mir! Ich antworte.',
@@ -5604,7 +5604,7 @@
         joke: [
           'Warum hat der Developer seine Frau verlassen? Weil sie .map() statt .forEach() nutzt. 😄',
           'Was ist ein Compiler? Ein Programm das Fehler findet — außer seinen eigenen.',
-          "404: Witze nicht gefunden. Versuch's nochmal!",
+          '404: Witze nicht gefunden. Versuch\'s nochmal!',
         ],
         quote: [
           '"Code is like humor. When you have to explain it, it\'s bad." — Cory House',
@@ -5628,23 +5628,23 @@
           'Das sehe ich genauso.',
         ],
       };
-      for (var key in replies) {
+      for (const key in replies) {
         if (t.indexOf(key) !== -1) {
-          var arr = replies[key];
+          const arr = replies[key];
           return arr[Math.floor(Math.random() * arr.length)];
         }
       }
-      var def = replies.default;
+      const def = replies.default;
       return def[Math.floor(Math.random() * def.length)];
     }
 
-    var chatReplyTimer = null;
-    var typingEl = null;
+    let chatReplyTimer = null;
+    let typingEl = null;
 
     function sendMsg(text) {
       if (!text) return;
-      var now = new Date();
-      var time = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      const now = new Date();
+      const time = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
       addChatBubble(msgs, { text: text, self: true, time: time });
       saveMsg(text, true, time);
 
@@ -5659,10 +5659,10 @@
       msgs.appendChild(typingEl);
       msgs.scrollTop = msgs.scrollHeight;
 
-      var replyDelay = 500 + Math.floor(Math.random() * 1000);
+      const replyDelay = 500 + Math.floor(Math.random() * 1000);
       chatReplyTimer = setTimeout(function () {
         if (typingEl) typingEl.remove();
-        var r = botReply(text);
+        const r = botReply(text);
         addChatBubble(msgs, {
           text: r,
           self: false,
@@ -5680,7 +5680,7 @@
 
     function saveMsg(text, self, time) {
       try {
-        var h = JSON.parse(localStorage.getItem('cp_msgs') || '[]');
+        const h = JSON.parse(localStorage.getItem('cp_msgs') || '[]');
         h.push({ text: text, self: self, time: time });
         if (h.length > 100) h.shift();
         localStorage.setItem('cp_msgs', JSON.stringify(h));
@@ -5689,7 +5689,7 @@
 
     sug.innerHTML = '';
     ['Hallo', 'Hilfe', 'Witz', 'Zeit', 'Quote', 'Echo'].forEach(function (t) {
-      var b = document.createElement('button');
+      const b = document.createElement('button');
       b.textContent = t;
       b.addEventListener('click', function () {
         sendMsg(t);
@@ -5698,7 +5698,7 @@
     });
 
     send.addEventListener('click', function () {
-      var v = inp.value.trim();
+      const v = inp.value.trim();
       if (!v) return;
       sendMsg(v);
       inp.value = '';
@@ -5713,29 +5713,29 @@
 
   /* Docs — S1: editable + export + preview */
   function buildDocs() {
-    var body = document.getElementById('mdBody');
+    const body = document.getElementById('mdBody');
     if (!body) return;
     body.setAttribute('contenteditable', 'true');
     body.innerHTML +=
       '<h3>MakerOS Docs</h3><p>Edit this document in-place. Export or preview below.</p><p style="margin-top:12px;font-size:11px;color:var(--muted)">Made by Alexander Kleine</p>';
-    var tb = document.createElement('div');
+    const tb = document.createElement('div');
     tb.style.cssText = 'padding:6px 10px;display:flex;gap:4px;border-top:2px solid var(--line)';
-    var expBtn = document.createElement('button');
+    const expBtn = document.createElement('button');
     expBtn.className = 'cBtn';
     expBtn.textContent = 'Export .md';
     expBtn.addEventListener('click', function () {
-      var txt = body.innerText;
-      var blob = new Blob([txt], { type: 'text/markdown' });
-      var a = document.createElement('a');
+      const txt = body.innerText;
+      const blob = new Blob([txt], { type: 'text/markdown' });
+      const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'docs.md';
       a.click();
       URL.revokeObjectURL(a.href);
     });
-    var prevBtn = document.createElement('button');
+    const prevBtn = document.createElement('button');
     prevBtn.className = 'cBtn op';
     prevBtn.textContent = 'Preview';
-    var preview = document.createElement('div');
+    const preview = document.createElement('div');
     preview.id = 'mdPrev';
     preview.style.cssText =
       'display:none;padding:8px;border:2px solid var(--line);background:var(--paper);margin-top:4px;max-height:200px;overflow-y:auto';
@@ -5760,14 +5760,14 @@
   }
 
   /* Settings-Import: nur definierte Präferenz-Keys dürfen geschrieben werden */
-  var SETTINGS_IMPORT_KEYS = ['os_dark', 'os_scan', 'os_accent', 'os_fs', 'os_lang', 'os_wall'];
+  const SETTINGS_IMPORT_KEYS = ['os_dark', 'os_scan', 'os_accent', 'os_fs', 'os_lang', 'os_wall'];
 
   /* Settings — S1+S2: 4 Tabs (Allgemein, Aussehen, Tastenkürzel, Datenschutz) */
   function buildSettings() {
-    var pane = document.getElementById('stGrid');
+    const pane = document.getElementById('stGrid');
     if (!pane) return;
     /* Tab Navigation */
-    var nav = pane.querySelector('.stNav');
+    const nav = pane.querySelector('.stNav');
     if (nav) {
       nav.querySelectorAll('button').forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -5778,13 +5778,13 @@
           pane.querySelectorAll('.stPane').forEach(function (p) {
             p.classList.remove('active');
           });
-          var target = pane.querySelector('.stPane[data-pane="' + btn.dataset.tab + '"]');
+          const target = pane.querySelector('.stPane[data-pane="' + btn.dataset.tab + '"]');
           if (target) target.classList.add('active');
         });
       });
     }
     /* General */
-    var stDarkEl = document.getElementById('stDark');
+    const stDarkEl = document.getElementById('stDark');
     if (stDarkEl)
       stDarkEl.addEventListener('change', function () {
         document.documentElement.dataset.theme = this.checked ? 'dark' : '';
@@ -5793,13 +5793,13 @@
         } catch (e) {}
         updateThemeToggleBtn();
       });
-    var stScan = document.getElementById('stScan');
+    const stScan = document.getElementById('stScan');
     if (stScan)
       stScan.addEventListener('change', function () {
         document.documentElement.classList.toggle('scanlines', this.checked);
         storeSet('os_scan', this.checked ? '1' : '0');
       });
-    var stLangEl = document.getElementById('stLang');
+    const stLangEl = document.getElementById('stLang');
     if (stLangEl) {
       stLangEl.innerHTML =
         '<option value="de">Deutsch</option><option value="en">English</option><option value="fr">Français</option>';
@@ -5808,7 +5808,7 @@
         setLang(this.value);
       });
     }
-    var regBtn = document.getElementById('stRegisterSW');
+    const regBtn = document.getElementById('stRegisterSW');
     if (regBtn) {
       regBtn.addEventListener('click', function () {
         if ('serviceWorker' in navigator) {
@@ -5826,19 +5826,19 @@
       });
     }
     /* Appearance */
-    var appearance = document.getElementById('stAppearance');
+    const appearance = document.getElementById('stAppearance');
     if (appearance) {
-      var grid = document.createElement('div');
+      const grid = document.createElement('div');
       grid.className = 'stGrid';
       /* Accent color with live preview */
-      var accentLabel = document.createElement('label');
+      const accentLabel = document.createElement('label');
       accentLabel.innerHTML =
         'Accent: <input type="color" id="stAccent" value="#2547ff" style="width:40px;height:24px;border:2px solid var(--line)">';
-      var accentBtn = document.createElement('button');
+      const accentBtn = document.createElement('button');
       accentBtn.className = 'cBtn';
       accentBtn.textContent = 'Apply Accent';
       accentBtn.addEventListener('click', function () {
-        var v = document.getElementById('stAccent').value;
+        const v = document.getElementById('stAccent').value;
         document.documentElement.style.setProperty('--accent', v);
         try {
           localStorage.setItem('os_accent', v);
@@ -5851,14 +5851,14 @@
       accentLabel.appendChild(accentBtn);
       grid.appendChild(accentLabel);
       /* Font size */
-      var fsLabel = document.createElement('label');
+      const fsLabel = document.createElement('label');
       fsLabel.innerHTML =
         'Font-Größe: <select id="stFS"><option value="13">Normal</option><option value="15">Groß</option><option value="11">Klein</option></select>';
-      var fsApply = document.createElement('button');
+      const fsApply = document.createElement('button');
       fsApply.className = 'cBtn';
       fsApply.textContent = 'Apply';
       fsApply.addEventListener('click', function () {
-        var v = document.getElementById('stFS').value;
+        const v = document.getElementById('stFS').value;
         document.documentElement.style.setProperty('--fs', v + 'px');
         try {
           localStorage.setItem('os_fs', v);
@@ -5867,25 +5867,25 @@
       fsLabel.appendChild(fsApply);
       grid.appendChild(fsLabel);
       /* Wallpaper URL */
-      var wpLabel = document.createElement('label');
+      const wpLabel = document.createElement('label');
       wpLabel.innerHTML =
         'Wallpaper URL: <input id="stWall" placeholder="https://..." style="flex:1;font-family:IBM Plex Mono;font-size:10px;padding:2px;border:2px solid var(--line);background:var(--paper);color:var(--ink)">';
-      var wpBtn = document.createElement('button');
+      const wpBtn = document.createElement('button');
       wpBtn.className = 'cBtn';
       wpBtn.textContent = 'Apply';
       wpBtn.addEventListener('click', function () {
-        var u = document.getElementById('stWall').value;
+        const u = document.getElementById('stWall').value;
         if (u) setWallpaper(u);
         toast('Wallpaper gesetzt');
       });
       wpLabel.appendChild(wpBtn);
       grid.appendChild(wpLabel);
       /* Wallpaper Gallery */
-      var galleryLabel = document.createElement('div');
+      const galleryLabel = document.createElement('div');
       galleryLabel.style.cssText = 'font-weight:bold;margin-top:6px';
       galleryLabel.textContent = 'Galerie:';
       grid.appendChild(galleryLabel);
-      var galGrid = document.createElement('div');
+      const galGrid = document.createElement('div');
       galGrid.style.cssText =
         'display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:4px';
       [
@@ -5902,14 +5902,14 @@
         'linear-gradient(135deg,#ff9ff3,#f368e0)',
         'linear-gradient(135deg,#00d2d3,#54a0ff)',
       ].forEach(function (g, i) {
-        var b = document.createElement('button');
+        const b = document.createElement('button');
         b.style.cssText =
           'height:48px;border:2px solid var(--line);background:' +
           g +
           ';cursor:pointer;box-shadow:var(--shadow);position:relative;transition:transform .1s';
         b.title = 'Wallpaper ' + (i + 1);
         b.addEventListener('click', function () {
-          var desk = document.getElementById('desktop');
+          const desk = document.getElementById('desktop');
           if (desk) {
             desk.style.backgroundImage = g;
             desk.style.backgroundSize = 'cover';
@@ -5931,19 +5931,19 @@
       grid.appendChild(galGrid);
 
       /* Wallpaper Slideshow */
-      var slideshowLabel = document.createElement('div');
+      const slideshowLabel = document.createElement('div');
       slideshowLabel.style.cssText = 'font-weight:bold;margin-top:10px';
       slideshowLabel.textContent = 'Slideshow:';
       grid.appendChild(slideshowLabel);
-      var slideshowWrap = document.createElement('div');
+      const slideshowWrap = document.createElement('div');
       slideshowWrap.style.cssText = 'display:flex;gap:4px;margin-top:4px;align-items:center';
-      var slideshowBtn = document.createElement('button');
+      const slideshowBtn = document.createElement('button');
       slideshowBtn.className = 'cBtn';
       slideshowBtn.textContent = 'Start';
-      var slideshowInterval = document.createElement('select');
+      const slideshowInterval = document.createElement('select');
       slideshowInterval.innerHTML =
         '<option value="5">5s</option><option value="10" selected>10s</option><option value="30">30s</option><option value="60">60s</option>';
-      var slideshowTimer = null;
+      let slideshowTimer = null;
       slideshowBtn.addEventListener('click', function () {
         if (slideshowTimer) {
           clearInterval(slideshowTimer);
@@ -5952,7 +5952,7 @@
           toast('Slideshow gestoppt');
           return;
         }
-        var gallery = [
+        const gallery = [
           'linear-gradient(135deg,#2547ff,#ff4d00)',
           'linear-gradient(135deg,#0b0b0c,#5d5d5d)',
           'radial-gradient(circle at 30% 30%,#ffd400,#2547ff)',
@@ -5960,7 +5960,7 @@
           'linear-gradient(135deg,#0f4c75,#3282b8)',
           'linear-gradient(135deg,#3a0066,#9d00ff)',
         ];
-        var idx = 0;
+        let idx = 0;
         slideshowTimer = setInterval(
           function () {
             document.getElementById('desktop').style.backgroundImage = gallery[idx];
@@ -5977,11 +5977,11 @@
       grid.appendChild(slideshowWrap);
 
       /* Theme Presets */
-      var themeLabel = document.createElement('div');
+      const themeLabel = document.createElement('div');
       themeLabel.style.cssText = 'font-weight:bold;margin-top:10px';
       themeLabel.textContent = 'Themes:';
       grid.appendChild(themeLabel);
-      var themeBtns = document.createElement('div');
+      const themeBtns = document.createElement('div');
       themeBtns.style.cssText = 'display:flex;gap:6px;margin-top:4px';
       [
         { n: 'Ignite', c: 'ignite', bg: '#ff4d00' },
@@ -5989,7 +5989,7 @@
         { n: 'Forest', c: 'forest', bg: '#2d6a4f' },
         { n: 'Mono', c: 'mono', bg: '#333' },
       ].forEach(function (t) {
-        var b = document.createElement('button');
+        const b = document.createElement('button');
         b.className = 'cBtn';
         b.innerHTML =
           '<span style="width:10px;height:10px;background:' +
@@ -6007,15 +6007,15 @@
       });
       grid.appendChild(themeBtns);
       /* Desktop Icon Size */
-      var iconSizeLabel = document.createElement('label');
+      const iconSizeLabel = document.createElement('label');
       iconSizeLabel.innerHTML =
         'Icon-Größe: <select id="stIconSize"><option value="small">Klein</option><option value="medium" selected>Mittel</option><option value="large">Groß</option></select>';
-      var iconSizeBtn = document.createElement('button');
+      const iconSizeBtn = document.createElement('button');
       iconSizeBtn.className = 'cBtn';
       iconSizeBtn.textContent = 'Apply';
       iconSizeBtn.addEventListener('click', function () {
-        var v = document.getElementById('stIconSize').value;
-        var desk = document.getElementById('deskIcons');
+        const v = document.getElementById('stIconSize').value;
+        const desk = document.getElementById('deskIcons');
         if (desk) {
           desk.dataset.iconSize = v;
           try {
@@ -6027,10 +6027,10 @@
       iconSizeLabel.appendChild(iconSizeBtn);
       grid.appendChild(iconSizeLabel);
       /* Grid toggle */
-      var gridLabel = document.createElement('label');
+      const gridLabel = document.createElement('label');
       gridLabel.innerHTML = '<input type="checkbox" id="stGrid" checked> Desktop-Raster anzeigen';
       gridLabel.addEventListener('change', function () {
-        var desk = document.getElementById('deskIcons');
+        const desk = document.getElementById('deskIcons');
         if (desk) {
           desk.classList.toggle('show-grid', document.getElementById('stGrid').checked);
           try {
@@ -6041,24 +6041,24 @@
       grid.appendChild(gridLabel);
       /* Restore icon size/grid */
       try {
-        var is = localStorage.getItem('os_iconsize');
+        const is = localStorage.getItem('os_iconsize');
         if (is) {
-          var isEl = document.getElementById('stIconSize');
+          const isEl = document.getElementById('stIconSize');
           if (isEl) isEl.value = is;
           var desk = document.getElementById('deskIcons');
           if (desk) desk.dataset.iconSize = is;
         }
       } catch (e) {}
       try {
-        var gd = localStorage.getItem('os_grid');
+        const gd = localStorage.getItem('os_grid');
         if (gd === '0') {
-          var gdEl = document.getElementById('stGrid');
+          const gdEl = document.getElementById('stGrid');
           if (gdEl) gdEl.checked = false;
           var desk = document.getElementById('deskIcons');
           if (desk) desk.classList.remove('show-grid');
         }
       } catch (e) {}
-      var resetBtn = document.createElement('button');
+      const resetBtn = document.createElement('button');
       resetBtn.className = 'cBtn op';
       resetBtn.textContent = 'Reset Defaults';
       resetBtn.addEventListener('click', function () {
@@ -6082,31 +6082,31 @@
       appearance.appendChild(grid);
       /* Restore saved accent/fs */
       try {
-        var sv = localStorage.getItem('os_accent');
+        const sv = localStorage.getItem('os_accent');
         if (sv) {
           document.documentElement.style.setProperty('--accent', sv);
-          var acc = document.getElementById('stAccent');
+          const acc = document.getElementById('stAccent');
           if (acc) acc.value = sv;
         }
       } catch (e) {}
       try {
-        var sv2 = localStorage.getItem('os_fs');
+        const sv2 = localStorage.getItem('os_fs');
         if (sv2) {
           document.documentElement.style.setProperty('--fs', sv2 + 'px');
         }
       } catch (e) {}
       /* Restore saved theme */
       try {
-        var th = localStorage.getItem('os_theme');
+        const th = localStorage.getItem('os_theme');
         if (th) {
           document.documentElement.className = th;
         }
       } catch (e) {}
     }
     /* Shortcuts */
-    var shortcuts = document.getElementById('stShortcuts');
+    const shortcuts = document.getElementById('stShortcuts');
     if (shortcuts) {
-      var data = [
+      const data = [
         ['Ctrl+N', 'Notepad'],
         ['Ctrl+T', 'Terminal'],
         ['Ctrl+E', 'Explorer'],
@@ -6120,14 +6120,14 @@
         ['A', 'AMIBIOS'],
         ['?', 'Help'],
       ];
-      var tbl = document.createElement('div');
+      const tbl = document.createElement('div');
       tbl.style.cssText = 'display:grid;grid-template-columns:auto 1fr;gap:4px';
       data.forEach(function (row) {
-        var k = document.createElement('span');
+        const k = document.createElement('span');
         k.textContent = row[0];
         k.style.cssText =
           'font-weight:bold;padding:4px 8px;border:2px solid var(--line);background:var(--accent-2)';
-        var d = document.createElement('span');
+        const d = document.createElement('span');
         d.textContent = row[1];
         d.style.cssText = 'padding:4px 8px;border:2px solid var(--line);background:var(--paper)';
         tbl.appendChild(k);
@@ -6136,14 +6136,14 @@
       shortcuts.appendChild(tbl);
     }
     /* Privacy */
-    var privacy = document.getElementById('stPrivacy');
+    const privacy = document.getElementById('stPrivacy');
     if (privacy) {
-      var info = document.createElement('div');
+      const info = document.createElement('div');
       info.style.cssText = 'font-size:11px;line-height:1.6';
       info.innerHTML =
         '<p>MakerOS speichert Daten ausschließlich in deinem Browser (localStorage):</p><ul style="margin:6px 0 12px 20px"><li>Akzentfarbe & Schriftgröße</li><li>Dark Mode & Scanlines</li><li>Wallpaper</li><li>Chat-Nachrichten</li><li>Notepad-Inhalt</li><li>Links</li><li>Sitzungsobjekte</li></ul><p>Kein Tracker, kein Analytics, keine externen Calls.</p><p style="margin-top:10px"><button class="cBtn op" id="stClearData">Alle lokalen Daten löschen</button></p>';
       privacy.appendChild(info);
-      var clearBtn = info.querySelector('#stClearData');
+      const clearBtn = info.querySelector('#stClearData');
       if (clearBtn)
         clearBtn.addEventListener('click', function () {
           if (confirm('Alle lokalen Daten löschen?')) {
@@ -6164,18 +6164,18 @@
         });
 
       /* Export Settings */
-      var exportBtn = document.createElement('button');
+      const exportBtn = document.createElement('button');
       exportBtn.className = 'cBtn op';
       exportBtn.textContent = '📤 Export Settings';
       exportBtn.style.marginTop = '6px';
       exportBtn.addEventListener('click', function () {
-        var data = {};
+        const data = {};
         SETTINGS_IMPORT_KEYS.forEach(function (k) {
-          var v = localStorage.getItem(k);
+          const v = localStorage.getItem(k);
           if (v !== null) data[k] = v;
         });
-        var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        var a = document.createElement('a');
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = 'makeros-settings.json';
         a.click();
@@ -6185,25 +6185,25 @@
       info.appendChild(exportBtn);
 
       /* Import Settings */
-      var importBtn = document.createElement('button');
+      const importBtn = document.createElement('button');
       importBtn.className = 'cBtn op';
       importBtn.textContent = '📥 Import Settings';
       importBtn.style.marginLeft = '4px';
       importBtn.addEventListener('click', function () {
-        var inp = document.createElement('input');
+        const inp = document.createElement('input');
         inp.type = 'file';
         inp.accept = '.json';
         inp.addEventListener('change', function () {
-          var file = inp.files[0];
+          const file = inp.files[0];
           if (!file) return;
-          var reader = new FileReader();
+          const reader = new FileReader();
           reader.onload = function (ev) {
             try {
-              var data = JSON.parse(ev.target.result);
+              const data = JSON.parse(ev.target.result);
               if (!data || typeof data !== 'object' || Array.isArray(data))
                 throw new Error('Ungültiges Format');
-              var applied = 0;
-              var skipped = 0;
+              let applied = 0;
+              let skipped = 0;
               SETTINGS_IMPORT_KEYS.forEach(function (k) {
                 if (Object.prototype.hasOwnProperty.call(data, k) && typeof data[k] !== 'object') {
                   try {
@@ -6240,10 +6240,10 @@
     }
     /* Restore dark/scan — auto-detect if no stored preference */
     try {
-      var sd = localStorage.getItem('os_dark');
+      const sd = localStorage.getItem('os_dark');
       if (sd === '1') {
         document.documentElement.dataset.theme = 'dark';
-        var dk = document.getElementById('stDark');
+        const dk = document.getElementById('stDark');
         if (dk) dk.checked = true;
       } else if (
         sd === null &&
@@ -6251,16 +6251,16 @@
         window.matchMedia('(prefers-color-scheme: dark)').matches
       ) {
         document.documentElement.dataset.theme = 'dark';
-        var dk2 = document.getElementById('stDark');
+        const dk2 = document.getElementById('stDark');
         if (dk2) dk2.checked = true;
       }
     } catch (e) {}
     try {
-      var sc = localStorage.getItem('os_scan');
+      const sc = localStorage.getItem('os_scan');
       if (sc !== '0') {
         document.documentElement.classList.add('scanlines');
       } else {
-        var scEl = document.getElementById('stScan');
+        const scEl = document.getElementById('stScan');
         if (scEl) scEl.checked = false;
       }
     } catch (e) {}
@@ -6268,13 +6268,13 @@
 
   function refreshUI() {
     document.querySelectorAll('.wtxt').forEach(function (el) {
-      var id = el.closest('.wnd');
+      const id = el.closest('.wnd');
       if (id) el.textContent = t(id.id.replace('w-', ''));
     });
   }
 
   /* Links — S1+S2: CRUD + Kategorien + JSON Import/Export */
-  var linksData = [
+  let linksData = [
     { n: 'MakerOS', u: 'https://qapdex-maker.github.io/macrohard/', cat: 'dev' },
     { n: 'GitHub', u: 'https://github.com/qapdex-maker', cat: 'dev' },
     { n: 'Perchance', u: 'https://perchance.org', cat: 'fun' },
@@ -6284,7 +6284,7 @@
     { n: 'Nous Research', u: 'https://nousresearch.com', cat: 'info' },
   ];
   /* Omarchy links (from omarchy-linux quattro repo) */
-  var omarchyLinks = [
+  const omarchyLinks = [
     { n: 'Omarchy', u: 'https://omarchy.org/', cat: 'os' },
     { n: 'Omarchy Manual', u: 'https://learn.omacom.io/2/the-omarchy-manual', cat: 'os' },
     { n: 'Basecamp', u: 'https://launchpad.37signals.com', cat: 'work' },
@@ -6299,14 +6299,14 @@
     { n: 'Zoom', u: 'https://zoom.us/', cat: 'work' },
   ];
   function buildOmarchyLinks() {
-    var pane = document.getElementById('clPane');
+    const pane = document.getElementById('clPane');
     if (!pane) return;
-    var hdr = document.createElement('div');
+    const hdr = document.createElement('div');
     hdr.style.cssText = 'padding:6px 8px;font-weight:bold;color:var(--accent)';
     hdr.textContent = 'Omarchy · Quattro';
     pane.appendChild(hdr);
     omarchyLinks.forEach(function (l) {
-      var a = document.createElement('a');
+      const a = document.createElement('a');
       a.className = 'clLink omarchyLink';
       a.href = l.u;
       a.target = '_blank';
@@ -6321,15 +6321,15 @@
     });
   }
   function buildLinks() {
-    var pane = document.getElementById('clPane');
+    const pane = document.getElementById('clPane');
     if (!pane) return;
     pane.innerHTML = '';
     /* Filter chips */
-    var cats = ['all', 'dev', 'fun', 'info'];
-    var catBar = document.createElement('div');
+    const cats = ['all', 'dev', 'fun', 'info'];
+    const catBar = document.createElement('div');
     catBar.style.cssText = 'display:flex;gap:4px;padding:4px 8px;flex-wrap:wrap';
     cats.forEach(function (c) {
-      var b = document.createElement('button');
+      const b = document.createElement('button');
       b.textContent = c;
       b.className = 'cBtn' + (c === 'all' ? ' op' : '');
       b.dataset.cat = c;
@@ -6340,13 +6340,13 @@
     });
     pane.appendChild(catBar);
     /* Add button */
-    var addBtn = document.createElement('button');
+    const addBtn = document.createElement('button');
     addBtn.className = 'cBtn';
     addBtn.textContent = '+ Link hinzufügen';
     addBtn.addEventListener('click', function () {
-      var n = prompt('Name:');
-      var u = prompt('URL:');
-      var c = prompt('Kategorie (dev/fun/info):') || 'dev';
+      const n = prompt('Name:');
+      const u = prompt('URL:');
+      const c = prompt('Kategorie (dev/fun/info):') || 'dev';
       if (n && u) {
         linksData.push({ n: n, u: u, cat: c });
         renderLinks('all');
@@ -6355,33 +6355,33 @@
     });
     pane.appendChild(addBtn);
     /* Export/Import */
-    var expBtn = document.createElement('button');
+    const expBtn = document.createElement('button');
     expBtn.className = 'cBtn';
     expBtn.textContent = 'Export JSON';
     expBtn.addEventListener('click', function () {
-      var j = JSON.stringify(linksData, null, 2);
-      var blob = new Blob([j], { type: 'application/json' });
-      var a = document.createElement('a');
+      const j = JSON.stringify(linksData, null, 2);
+      const blob = new Blob([j], { type: 'application/json' });
+      const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'links.json';
       a.click();
       URL.revokeObjectURL(a.href);
     });
     pane.appendChild(expBtn);
-    var impBtn = document.createElement('button');
+    const impBtn = document.createElement('button');
     impBtn.className = 'cBtn';
     impBtn.textContent = 'Import JSON';
     impBtn.addEventListener('click', function () {
-      var f = document.createElement('input');
+      const f = document.createElement('input');
       f.type = 'file';
       f.accept = '.json';
       f.onchange = function (e) {
-        var file = e.target.files[0];
+        const file = e.target.files[0];
         if (!file) return;
-        var r = new FileReader();
+        const r = new FileReader();
         r.onload = function (ev) {
           try {
-            var d = JSON.parse(ev.target.result);
+            const d = JSON.parse(ev.target.result);
             if (Array.isArray(d)) {
               linksData = d;
               renderLinks('all');
@@ -6397,7 +6397,7 @@
     });
     pane.appendChild(impBtn);
     /* Sort selector */
-    var sortSel = document.createElement('select');
+    const sortSel = document.createElement('select');
     sortSel.id = 'clSort';
     sortSel.className = 'clSort';
     sortSel.innerHTML =
@@ -6409,20 +6409,20 @@
     renderLinks('all');
   }
   function renderLinks(cat) {
-    var pane = document.getElementById('clPane');
+    const pane = document.getElementById('clPane');
     if (!pane) return;
-    var items = pane.querySelectorAll('.clLink:not(.omarchyLink),.clDel');
+    const items = pane.querySelectorAll('.clLink:not(.omarchyLink),.clDel');
     items.forEach(function (el) {
       el.remove();
     });
-    var filtered =
+    const filtered =
       cat === 'all'
         ? linksData
         : linksData.filter(function (l) {
-            return l.cat === cat;
-          });
+          return l.cat === cat;
+        });
     /* Sort */
-    var sortBy = document.getElementById('clSort')
+    const sortBy = document.getElementById('clSort')
       ? document.getElementById('clSort').value
       : 'name';
     if (sortBy === 'name')
@@ -6438,29 +6438,29 @@
         return (b.fav ? 1 : 0) - (a.fav ? 1 : 0);
       });
     filtered.forEach(function (l) {
-      var itemDiv = document.createElement('div');
+      const itemDiv = document.createElement('div');
       itemDiv.className = 'clItem';
       /* Fav star */
-      var favSpan = document.createElement('span');
+      const favSpan = document.createElement('span');
       favSpan.className = 'clFav' + (l.fav ? ' active' : '');
       favSpan.textContent = l.fav ? '★' : '☆';
       favSpan.addEventListener('click', function () {
         l.fav = !l.fav;
-        var idx2 = linksData.indexOf(l);
+        const idx2 = linksData.indexOf(l);
         if (idx2 !== -1) linksData[idx2] = l;
         renderLinks(cat);
       });
       itemDiv.appendChild(favSpan);
       /* Link */
-      var a = document.createElement('a');
+      const a = document.createElement('a');
       a.className = 'clLink';
       a.href = l.u;
       a.target = '_blank';
       a.rel = 'noopener';
-      var ico = document.createElement('span');
+      const ico = document.createElement('span');
       ico.className = 'clIco';
       ico.textContent = '🔗';
-      var label = document.createElement('span');
+      const label = document.createElement('span');
       label.appendChild(document.createTextNode(String(l.n || '')));
       var cat = document.createElement('span');
       cat.style.cssText = 'font-size:9px;opacity:.6';
@@ -6471,11 +6471,11 @@
       a.appendChild(label);
       a.addEventListener('click', function () {
         l.lastVisit = Date.now();
-        var idx3 = linksData.indexOf(l);
+        const idx3 = linksData.indexOf(l);
         if (idx3 !== -1) linksData[idx3] = l;
       });
       itemDiv.appendChild(a);
-      var del = document.createElement('button');
+      const del = document.createElement('button');
       del.textContent = '✕';
       del.className = 'clDel';
       del.style.cssText =
@@ -6484,7 +6484,7 @@
         e.preventDefault();
         e.stopPropagation();
         /* Find actual index in linksData, not filtered index */
-        var idx = linksData.indexOf(l);
+        const idx = linksData.indexOf(l);
         if (idx !== -1) {
           linksData.splice(idx, 1);
           renderLinks(cat);
@@ -6497,20 +6497,20 @@
 
   /* Init */
   function initDesktop() {
-    var desk = document.getElementById('deskIcons');
+    const desk = document.getElementById('deskIcons');
 
     /* Hide landing page (os-shell) once lock screen is dismissed */
-    var hideShell = function () {
-      var shellEl = document.querySelector('.os-shell');
+    const hideShell = function () {
+      const shellEl = document.querySelector('.os-shell');
       if (shellEl) shellEl.style.display = 'none';
     };
-    var lockEl = document.getElementById('lock');
+    const lockEl = document.getElementById('lock');
     if (lockEl && lockEl.classList.contains('hide')) {
       hideShell();
     } else {
       var hideShellInterval = setInterval(function () {
-        var lockEl2 = document.getElementById('lock');
-        var shellEl2 = document.querySelector('.os-shell');
+        const lockEl2 = document.getElementById('lock');
+        const shellEl2 = document.querySelector('.os-shell');
         if (
           lockEl2 &&
           lockEl2.classList.contains('hide') &&
@@ -6530,7 +6530,7 @@
 
     desktopApps.forEach(function (a) {
       a.iconSvg = svgIcon(a.icon);
-      var icon = makeIcon(a);
+      const icon = makeIcon(a);
       desk.appendChild(icon);
       /* Keyboard support */
       icon.addEventListener('keydown', function (e) {
@@ -6554,7 +6554,7 @@
       });
       /* Set ARIA labels for static cards */
       if (!card.getAttribute('aria-label')) {
-        var lbl = card.querySelector('.lbl');
+        const lbl = card.querySelector('.lbl');
         if (lbl) {
           card.setAttribute('aria-label', lbl.textContent + ' öffnen');
           card.setAttribute('role', 'button');
@@ -6562,10 +6562,10 @@
         }
       }
     });
-    var sm = document.getElementById('smList');
-    var smSearch = document.getElementById('smSearch');
+    const sm = document.getElementById('smList');
+    const smSearch = document.getElementById('smSearch');
     desktopApps.forEach(function (a) {
-      var it = document.createElement('div');
+      const it = document.createElement('div');
       it.className = 'smItem';
       it.setAttribute('data-app', a.id);
       it.setAttribute('data-label', a.label.toLowerCase());
@@ -6578,11 +6578,11 @@
     });
     if (smSearch) {
       smSearch.addEventListener('input', function () {
-        var q = this.value.toLowerCase();
-        var items = sm.querySelectorAll('.smItem');
+        const q = this.value.toLowerCase();
+        const items = sm.querySelectorAll('.smItem');
         items.forEach(function (it) {
-          var label = it.getAttribute('data-label') || '';
-          var appName = it.textContent.toLowerCase();
+          const label = it.getAttribute('data-label') || '';
+          const appName = it.textContent.toLowerCase();
           if (!q || label.indexOf(q) !== -1 || appName.indexOf(q) !== -1) {
             it.style.display = 'flex';
           } else {
@@ -6592,9 +6592,9 @@
       });
     }
     /* Theme Toggle Button in Taskbar */
-    var tbRight = document.getElementById('tbRight');
+    const tbRight = document.getElementById('tbRight');
     if (tbRight) {
-      var themeBtn = document.createElement('div');
+      const themeBtn = document.createElement('div');
       themeBtn.id = 'tbThemeToggle';
       themeBtn.title = 'Theme umschalten (Ctrl+Shift+L)';
       themeBtn.textContent = document.documentElement.dataset.theme === 'dark' ? '☀️' : '🌙';
@@ -6611,18 +6611,18 @@
 
   /* Browser — S1+S2+S3: Tabs + Shortcuts + Bookmarks + History */
   function buildBrowser() {
-    var content = document.getElementById('brContent');
-    var addr = document.getElementById('brAddr');
-    var tabsEl = document.getElementById('brTabs');
+    const content = document.getElementById('brContent');
+    const addr = document.getElementById('brAddr');
+    const tabsEl = document.getElementById('brTabs');
     if (!content) return;
     if (BROWSER_INITIALIZED) return;
     BROWSER_INITIALIZED = true;
 
-    var tabs = [];
-    var activeTab = 0;
-    var history = [];
-    var histIdx = -1;
-    var bookmarks = loadBookmarks();
+    let tabs = [];
+    let activeTab = 0;
+    let history = [];
+    let histIdx = -1;
+    const bookmarks = loadBookmarks();
 
     function uid() {
       return 'br' + Math.random().toString(36).slice(2, 8);
@@ -6659,7 +6659,7 @@
     function renderTabs() {
       tabsEl.innerHTML = '';
       tabs.forEach(function (t, i) {
-        var tab = document.createElement('div');
+        const tab = document.createElement('div');
         tab.className = 'brTab' + (i === activeTab ? ' active' : '');
         tab.innerHTML =
           '<span class="brTabTit">' + (t.title || t.url) + '</span><span class="brTabX">×</span>';
@@ -6678,7 +6678,7 @@
     function showTab(i) {
       if (i < 0 || i >= tabs.length) return;
       activeTab = i;
-      var t = tabs[i];
+      const t = tabs[i];
       addr.value = t.url;
       renderTabs();
       content.innerHTML = '';
@@ -6687,19 +6687,19 @@
         return;
       }
       /* Loading spinner */
-      var loading = document.createElement('div');
+      const loading = document.createElement('div');
       loading.className = 'brLoading';
       loading.innerHTML =
         '<div class="brSpinner"></div><div style="font-size:11px;color:var(--muted)">Wird geladen…</div>';
       content.appendChild(loading);
 
-      var iframe = document.createElement('iframe');
+      const iframe = document.createElement('iframe');
       iframe.id = 'brFrame';
       iframe.style.cssText = 'width:100%;height:100%;border:none;background:#fff';
       iframe.sandbox =
         'allow-scripts allow-same-origin allow-forms allow-popups allow-presentation';
       iframe.src = t.url;
-      var err = document.createElement('div');
+      const err = document.createElement('div');
       err.className = 'brErr';
       err.style.cssText =
         'display:none;height:100%;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center';
@@ -6708,14 +6708,14 @@
       content.appendChild(iframe);
       content.appendChild(err);
 
-      var brLoaded = false;
+      let brLoaded = false;
       iframe.onload = function () {
         brLoaded = true;
         loading.style.display = 'none';
         err.style.display = 'none';
         /* Update tab title from iframe */
         try {
-          var title = iframe.contentDocument.title;
+          const title = iframe.contentDocument.title;
           if (title) {
             tabs[i].title = title;
             renderTabs();
@@ -6749,21 +6749,21 @@
       addr.value = 'home';
       renderTabs();
       content.innerHTML = '';
-      var home = document.createElement('div');
+      const home = document.createElement('div');
       home.className = 'brHome';
       home.innerHTML =
         '<div class="brLogo">🌐</div><div class="brTitle">Web-Browser</div><div class="brSub">DuckDuckGo-Suche</div><div class="brSearch"><input id="brSearchIn" placeholder="Suchbegriff eingeben..."><button id="brSearchBtn">🔍</button></div><div class="brHomeBody"><div class="brBookmarks" id="brBookmarks"></div><div class="brQuick" id="brQuick"></div></div>';
       content.appendChild(home);
 
       /* Bookmarks */
-      var bmDiv = document.getElementById('brBookmarks');
+      const bmDiv = document.getElementById('brBookmarks');
       if (bookmarks.length) {
-        var bmTitle = document.createElement('div');
+        const bmTitle = document.createElement('div');
         bmTitle.className = 'brSectionTitle';
         bmTitle.textContent = '⭐ Lesezeichen';
         bmDiv.appendChild(bmTitle);
         bookmarks.forEach(function (b) {
-          var a = document.createElement('div');
+          const a = document.createElement('div');
           a.className = 'brBmItem';
           a.innerHTML = '<span>' + b.icon + '</span><span>' + b.name + '</span>';
           a.addEventListener('click', function () {
@@ -6774,12 +6774,12 @@
       }
 
       /* Quick Links */
-      var quick = document.getElementById('brQuick');
-      var qlTitle = document.createElement('div');
+      const quick = document.getElementById('brQuick');
+      const qlTitle = document.createElement('div');
       qlTitle.className = 'brSectionTitle';
       qlTitle.textContent = '🚀 Quick Links';
       quick.appendChild(qlTitle);
-      var links = [
+      const links = [
         ['Wikipedia', 'https://wikipedia.org', '📚'],
         ['GitHub', 'https://github.com', '💻'],
         ['Reddit', 'https://reddit.com', '📰'],
@@ -6788,7 +6788,7 @@
         ['Stack Overflow', 'https://stackoverflow.com', '💡'],
       ];
       links.forEach(function (l) {
-        var a = document.createElement('div');
+        const a = document.createElement('div');
         a.className = 'brQItem';
         a.innerHTML = '<span class="brQIco">' + l[2] + '</span><span>' + l[0] + '</span>';
         a.addEventListener('click', function () {
@@ -6798,10 +6798,10 @@
       });
 
       /* Search */
-      var si = document.getElementById('brSearchIn');
-      var sb = document.getElementById('brSearchBtn');
+      const si = document.getElementById('brSearchIn');
+      const sb = document.getElementById('brSearchBtn');
       function doSearch() {
-        var q = si.value.trim();
+        const q = si.value.trim();
         if (q) openUrl('https://duckduckgo.com/?q=' + encodeURIComponent(q));
       }
       si.addEventListener('keydown', function (e) {
@@ -6827,7 +6827,7 @@
     /* Navigate without pushing to history (for back/forward) */
     function navigateTo(u) {
       if (!u) return;
-      var fullUrl = u.startsWith('http') || u === 'home' ? u : 'https://' + u;
+      const fullUrl = u.startsWith('http') || u === 'home' ? u : 'https://' + u;
       tabs[activeTab] = { id: tabs[activeTab].id, url: fullUrl, title: fullUrl };
       showTab(activeTab);
     }
@@ -6872,7 +6872,7 @@
       openUrl('home');
     });
     document.getElementById('brBm').addEventListener('click', function () {
-      var u = prompt('Lesezeichen hinzufügen (URL):');
+      const u = prompt('Lesezeichen hinzufügen (URL):');
       if (u) {
         addBookmark(u, u, '🔖');
         toast('Lesezeichen: ' + u);
@@ -6906,16 +6906,16 @@
 
   /* Window resize — bottom-right corner */
   document.addEventListener('mousedown', function (e) {
-    var w = e.target.closest('.wnd');
+    const w = e.target.closest('.wnd');
     if (!w) return;
-    var rect = w.getBoundingClientRect();
-    var mr = rect.right - e.clientX,
+    const rect = w.getBoundingClientRect();
+    const mr = rect.right - e.clientX,
       mb = rect.bottom - e.clientY;
-    var edge = mr < 8 && mb < 8;
+    const edge = mr < 8 && mb < 8;
     if (!edge) return;
     e.preventDefault();
     e.stopPropagation();
-    var sx = e.clientX,
+    const sx = e.clientX,
       sy = e.clientY,
       ow = w.offsetWidth,
       oh = w.offsetHeight;
@@ -6935,19 +6935,19 @@
   document.addEventListener(
     'touchstart',
     function (e) {
-      var w = e.target.closest('.wnd');
+      const w = e.target.closest('.wnd');
       if (!w) return;
-      var rect = w.getBoundingClientRect();
-      var mr = rect.right - e.touches[0].clientX,
+      const rect = w.getBoundingClientRect();
+      const mr = rect.right - e.touches[0].clientX,
         mb = rect.bottom - e.touches[0].clientY;
-      var edge = mr < 20 && mb < 20;
+      const edge = mr < 20 && mb < 20;
       if (!edge) return;
-      var sx = e.touches[0].clientX,
+      const sx = e.touches[0].clientX,
         sy = e.touches[0].clientY,
         ow = w.offsetWidth,
         oh = w.offsetHeight;
       function onmove(ev) {
-        var t = ev.touches[0];
+        const t = ev.touches[0];
         w.style.width = Math.max(280, ow + (t.clientX - sx)) + 'px';
         w.style.height = Math.max(180, oh + (t.clientY - sy)) + 'px';
       }
@@ -6966,19 +6966,19 @@
     'touchstart',
     function (e) {
       if (e.touches.length !== 2) return;
-      var w = e.target.closest('.wnd');
+      const w = e.target.closest('.wnd');
       if (!w) return;
-      var dx = e.touches[0].clientX - e.touches[1].clientX;
-      var dy = e.touches[0].clientY - e.touches[1].clientY;
-      var startDist = Math.sqrt(dx * dx + dy * dy);
-      var startW = w.offsetWidth,
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const startDist = Math.sqrt(dx * dx + dy * dy);
+      const startW = w.offsetWidth,
         startH = w.offsetHeight;
       function onmove(ev) {
         if (ev.touches.length !== 2) return;
-        var dx2 = ev.touches[0].clientX - ev.touches[1].clientX;
-        var dy2 = ev.touches[0].clientY - ev.touches[1].clientY;
-        var dist = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-        var ratio = dist / startDist;
+        const dx2 = ev.touches[0].clientX - ev.touches[1].clientX;
+        const dy2 = ev.touches[0].clientY - ev.touches[1].clientY;
+        const dist = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+        const ratio = dist / startDist;
         w.style.width = Math.max(280, startW * ratio) + 'px';
         w.style.height = Math.max(180, startH * ratio) + 'px';
       }
@@ -6993,20 +6993,20 @@
   );
 
   /* Window drag via titlebar */
-  var dragging = null,
+  let dragging = null,
     dx = 0,
     dy = 0;
   function dragStart(e, w) {
     e.preventDefault();
-    var clientX = e.clientX || e.touches[0].clientX;
-    var clientY = e.clientY || e.touches[0].clientY;
+    const clientX = e.clientX || e.touches[0].clientX;
+    const clientY = e.clientY || e.touches[0].clientY;
     dragging = w;
     dx = clientX - w.offsetLeft;
     dy = clientY - w.offsetTop;
     function onmove(ev) {
-      var mx = ev.clientX || ev.touches[0].clientX;
-      var my = ev.clientY || ev.touches[0].clientY;
-      var nx = mx - dx,
+      const mx = ev.clientX || ev.touches[0].clientX;
+      const my = ev.clientY || ev.touches[0].clientY;
+      const nx = mx - dx,
         ny = my - dy;
       dragging.style.left = nx + 'px';
       dragging.style.top = ny + 'px';
@@ -7019,9 +7019,9 @@
       document.removeEventListener('touchend', onup);
       hideSnapHint();
       dragging = null;
-      var mx = (ev.clientX || ev.changedTouches[0].clientX) - dx;
-      var my = (ev.clientY || ev.changedTouches[0].clientY) - dy;
-      var wW = window.innerWidth;
+      const mx = (ev.clientX || ev.changedTouches[0].clientX) - dx;
+      const my = (ev.clientY || ev.changedTouches[0].clientY) - dy;
+      const wW = window.innerWidth;
       if (mx < 60) {
         snapWindow(w, 'left');
       } else if (mx > wW - w.offsetWidth - 60) {
@@ -7036,8 +7036,8 @@
     document.addEventListener('touchend', onup);
   }
   function showSnapHint(x, y) {
-    var wW = window.innerWidth;
-    var hint = document.getElementById('snapHint');
+    const wW = window.innerWidth;
+    let hint = document.getElementById('snapHint');
     if (!hint) {
       hint = document.createElement('div');
       hint.id = 'snapHint';
@@ -7057,31 +7057,31 @@
     }
   }
   function hideSnapHint() {
-    var h = document.getElementById('snapHint');
+    const h = document.getElementById('snapHint');
     if (h) h.style.display = 'none';
   }
   /* ===== File Editor ===== */
   function buildEditor() {
-    var area = document.getElementById('edArea');
-    var lines = document.getElementById('edLines');
-    var langSel = document.getElementById('edLang');
-    var stats = document.getElementById('edStats');
-    var toolbar = document.querySelector('.edToolbar');
+    const area = document.getElementById('edArea');
+    const lines = document.getElementById('edLines');
+    const langSel = document.getElementById('edLang');
+    const stats = document.getElementById('edStats');
+    const toolbar = document.querySelector('.edToolbar');
     if (!area || !lines || !toolbar) return;
 
-    var SK = 'editor_save';
-    var SK_LANG = 'editor_lang';
-    var undoStack = [];
-    var redoStack = [];
-    var lastContent = '';
+    const SK = 'editor_save';
+    const SK_LANG = 'editor_lang';
+    let undoStack = [];
+    let redoStack = [];
+    let lastContent = '';
 
     /* Load saved content */
     try {
-      var sv = localStorage.getItem(SK);
+      const sv = localStorage.getItem(SK);
       if (sv) area.value = sv;
     } catch (e) {}
     try {
-      var lg = localStorage.getItem(SK_LANG);
+      const lg = localStorage.getItem(SK_LANG);
       if (lg && langSel) langSel.value = lg;
     } catch (e) {}
 
@@ -7089,15 +7089,15 @@
     undoStack.push(lastContent);
 
     function updateLines() {
-      var content = area.value;
-      var lineCount = content.split('\n').length;
-      var html = '';
-      for (var i = 1; i <= lineCount; i++) {
+      const content = area.value;
+      const lineCount = content.split('\n').length;
+      let html = '';
+      for (let i = 1; i <= lineCount; i++) {
         html += '<div class="edLine">' + i + '</div>';
       }
       lines.innerHTML = html;
-      var words = content.trim().split(/\s+/).filter(Boolean).length;
-      var chars = content.length;
+      const words = content.trim().split(/\s+/).filter(Boolean).length;
+      const chars = content.length;
       stats.textContent = lineCount + ' Zeilen · ' + words + ' Wörter · ' + chars + ' Zeichen';
       try {
         localStorage.setItem(SK, content);
@@ -7105,7 +7105,7 @@
     }
 
     function saveUndo() {
-      var content = area.value;
+      const content = area.value;
       if (content !== lastContent) {
         undoStack.push(content);
         if (undoStack.length > 50) undoStack.shift();
@@ -7126,8 +7126,8 @@
     area.addEventListener('keydown', function (e) {
       if (e.key === 'Tab') {
         e.preventDefault();
-        var start = area.selectionStart;
-        var end = area.selectionEnd;
+        const start = area.selectionStart;
+        const end = area.selectionEnd;
         area.value = area.value.substring(0, start) + '  ' + area.value.substring(end);
         area.selectionStart = area.selectionEnd = start + 2;
         updateLines();
@@ -7146,7 +7146,7 @@
       if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
         e.preventDefault();
         if (redoStack.length > 0) {
-          var next = redoStack.pop();
+          const next = redoStack.pop();
           undoStack.push(next);
           area.value = next;
           lastContent = area.value;
@@ -7175,9 +7175,9 @@
 
     /* Syntax Highlighting (simple overlay) */
     function updateSyntax() {
-      var content = area.value;
-      var lang = langSel ? langSel.value : 'js';
-      var keywords = {
+      const content = area.value;
+      const lang = langSel ? langSel.value : 'js';
+      const keywords = {
         js: [
           'function',
           'var',
@@ -7274,7 +7274,7 @@
       /* Simple highlight: wrap keywords in span - disabled for now (performance) */
     }
 
-    var edNewBtn = toolbar.querySelector('#edNew');
+    const edNewBtn = toolbar.querySelector('#edNew');
     if (edNewBtn)
       edNewBtn.addEventListener('click', function () {
         if (area.value && !confirm('Inhalt verwerfen?')) return;
@@ -7286,18 +7286,18 @@
         toast('Neuer Editor');
       });
 
-    var edOpenBtn = toolbar.querySelector('#edOpen');
+    const edOpenBtn = toolbar.querySelector('#edOpen');
     if (edOpenBtn)
       edOpenBtn.addEventListener('click', function () {
-        var inp = document.createElement('input');
+        const inp = document.createElement('input');
         inp.type = 'file';
         inp.accept = '.txt,.js,.html,.css,.md,.json,.py,.sh,.xml,.csv';
         inp.style.display = 'none';
         document.body.appendChild(inp);
         inp.addEventListener('change', function () {
-          var file = inp.files[0];
+          const file = inp.files[0];
           if (!file) return;
-          var reader = new FileReader();
+          const reader = new FileReader();
           reader.onload = function (ev) {
             area.value = ev.target.result;
             undoStack = [area.value];
@@ -7315,10 +7315,10 @@
     var edSaveBtn = toolbar.querySelector('#edSave');
     if (edSaveBtn)
       edSaveBtn.addEventListener('click', function () {
-        var content = area.value;
-        var ext = 'txt';
+        const content = area.value;
+        let ext = 'txt';
         if (langSel) {
-          var map = {
+          const map = {
             md: 'md',
             html: 'html',
             css: 'css',
@@ -7331,8 +7331,8 @@
           };
           ext = map[langSel.value] || 'txt';
         }
-        var blob = new Blob([content], { type: 'text/plain' });
-        var a = document.createElement('a');
+        const blob = new Blob([content], { type: 'text/plain' });
+        const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = 'document.' + ext;
         a.click();
@@ -7350,9 +7350,9 @@
       toolbar.appendChild(edFindBtn);
     }
     edFindBtn.addEventListener('click', function () {
-      var search = prompt('Suchen:');
+      const search = prompt('Suchen:');
       if (!search) return;
-      var idx = area.value.indexOf(search);
+      const idx = area.value.indexOf(search);
       if (idx >= 0) {
         area.focus();
         area.setSelectionRange(idx, idx + search.length);
@@ -7363,7 +7363,7 @@
     });
 
     /* Replace button */
-    var edReplaceBtn = toolbar.querySelector('#edReplace');
+    let edReplaceBtn = toolbar.querySelector('#edReplace');
     if (!edReplaceBtn) {
       edReplaceBtn = document.createElement('button');
       edReplaceBtn.className = 'cBtn';
@@ -7372,12 +7372,12 @@
       toolbar.appendChild(edReplaceBtn);
     }
     edReplaceBtn.addEventListener('click', function () {
-      var search = prompt('Suchen:');
+      const search = prompt('Suchen:');
       if (!search) return;
-      var replace = prompt('Ersetzen durch:');
+      const replace = prompt('Ersetzen durch:');
       if (replace === null) return;
-      var content = area.value;
-      var count = (
+      const content = area.value;
+      const count = (
         content.match(new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []
       ).length;
       if (count > 0) {
@@ -7391,7 +7391,7 @@
     });
 
     /* Font size selector */
-    var edFontBtn = toolbar.querySelector('#edFont');
+    let edFontBtn = toolbar.querySelector('#edFont');
     if (!edFontBtn) {
       edFontBtn = document.createElement('select');
       edFontBtn.id = 'edFont';
@@ -7409,16 +7409,16 @@
 
   /* ===== Image Editor ===== */
   function buildImgeditor() {
-    var canvas = document.getElementById('ieCanvas');
-    var toolbar = document.querySelector('.ieToolbar');
+    const canvas = document.getElementById('ieCanvas');
+    const toolbar = document.querySelector('.ieToolbar');
     if (!canvas || !toolbar || !canvas.getContext) return;
 
-    var ctx = canvas.getContext('2d');
-    var origImage = null;
-    var cropStart = null,
+    const ctx = canvas.getContext('2d');
+    let origImage = null;
+    let cropStart = null,
       cropEnd = null,
       cropMode = false;
-    var drawState = { rotation: 0, filters: 'none' };
+    const drawState = { rotation: 0, filters: 'none' };
 
     canvas.width = 500;
     canvas.height = 350;
@@ -7430,16 +7430,16 @@
     ctx.fillText('Bild hierher ziehen oder laden', canvas.width / 2, canvas.height / 2);
 
     /* Undo/Redo + Layers */
-    var ieUndoStack = [],
+    let ieUndoStack = [],
       ieRedoStack = [];
-    var ieLayers = [];
-    var ieCurrentLayer = 0;
-    var ieSelectMode = false;
-    var ieSelectStart = null,
+    const ieLayers = [];
+    let ieCurrentLayer = 0;
+    const ieSelectMode = false;
+    const ieSelectStart = null,
       ieSelectEnd = null;
 
     function ieAddLayer(name) {
-      var layerCanvas = document.createElement('canvas');
+      const layerCanvas = document.createElement('canvas');
       layerCanvas.width = canvas.width;
       layerCanvas.height = canvas.height;
       ieLayers.push({
@@ -7466,12 +7466,12 @@
     function ieStamp(x, y) {
       /* Clone tool - copy from current layer and paste at offset */
       if (ieLayers.length === 0) return;
-      var src = ieLayers[ieCurrentLayer];
+      const src = ieLayers[ieCurrentLayer];
       if (!src) return;
       ieSaveState();
-      var stampSize = 30;
-      var srcCtx = src.canvas.getContext('2d');
-      var stampData = srcCtx.getImageData(
+      const stampSize = 30;
+      const srcCtx = src.canvas.getContext('2d');
+      const stampData = srcCtx.getImageData(
         Math.max(0, x - stampSize / 2),
         Math.max(0, y - stampSize / 2),
         stampSize,
@@ -7484,17 +7484,17 @@
     canvas.addEventListener('mousedown', function (e) {
       if (e.shiftKey && e.button === 0) {
         /* Shift+Click for clone stamp */
-        var rect = canvas.getBoundingClientRect();
+        const rect = canvas.getBoundingClientRect();
         ieStamp(e.clientX - rect.left, e.clientY - rect.top);
       }
     });
 
     /* Layer panel toggle */
-    var ieLayerBtn = document.createElement('button');
+    const ieLayerBtn = document.createElement('button');
     ieLayerBtn.className = 'cBtn';
     ieLayerBtn.textContent = 'Ebenen';
     ieLayerBtn.addEventListener('click', function () {
-      var panel = document.getElementById('ieLayersPanel');
+      let panel = document.getElementById('ieLayersPanel');
       if (panel) {
         panel.remove();
         return;
@@ -7510,11 +7510,11 @@
         renderLayerList();
       });
       function renderLayerList() {
-        var list = document.getElementById('ieLayerList');
+        const list = document.getElementById('ieLayerList');
         if (!list) return;
         list.innerHTML = '';
         ieLayers.forEach(function (layer, i) {
-          var item = document.createElement('div');
+          const item = document.createElement('div');
           item.className = 'ieLayerItem' + (i === ieCurrentLayer ? ' active' : '');
           item.innerHTML =
             '<input type="checkbox"' +
@@ -7549,7 +7549,7 @@
     }
     function ieRedo() {
       if (ieRedoStack.length > 0) {
-        var s = ieRedoStack.pop();
+        const s = ieRedoStack.pop();
         ieUndoStack.push(s);
         ctx.putImageData(s, 0, 0);
         toast('Wiederhergestellt');
@@ -7557,7 +7557,7 @@
     }
     /* Text tool */
     canvas.addEventListener('dblclick', function (e) {
-      var text = prompt('Text eingeben:');
+      const text = prompt('Text eingeben:');
       if (text) {
         ieSaveState();
         ctx.font = '20px IBM Plex Mono';
@@ -7570,15 +7570,15 @@
     ieResizeBtn.className = 'cBtn';
     ieResizeBtn.textContent = 'Größe ändern';
     ieResizeBtn.addEventListener('click', function () {
-      var w = prompt('Breite:', canvas.width);
+      const w = prompt('Breite:', canvas.width);
       if (!w) return;
-      var h = prompt('Höhe:', canvas.height);
+      const h = prompt('Höhe:', canvas.height);
       if (!h) return;
       ieSaveState();
-      var tmpCanvas = document.createElement('canvas');
+      const tmpCanvas = document.createElement('canvas');
       tmpCanvas.width = canvas.width;
       tmpCanvas.height = canvas.height;
-      var tmpCtx = tmpCanvas.getContext('2d');
+      const tmpCtx = tmpCanvas.getContext('2d');
       tmpCtx.drawImage(canvas, 0, 0);
       canvas.width = parseInt(w);
       canvas.height = parseInt(h);
@@ -7586,7 +7586,7 @@
     });
     toolbar.appendChild(ieResizeBtn);
     /* Rotate slider */
-    var ieRotateWrap = document.createElement('label');
+    const ieRotateWrap = document.createElement('label');
     ieRotateWrap.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:10px';
     ieRotateWrap.innerHTML =
       'Drehen: <input type="range" id="ieRotate" min="0" max="360" value="0" style="width:60px"><span id="ieRotateVal">0°</span>';
@@ -7597,12 +7597,12 @@
       applyFilters();
     });
     /* Undo/Redo buttons */
-    var ieUndoBtn = document.createElement('button');
+    const ieUndoBtn = document.createElement('button');
     ieUndoBtn.className = 'cBtn';
     ieUndoBtn.textContent = '↩';
     ieUndoBtn.title = 'Rückgängig';
     ieUndoBtn.addEventListener('click', ieUndo);
-    var ieRedoBtn = document.createElement('button');
+    const ieRedoBtn = document.createElement('button');
     ieRedoBtn.className = 'cBtn';
     ieRedoBtn.textContent = '↪';
     ieRedoBtn.title = 'Wiederhergestellt';
@@ -7612,7 +7612,7 @@
 
     function applyFilters() {
       if (!origImage) return;
-      var w = canvas.width,
+      const w = canvas.width,
         h = canvas.height;
       ctx.clearRect(0, 0, w, h);
       ctx.save();
@@ -7622,11 +7622,11 @@
       ctx.restore();
 
       if (drawState.filters !== 'none') {
-        var imgData = ctx.getImageData(0, 0, w, h);
-        var d = imgData.data;
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const d = imgData.data;
         if (drawState.filters === 'grayscale') {
           for (var i = 0; i < d.length; i += 4) {
-            var avg = (d[i] + d[i + 1] + d[i + 2]) / 3;
+            const avg = (d[i] + d[i + 1] + d[i + 2]) / 3;
             d[i] = avg;
             d[i + 1] = avg;
             d[i + 2] = avg;
@@ -7634,7 +7634,7 @@
           ctx.putImageData(imgData, 0, 0);
         } else if (drawState.filters === 'sepia') {
           for (var i = 0; i < d.length; i += 4) {
-            var r = d[i],
+            const r = d[i],
               g = d[i + 1],
               b = d[i + 2];
             d[i] = Math.min(255, r * 0.393 + g * 0.769 + b * 0.189);
@@ -7651,12 +7651,12 @@
           ctx.putImageData(imgData, 0, 0);
         } else if (drawState.filters === 'blur') {
           // Simple box blur
-          var data2 = ctx.getImageData(0, 0, w, h);
-          var d2 = data2.data;
-          for (var y = 1; y < h - 1; y++) {
-            for (var x = 1; x < w - 1; x++) {
-              var idx = (y * w + x) * 4;
-              for (var c = 0; c < 3; c++) {
+          const data2 = ctx.getImageData(0, 0, w, h);
+          const d2 = data2.data;
+          for (let y = 1; y < h - 1; y++) {
+            for (let x = 1; x < w - 1; x++) {
+              const idx = (y * w + x) * 4;
+              for (let c = 0; c < 3; c++) {
                 d2[idx + c] = Math.round(
                   (d[idx - w * 4 + c] + d[idx - 4 + c] + d[idx + 4 + c] + d[idx + w * 4 + c]) / 4,
                 );
@@ -7668,18 +7668,18 @@
       }
     }
 
-    var ieLoadBtn = toolbar.querySelector('#ieLoad');
+    const ieLoadBtn = toolbar.querySelector('#ieLoad');
     if (ieLoadBtn)
       ieLoadBtn.addEventListener('click', function () {
-        var inp = document.createElement('input');
+        const inp = document.createElement('input');
         inp.type = 'file';
         inp.accept = 'image/*';
         inp.style.display = 'none';
         document.body.appendChild(inp);
         inp.addEventListener('change', function () {
-          var file = inp.files[0];
+          const file = inp.files[0];
           if (!file) return;
-          var img = new Image();
+          const img = new Image();
           img.onload = function () {
             origImage = img;
             drawState.rotation = 0;
@@ -7696,14 +7696,14 @@
         inp.click();
       });
 
-    var ieFilterSel = toolbar.querySelector('#ieFilter');
+    const ieFilterSel = toolbar.querySelector('#ieFilter');
     if (ieFilterSel)
       ieFilterSel.addEventListener('change', function () {
         drawState.filters = this.value;
         applyFilters();
       });
 
-    var ieRotateBtn = toolbar.querySelector('#ieRotate');
+    const ieRotateBtn = toolbar.querySelector('#ieRotate');
     if (ieRotateBtn)
       ieRotateBtn.addEventListener('click', function () {
         if (!origImage) return;
@@ -7716,8 +7716,8 @@
     if (ieResizeBtn)
       ieResizeBtn.addEventListener('click', function () {
         if (!origImage) return;
-        var w = prompt('Breite (px):', canvas.width);
-        var h = prompt('Höhe (px):', canvas.height);
+        const w = prompt('Breite (px):', canvas.width);
+        const h = prompt('Höhe (px):', canvas.height);
         if (w && h) {
           canvas.width = parseInt(w);
           canvas.height = parseInt(h);
@@ -7725,7 +7725,7 @@
         }
       });
 
-    var ieCropBtn = toolbar.querySelector('#ieCrop');
+    const ieCropBtn = toolbar.querySelector('#ieCrop');
     if (ieCropBtn)
       ieCropBtn.addEventListener('click', function () {
         if (!origImage) return;
@@ -7742,12 +7742,12 @@
 
     canvas.addEventListener('mousedown', function (e) {
       if (!cropMode) return;
-      var r = canvas.getBoundingClientRect();
+      const r = canvas.getBoundingClientRect();
       cropStart = { x: e.clientX - r.left, y: e.clientY - r.top };
     });
     canvas.addEventListener('mousemove', function (e) {
       if (!cropMode || !cropStart) return;
-      var r = canvas.getBoundingClientRect();
+      const r = canvas.getBoundingClientRect();
       cropEnd = { x: e.clientX - r.left, y: e.clientY - r.top };
       applyFilters();
       ctx.save();
@@ -7759,16 +7759,16 @@
     });
     canvas.addEventListener('mouseup', function () {
       if (!cropMode || !cropStart || !cropEnd) return;
-      var w = Math.abs(cropEnd.x - cropStart.x);
-      var h = Math.abs(cropEnd.y - cropStart.y);
-      var x = Math.min(cropStart.x, cropEnd.x);
-      var y = Math.min(cropStart.y, cropEnd.y);
+      const w = Math.abs(cropEnd.x - cropStart.x);
+      const h = Math.abs(cropEnd.y - cropStart.y);
+      const x = Math.min(cropStart.x, cropEnd.x);
+      const y = Math.min(cropStart.y, cropEnd.y);
       if (w > 10 && h > 10) {
-        var imgData = ctx.getImageData(x, y, w, h);
+        const imgData = ctx.getImageData(x, y, w, h);
         canvas.width = w;
         canvas.height = h;
         ctx.putImageData(imgData, 0, 0);
-        var img = new Image();
+        const img = new Image();
         img.onload = function () {
           origImage = img;
         };
@@ -7777,24 +7777,24 @@
       cropStart = null;
       cropEnd = null;
       cropMode = false;
-      var btn = toolbar.querySelector('#ieCrop');
+      const btn = toolbar.querySelector('#ieCrop');
       if (btn) btn.style.background = '';
     });
 
-    var ieExportPngBtn = toolbar.querySelector('#ieExportPNG');
+    const ieExportPngBtn = toolbar.querySelector('#ieExportPNG');
     if (ieExportPngBtn)
       ieExportPngBtn.addEventListener('click', function () {
-        var a = document.createElement('a');
+        const a = document.createElement('a');
         a.download = 'image.png';
         a.href = canvas.toDataURL('image/png');
         a.click();
         toast('PNG exportiert');
       });
 
-    var ieExportJpgBtn = toolbar.querySelector('#ieExportJPG');
+    const ieExportJpgBtn = toolbar.querySelector('#ieExportJPG');
     if (ieExportJpgBtn)
       ieExportJpgBtn.addEventListener('click', function () {
-        var a = document.createElement('a');
+        const a = document.createElement('a');
         a.download = 'image.jpg';
         a.href = canvas.toDataURL('image/jpeg', 0.85);
         a.click();
@@ -7802,16 +7802,16 @@
       });
 
     /* Drag & Drop */
-    var container = document.querySelector('.ieContainer');
+    const container = document.querySelector('.ieContainer');
     if (container) {
       container.addEventListener('dragover', function (e) {
         e.preventDefault();
       });
       container.addEventListener('drop', function (e) {
         e.preventDefault();
-        var file = e.dataTransfer.files[0];
+        const file = e.dataTransfer.files[0];
         if (!file || !file.type.startsWith('image/')) return;
-        var img = new Image();
+        const img = new Image();
         img.onload = function () {
           origImage = img;
           drawState.rotation = 0;
@@ -7828,25 +7828,25 @@
 
   /* ===== Pomodoro Timer ===== */
   function buildPomodoro() {
-    var timeEl = document.getElementById('poTime');
-    var labelEl = document.getElementById('poLabel');
-    var ringFg = document.getElementById('poRingFg');
-    var startBtn = document.querySelector('#poStart');
-    var resetBtn = document.querySelector('#poReset');
-    var countEl = document.getElementById('poCount');
+    const timeEl = document.getElementById('poTime');
+    const labelEl = document.getElementById('poLabel');
+    const ringFg = document.getElementById('poRingFg');
+    const startBtn = document.querySelector('#poStart');
+    const resetBtn = document.querySelector('#poReset');
+    const countEl = document.getElementById('poCount');
     if (!timeEl) return;
 
-    var workMinInput = document.getElementById('poWorkMin');
-    var breakMinInput = document.getElementById('poBreakMin');
+    const workMinInput = document.getElementById('poWorkMin');
+    const breakMinInput = document.getElementById('poBreakMin');
 
-    var totalSeconds = 25 * 60;
-    var remaining = 25 * 60;
-    var interval = null;
-    var isWork = true;
-    var sessions = 0;
-    var running = false;
-    var radius = 54;
-    var circumference = 2 * Math.PI * radius;
+    let totalSeconds = 25 * 60;
+    let remaining = 25 * 60;
+    let interval = null;
+    let isWork = true;
+    let sessions = 0;
+    let running = false;
+    const radius = 54;
+    const circumference = 2 * Math.PI * radius;
 
     if (ringFg) {
       ringFg.style.strokeDasharray = circumference;
@@ -7854,14 +7854,14 @@
     }
 
     function fmt(s) {
-      var m = Math.floor(s / 60);
-      var sec = s % 60;
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
       return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
     }
 
     function update() {
       timeEl.textContent = fmt(remaining);
-      var pct = remaining / totalSeconds;
+      const pct = remaining / totalSeconds;
       if (ringFg) ringFg.style.strokeDashoffset = circumference * (1 - pct);
       if (isWork) {
         ringFg.style.stroke = 'var(--accent)';
@@ -7899,15 +7899,15 @@
     }
 
     function showBreakExercise() {
-      var exercises = [
+      const exercises = [
         'Tief ein- und ausatmen (5x)',
         'Dehnen',
         'Umhergehen',
         'Augen entspannen',
         'Wasser trinken',
       ];
-      var ex = exercises[Math.floor(Math.random() * exercises.length)];
-      var exDiv = document.getElementById('poExercise');
+      const ex = exercises[Math.floor(Math.random() * exercises.length)];
+      let exDiv = document.getElementById('poExercise');
       if (!exDiv) {
         exDiv = document.createElement('div');
         exDiv.id = 'poExercise';
@@ -7921,7 +7921,7 @@
     }
 
     /* Break exercise button */
-    var exBtn = document.createElement('button');
+    const exBtn = document.createElement('button');
     exBtn.className = 'cBtn';
     exBtn.textContent = 'Übung';
     exBtn.title = 'Pausen-Übung anzeigen';
@@ -7953,7 +7953,7 @@
     });
 
     /* Statistics */
-    var SK_STATS = 'pomodoro_stats';
+    const SK_STATS = 'pomodoro_stats';
     function loadStats() {
       try {
         return JSON.parse(localStorage.getItem(SK_STATS) || '{}');
@@ -7967,19 +7967,19 @@
       } catch (e) {}
     }
     function recordSession() {
-      var stats = loadStats();
-      var today = new Date().toISOString().split('T')[0];
+      const stats = loadStats();
+      const today = new Date().toISOString().split('T')[0];
       stats[today] = (stats[today] || 0) + 1;
       saveStats(stats);
       updateStats();
     }
     function updateStats() {
-      var stats = loadStats();
-      var today = new Date().toISOString().split('T')[0];
-      var total = Object.values(stats).reduce(function (a, b) {
+      const stats = loadStats();
+      const today = new Date().toISOString().split('T')[0];
+      const total = Object.values(stats).reduce(function (a, b) {
         return a + b;
       }, 0);
-      var statsEl = document.getElementById('poStats');
+      let statsEl = document.getElementById('poStats');
       if (!statsEl) {
         statsEl = document.createElement('div');
         statsEl.id = 'poStats';
@@ -8029,15 +8029,15 @@
 
     /* CSV Export */
     function exportStats() {
-      var stats = loadStats();
-      var csv = 'Date,Sessions\n';
+      const stats = loadStats();
+      let csv = 'Date,Sessions\n';
       Object.keys(stats)
         .sort()
         .forEach(function (d) {
           csv += d + ',' + stats[d] + '\n';
         });
-      var blob = new Blob([csv], { type: 'text/csv' });
-      var a = document.createElement('a');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'pomodoro-stats.csv';
       a.click();
@@ -8046,7 +8046,7 @@
     }
 
     /* Add export button next to reset */
-    var expBtn = document.createElement('button');
+    const expBtn = document.createElement('button');
     expBtn.className = 'cBtn';
     expBtn.textContent = 'CSV';
     expBtn.title = 'Statistik exportieren';
@@ -8069,19 +8069,19 @@
 
   /* ===== Notes App ===== */
   function buildNotes() {
-    var searchInp = document.getElementById('ntSearch');
-    var tagsEl = document.getElementById('ntTags');
-    var listEl = document.getElementById('ntList');
-    var titleInp = document.getElementById('ntTitle');
-    var tagInp = document.getElementById('ntTagInput');
-    var contentEl = document.getElementById('ntContent');
-    var previewEl = document.getElementById('ntPreview');
-    var saveBtn = document.querySelector('#ntSave');
-    var togglePrevBtn = document.querySelector('#ntTogglePreview');
-    var newBtn = document.querySelector('#ntNew');
+    const searchInp = document.getElementById('ntSearch');
+    const tagsEl = document.getElementById('ntTags');
+    const listEl = document.getElementById('ntList');
+    const titleInp = document.getElementById('ntTitle');
+    const tagInp = document.getElementById('ntTagInput');
+    const contentEl = document.getElementById('ntContent');
+    const previewEl = document.getElementById('ntPreview');
+    const saveBtn = document.querySelector('#ntSave');
+    const togglePrevBtn = document.querySelector('#ntTogglePreview');
+    const newBtn = document.querySelector('#ntNew');
 
     /* Encrypt button */
-    var encryptBtn = document.createElement('button');
+    const encryptBtn = document.createElement('button');
     encryptBtn.className = 'cBtn op';
     encryptBtn.textContent = '🔒';
     encryptBtn.title = 'Notizen verschlüsseln';
@@ -8094,7 +8094,7 @@
         }
         return;
       }
-      var pw = prompt('Passwort für Verschlüsselung:');
+      const pw = prompt('Passwort für Verschlüsselung:');
       if (pw && pw.length >= 4) {
         notesPassword = pw;
         saveNotes();
@@ -8107,7 +8107,7 @@
     saveBtn.parentNode.appendChild(encryptBtn);
 
     /* Drag & Drop Sort for note list items */
-    var dragItem = null;
+    let dragItem = null;
     listEl.addEventListener('dragstart', function (e) {
       if (e.target.classList.contains('ntItem')) {
         dragItem = e.target;
@@ -8119,12 +8119,12 @@
         e.target.style.opacity = '1';
         dragItem = null;
         /* Reorder notes array based on DOM order */
-        var items = listEl.querySelectorAll('.ntItem');
-        var newOrder = [];
+        const items = listEl.querySelectorAll('.ntItem');
+        const newOrder = [];
         items.forEach(function (item) {
-          var id = item.dataset.id;
+          const id = item.dataset.id;
           if (id) {
-            var n = notes.filter(function (x) {
+            const n = notes.filter(function (x) {
               return x.id === id;
             })[0];
             if (n) newOrder.push(n);
@@ -8138,7 +8138,7 @@
     });
     listEl.addEventListener('dragover', function (e) {
       e.preventDefault();
-      var afterElement = getDragAfterElement(listEl, e.clientY);
+      const afterElement = getDragAfterElement(listEl, e.clientY);
       if (afterElement == null) {
         listEl.appendChild(dragItem);
       } else {
@@ -8146,14 +8146,14 @@
       }
     });
     function getDragAfterElement(container, y) {
-      var draggableElements = [].concat.apply(
+      const draggableElements = [].concat.apply(
         [],
         container.querySelectorAll('.ntItem:not(.dragging)'),
       );
       return draggableElements.reduce(
         function (closest, child) {
-          var box = child.getBoundingClientRect();
-          var offset = y - box.top - box.height / 2;
+          const box = child.getBoundingClientRect();
+          const offset = y - box.top - box.height / 2;
           if (offset < 0 && offset > closest.offset) {
             return { offset: offset, element: child };
           } else {
@@ -8165,7 +8165,7 @@
     }
 
     /* Share button */
-    var shareBtn = document.createElement('button');
+    const shareBtn = document.createElement('button');
     shareBtn.className = 'cBtn op';
     shareBtn.textContent = 'Teilen';
     shareBtn.addEventListener('click', function () {
@@ -8173,34 +8173,34 @@
         toast('Keine Notiz ausgewählt');
         return;
       }
-      var n = notes.filter(function (x) {
+      const n = notes.filter(function (x) {
         return x.id === currentId;
       })[0];
       if (!n) return;
-      var data = btoa(encodeURIComponent(JSON.stringify({ t: n.title, c: n.content })));
-      var url = window.location.origin + window.location.pathname + '#note=' + data;
+      const data = btoa(encodeURIComponent(JSON.stringify({ t: n.title, c: n.content })));
+      const url = window.location.origin + window.location.pathname + '#note=' + data;
       prompt('Link kopieren:', url);
     });
     saveBtn.parentNode.appendChild(shareBtn);
 
     /* Trash button */
-    var trashBtn = document.createElement('button');
+    const trashBtn = document.createElement('button');
     trashBtn.className = 'cBtn op';
     trashBtn.textContent = 'Papierkorb';
     trashBtn.addEventListener('click', function () {
-      var trash = loadTrash();
+      const trash = loadTrash();
       if (!trash.length) {
         toast('Papierkorb leer');
         return;
       }
-      var list = trash
+      const list = trash
         .map(function (n, i) {
           return i + ': ' + (n.title || 'Ohne Titel');
         })
         .join('\n');
-      var idx = prompt('Wiederherstellen (Nr) oder leer:\n' + list);
+      const idx = prompt('Wiederherstellen (Nr) oder leer:\n' + list);
       if (idx !== null && idx !== '') {
-        var n = trash.splice(parseInt(idx), 1)[0];
+        const n = trash.splice(parseInt(idx), 1)[0];
         if (n) {
           notes.push(n);
           saveNotes();
@@ -8213,7 +8213,7 @@
     saveBtn.parentNode.appendChild(trashBtn);
 
     /* Autosave indicator */
-    var savedIndicator = document.createElement('span');
+    const savedIndicator = document.createElement('span');
     savedIndicator.id = 'ntSaved';
     savedIndicator.style.cssText =
       'font-size:10px;color:var(--ok);opacity:0;transition:opacity 0.3s';
@@ -8221,11 +8221,11 @@
     saveBtn.parentNode.appendChild(savedIndicator);
     if (!listEl) return;
 
-    var SK_NOTES = 'notes_data';
+    const SK_NOTES = 'notes_data';
     var currentId = null;
     var notes = [];
-    var filterTag = '';
-    var showPreview = false;
+    let filterTag = '';
+    let showPreview = false;
 
     var notesPassword = null;
     function loadNotes() {
@@ -8237,7 +8237,7 @@
     }
     function saveNotes() {
       try {
-        var data = notes;
+        let data = notes;
         if (notesPassword) {
           data = notes.map(function (n) {
             return {
@@ -8251,7 +8251,7 @@
         }
         localStorage.setItem(SK_NOTES, JSON.stringify(data));
       } catch (e) {}
-      var indicator = document.getElementById('ntSaved');
+      const indicator = document.getElementById('ntSaved');
       if (indicator) {
         indicator.textContent = 'Gespeichert';
         indicator.style.opacity = '1';
@@ -8277,7 +8277,7 @@
 
     /* Markdown-ish render */
     function mdRender(md) {
-      var escaped = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      let escaped = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       escaped = escaped.replace(/^### (.+)$/gm, '<h3>$1</h3>');
       escaped = escaped.replace(/^## (.+)$/gm, '<h2>$1</h2>');
       escaped = escaped.replace(/^# (.+)$/gm, '<h1>$1</h1>');
@@ -8292,7 +8292,7 @@
     }
 
     /* Trash */
-    var SK_TRASH = 'notes_trash';
+    const SK_TRASH = 'notes_trash';
     function loadTrash() {
       try {
         return JSON.parse(localStorage.getItem(SK_TRASH) || '[]');
@@ -8307,14 +8307,14 @@
     }
 
     function renderTags() {
-      var tags = {};
+      const tags = {};
       notes.forEach(function (n) {
         (n.tags || []).forEach(function (t) {
           tags[t] = (tags[t] || 0) + 1;
         });
       });
       tagsEl.innerHTML = '';
-      var allSpan = document.createElement('span');
+      const allSpan = document.createElement('span');
       allSpan.className = 'ntTag' + (filterTag === '' ? ' active' : '');
       allSpan.textContent = 'Alle (' + notes.length + ')';
       allSpan.addEventListener('click', function () {
@@ -8323,7 +8323,7 @@
       });
       tagsEl.appendChild(allSpan);
       Object.keys(tags).forEach(function (t) {
-        var s = document.createElement('span');
+        const s = document.createElement('span');
         s.className = 'ntTag' + (filterTag === t ? ' active' : '');
         s.textContent = t + ' (' + tags[t] + ')';
         s.addEventListener('click', function () {
@@ -8335,7 +8335,7 @@
     }
 
     function renderList() {
-      var q = (searchInp.value || '').toLowerCase();
+      const q = (searchInp.value || '').toLowerCase();
       listEl.innerHTML = '';
       notes
         .filter(function (n) {
@@ -8352,7 +8352,7 @@
           return b.updated - a.updated;
         })
         .forEach(function (n) {
-          var item = document.createElement('div');
+          const item = document.createElement('div');
           item.className = 'ntItem' + (n.id === currentId ? ' active' : '');
           item.innerHTML =
             '<div class="ntItemTitle">' +
@@ -8362,7 +8362,7 @@
             ' · ' +
             (n.tags || []).join(', ') +
             '</div>';
-          var del = document.createElement('button');
+          const del = document.createElement('button');
           del.className = 'ntItemDel';
           del.textContent = '×';
           del.addEventListener('click', function (e) {
@@ -8370,7 +8370,7 @@
             notes = notes.filter(function (x) {
               return x.id !== n.id;
             });
-            var trash = loadTrash();
+            const trash = loadTrash();
             trash.push(n);
             saveTrash(trash);
             saveNotes();
@@ -8389,7 +8389,7 @@
     }
 
     function loadNote(id) {
-      var n = notes.filter(function (x) {
+      const n = notes.filter(function (x) {
         return x.id === id;
       })[0];
       if (!n) return;
@@ -8415,9 +8415,9 @@
     }
 
     function saveCurrent() {
-      var title = titleInp.value.trim();
-      var content = contentEl.value;
-      var tags = (tagInp.value || '')
+      const title = titleInp.value.trim();
+      const content = contentEl.value;
+      const tags = (tagInp.value || '')
         .split(',')
         .map(function (t) {
           return t.trim();
@@ -8428,7 +8428,7 @@
         return;
       }
       if (currentId) {
-        var n = notes.filter(function (x) {
+        const n = notes.filter(function (x) {
           return x.id === currentId;
         })[0];
         if (n) {
@@ -8485,7 +8485,7 @@
       clearInterval(window.osIntervals[k]);
     });
     Object.keys(window.osTimeouts || {}).forEach(function (k) {
-      var v = window.osTimeouts[k];
+      const v = window.osTimeouts[k];
       if (typeof v === 'number') clearTimeout(v);
       else if (typeof v === 'function') {
         try {
@@ -8499,7 +8499,7 @@
 
 /* AMIBIOS Setup — iframe window */
 function buildAMIBIOS() {
-  var wrap = document.getElementById('ami-bios-wrap');
+  const wrap = document.getElementById('ami-bios-wrap');
   if (!wrap) return;
   wrap.innerHTML =
     '<iframe src="./assets/ami-bios-setup.html" style="width:100%;height:100%;border:none;background:#0d0e0f" sandbox="allow-scripts allow-same-origin"></iframe>';
@@ -8507,14 +8507,14 @@ function buildAMIBIOS() {
 
 /* Taskmanager */
 function buildTaskmgr() {
-  var body = document.getElementById('tmBody');
+  const body = document.getElementById('tmBody');
   if (!body) return;
-  var tabs = ['Prozesse', 'Leistung', 'App-Verlauf', 'Start', 'Benutzer'];
-  var activeTab = 'Prozesse';
-  var cpuHistory = [];
-  var ramHistory = [];
+  const tabs = ['Prozesse', 'Leistung', 'App-Verlauf', 'Start', 'Benutzer'];
+  let activeTab = 'Prozesse';
+  const cpuHistory = [];
+  const ramHistory = [];
   // Initialize with some base values
-  for (var i = 0; i < 30; i++) {
+  for (let i = 0; i < 30; i++) {
     cpuHistory.push(Math.random() * 40 + 10);
     ramHistory.push(Math.random() * 30 + 40);
   }
@@ -8526,12 +8526,12 @@ function buildTaskmgr() {
   }
 
   // App history tracking
-  var appHistory = [];
+  let appHistory = [];
   if (!window._tmAppHistory) window._tmAppHistory = [];
   appHistory = window._tmAppHistory;
 
   // Startup apps
-  var startupApps = [
+  const startupApps = [
     { name: 'System Explorer', enabled: true },
     { name: 'Taskmanager', enabled: true },
     { name: 'Audio Service', enabled: false },
@@ -8546,8 +8546,8 @@ function buildTaskmgr() {
 
   function getCpuUsage() {
     // Smooth CPU value with small random walk
-    var last = cpuHistory[cpuHistory.length - 1];
-    var next = Math.max(5, Math.min(95, last + (Math.random() - 0.5) * 10));
+    const last = cpuHistory[cpuHistory.length - 1];
+    const next = Math.max(5, Math.min(95, last + (Math.random() - 0.5) * 10));
     cpuHistory.push(next);
     if (cpuHistory.length > 30) cpuHistory.shift();
     return next;
@@ -8555,39 +8555,39 @@ function buildTaskmgr() {
 
   function getRamUsage() {
     // Smooth RAM value
-    var last = ramHistory[ramHistory.length - 1];
-    var next = Math.max(20, Math.min(90, last + (Math.random() - 0.5) * 5));
+    const last = ramHistory[ramHistory.length - 1];
+    const next = Math.max(20, Math.min(90, last + (Math.random() - 0.5) * 5));
     ramHistory.push(next);
     if (ramHistory.length > 30) ramHistory.shift();
     return next;
   }
 
   function renderProzesse(content) {
-    var wins = document.querySelectorAll('[data-app]');
+    const wins = document.querySelectorAll('[data-app]');
     if (!wins.length) {
       content.innerHTML = '<div class="mock">Keine offenen Fenster</div>';
       return;
     }
-    var table = document.createElement('div');
+    const table = document.createElement('div');
     table.className = 'tmTable';
-    var header = document.createElement('div');
+    const header = document.createElement('div');
     header.className = 'tmHeader';
     header.innerHTML =
       '<span class="col-name">Name</span><span class="col-cpu">CPU</span><span class="col-ram">Arbeitsspeicher</span><span class="col-status">Status</span><span class="col-action"></span>';
     table.appendChild(header);
 
-    var totalCpu = 0,
+    let totalCpu = 0,
       totalRam = 0;
     wins.forEach(function (w) {
-      var nameEl = w.querySelector('.wtxt');
+      const nameEl = w.querySelector('.wtxt');
       if (!nameEl) return;
-      var name = nameEl.textContent;
-      var id = w.getAttribute('data-app') || '';
-      var cpu = Math.random() * 15;
-      var ram = 20 + Math.floor(Math.random() * 80);
+      const name = nameEl.textContent;
+      const id = w.getAttribute('data-app') || '';
+      const cpu = Math.random() * 15;
+      const ram = 20 + Math.floor(Math.random() * 80);
       totalCpu += cpu;
       totalRam += ram;
-      var row = document.createElement('div');
+      const row = document.createElement('div');
       row.className = 'tmProc';
       row.innerHTML =
         '<span class="col-name">' +
@@ -8604,14 +8604,14 @@ function buildTaskmgr() {
           w.remove();
           renderContent();
         }, 200);
-        var tbIcon = document.getElementById('tb-' + w.getAttribute('data-app'));
+        const tbIcon = document.getElementById('tb-' + w.getAttribute('data-app'));
         if (tbIcon) tbIcon.remove();
       });
       table.appendChild(row);
     });
 
     content.appendChild(table);
-    var sum = document.createElement('div');
+    const sum = document.createElement('div');
     sum.className = 'tmSummary';
     sum.innerHTML =
       '<span>' +
@@ -8625,9 +8625,9 @@ function buildTaskmgr() {
   }
 
   function renderLeistung(content) {
-    var cpu = getCpuUsage();
-    var ram = getRamUsage();
-    var html = '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">';
+    const cpu = getCpuUsage();
+    const ram = getRamUsage();
+    let html = '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">';
     html +=
       '<div style="flex:1;min-width:180px"><div style="font-size:10px;color:var(--muted);margin-bottom:4px">CPU-Auslastung</div>';
     html += '<div class="tmBar"><div class="tmBarFill" style="width:' + cpu + '%"></div></div>';
@@ -8674,13 +8674,13 @@ function buildTaskmgr() {
       content.innerHTML = '<div class="mock">App-Verlauf ist leer</div>';
       return;
     }
-    var list = document.createElement('div');
+    const list = document.createElement('div');
     list.className = 'tmHistory';
     appHistory
       .slice()
       .reverse()
       .forEach(function (entry) {
-        var row = document.createElement('div');
+        const row = document.createElement('div');
         row.className = 'tmHistoryRow';
         row.innerHTML =
           '<span class="tmHistoryTime">' +
@@ -8696,10 +8696,10 @@ function buildTaskmgr() {
   }
 
   function renderStart(content) {
-    var list = document.createElement('div');
+    const list = document.createElement('div');
     list.className = 'tmStartup';
     startupApps.forEach(function (app) {
-      var row = document.createElement('div');
+      const row = document.createElement('div');
       row.className = 'tmStartupRow';
       row.innerHTML =
         '<span class="tmStartupName">' +
@@ -8707,7 +8707,7 @@ function buildTaskmgr() {
         '</span><label class="tmToggle"><input type="checkbox"' +
         (app.enabled ? ' checked="checked"' : '') +
         '><span class="tmToggleSlider"></span></label>';
-      var cb = row.querySelector('input');
+      const cb = row.querySelector('input');
       cb.addEventListener('change', function () {
         app.enabled = this.checked;
       });
@@ -8724,15 +8724,15 @@ function buildTaskmgr() {
   }
 
   function renderContent() {
-    var currentBody = document.getElementById('tmBody');
+    const currentBody = document.getElementById('tmBody');
     if (!currentBody) return;
     currentBody.innerHTML = '';
 
     // Tab bar
-    var tabBar = document.createElement('div');
+    const tabBar = document.createElement('div');
     tabBar.className = 'tmTabs';
     tabs.forEach(function (t) {
-      var tab = document.createElement('div');
+      const tab = document.createElement('div');
       tab.className = 'tmTab' + (t === activeTab ? ' active' : '');
       tab.textContent = t;
       tab.addEventListener('click', function () {
@@ -8744,7 +8744,7 @@ function buildTaskmgr() {
     currentBody.appendChild(tabBar);
 
     // Content area
-    var content = document.createElement('div');
+    const content = document.createElement('div');
     content.className = 'tmContent';
     if (activeTab === 'Prozesse') renderProzesse(content);
     else if (activeTab === 'Leistung') renderLeistung(content);
@@ -8780,12 +8780,12 @@ function buildTaskmgr() {
 
 /* Systeminfo */
 function buildSysinfo() {
-  var body = document.getElementById('siBody');
+  const body = document.getElementById('siBody');
   if (!body) return;
   body.innerHTML = '';
 
   /* Refresh Button */
-  var refreshBtn = document.createElement('button');
+  const refreshBtn = document.createElement('button');
   refreshBtn.className = 'siRefresh';
   refreshBtn.textContent = '↻ Aktualisieren';
   refreshBtn.onclick = function () {
@@ -8925,10 +8925,10 @@ function buildSysinfo() {
     navigator.mediaDevices
       .enumerateDevices()
       .then(function (devices) {
-        var cameras = devices.filter(function (d) {
+        const cameras = devices.filter(function (d) {
           return d.kind === 'videoinput';
         });
-        var mics = devices.filter(function (d) {
+        const mics = devices.filter(function (d) {
           return d.kind === 'audioinput';
         });
         addRow(
@@ -8950,22 +8950,22 @@ function buildSysinfo() {
   }
 
   function addSection(title) {
-    var sec = document.createElement('div');
+    const sec = document.createElement('div');
     sec.className = 'siSection';
     sec.textContent = title;
     body.appendChild(sec);
   }
   function addRow(key, val) {
-    var el = document.createElement('div');
+    const el = document.createElement('div');
     el.className = 'siRow';
     el.innerHTML = '<span class="siKey">' + key + '</span><span class="siVal">' + val + '</span>';
     body.appendChild(el);
   }
   function formatTime(seconds) {
     if (!seconds || seconds <= 0) return 'Sofort';
-    var h = Math.floor(seconds / 3600);
-    var m = Math.floor((seconds % 3600) / 60);
-    var s = Math.floor(seconds % 60);
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
     if (h > 0) return h + 'h ' + m + 'm';
     if (m > 0) return m + 'm ' + s + 's';
     return s + 's';
@@ -8974,7 +8974,7 @@ function buildSysinfo() {
 
 /* Kalender mit Ereignissen */
 function buildCalendar() {
-  var body = document.getElementById('calBody');
+  const body = document.getElementById('calBody');
   if (!body) return;
   if (CALENDAR_INITIALIZED) {
     renderCalendar();
@@ -8983,15 +8983,15 @@ function buildCalendar() {
   CALENDAR_INITIALIZED = true;
 
   // State
-  var today = new Date();
-  var viewYear = today.getFullYear();
-  var viewMonth = today.getMonth();
-  var selectedDay = today.getDate();
-  var events = loadEvents();
+  const today = new Date();
+  let viewYear = today.getFullYear();
+  let viewMonth = today.getMonth();
+  let selectedDay = today.getDate();
+  const events = loadEvents();
 
   function loadEvents() {
     try {
-      var parsed = JSON.parse(localStorage.getItem('macrohard_calendar_events') || '[]');
+      const parsed = JSON.parse(localStorage.getItem('macrohard_calendar_events') || '[]');
       return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
       return [];
@@ -9027,7 +9027,7 @@ function buildCalendar() {
 
   function renderCalendar() {
     body.innerHTML = '';
-    var monthNames = [
+    const monthNames = [
       'Januar',
       'Februar',
       'März',
@@ -9041,10 +9041,10 @@ function buildCalendar() {
       'November',
       'Dezember',
     ];
-    var dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+    const dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
     // Header with navigation
-    var header = document.createElement('div');
+    const header = document.createElement('div');
     header.className = 'calHeader';
     header.innerHTML =
       '<button class="calNav" id="calPrev">◀</button><span class="calTitle">' +
@@ -9055,30 +9055,30 @@ function buildCalendar() {
     body.appendChild(header);
 
     // Grid
-    var grid = document.createElement('div');
+    const grid = document.createElement('div');
     grid.className = 'calGrid';
     dayNames.forEach(function (d) {
       grid.innerHTML += '<div class="calDayName">' + d + '</div>';
     });
 
-    var firstDay = new Date(viewYear, viewMonth, 1).getDay();
-    var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-    var prevMonthDays = new Date(viewYear, viewMonth, 0).getDate();
-    var startOffset = (firstDay + 6) % 7;
+    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+    const prevMonthDays = new Date(viewYear, viewMonth, 0).getDate();
+    const startOffset = (firstDay + 6) % 7;
 
     // Previous month days
-    for (var i = startOffset - 1; i >= 0; i--) {
+    for (let i = startOffset - 1; i >= 0; i--) {
       grid.innerHTML += '<div class="calDay otherMonth">' + (prevMonthDays - i) + '</div>';
     }
     // Current month days
-    for (var day = 1; day <= daysInMonth; day++) {
-      var isToday =
+    for (let day = 1; day <= daysInMonth; day++) {
+      const isToday =
         day === today.getDate() &&
         viewMonth === today.getMonth() &&
         viewYear === today.getFullYear();
-      var isSelected = day === selectedDay;
+      const isSelected = day === selectedDay;
       var dayEvents = getEventsForDate(viewYear, viewMonth, day);
-      var hasEvents = dayEvents.length > 0;
+      const hasEvents = dayEvents.length > 0;
       grid.innerHTML +=
         '<div class="calDay' +
         (isToday ? ' today' : '') +
@@ -9092,18 +9092,18 @@ function buildCalendar() {
         '</div>';
     }
     // Next month days
-    var totalCells = startOffset + daysInMonth;
-    var remaining = 42 - totalCells;
-    for (var j = 1; j <= remaining; j++) {
+    const totalCells = startOffset + daysInMonth;
+    const remaining = 42 - totalCells;
+    for (let j = 1; j <= remaining; j++) {
       grid.innerHTML += '<div class="calDay otherMonth">' + j + '</div>';
     }
     body.appendChild(grid);
 
     // Event panel
-    var panel = document.createElement('div');
+    const panel = document.createElement('div');
     panel.className = 'calPanel';
     var dayEvents = getEventsForDate(viewYear, viewMonth, selectedDay);
-    var panelHtml =
+    let panelHtml =
       '<div class="calPanelHeader"><strong>' +
       selectedDay +
       '. ' +
@@ -9152,9 +9152,9 @@ function buildCalendar() {
       renderCalendar();
     });
     document.getElementById('calAddEvent').addEventListener('click', function () {
-      var title = prompt('Ereignis-Titel:');
+      const title = prompt('Ereignis-Titel:');
       if (!title) return;
-      var time = prompt('Zeit (HH:MM, leer für ganztägig):');
+      const time = prompt('Zeit (HH:MM, leer für ganztägig):');
       addEvent(viewYear, viewMonth, selectedDay, title, time);
     });
     grid.querySelectorAll('.calDay:not(.otherMonth)').forEach(function (el) {
@@ -9188,11 +9188,11 @@ function playSound(type) {
       soundCtx.resume();
       return; // Skip this call, will work next time
     }
-    var osc = soundCtx.createOscillator();
-    var gain = soundCtx.createGain();
+    const osc = soundCtx.createOscillator();
+    const gain = soundCtx.createGain();
     osc.connect(gain);
     gain.connect(soundCtx.destination);
-    var now = soundCtx.currentTime;
+    const now = soundCtx.currentTime;
     if (type === 'click') {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(800, now);
@@ -9239,17 +9239,17 @@ function playSound(type) {
 }
 
 function buildClock() {
-  var body = document.getElementById('clkBody');
+  const body = document.getElementById('clkBody');
   if (!body) return;
-  var mode = 'clock';
-  var timerInterval = null;
-  var stopwatchStart = null;
-  var stopwatchElapsed = 0;
-  var timerSound = new Audio(
+  let mode = 'clock';
+  let timerInterval = null;
+  let stopwatchStart = null;
+  let stopwatchElapsed = 0;
+  const timerSound = new Audio(
     'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQAA',
   );
   if (!window.osIntervals) window.osIntervals = {};
-  var clockIntervalId = setInterval(function () {
+  let clockIntervalId = setInterval(function () {
     if (mode === 'clock') render();
   }, 1000);
   window.osIntervals['clock_app'] = clockIntervalId;
@@ -9271,7 +9271,7 @@ function buildClock() {
   function render() {
     if (!document.getElementById('clkBody')) return;
     if (mode === 'clock') {
-      var now = new Date();
+      const now = new Date();
       body.innerHTML =
         '<div class="clkDisplay">' +
         now.toLocaleTimeString('de-DE') +
@@ -9290,7 +9290,7 @@ function buildClock() {
       body.innerHTML =
         '<div class="clkStopwatch" id="swDisplay">00:00.00</div><button class="cBtn" id="swStart">Start</button><button class="cBtn" id="swReset">Reset</button><div class="clkBtns"><button class="cBtn" data-mode="clock">Uhr</button><button class="cBtn" data-mode="timer">Timer</button><button class="cBtn" data-mode="stopwatch">Stoppuhr</button><button class="cBtn" data-mode="world">Weltzeit</button><button class="cBtn" data-mode="analog">Analog</button><button class="cBtn" data-mode="fullscreen">⛶</button></div>';
     } else if (mode === 'world') {
-      var zones = {
+      const zones = {
         Berlin: 'Europe/Berlin',
         New_York: 'America/New_York',
         Tokyo: 'Asia/Tokyo',
@@ -9300,9 +9300,9 @@ function buildClock() {
         Los_Angeles: 'America/Los_Angeles',
         Paris: 'Europe/Paris',
       };
-      var html = '<div class="clkWorldGrid">';
+      let html = '<div class="clkWorldGrid">';
       Object.keys(zones).forEach(function (city) {
-        var time = new Date().toLocaleTimeString('de-DE', {
+        const time = new Date().toLocaleTimeString('de-DE', {
           timeZone: zones[city],
           hour: '2-digit',
           minute: '2-digit',
@@ -9335,19 +9335,19 @@ function buildClock() {
       });
     });
     if (mode === 'timer') {
-      var tBtn = body.querySelector('#timerStart');
+      const tBtn = body.querySelector('#timerStart');
       if (tBtn)
         tBtn.addEventListener('click', function () {
           if (timerInterval) clearInterval(timerInterval);
-          var m = parseInt(body.querySelector('#timerMin').value) || 5;
-          var s = parseInt(body.querySelector('#timerSec').value) || 0;
-          var sec = m * 60 + s;
-          var display = body.querySelector('#timerDisplay');
+          const m = parseInt(body.querySelector('#timerMin').value) || 5;
+          const s = parseInt(body.querySelector('#timerSec').value) || 0;
+          let sec = m * 60 + s;
+          const display = body.querySelector('#timerDisplay');
           display.style.color = '';
           timerInterval = setInterval(function () {
             sec--;
-            var mm = Math.floor(sec / 60);
-            var ss = sec % 60;
+            const mm = Math.floor(sec / 60);
+            const ss = sec % 60;
             display.textContent = (mm < 10 ? '0' : '') + mm + ':' + (ss < 10 ? '0' : '') + ss;
             if (sec <= 0) {
               clearInterval(timerInterval);
@@ -9364,7 +9364,7 @@ function buildClock() {
         });
     }
     if (mode === 'stopwatch') {
-      var swBtn = body.querySelector('#swStart');
+      const swBtn = body.querySelector('#swStart');
       if (swBtn)
         swBtn.addEventListener('click', function () {
           if (timerInterval) {
@@ -9376,16 +9376,16 @@ function buildClock() {
           stopwatchStart = Date.now() - stopwatchElapsed;
           timerInterval = setInterval(function () {
             stopwatchElapsed = Date.now() - stopwatchStart;
-            var ms = stopwatchElapsed % 1000;
-            var s = Math.floor(stopwatchElapsed / 1000) % 60;
-            var m = Math.floor(stopwatchElapsed / 60000);
+            const ms = stopwatchElapsed % 1000;
+            const s = Math.floor(stopwatchElapsed / 1000) % 60;
+            const m = Math.floor(stopwatchElapsed / 60000);
             body.querySelector('#swDisplay').textContent =
               (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s + '.' + Math.floor(ms / 10);
           }, 10);
           window.osIntervals['clock_app_timer'] = timerInterval;
           swBtn.textContent = 'Stop';
         });
-      var swReset = body.querySelector('#swReset');
+      const swReset = body.querySelector('#swReset');
       if (swReset)
         swReset.addEventListener('click', function () {
           if (timerInterval) {
@@ -9407,7 +9407,7 @@ window.addEventListener('beforeunload', function () {
     clearInterval(window.osIntervals[k]);
   });
   Object.keys(window.osTimeouts || {}).forEach(function (k) {
-    var v = window.osTimeouts[k];
+    const v = window.osTimeouts[k];
     if (typeof v === 'number') clearTimeout(v);
     else if (typeof v === 'function') {
       try {
@@ -9419,57 +9419,57 @@ window.addEventListener('beforeunload', function () {
 
 /* Farbwähler */
 function buildColorpicker() {
-  var body = document.getElementById('cpBody');
+  const body = document.getElementById('cpBody');
   if (!body) return;
-  var preview = document.getElementById('cpPreview');
-  var input = document.getElementById('cpInput');
-  var hex = document.getElementById('cpHex');
-  var savedPalette = JSON.parse(localStorage.getItem('cp_palette') || '[]');
+  const preview = document.getElementById('cpPreview');
+  const input = document.getElementById('cpInput');
+  const hex = document.getElementById('cpHex');
+  const savedPalette = JSON.parse(localStorage.getItem('cp_palette') || '[]');
   function update(v) {
     preview.style.background = v;
     hex.value = v;
     input.value = v;
     /* Show complement */
-    var r = parseInt(v.substr(1, 2), 16);
-    var g = parseInt(v.substr(3, 2), 16);
-    var b = parseInt(v.substr(5, 2), 16);
-    var comp =
+    const r = parseInt(v.substr(1, 2), 16);
+    const g = parseInt(v.substr(3, 2), 16);
+    const b = parseInt(v.substr(5, 2), 16);
+    const comp =
       '#' +
       (255 - r).toString(16).padStart(2, '0') +
       (255 - g).toString(16).padStart(2, '0') +
       (255 - b).toString(16).padStart(2, '0');
-    var compEl = document.getElementById('cpComplement');
+    const compEl = document.getElementById('cpComplement');
     if (compEl) {
       compEl.style.background = comp;
       compEl.textContent = comp;
     }
     /* HSL */
-    var r1 = r / 255,
+    const r1 = r / 255,
       g1 = g / 255,
       b1 = b / 255;
-    var max = Math.max(r1, g1, b1),
+    const max = Math.max(r1, g1, b1),
       min = Math.min(r1, g1, b1);
-    var h,
+    let h,
       s,
       l = (max + min) / 2;
     if (max === min) {
       h = s = 0;
     } else {
-      var d = max - min;
+      const d = max - min;
       s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
       switch (max) {
-        case r1:
-          h = ((g1 - b1) / d + (g1 < b1 ? 6 : 0)) / 6;
-          break;
-        case g1:
-          h = ((b1 - r1) / d + 2) / 6;
-          break;
-        case b1:
-          h = ((r1 - g1) / d + 4) / 6;
-          break;
+      case r1:
+        h = ((g1 - b1) / d + (g1 < b1 ? 6 : 0)) / 6;
+        break;
+      case g1:
+        h = ((b1 - r1) / d + 2) / 6;
+        break;
+      case b1:
+        h = ((r1 - g1) / d + 4) / 6;
+        break;
       }
     }
-    var hslEl = document.getElementById('cpHSL');
+    const hslEl = document.getElementById('cpHSL');
     if (hslEl) {
       hslEl.textContent =
         'HSL: ' +
@@ -9486,17 +9486,17 @@ function buildColorpicker() {
   });
   /* Complement + HSL display */
   if (!document.getElementById('cpComplement')) {
-    var compDiv = document.createElement('div');
+    const compDiv = document.createElement('div');
     compDiv.id = 'cpComplement';
     compDiv.className = 'cpComplement';
     body.appendChild(compDiv);
-    var hslDiv = document.createElement('div');
+    const hslDiv = document.createElement('div');
     hslDiv.id = 'cpHSL';
     hslDiv.className = 'cpHSL';
     body.appendChild(hslDiv);
   }
   /* Save to palette */
-  var saveBtn = document.createElement('button');
+  const saveBtn = document.createElement('button');
   saveBtn.className = 'cBtn';
   saveBtn.textContent = 'Palette +';
   saveBtn.addEventListener('click', function () {
@@ -9509,14 +9509,14 @@ function buildColorpicker() {
   });
   body.appendChild(saveBtn);
   /* Palette display */
-  var paletteDiv = document.createElement('div');
+  const paletteDiv = document.createElement('div');
   paletteDiv.id = 'cpPalette';
   paletteDiv.className = 'cpPalette';
   body.appendChild(paletteDiv);
   function renderPalette() {
     paletteDiv.innerHTML = '';
     savedPalette.forEach(function (c) {
-      var sw = document.createElement('div');
+      const sw = document.createElement('div');
       sw.className = 'cpSwatch';
       sw.style.background = c;
       sw.title = c;
@@ -9532,18 +9532,18 @@ function buildColorpicker() {
 
 /* Passwort-Generator */
 function buildPwgen() {
-  var body = document.getElementById('pwBody');
+  const body = document.getElementById('pwBody');
   if (!body) return;
-  var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=';
-  var history = JSON.parse(localStorage.getItem('pw_history') || '[]');
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=';
+  const history = JSON.parse(localStorage.getItem('pw_history') || '[]');
   function generate(len, customChars) {
-    var c = customChars || chars;
-    var pw = '';
-    for (var i = 0; i < len; i++) pw += c[Math.floor(Math.random() * c.length)];
+    const c = customChars || chars;
+    let pw = '';
+    for (let i = 0; i < len; i++) pw += c[Math.floor(Math.random() * c.length)];
     return pw;
   }
   function strength(pw) {
-    var s = 0;
+    let s = 0;
     if (pw.length >= 8) s++;
     if (pw.length >= 12) s++;
     if (/[a-z]/.test(pw)) s++;
@@ -9554,16 +9554,16 @@ function buildPwgen() {
   }
   body.innerHTML =
     '<div class="pwLen">Länge: <input type="range" id="pwLen" min="6" max="32" value="16"><span id="pwLenVal">16</span></div><div class="pwCustom">Custom: <input type="text" id="pwCustom" placeholder="Zeichen (leer = alle)" style="width:100px"></div><div class="pwResult" id="pwResult"></div><div class="pwStrength" id="pwStrength"></div><button class="cBtn" id="pwBtn">Generieren</button><button class="cBtn" id="pwCopy">Kopieren</button><button class="cBtn" id="pwMulti">10x</button><button class="cBtn" id="pwHistoryBtn">Verlauf</button>';
-  var lenInput = body.querySelector('#pwLen');
-  var lenVal = body.querySelector('#pwLenVal');
+  const lenInput = body.querySelector('#pwLen');
+  const lenVal = body.querySelector('#pwLenVal');
   lenInput.addEventListener('input', function () {
     lenVal.textContent = this.value;
   });
   body.querySelector('#pwBtn').addEventListener('click', function () {
-    var custom = document.getElementById('pwCustom').value;
-    var pw = generate(parseInt(lenInput.value), custom || null);
+    const custom = document.getElementById('pwCustom').value;
+    const pw = generate(parseInt(lenInput.value), custom || null);
     body.querySelector('#pwResult').textContent = pw;
-    var s = strength(pw);
+    const s = strength(pw);
     body.querySelector('#pwStrength').innerHTML =
       '<span style="color:' +
       (s < 2 ? 'var(--danger)' : s < 4 ? 'var(--accent-2)' : 'var(--ok)') +
@@ -9575,12 +9575,12 @@ function buildPwgen() {
     localStorage.setItem('pw_history', JSON.stringify(history));
   });
   body.querySelector('#pwCopy').addEventListener('click', function () {
-    var pw = body.querySelector('#pwResult').textContent;
+    const pw = body.querySelector('#pwResult').textContent;
     if (pw && navigator.clipboard) navigator.clipboard.writeText(pw);
   });
   body.querySelector('#pwMulti').addEventListener('click', function () {
-    var pws = [];
-    for (var i = 0; i < 10; i++) pws.push(generate(parseInt(lenInput.value)));
+    const pws = [];
+    for (let i = 0; i < 10; i++) pws.push(generate(parseInt(lenInput.value)));
     body.querySelector('#pwResult').innerHTML = pws.join('<br>');
   });
   body.querySelector('#pwHistoryBtn').addEventListener('click', function () {
@@ -9596,13 +9596,13 @@ function buildPwgen() {
 
 /* QR-Generator */
 function buildQrgen() {
-  var body = document.getElementById('qrBody');
+  const body = document.getElementById('qrBody');
   if (!body) return;
-  var input = document.getElementById('qrInput');
-  var canvas = document.getElementById('qrCanvas');
-  var btn = document.getElementById('qrBtn');
-  var colorInput = document.getElementById('qrColor');
-  var sizeSelect = document.getElementById('qrSize');
+  const input = document.getElementById('qrInput');
+  const canvas = document.getElementById('qrCanvas');
+  const btn = document.getElementById('qrBtn');
+  let colorInput = document.getElementById('qrColor');
+  let sizeSelect = document.getElementById('qrSize');
   if (!colorInput) {
     colorInput = document.createElement('input');
     colorInput.type = 'color';
@@ -9617,30 +9617,30 @@ function buildQrgen() {
       '<option value="12">Klein</option><option value="20" selected>Mittel</option><option value="30">Groß</option>';
     body.insertBefore(sizeSelect, canvas);
     /* SVG Export */
-    var svgBtn = document.createElement('button');
+    const svgBtn = document.createElement('button');
     svgBtn.className = 'cBtn';
     svgBtn.textContent = 'SVG';
     svgBtn.addEventListener('click', function () {
-      var text = input.value.trim();
+      const text = input.value.trim();
       if (!text) return;
-      var size = parseInt(sizeSelect.value) || 20;
-      var fg = colorInput.value;
-      var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + ' ' + size + '">';
-      var grid = [];
-      for (var i = 0; i < size; i++) {
+      const size = parseInt(sizeSelect.value) || 20;
+      const fg = colorInput.value;
+      let svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + ' ' + size + '">';
+      const grid = [];
+      for (let i = 0; i < size; i++) {
         grid[i] = [];
-        for (var j = 0; j < size; j++) {
+        for (let j = 0; j < size; j++) {
           grid[i][j] = Math.random() > 0.5 ? 1 : 0;
         }
       }
-      for (var y = 0; y < size; y++)
-        for (var x = 0; x < size; x++) {
+      for (let y = 0; y < size; y++)
+        for (let x = 0; x < size; x++) {
           if (grid[y][x])
             svg += '<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="' + fg + '"/>';
         }
       svg += '</svg>';
-      var blob = new Blob([svg], { type: 'image/svg+xml' });
-      var a = document.createElement('a');
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'qrcode.svg';
       a.click();
@@ -9651,27 +9651,27 @@ function buildQrgen() {
     /* SVG Export */
   }
   btn.addEventListener('click', function () {
-    var text = input.value.trim();
+    const text = input.value.trim();
     if (!text) return;
     canvas.innerHTML = '';
-    var size = parseInt(sizeSelect.value) || 20;
-    var fg = colorInput.value;
-    var grid = [];
-    for (var i = 0; i < size; i++) {
+    const size = parseInt(sizeSelect.value) || 20;
+    const fg = colorInput.value;
+    const grid = [];
+    for (let i = 0; i < size; i++) {
       grid[i] = [];
-      for (var j = 0; j < size; j++) {
+      for (let j = 0; j < size; j++) {
         grid[i][j] = Math.random() > 0.5 ? 1 : 0;
       }
     }
-    var c = document.createElement('canvas');
+    const c = document.createElement('canvas');
     c.width = size * 8;
     c.height = size * 8;
-    var ctx = c.getContext('2d');
+    const ctx = c.getContext('2d');
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, c.width, c.height);
     ctx.fillStyle = fg;
-    for (var y = 0; y < size; y++)
-      for (var x = 0; x < size; x++) {
+    for (let y = 0; y < size; y++)
+      for (let x = 0; x < size; x++) {
         if (grid[y][x]) ctx.fillRect(x * 8, y * 8, 8, 8);
       }
     c.style.cssText = 'width:100%;height:100%;image-rendering:pixelated';
@@ -9682,21 +9682,21 @@ function buildQrgen() {
 
 /* Bildbetrachter */
 function buildViewer() {
-  var body = document.getElementById('vwBody');
+  const body = document.getElementById('vwBody');
   if (!body) return;
-  var placeholder = document.getElementById('vwPlaceholder');
-  var canvas = document.getElementById('vwCanvas');
-  var scale = 1;
-  var currentFile = null;
+  const placeholder = document.getElementById('vwPlaceholder');
+  const canvas = document.getElementById('vwCanvas');
+  let scale = 1;
+  let currentFile = null;
   body.addEventListener('dragover', function (e) {
     e.preventDefault();
   });
   body.addEventListener('drop', function (e) {
     e.preventDefault();
-    var file = e.dataTransfer.files[0];
+    const file = e.dataTransfer.files[0];
     if (!file || !file.type.startsWith('image/')) return;
     currentFile = file;
-    var img = new Image();
+    const img = new Image();
     img.onload = function () {
       canvas.width = img.width;
       canvas.height = img.height;
@@ -9706,7 +9706,7 @@ function buildViewer() {
       scale = 1;
       canvas.style.transform = 'scale(1)';
       /* Show image info */
-      var info = document.getElementById('vwInfo');
+      const info = document.getElementById('vwInfo');
       if (info) {
         info.textContent =
           img.width + '×' + img.height + ' · ' + (file.size / 1024).toFixed(1) + ' KB';
@@ -9715,7 +9715,7 @@ function buildViewer() {
     img.src = URL.createObjectURL(file);
   });
   if (!document.getElementById('vwControls')) {
-    var controls = document.createElement('div');
+    const controls = document.createElement('div');
     controls.id = 'vwControls';
     controls.className = 'vwControls';
     controls.innerHTML =
@@ -9741,14 +9741,14 @@ function buildViewer() {
 
 /* Tic-Tac-Toe */
 function buildGame() {
-  var body = document.getElementById('gmBody');
+  const body = document.getElementById('gmBody');
   if (!body) return;
-  var board = ['', '', '', '', '', '', '', '', ''];
-  var player = 'X';
-  var gameOver = false;
-  var mode = 'pvp';
-  var boardSize = 3;
-  var winCombos = [
+  let board = ['', '', '', '', '', '', '', '', ''];
+  let player = 'X';
+  let gameOver = false;
+  let mode = 'pvp';
+  let boardSize = 3;
+  let winCombos = [
     [0, 1, 2],
     [3, 4, 5],
     [6, 7, 8],
@@ -9759,8 +9759,8 @@ function buildGame() {
     [2, 4, 6],
   ];
   function checkWin() {
-    for (var i = 0; i < winCombos.length; i++) {
-      var a = winCombos[i][0],
+    for (let i = 0; i < winCombos.length; i++) {
+      const a = winCombos[i][0],
         b = winCombos[i][1],
         c = winCombos[i][2];
       if (board[a] && board[a] === board[b] && board[a] === board[c]) return board[a];
@@ -9769,7 +9769,7 @@ function buildGame() {
     return null;
   }
   function aiMove() {
-    var empty = board
+    const empty = board
       .map(function (c, i) {
         return c === '' ? i : null;
       })
@@ -9798,7 +9798,7 @@ function buildGame() {
     /* Take center */
     if (board[4] === '') return 4;
     /* Take corner */
-    var corners = [0, 2, 6, 8].filter(function (i) {
+    const corners = [0, 2, 6, 8].filter(function (i) {
       return board[i] === '';
     });
     if (corners.length) return corners[Math.floor(Math.random() * corners.length)];
@@ -9819,7 +9819,7 @@ function buildGame() {
       ];
     } else {
       /* 4x4: rows, cols, diagonals */
-      for (var i = 0; i < 4; i++) {
+      for (let i = 0; i < 4; i++) {
         winCombos.push([i * 4, i * 4 + 1, i * 4 + 2, i * 4 + 3]);
         winCombos.push([i, i + 4, i + 8, i + 12]);
       }
@@ -9832,9 +9832,9 @@ function buildGame() {
       '<div class="gmStatus">' +
       (gameOver ? 'Spiel vorbei!' : 'Spieler ' + player + ' ist dran') +
       '</div><div class="gmMode"><button class="cBtn" id="gmPvP">PvP</button><button class="cBtn" id="gmPvE">vs CPU</button><button class="cBtn" id="gm4x4">4×4</button></div><div class="gmGrid"></div><button class="cBtn" id="gmReset">Neustart</button>';
-    var grid = body.querySelector('.gmGrid');
+    const grid = body.querySelector('.gmGrid');
     board.forEach(function (cell, i) {
-      var b = document.createElement('button');
+      const b = document.createElement('button');
       b.className =
         'gmCell' + (cell ? ' disabled' : '') + (cell === 'X' ? ' gmX' : cell === 'O' ? ' gmO' : '');
       b.textContent = cell;
@@ -9842,7 +9842,7 @@ function buildGame() {
       b.addEventListener('click', function () {
         if (gameOver || board[i]) return;
         board[i] = player;
-        var win = checkWin();
+        const win = checkWin();
         if (win) {
           gameOver = true;
           render();
@@ -9852,10 +9852,10 @@ function buildGame() {
         render();
         if (mode === 'pve' && player === 'O' && !gameOver) {
           setTimeout(function () {
-            var move = aiMove();
+            const move = aiMove();
             if (move >= 0) {
               board[move] = 'O';
-              var win2 = checkWin();
+              const win2 = checkWin();
               if (win2) {
                 gameOver = true;
                 render();
@@ -9869,7 +9869,7 @@ function buildGame() {
       });
       grid.appendChild(b);
     });
-    var win = checkWin();
+    const win = checkWin();
     if (win) {
       body.querySelector('.gmStatus').textContent =
         win === 'tie' ? 'Unentschieden!' : 'Spieler ' + win + ' gewinnt!';
@@ -9907,7 +9907,7 @@ window.addEventListener('beforeunload', function () {
     clearInterval(window.osIntervals[k]);
   });
   Object.keys(window.osTimeouts || {}).forEach(function (k) {
-    var v = window.osTimeouts[k];
+    const v = window.osTimeouts[k];
     if (typeof v === 'number') clearTimeout(v);
     else if (typeof v === 'function') {
       try {

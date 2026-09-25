@@ -10,7 +10,7 @@ const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 test('storage facade is loaded, but incomplete legacy modules are not', () => {
   assert.match(index, /assets\/js\/storage\.js/);
   assert.doesNotMatch(index, /assets\/js\/(main|i18n|window-manager)\.js/);
-  assert.match(index, /assets\/app\.js\?v=55/);
+  assert.match(index, /assets\/app\.js\?v=56/);
 });
 
 test('legacy window manager remains documented as an incomplete parallel implementation', () => {
