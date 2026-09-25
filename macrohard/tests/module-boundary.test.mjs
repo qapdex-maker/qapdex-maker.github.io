@@ -12,7 +12,7 @@ test('legacy facades are loaded, incomplete parallel modules are not', () => {
   assert.match(index, /assets\/js\/notes-crypto\.js/);
   assert.match(index, /assets\/js\/editor\.js/);
   assert.doesNotMatch(index, /assets\/js\/(main|i18n|window-manager)\.js/);
-  assert.match(index, /assets\/app\.js\?v=62/);
+  assert.match(index, /assets\/app\.js\?v=63/);
 });
 
 test('legacy window manager remains documented as an incomplete parallel implementation', () => {

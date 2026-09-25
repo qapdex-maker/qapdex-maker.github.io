@@ -3676,6 +3676,24 @@
       { f: 400, n: '80 Horn', c: '#ff2', file: '80horn' },
       { f: 150, n: 'BadEarth', c: '#2ff', file: 'bad earth' },
       { f: 100, n: '808 Tom', c: '#f2f', file: '808tom' },
+      { f: 60, n: 'MP Kick 1', c: '#ff4000', file: 'mp/mp-kick1' },
+      { f: 120, n: 'MP Kick 2', c: '#ff6000', file: 'mp/mp-kick2' },
+      { f: 180, n: 'MP Kick 3', c: '#ff8000', file: 'mp/mp-kick3' },
+      { f: 200, n: 'MP Snare 1', c: '#2547ff', file: 'mp/mp-snare1' },
+      { f: 260, n: 'MP Snare 2', c: '#4050ff', file: 'mp/mp-snare2' },
+      { f: 320, n: 'MP Snare 3', c: '#6060ff', file: 'mp/mp-snare3' },
+      { f: 600, n: 'MP Clap 1', c: '#0ff', file: 'mp/mp-clap1' },
+      { f: 700, n: 'MP Clap 2', c: '#2ff', file: 'mp/mp-clap2' },
+      { f: 8000, n: 'MP Hat 1', c: '#ffd400', file: 'mp/mp-hat1' },
+      { f: 8500, n: 'MP Hat 2', c: '#ffe000', file: 'mp/mp-hat2' },
+      { f: 9000, n: 'MP Hat 3', c: '#ff8000', file: 'mp/mp-hat3' },
+      { f: 9500, n: 'MP Hat 4', c: '#ff6000', file: 'mp/mp-hat4' },
+      { f: 10000, n: 'MP Hat 5', c: '#ff4000', file: 'mp/mp-hat5' },
+      { f: 10500, n: 'MP Hat 6', c: '#ff0000', file: 'mp/mp-hat6' },
+      { f: 90, n: 'MP Tom 1', c: '#0f0', file: 'mp/mp-tom1' },
+      { f: 110, n: 'MP Tom 2', c: '#00f', file: 'mp/mp-tom2' },
+      { f: 30, n: 'MP Rim 1', c: '#f0f', file: 'mp/mp-perc1' },
+      { f: 500, n: 'MP Rim 2', c: '#ff0', file: 'mp/mp-perc2' },
     ];
 
     const SEQ_CUSTOM_KEY = 'seq_custom_samples';
@@ -3746,7 +3764,7 @@
             .catch(reject);
         });
       }
-      return fetch('./assets/samples/' + encodeURIComponent(libEntry.file) + '.mp3').then(
+      return fetch('./assets/samples/' + libEntry.file + '.mp3').then(
         function (r) {
           return r.arrayBuffer();
         },
@@ -3754,7 +3772,8 @@
     }
 
     // Default 8 tracks (first from library)
-    let seqTracks = [0, 1, 2, 3, 4, 5, 6, 7];
+    // Start auf den Musicpack-One-Shots (Kick/Snare/Clap/HiHat x2).
+    let seqTracks = [31, 34, 36, 37, 38, 39, 40, 41];
 
     function initSequencer() {
       const pad = document.getElementById('musBeatpad');
@@ -4907,110 +4926,36 @@
 
     /* === Radio Browser === */
     const fallbackStations = [
-      {
-        name: 'SomaFM: DEF CON Radio',
-        u: 'https://ice1.somafm.com/defcon-128-mp3',
-        codec: 'MP3',
-        votes: 5000,
-      },
-      {
-        name: 'SomaFM: Groove Salad',
-        u: 'https://ice1.somafm.com/groovesalad-128-mp3',
-        codec: 'MP3',
-        votes: 4500,
-      },
-      {
-        name: 'SomaFM: Fluid',
-        u: 'https://ice1.somafm.com/fluid-128-mp3',
-        codec: 'MP3',
-        votes: 4000,
-      },
-      {
-        name: 'SomaFM: Vaporwaves',
-        u: 'https://ice1.somafm.com/vaporwaves-128-mp3',
-        codec: 'MP3',
-        votes: 3800,
-      },
-      {
-        name: 'SomaFM: Beat Blender',
-        u: 'https://ice1.somafm.com/beatblender-128-mp3',
-        codec: 'MP3',
-        votes: 3500,
-      },
-      {
-        name: 'SomaFM: Drone Zone',
-        u: 'https://ice1.somafm.com/dronezone-128-mp3',
-        codec: 'MP3',
-        votes: 3200,
-      },
-      {
-        name: 'SomaFM: Suburbs of Goa',
-        u: 'https://ice1.somafm.com/suburbsofgoa-128-mp3',
-        codec: 'MP3',
-        votes: 3000,
-      },
-      {
-        name: 'SomaFM: Underground 80s',
-        u: 'https://ice1.somafm.com/u80s-128-mp3',
-        codec: 'MP3',
-        votes: 2800,
-      },
-      {
-        name: 'SomaFM: Deep Space One',
-        u: 'https://ice1.somafm.com/deepspaceone-128-mp3',
-        codec: 'MP3',
-        votes: 2600,
-      },
-      {
-        name: 'SomaFM: Lush',
-        u: 'https://ice1.somafm.com/lush-128-mp3',
-        codec: 'MP3',
-        votes: 2000,
-      },
-      {
-        name: 'Radio Paradise',
-        u: 'https://stream.radioparadise.com/aac-320',
-        codec: 'AAC',
-        votes: 4000,
-      },
-      {
-        name: 'FIP Radio',
-        u: 'https://icecast.radiofrance.fr/fip-midfi.mp3',
-        codec: 'MP3',
-        votes: 3500,
-      },
-      {
-        name: 'Jazz Radio',
-        u: 'https://jazz-wr01.ice.infomaniak.ch/jazz-wr01-128.mp3',
-        codec: 'MP3',
-        votes: 2000,
-      },
-      {
-        name: 'BBC World Service',
-        u: 'https://stream.live.vc.bbcmedia.co.uk/bbc_world_service',
-        codec: 'MP3',
-        votes: 2400,
-      },
-      {
-        name: 'NPR News',
-        u: 'https://npr-ice.streamguys1.com/live.mp3',
-        codec: 'MP3',
-        votes: 2000,
-      },
-      { name: 'WNYC FM', u: 'https://fm939.wnyc.org/wnycfm', codec: 'MP3', votes: 1500 },
-      {
-        name: 'KEXP FM',
-        u: 'https://kexp-mp3-128.streamguys1.com/kexp128.mp3',
-        codec: 'MP3',
-        votes: 1800,
-      },
-      {
-        name: 'Deutschlandfunk',
-        u: 'https://st01.dlf.de/dlf/01/128/mp3/stream.mp3',
-        codec: 'MP3',
-        votes: 2000,
-      },
-    ];
+      { name: 'SomaFM: DEF CON Radio', u: 'https://ice1.somafm.com/defcon-128-mp3', codec: 'MP3', votes: 5000 },
+      { name: 'SomaFM: Groove Salad', u: 'https://ice1.somafm.com/groovesalad-128-mp3', codec: 'MP3', votes: 4500 },
+      { name: 'SomaFM: Fluid', u: 'https://ice1.somafm.com/fluid-128-mp3', codec: 'MP3', votes: 4200 },
+      { name: 'SomaFM: Vaporwaves', u: 'https://ice1.somafm.com/vaporwaves-128-mp3', codec: 'MP3', votes: 4000 },
+      { name: 'SomaFM: Beat Blender', u: 'https://ice1.somafm.com/beatblender-128-mp3', codec: 'MP3', votes: 3900 },
+      { name: 'SomaFM: Drone Zone', u: 'https://ice1.somafm.com/dronezone-128-mp3', codec: 'MP3', votes: 3800 },
+      { name: 'SomaFM: Suburbs of Goa', u: 'https://ice1.somafm.com/suburbsofgoa-128-mp3', codec: 'MP3', votes: 3700 },
+      { name: 'SomaFM: Underground 80s', u: 'https://ice1.somafm.com/u80s-128-mp3', codec: 'MP3', votes: 3600 },
+      { name: 'SomaFM: Deep Space One', u: 'https://ice1.somafm.com/deepspaceone-128-mp3', codec: 'MP3', votes: 3500 },
+      { name: 'SomaFM: Secret Agent', u: 'https://ice1.somafm.com/secretagent-128-mp3', codec: 'MP3', votes: 3400 },
+      { name: 'SomaFM: Space Station Soma', u: 'https://ice1.somafm.com/spacestation-128-mp3', codec: 'MP3', votes: 3300 },
+      { name: 'SomaFM: Lush', u: 'https://ice1.somafm.com/lush-128-mp3', codec: 'MP3', votes: 3200 },
+      { name: 'Radio Paradise Main', u: 'https://stream.radioparadise.com/mp3-128', codec: 'MP3', votes: 4800 },
+      { name: 'Radio Paradise Mellow', u: 'https://stream.radioparadise.com/mellow-128', codec: 'AAC', votes: 4100 },
+      { name: 'Radio Paradise Rock', u: 'https://stream.radioparadise.com/rock-128', codec: 'AAC', votes: 3000 },
+      { name: 'FIP', u: 'https://icecast.radiofrance.fr/fip-midfi.mp3', codec: 'MP3', votes: 4400 },
+      { name: 'France Inter', u: 'https://icecast.radiofrance.fr/franceinter-midfi.mp3', codec: 'MP3', votes: 4300 },
+      { name: 'France Musique', u: 'https://icecast.radiofrance.fr/francemusique-midfi.mp3', codec: 'MP3', votes: 3600 },
+      { name: 'FluxFM', u: 'https://streams.fluxfm.de/fluxfm/mp3-320', codec: 'MP3', votes: 3500 },
+      { name: 'FM4 (ORF)', u: 'https://orf-live.ors-shoutcast.at/fm4-q2a', codec: 'MP3', votes: 3300 },
+      { name: 'Radio Bob', u: 'https://streams.radiobob.de/bob-live/mp3-192', codec: 'MP3', votes: 2900 },
+      { name: 'Deutschlandfunk', u: 'https://st01.dlf.de/dlf/01/128/mp3/stream.mp3', codec: 'MP3', votes: 3100 },
+      { name: 'WDR 1Live', u: 'https://wdr-1live-live.icecastssl.wdr.de/wdr/1live/live/mp3/128/stream.mp3', codec: 'MP3', votes: 3200 },
+      { name: 'KEXP 90.3 Seattle', u: 'https://kexp-mp3-128.streamguys1.com/kexp128.mp3', codec: 'MP3', votes: 2800 },
+      { name: 'NPR Music', u: 'https://npr-ice.streamguys1.com/live.mp3', codec: 'MP3', votes: 2700 },
+      { name: 'WNYC FM', u: 'https://fm939.wnyc.org/wnycfm', codec: 'MP3', votes: 2500 },
+      { name: 'Jazz Radio', u: 'https://jazz-wr01.ice.infomaniak.ch/jazz-wr01-128.mp3', codec: 'MP3', votes: 2400 },
+      { name: 'NTS Radio 1', u: 'https://stream-relay-geo.ntslive.net/stream', codec: 'MP3', votes: 2200 },
+      { name: 'NTS Radio 2', u: 'https://stream-relay-geo.ntslive.net/stream2', codec: 'MP3', votes: 2100 },
+    ];;
     const radioServers = ['de1', 'de2', 'nl1', 'at1', 'fr1', 'us1'];
     const radioSearchTerm = '';
     function fetchRadios(search, forceRefresh) {

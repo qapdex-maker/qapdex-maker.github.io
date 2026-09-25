@@ -27,8 +27,11 @@ test('mp3 samples are not excluded from git', () => {
   }
 });
 
-test('sample fetch uses the explicit file name and encodes spaces', () => {
-  assert.ok(has('encodeURIComponent(libEntry.file)'), 'fetchSample must use the file field');
+test('sample fetch appends the file field directly', () => {
+  assert.ok(
+    has("fetch('./assets/samples/' + libEntry.file + '.mp3')"),
+    'fetchSample must append the file field directly so mp/ sub-paths keep their slash',
+  );
 });
 
 test('loadSamples decodes the buffer that fetchSample already resolved', () => {
