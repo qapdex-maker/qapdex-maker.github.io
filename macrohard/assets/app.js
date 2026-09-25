@@ -3632,37 +3632,37 @@
 
     var SEQ_STEPS = 16;
     var SAMPLE_LIBRARY = [
-      { f: 60, n: '909 Kick', c: '#ff4000' },
-      { f: 200, n: '909 Snare', c: '#2547ff' },
-      { f: 8000, n: '909 HiHat', c: '#ffd400' },
-      { f: 9000, n: '808 OpHat', c: '#ff8000' },
-      { f: 150, n: 'Punch', c: '#0f0' },
-      { f: 50, n: 'JuBass', c: '#f0f' },
-      { f: 40, n: 'Sub Bass', c: '#800' },
-      { f: 800, n: 'Cowbell', c: '#666' },
-      { f: 440, n: 'Acidic', c: '#0ff' },
-      { f: 250, n: 'Barrel', c: '#808' },
-      { f: 50, n: 'Boom Echo', c: '#f80' },
-      { f: 600, n: 'Choose', c: '#08f' },
-      { f: 100, n: 'Dive', c: '#8f0' },
-      { f: 300, n: 'Door', c: '#f08' },
-      { f: 1000, n: 'Dry Blow', c: '#888' },
-      { f: 30, n: 'Explosion', c: '#ff0' },
-      { f: 200, n: 'Fireguard', c: '#f40' },
-      { f: 1200, n: 'FM Bells', c: '#4f0' },
-      { f: 1500, n: 'FretNoise', c: '#0f4' },
-      { f: 150, n: 'Hard Hit', c: '#40f' },
-      { f: 2000, n: 'HarshWind', c: '#f0f' },
-      { f: 4000, n: 'High Band', c: '#ff8' },
-      { f: 6000, n: 'HiSticks', c: '#8ff' },
-      { f: 800, n: 'Insect', c: '#f88' },
-      { f: 3000, n: 'MetalFlt', c: '#8f8' },
-      { f: 1000, n: 'Triangle', c: '#88f' },
-      { f: 80, n: 'WaveCrash', c: '#f44' },
-      { f: 2500, n: 'WindSweep', c: '#4f4' },
-      { f: 400, n: '80 Horn', c: '#ff2' },
-      { f: 150, n: 'BadEarth', c: '#2ff' },
-      { f: 100, n: '808 Tom', c: '#f2f' },
+      { f: 60, n: '909 Kick', c: '#ff4000', file: '909kick1' },
+      { f: 200, n: '909 Snare', c: '#2547ff', file: '909snare1' },
+      { f: 8000, n: '909 HiHat', c: '#ffd400', file: '909closehat' },
+      { f: 9000, n: '808 OpHat', c: '#ff8000', file: '808openhat' },
+      { f: 150, n: 'Punch', c: '#0f0', file: 'punch' },
+      { f: 50, n: 'JuBass', c: '#f0f', file: 'jubass1' },
+      { f: 40, n: 'Sub Bass', c: '#800', file: 'subbass' },
+      { f: 800, n: 'Cowbell', c: '#666', file: 'cowbell' },
+      { f: 440, n: 'Acidic', c: '#0ff', file: 'acidic' },
+      { f: 250, n: 'Barrel', c: '#808', file: 'barrel' },
+      { f: 50, n: 'Boom Echo', c: '#f80', file: 'boom echo' },
+      { f: 600, n: 'Choose', c: '#08f', file: 'choose now' },
+      { f: 100, n: 'Dive', c: '#8f0', file: 'dive1' },
+      { f: 300, n: 'Door', c: '#f08', file: 'door' },
+      { f: 1000, n: 'Dry Blow', c: '#888', file: 'dry blow' },
+      { f: 30, n: 'Explosion', c: '#ff0', file: 'explosion' },
+      { f: 200, n: 'Fireguard', c: '#f40', file: 'fireguard' },
+      { f: 1200, n: 'FM Bells', c: '#4f0', file: 'fm bellsy' },
+      { f: 1500, n: 'FretNoise', c: '#0f4', file: 'fretnoise01' },
+      { f: 150, n: 'Hard Hit', c: '#40f', file: 'hard hit' },
+      { f: 2000, n: 'HarshWind', c: '#f0f', file: 'harsh wind' },
+      { f: 4000, n: 'High Band', c: '#ff8', file: 'high band' },
+      { f: 6000, n: 'HiSticks', c: '#8ff', file: 'high sticks' },
+      { f: 800, n: 'Insect', c: '#f88', file: 'insect death' },
+      { f: 3000, n: 'MetalFlt', c: '#8f8', file: 'metal filter' },
+      { f: 1000, n: 'Triangle', c: '#88f', file: 'triangle sust' },
+      { f: 80, n: 'WaveCrash', c: '#f44', file: 'wave crash' },
+      { f: 2500, n: 'WindSweep', c: '#4f4', file: 'wind sweep' },
+      { f: 400, n: '80 Horn', c: '#ff2', file: '80horn' },
+      { f: 150, n: 'BadEarth', c: '#2ff', file: 'bad earth' },
+      { f: 100, n: '808 Tom', c: '#f2f', file: '808tom' },
     ];
 
     var SEQ_CUSTOM_KEY = 'seq_custom_samples';
@@ -3711,7 +3711,7 @@
     function getAllSamples() {
       return SAMPLE_LIBRARY.concat(
         customSamples.map(function (c) {
-          return { f: '_custom_' + c.id, n: c.name, c: '#0aa', _custom: true };
+          return { f: '_custom_' + c.id, n: c.name, c: '#0aa', _custom: true, file: '' };
         }),
       );
     }
@@ -3732,9 +3732,11 @@
             .catch(reject);
         });
       }
-      return fetch('./assets/samples/' + libEntry.f + '.mp3').then(function (r) {
-        return r.arrayBuffer();
-      });
+      return fetch('./assets/samples/' + encodeURIComponent(libEntry.file) + '.mp3').then(
+        function (r) {
+          return r.arrayBuffer();
+        },
+      );
     }
 
     // Default 8 tracks (first from library)
@@ -3780,9 +3782,6 @@
           var sample = SAMPLE_LIBRARY[libIdx];
           promises.push(
             fetchSample(sample)
-              .then(function (r) {
-                return r.arrayBuffer();
-              })
               .then(function (buf) {
                 return SEQ.ctx.decodeAudioData(buf);
               })
@@ -4973,18 +4972,6 @@
         votes: 2000,
       },
       {
-        name: 'Classic FM',
-        u: 'https://media-ice.musicradio.com/ClassicFMMP3',
-        codec: 'MP3',
-        votes: 3000,
-      },
-      {
-        name: 'Capital FM',
-        u: 'https://media-ice.musicradio.com/CapitalMP3',
-        codec: 'MP3',
-        votes: 2000,
-      },
-      {
         name: 'BBC World Service',
         u: 'https://stream.live.vc.bbcmedia.co.uk/bbc_world_service',
         codec: 'MP3',
@@ -5763,6 +5750,9 @@
     body.appendChild(preview);
   }
 
+  /* Settings-Import: nur definierte Präferenz-Keys dürfen geschrieben werden */
+  var SETTINGS_IMPORT_KEYS = ['os_dark', 'os_scan', 'os_accent', 'os_fs', 'os_lang', 'os_wall'];
+
   /* Settings — S1+S2: 4 Tabs (Allgemein, Aussehen, Tastenkürzel, Datenschutz) */
   function buildSettings() {
     var pane = document.getElementById('stGrid');
@@ -6171,11 +6161,10 @@
       exportBtn.style.marginTop = '6px';
       exportBtn.addEventListener('click', function () {
         var data = {};
-        for (var i = 0; i < localStorage.length; i++) {
-          var key = localStorage.key(i);
-          if (key.startsWith('os_') || key.startsWith('macrohard_') || key.startsWith('np_'))
-            data[key] = localStorage.getItem(key);
-        }
+        SETTINGS_IMPORT_KEYS.forEach(function (k) {
+          var v = localStorage.getItem(k);
+          if (v !== null) data[k] = v;
+        });
         var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -6202,10 +6191,31 @@
           reader.onload = function (ev) {
             try {
               var data = JSON.parse(ev.target.result);
-              Object.keys(data).forEach(function (k) {
-                localStorage.setItem(k, data[k]);
+              if (!data || typeof data !== 'object' || Array.isArray(data))
+                throw new Error('Ungültiges Format');
+              var applied = 0;
+              var skipped = 0;
+              SETTINGS_IMPORT_KEYS.forEach(function (k) {
+                if (Object.prototype.hasOwnProperty.call(data, k) && typeof data[k] !== 'object') {
+                  try {
+                    localStorage.setItem(k, data[k]);
+                    applied++;
+                  } catch (e) {
+                    skipped++;
+                  }
+                } else {
+                  skipped++;
+                }
               });
-              toast('Settings importiert — Reload...');
+              Object.keys(data).forEach(function (k) {
+                if (SETTINGS_IMPORT_KEYS.indexOf(k) === -1) skipped++;
+              });
+              toast(
+                applied +
+                  ' Einstellungen importiert' +
+                  (skipped ? ' · ' + skipped + ' übersprungen' : '') +
+                  ' — Reload...',
+              );
               setTimeout(function () {
                 location.reload();
               }, 1000);

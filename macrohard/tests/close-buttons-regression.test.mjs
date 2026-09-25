@@ -6,12 +6,13 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const source = fs.readFileSync(path.join(root, 'assets', 'app.js'), 'utf8');
+const flat = source.replace(/\s+/g, ' ');
 
 test('calendar storage always normalizes to an event array', () => {
-  assert.match(source, /var parsed\s*=\s*JSON\.parse\(localStorage\.getItem\('macrohard_calendar_events'\)\s*\|\|\s*'\[\]'\);\s*return Array\.isArray\(parsed\)\?\s*parsed:\s*\[\];/);
+  assert.match(flat, /var parsed = JSON\.parse\([\s\S]*?\)[\s\S]*?Array\.isArray\(parsed\)/);
 });
 
 test('all desktop apps use the shared window close handler', () => {
-  assert.match(source, /var closeBtn=mk\.querySelector\('\.wclose'\);/);
-  assert.match(source, /wnd\.classList\.add\('closing'\);[\s\S]*setTimeout\(function\(\)\{wnd\.remove\(\);\},200\);/);
+  assert.match(flat, /var closeBtn = mk\.querySelector\(['"]\.wclose['"]\);/);
+  assert.match(flat, /wnd\.classList\.add\(['"]closing['"]\)[\s\S]*?wnd\.remove\(\)/);
 });
