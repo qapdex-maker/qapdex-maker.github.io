@@ -1,38 +1,23 @@
 # MakerOS — Code Quality & Debugging Report
 
 **URL:** https://qapdex-maker.github.io/macrohard/
-**Stand:** 2026-09-23 | v2.11.45
-**Scope:** `assets/app.js` (6434 ZL), `index.html` (309 ZL), `assets/site.css` (1043 ZL), `assets/js/*` (361 ZL), `tests/app.test.js` (911 ZL)
+**Stand:** 2026-09-25 | v2.11.45 | Remote-Commit `ab8c447` | Cache `app.js?v=55`
+**Scope:** `assets/app.js` (~6.4K ZL), `index.html`, `assets/site.css`, `assets/js/storage.js`, `tests/*`
 
 ---
 
 ## Executive Summary
 
-Die Seite läuft und ist funktional. 68/68 Tests grün. Live-Crawl zeigt keine 404s.
+Die Live-Seite läuft. `npm test` liefert 119/119 grüne Tests. Der Live-Close-Test für alle 25 Apps ist erfolgreich; der Kalender schützt zusätzlich ungültige gespeicherte Event-Daten.
 
-Aber: Die Codebasis hat **strukturelle Schulden**, die Wartung und Testbarkeit stark einschränken. Kernproblem: Eine 6434-Zeilen-IIFE als Monolith, während ein paralleres Modul-System (`assets/js/*`) existiert aber **vollständig orphaned** ist — es wird in `index.html` nie geladen.
+Die Codebasis bleibt strukturell belastet: `assets/app.js` ist weiterhin ein Monolith. `storage.js` wurde als Classic-Facade migriert; die übrigen Module unter `assets/js/*` bleiben wegen unvollständiger Parallelimplementierung nicht geladen.
 
 ---
 
 ## 1. Kritische Befunde
 
-### 1.1 Module sind Orphaned (CRITICAL)
-
-`assets/js/` enthält 4 saubere ES-Module (i18n.js, main.js, storage.js, window-manager.js) mit Exports und JSDoc. Aber:
-
-- `index.html` lädt **nur** `assets/app.js?v=52` — kein `<script type="module">` für die JS-Dateien
-- Die Module werden von **niemandem importiert**
-- `restoreSession()` in `assets/app.js` ist definiert, aber **nie aufgerufen** — Session Restore ist toter Code
-- `window-manager.js` exportiert `openApp()`, aber `assets/app.js` hat eine eigene (andere) `openApp()` Definition
-
-**Folgendes ist doppelt:**
-- `storeSet`/`storeGet` existieren in `assets/js/storage.js` UND in `assets/app.js`
-- `desktopApps`-Array existiert in `assets/js/main.js` UND in `assets/app.js`
-- `openApp` existiert in `assets/js/window-manager.js` UND in `assets/app.js`
-
-**Fix:** Entweder:
-- (A) Module in `index.html` als `<script type="module" src="./assets/js/main.js">` laden und `app.js` aufteilen — ABER: `app.js` ist kein Module, es ist eine IIFE
-- (B) `assets/js/*` löschen und den Monolith akzeptieren (Wartbarkeit leidet)
+### 1.1 Module teilweise migriert (offen)
+`assets/js/storage.js` ist als Classic-Facade in `index.html` geladen und besitzt die globale Storage-API. `main.js`, `i18n.js` und `window-manager.js` bleiben nicht geladen, weil ihre Parallelimplementierungen unvollständig sind und die reale App-Logik in `app.js` weiter verwendet wird.
 
 ### 1.2 eval() in Produktion (FIXED)
 
@@ -51,11 +36,8 @@ else if(b==='='){try{var r=eval(expr.value.replace(/×/g,'*').replace(/÷/g,'/')
 - **38/38 Tests grün** (darunter 14 Sicherheits-Tests gegen XSS/Injection)
 - Datei: `tests/safe-eval.test.mjs` (ES-Module-kompatibel)
 
-### 1.3 DOMContentLoaded x4 (MEDIUM)
-
-Drei Handler in `app.js` (Zeilen 466, 3967, 4254) + einer inline in `index.html`. Reihenfolge und Abhängigkeiten sind undefiniert. Wenn einer fehlschlägt, können andere brechen.
-
-**Fix:** Einziger Boot-Handler, alle anderen via Custom Events triggern.
+### 1.3 DOMContentLoaded konsolidiert (FIXED)
+`app.js` besitzt genau einen zentralen `DOMContentLoaded`-Handler. Er ruft `initShell()`, `initDesktop()` und `initBoot()` in definierter Reihenfolge auf.
 
 ### 1.4 Monolith-Größe (MEDIUM)
 
@@ -84,17 +66,11 @@ Das gesamte UI-Rendering läuft über `innerHTML`. Weniger als 10 nutzen `create
 
 6 JSDoc-Kommentare für 121+ Funktionen. `eslint.config.js` fordert Konsistenz, kann aber nicht ausgeführt werden.
 
-### 2.4 ESLint-Config kaputt
+### 2.4 ESLint-Config ausführbar, Bestand als Warnungen
+`eslint.config.js` ist auf ESLint-9-Flat-Config migriert. `npm run lint` läuft mit Exit 0. Nach dem Prettier-Lauf (Commit `5aed13a`) 2.029 Warnungen im Monolith, davon 0 `indent` (0 Fehler).
 
-`eslint.config.js` nutzt `env:` (ESLint 8 Style) in einem Flat-Config-System (ESLint 9). `npm run lint` crasht. Die vordefinierten Regeln (`no-var: error`, `no-unused-vars: error`) werden nie erzwungen.
-
-### 2.5 Tests testen sich selbst
-
-`tests/app.test.js` hat 68 Tests, aber:
-- `console.log('All Tests passed!')` in Zeile 289 (zwischen Tests!)
-- Kein einziger Import aus `app.js` oder den JS-Modulen
-- Jeder Test baut seine eigene Mock-Logik inline auf
-- 0% Coverage des eigentlichen Produktivcodes
+### 2.5 Testabdeckung
+`tests/app.test.js` enthält weiterhin umfangreiche Mock-Tests. Zusätzlich gibt es inzwischen echte Regressionstests für `app.js`, Storage-Facade, Safe-Evaluator, XSS, Music und den gemeinsamen Close-Handler. Die Monolith-Abdeckung ist dennoch nicht vollständig.
 
 ---
 
@@ -102,7 +78,7 @@ Das gesamte UI-Rendering läuft über `innerHTML`. Weniger als 10 nutzen `create
 
 ### 3.1 Render-Blocking Script
 
-`<script src="./assets/app.js?v=52">` ist synchron. Der Browser muss 6434 Zeilen JS parsen und ausführen, bevor der Desktop gerendert wird. Dazu kommt die Boot-Animation als visueller Workaround.
+`<script src="./assets/app.js?v=55">` ist synchron. Der Browser muss circa 9.9K ZL JS parsen und ausführen, bevor der Desktop gerendert wird. Dazu kommt die Boot-Animation als visueller Workaround.
 
 **Mit `<script defer>` oder Module + Lazy Loading:** Desktop sofort sicher.
 
@@ -159,9 +135,9 @@ Keine 404-Fehler. Alle Assets laden.
 ## Verifikation
 
 ```
-node --test                    → 91/91 passing (68 alte + 23 neue echte app.js-Tests)
-node --check assets/app.js     → SYNTAX OK
-ESLint                         → CRASHED (Config broken)
+119/119 Tests grün
+ESLint: 0 Fehler, 2.029 Warnungen (Monolith-Schuld)
+25/25 App-X-Buttons im Browser geschlossen
 ```
 
 **Neue Testdateien:**

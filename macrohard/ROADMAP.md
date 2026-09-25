@@ -1,8 +1,8 @@
 # ROADMAP — macrohard/ (MakerOS)
 
-Stand: 2026-09-21 · v2.11.45 · 25 Apps · 68 Tests grün
+Stand: 2026-09-25 · v2.11.45 · 25 Apps · 119 Tests grün
 
-## 1. Aktueller Status (v2.11.43)
+## 1. Aktueller Status (v2.11.45)
 
 ### Stabil (2026-09-21)
 
@@ -14,7 +14,7 @@ Stand: 2026-09-21 · v2.11.45 · 25 Apps · 68 Tests grün
 | Explorer | explorer | v2.11.44 | Breadcrumb, Sortierung, Kopieren/Verschieben, Papierkorb, **Mobile Drawer + Listenansicht** |
 | Paint | paint | v2.11.12 | 24 Farben, Shape-Tools, Export PNG, Undo/Redo, Fill, Eraser |
 | Browser | browser | v2.11.38 | Bookmarks, History, Home-Seite, iframe-Fallback |
-| Music | music | v2.11.43 | Sequencer (8 Tracks, 8/16/32 Steps, Lookahead, 31+ Samples, BPM Input 40-300, Pattern Bank, Swing, Solo/Mute), Radio (30 Stationen API + 30 Fallback), EQ 6-Band, Visualizer |
+| Music | music | v2.11.45 | Sequencer-Playback-Fix (AudioContext + Synth-Start/Stop), Radio-Fallback auf 20 geprüfte Sender, API auf 12 plausible HTTPS-Streams begrenzt, EQ/Visualizer |
 | Chat | chat | v2.11.37 | Bot-Antworten, Typing-Indicator, Kontakt-Status |
 | Docs | docs | v2.11.41 | Markdown-Toolbar, Export .md, Preview |
 | Settings | settings | v2.11.41 | 4 Tabs, Wallpaper-Galerie, Theme-Engine, Export/Import JSON, SW Registrierung |
@@ -109,11 +109,19 @@ Stand: 2026-09-21 · v2.11.45 · 25 Apps · 68 Tests grün
 - [ ] Code: Kommentare, JSDoc
 - [ ] Performance: Lazy Loading für App-Bodies
 - [ ] Architektur: `assets/js/*` als unabhängige Parallelmodule bereinigen oder in `app.js` migrieren; aktuell nur `storage.js` als Classic-Facade geladen, `main.js`/`i18n.js`/`window-manager.js` bleiben wegen unvollständiger Parallelimplementierung außen vor
-- [ ] Lint: `assets/app.js` schrittweise von Warnungen auf Fehler-Gate umstellen; aktuell 2.883 Warnungen, davon 1.260 `no-var` und 1.257 `indent`
+- [ ] Lint: `assets/app.js` schrittweise von Warnungen auf Fehler-Gate umstellen; nach dem Prettier-Lauf 2.029 Warnungen, davon 1.260 `no-var` und 0 `indent`
 
 ---
 
 ## 4. Changelog
+
+### v2.11.45 (2026-09-25)
+- Fix: Music-Beatpad AudioContext-Kontext und Synth-Start/Stop-Reihenfolge
+- Fix: Music-X-Button schließt Fenster; Kalender-X-Button mit ungültigem Event-Cache abgesichert
+- Radio: 20 geprüfte Fallback-Sender, API auf 12 plausible HTTPS-Streams begrenzt
+- 25/25 App-Fenster-X-Buttons dynamisch im Browser verifiziert
+- 119 Tests grün
+- Live verifiziert nach Push auf Commits `5aed13a` (Prettier) und `ab8c447` (Samples/CORS)
 
 ### v2.11.45 (2026-09-21)
 - Fix: Explorer Mobile Sidebar-Drawer overflow:hidden überschrieben

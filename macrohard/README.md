@@ -1,12 +1,12 @@
 # MakerOS — qapdex-maker.github.io/macrohard/
 
-Stand 2026-09-21 · v2.11.45 · Cache `?v=52` / `?v=40`.
+Stand 2026-09-25 · v2.11.45 · Cache `?v=55` / `?v=40`.
 
 ## Live
 - **URL**: https://qapdex-maker.github.io/macrohard/
 - **Branch**: `main`
-- **Tests**: 68/68 passing (`node tests/app.test.js`)
-- **Cache-Bust**: `?v=52`
+- **Tests**: 119/119 passing (`npm test`)
+- **Cache-Bust**: `?v=55`
 
 ## Domain
 - **qapdex.com**: Gekauft am 2026-09-19 (0,87 Cent für 1 Jahr, checkdomain.de)
@@ -19,12 +19,12 @@ Stand 2026-09-21 · v2.11.45 · Cache `?v=52` / `?v=40`.
 ## Structure
 - `index.html` — OS shell + desktop + boot/lock + i18n inline + CSS-Criticals + app cards grid
 - `assets/site.css` — design tokens, 4 themes, dark mode, components, animations, task view, help overlay, notifications, transitions, a11y
-- `assets/app.js` — boot→lock→desktop, 25 apps, multi-instance, drag & drop, task view, help overlay, notification center, i18n, lazy loading (~6370 lines)
+- `assets/app.js` — boot→lock→desktop, 25 apps, multi-instance, drag & drop, task view, help overlay, notification center, i18n (~6.4K ZL)
 - `manifest.json` — PWA manifest
 - `sw.js` — service worker (stale-while-revalidate, network-first, quota check, offline fallback)
 - `assets/ami-bios-setup.html` — AMIBIOS Setup utility (Award BIOS simulation, CRT-style)
 - `assets/samples/` — 31 drum samples (MP3 + WAV) für Pattern Sequencer
-- `tests/app.test.js` — 68 unit tests (Node.js test runner)
+- `tests/` — 119 Tests (`npm test`), darunter echte app.js-, Storage-, Safe-Evaluator-, XSS-, Music-, Close- und Hardening-Regressionen
 
 ## Apps (25 Apps)
 
@@ -35,7 +35,7 @@ Stand 2026-09-21 · v2.11.45 · Cache `?v=52` / `?v=40`.
 4. **Explorer** — Breadcrumb-Navigation, Sortierung (Name/Typ/Größe), Listen/Raster-Ansicht, Kopieren/Verschieben, Papierkorb leeren, Shared FS mit Terminal, Kontextmenü, Single-Instanz
 5. **Paint** — 24 Farben, Shape-Tools, Export PNG, Undo/Redo, Radiergummi, Linienbreite, Fill, Clear, Touch
 6. **Browser** — Bookmarks (localStorage), History, Home-Seite mit Quick-Links, Tab-System, iframe-Fallback
-7. **Music** — Pattern Sequencer (8 Tracks, 8/16/32 Steps, Lookahead, 31+ Samples, Custom Sample Upload, Synthesizer-Fallback, Solo/Mute per Track, Pattern Bank 4 Slots, Swing, Undo/Redo/Copy/Paste, BPM Input 40-300), Radio (30 Stationen via radio-browser.info API + 30 Fallback), Upload, Favoriten, EQ 6-Band, Visualizer
+7. **Music** — Pattern Sequencer (8 Tracks, 8/16/32 Steps, Lookahead, Samples + Synth-Fallback, Custom Upload, Solo/Mute, Pattern Bank, Swing, Undo/Redo/Copy/Paste, BPM 40-300), Radio (max. 12 API-Streams + 20 geprüfte Fallback-Sender), Upload, Favoriten, EQ 6-Band, Visualizer
 8. **Chat** — Bot-Antworten (Keywords), Typing-Indicator, Kontakt-Status, Emoji-Bar, Suggestion-Chips, localStorage
 9. **Docs** — Markdown-Toolbar (Bold/Italic/Heading/Link/Code/Quote/List), Export .md, Preview, localStorage
 10. **Settings** — 4 Tabs, Wallpaper-Galerie (12 Presets), Accent-Color Picker (live), Theme-Engine (Ignite/Ocean/Forest/Mono), Icon-Größe, Export/Import JSON, Privacy-Clear, Service Worker Registrierung

@@ -1,7 +1,7 @@
 # PROJECT_NOTES — qapdex-maker.github.io (Portal + msgraph/react)
 
-Stand: 2026-08-29 (Session mit Hermes/idun). Wissensstand, nicht push-pflichtig.
-Letztes Push-Tip != lokaler HEAD (ungepushte Commits inkl. catpop-Entwicklungs-Commits bis 194c641).
+Stand: 2026-09-25 (MakerOS-Session, Commits `5aed13a` + `ab8c447` auf `origin/main` verifiziert).
+Letztes Push-Tip: `ab8c447`; lokaler und remote `main` waren nach dem Push identisch.
 Detaillierter Fahrplan + tiefe Bereiche: siehe ROADMAP.md (im Repo-Root).
 
 ## Architektur
@@ -209,9 +209,6 @@ Alles unten ist echter Tool-Output, keine Annahme:
   (JSON-Parse geprüft). `schemaVersion`/`syncDate` unverändert — die Daten selbst
   wurden in diesem Lauf nicht neu gesynct.
 
-<<<<<<< Updated upstream
-## catpop — CatPop Announcement Seite (Stand: 2026-09-12)
-=======
 ## PEPE Pages — `pepemem/` + `pepememe/`
 - `pepemem/` = MEMEPEPE Linktree-Backup
 - `pepememe/` = PEPEMEME Linktree-Backup
@@ -226,12 +223,11 @@ Alles unten ist echter Tool-Output, keine Annahme:
   - Button-Reihe im Base-Card-Bereich:
     - `GODPEPE Chart` → `https://app.uniswap.org/swap?outputCurrency=0x40A5808B104cE2A4E1b95E2E497d8E8a847CEE26&chain=base`
     - `or`
-    - `PEPEGOD` → `https://app.uniswap.org/swap?outputCurrency=0x08985d3198E84633B8E2B40c5EF54A095db2f9D2&chain=base`
+    - `PEPEGOD` → `https://app.uniswap.org/swap?outputCurrency=0x08985d3198E84633B8E2B40C5EF54A095db2f9D2&chain=base`
     - `GAGA Chart` → `https://dexscreener.com/base/0x27d8744e5208c1580ca296af239e5720f6bba363`
   - Footer „Divine Council & Citadel“: `https://pepecoin.com/` ergänzt
 
-## catpop — CatPop Announcement Seite
->>>>>>> Stashed changes
+## catpop — CatPop Announcement Seite (Stand 2026-09-12)
 - Pfad: `catpop/index.html`, Bild: `catpop/popnomics.jpg`
 - README: `catpop/README.md` (aktuell)
 - Ticker: `$CATPOP` (gewollter Platzhalter für Meme-Coin-Symbol, wie $DOGE/$PEPE)
