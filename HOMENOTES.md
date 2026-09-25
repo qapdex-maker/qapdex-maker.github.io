@@ -15,16 +15,18 @@ Siehe [VISION.md](VISION.md) — Gesamtübersicht, neue Apps, Roadmap, Go-to-Mar
 
 ## 2. Verifizierter MakerOS-Stand (2026-09-25)
 
-- Remote-Commit: `ab8c447` auf `origin/main`; Pages live.
-- Release: MakerOS v2.11.45, App-Cache `assets/app.js?v=55`.
-- Testsuite: 119/119 grün mit `npm test`.
+- Remote-Commit: `9076d6a` auf `origin/main`; Pages live.
+- Release: MakerOS v2.11.45, App-Cache `assets/app.js?v=62`.
+- Testsuite: 165/165 grün mit `npm test`.
 - Browser-Audit: alle 25 Desktop-Apps geöffnet; `.wclose` entfernt jedes Fenster nach dem 200-ms-Close-Overlay.
 - Music: Beatpad lädt 8/8 echte Sample-Buffers; Radio mit 18 CORS-geprüften Fallback-Sendern, maximal 12 API-Streams.
 - Kalender: beschädigte LocalStorage-Eventdaten werden als leere Liste behandelt.
 - Storage: `assets/js/storage.js` als Classic-Facade vor `app.js` geladen; übrige parallele ES-Module bleiben außen vor.
 - Settings-Import/Export: nur allow-listed Präferenz-Keys.
-- `app.js` mit Prettier formatiert (`5aed13a`): Lint 2.883 → 2.029 Warnungen, `indent` 1.257 → 0.
-- Offen: 2.029 ESLint-Warnungen im Monolith.
+- `app.js` mit Prettier formatiert (`5aed13a`) und `var` → `let/const` (`c19625e`); Lint 2.883 → 125 Warnungen.
+- Editor: Logik in `assets/js/editor.js` (testbar), DOM in `assets/editor-adapter.js`; Suche/Ersetzen als Overlay.
+- Notes: AES-GCM-Vault über `assets/js/notes-crypto.js` (PBKDF2, 150k Iterationen).
+- Offen: 125 ESLint-Warnungen im Monolith.
 
 ## MakerOS v2.5 — Änderungen
 - Phase 1: Notepad (localStorage, Suche, Wortzähler, Export), Calculator (Tastatur, History, SCI), Terminal (7 neue Befehle, colored output, Tab-Completion), Explorer (New Folder/File), Platform (toast, Shortcuts, Kontextmenu)

@@ -7067,349 +7067,8 @@
   }
   /* ===== File Editor ===== */
   function buildEditor() {
-    const area = document.getElementById('edArea');
-    const lines = document.getElementById('edLines');
-    const langSel = document.getElementById('edLang');
-    const stats = document.getElementById('edStats');
-    const toolbar = document.querySelector('.edToolbar');
-    if (!area || !lines || !toolbar) return;
-
-    const SK = 'editor_save';
-    const SK_LANG = 'editor_lang';
-    let undoStack = [];
-    let redoStack = [];
-    let lastContent = '';
-
-    /* Load saved content */
-    try {
-      const sv = localStorage.getItem(SK);
-      if (sv) area.value = sv;
-    } catch (e) {}
-    try {
-      const lg = localStorage.getItem(SK_LANG);
-      if (lg && langSel) langSel.value = lg;
-    } catch (e) {}
-
-    lastContent = area.value;
-    undoStack.push(lastContent);
-
-    function updateLines() {
-      const content = area.value;
-      const lineCount = content.split('\n').length;
-      let html = '';
-      for (let i = 1; i <= lineCount; i++) {
-        html += '<div class="edLine">' + i + '</div>';
-      }
-      lines.innerHTML = html;
-      const words = content.trim().split(/\s+/).filter(Boolean).length;
-      const chars = content.length;
-      stats.textContent = lineCount + ' Zeilen · ' + words + ' Wörter · ' + chars + ' Zeichen';
-      try {
-        localStorage.setItem(SK, content);
-      } catch (e) {}
-    }
-
-    function saveUndo() {
-      const content = area.value;
-      if (content !== lastContent) {
-        undoStack.push(content);
-        if (undoStack.length > 50) undoStack.shift();
-        redoStack = [];
-        lastContent = content;
-      }
-    }
-
-    area.addEventListener('input', function () {
-      saveUndo();
-      updateLines();
-    });
-
-    area.addEventListener('scroll', function () {
-      lines.scrollTop = area.scrollTop;
-    });
-
-    area.addEventListener('keydown', function (e) {
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        const start = area.selectionStart;
-        const end = area.selectionEnd;
-        area.value = area.value.substring(0, start) + '  ' + area.value.substring(end);
-        area.selectionStart = area.selectionEnd = start + 2;
-        updateLines();
-      }
-      /* Undo/Redo */
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
-        e.preventDefault();
-        if (undoStack.length > 1) {
-          redoStack.push(undoStack.pop());
-          area.value = undoStack[undoStack.length - 1];
-          lastContent = area.value;
-          updateLines();
-          toast('Rückgängig');
-        }
-      }
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
-        e.preventDefault();
-        if (redoStack.length > 0) {
-          const next = redoStack.pop();
-          undoStack.push(next);
-          area.value = next;
-          lastContent = area.value;
-          updateLines();
-          toast('Wiederhergestellt');
-        }
-      }
-      /* Save shortcut */
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        edSaveBtn.click();
-      }
-      /* Find shortcut */
-      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-        e.preventDefault();
-        edFindBtn.click();
-      }
-    });
-
-    langSel.addEventListener('change', function () {
-      try {
-        localStorage.setItem(SK_LANG, this.value);
-      } catch (e) {}
-      updateSyntax();
-    });
-
-    /* Syntax Highlighting (simple overlay) */
-    function updateSyntax() {
-      const content = area.value;
-      const lang = langSel ? langSel.value : 'js';
-      const keywords = {
-        js: [
-          'function',
-          'var',
-          'let',
-          'const',
-          'if',
-          'else',
-          'for',
-          'while',
-          'return',
-          'class',
-          'import',
-          'export',
-          'new',
-          'this',
-          'try',
-          'catch',
-          'throw',
-          'typeof',
-          'instanceof',
-          'true',
-          'false',
-          'null',
-          'undefined',
-          'async',
-          'await',
-          'yield',
-        ],
-        html: [
-          'div',
-          'span',
-          'p',
-          'a',
-          'img',
-          'table',
-          'tr',
-          'td',
-          'th',
-          'ul',
-          'ol',
-          'li',
-          'form',
-          'input',
-          'button',
-          'script',
-          'style',
-          'head',
-          'body',
-          'html',
-          'meta',
-          'link',
-          'title',
-          'h1',
-          'h2',
-          'h3',
-          'h4',
-          'h5',
-          'h6',
-          'section',
-          'article',
-          'nav',
-          'header',
-          'footer',
-          'main',
-        ],
-        css: [
-          'color',
-          'background',
-          'border',
-          'margin',
-          'padding',
-          'display',
-          'position',
-          'width',
-          'height',
-          'font',
-          'text',
-          'flex',
-          'grid',
-          'animation',
-          'transition',
-          'transform',
-          'opacity',
-          'overflow',
-          'cursor',
-          'z-index',
-          'top',
-          'left',
-          'right',
-          'bottom',
-        ],
-        md: ['#', '##', '###', '####', '-', '*', '>', '```', '`', '[', '!', '**', '__'],
-      };
-      /* Simple highlight: wrap keywords in span - disabled for now (performance) */
-    }
-
-    const edNewBtn = toolbar.querySelector('#edNew');
-    if (edNewBtn)
-      edNewBtn.addEventListener('click', function () {
-        if (area.value && !confirm('Inhalt verwerfen?')) return;
-        area.value = '';
-        undoStack = [''];
-        redoStack = [];
-        lastContent = '';
-        updateLines();
-        toast('Neuer Editor');
-      });
-
-    const edOpenBtn = toolbar.querySelector('#edOpen');
-    if (edOpenBtn)
-      edOpenBtn.addEventListener('click', function () {
-        const inp = document.createElement('input');
-        inp.type = 'file';
-        inp.accept = '.txt,.js,.html,.css,.md,.json,.py,.sh,.xml,.csv';
-        inp.style.display = 'none';
-        document.body.appendChild(inp);
-        inp.addEventListener('change', function () {
-          const file = inp.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = function (ev) {
-            area.value = ev.target.result;
-            undoStack = [area.value];
-            redoStack = [];
-            lastContent = area.value;
-            updateLines();
-            toast('Geladen: ' + file.name);
-          };
-          reader.readAsText(file);
-          inp.remove();
-        });
-        inp.click();
-      });
-
-    var edSaveBtn = toolbar.querySelector('#edSave');
-    if (edSaveBtn)
-      edSaveBtn.addEventListener('click', function () {
-        const content = area.value;
-        let ext = 'txt';
-        if (langSel) {
-          const map = {
-            md: 'md',
-            html: 'html',
-            css: 'css',
-            js: 'js',
-            json: 'json',
-            py: 'py',
-            sh: 'sh',
-            xml: 'xml',
-            csv: 'csv',
-          };
-          ext = map[langSel.value] || 'txt';
-        }
-        const blob = new Blob([content], { type: 'text/plain' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'document.' + ext;
-        a.click();
-        URL.revokeObjectURL(a.href);
-        toast('Gespeichert');
-      });
-
-    /* Find & Replace */
-    var edFindBtn = toolbar.querySelector('#edFind');
-    if (!edFindBtn) {
-      edFindBtn = document.createElement('button');
-      edFindBtn.className = 'cBtn';
-      edFindBtn.id = 'edFind';
-      edFindBtn.textContent = 'Suchen';
-      toolbar.appendChild(edFindBtn);
-    }
-    edFindBtn.addEventListener('click', function () {
-      const search = prompt('Suchen:');
-      if (!search) return;
-      const idx = area.value.indexOf(search);
-      if (idx >= 0) {
-        area.focus();
-        area.setSelectionRange(idx, idx + search.length);
-        lines.scrollTop = area.scrollTop;
-      } else {
-        toast('Nicht gefunden');
-      }
-    });
-
-    /* Replace button */
-    let edReplaceBtn = toolbar.querySelector('#edReplace');
-    if (!edReplaceBtn) {
-      edReplaceBtn = document.createElement('button');
-      edReplaceBtn.className = 'cBtn';
-      edReplaceBtn.id = 'edReplace';
-      edReplaceBtn.textContent = 'Ersetzen';
-      toolbar.appendChild(edReplaceBtn);
-    }
-    edReplaceBtn.addEventListener('click', function () {
-      const search = prompt('Suchen:');
-      if (!search) return;
-      const replace = prompt('Ersetzen durch:');
-      if (replace === null) return;
-      const content = area.value;
-      const count = (
-        content.match(new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []
-      ).length;
-      if (count > 0) {
-        area.value = content.split(search).join(replace);
-        saveUndo();
-        updateLines();
-        toast(count + ' ersetzt');
-      } else {
-        toast('Nicht gefunden');
-      }
-    });
-
-    /* Font size selector */
-    let edFontBtn = toolbar.querySelector('#edFont');
-    if (!edFontBtn) {
-      edFontBtn = document.createElement('select');
-      edFontBtn.id = 'edFont';
-      edFontBtn.className = 'cBtn';
-      edFontBtn.innerHTML =
-        '<option value="12">12px</option><option value="14" selected>14px</option><option value="16">16px</option><option value="18">18px</option><option value="20">20px</option>';
-      toolbar.appendChild(edFontBtn);
-      edFontBtn.addEventListener('change', function () {
-        area.style.fontSize = this.value + 'px';
-      });
-    }
-
-    updateLines();
+    /* Logik liegt in assets/js/editor.js (testbar), DOM-Verdrahtung hier. */
+    if (typeof window.EditorUI === 'function') window.EditorUI();
   }
 
   /* ===== Image Editor ===== */
@@ -8085,31 +7744,51 @@
     const togglePrevBtn = document.querySelector('#ntTogglePreview');
     const newBtn = document.querySelector('#ntNew');
 
-    /* Encrypt button */
+    /* Vault-Button: AES-GCM ein-/ausschalten */
     const encryptBtn = document.createElement('button');
     encryptBtn.className = 'cBtn op';
     encryptBtn.textContent = '🔒';
-    encryptBtn.title = 'Notizen verschlüsseln';
+    encryptBtn.title = 'Notizen mit AES-GCM verschlüsseln';
+
+    function paintVaultBtn() {
+      if (notesVault === 'aes-gcm') {
+        encryptBtn.textContent = '🔓';
+        encryptBtn.title = 'Verschlüsselung aufheben';
+      } else {
+        encryptBtn.textContent = '🔒';
+        encryptBtn.title = 'Notizen mit AES-GCM verschlüsseln';
+      }
+    }
+
     encryptBtn.addEventListener('click', function () {
-      if (notesPassword) {
-        if (confirm('Verschlüsselung aufheben?')) {
-          notesPassword = null;
-          encryptBtn.textContent = '🔒';
-          toast('Verschlüsselung aufgehoben');
-        }
+      if (notesVault === 'aes-gcm') {
+        if (!confirm('Verschlüsselung aufheben? Der Vault wird im Klartext gespeichert.')) return;
+        notesVault = null;
+        notesPassword = null;
+        saveNotes();
+        paintVaultBtn();
+        toast('Verschlüsselung aufgehoben');
         return;
       }
-      const pw = prompt('Passwort für Verschlüsselung:');
-      if (pw && pw.length >= 4) {
-        notesPassword = pw;
-        saveNotes();
-        encryptBtn.textContent = '🔓';
-        toast('Notizen verschlüsselt');
-      } else if (pw !== null) {
+      const pw = prompt('Passwort für Verschlüsselung (AES-GCM):');
+      if (pw === null) return;
+      if (pw.length < 4) {
         alert('Passwort muss mind. 4 Zeichen sein.');
+        return;
       }
+      const confirmed = prompt('Passwort wiederholen:');
+      if (confirmed !== pw) {
+        alert('Passwörter stimmen nicht überein.');
+        return;
+      }
+      notesPassword = pw;
+      notesVault = 'aes-gcm';
+      saveNotes();
+      paintVaultBtn();
+      toast('Notizen verschlüsselt (AES-GCM)');
     });
     saveBtn.parentNode.appendChild(encryptBtn);
+    paintVaultBtn();
 
     /* Drag & Drop Sort for note list items */
     let dragItem = null;
@@ -8182,7 +7861,7 @@
         return x.id === currentId;
       })[0];
       if (!n) return;
-      const data = btoa(encodeURIComponent(JSON.stringify({ t: n.title, c: n.content })));
+      const data = b64encode(JSON.stringify({ t: n.title, c: n.content }));
       const url = window.location.origin + window.location.pathname + '#note=' + data;
       prompt('Link kopieren:', url);
     });
@@ -8233,30 +7912,20 @@
     let filterTag = '';
     let showPreview = false;
 
+    /* Passwort lebt nur im Speicher, nie persistiert. */
     var notesPassword = null;
-    function loadNotes() {
-      try {
-        notes = JSON.parse(localStorage.getItem(SK_NOTES) || '[]');
-      } catch (e) {
-        notes = [];
-      }
+    var notesVault = null; // 'aes-gcm' | null (Klartext)
+
+    /* UTF-8-sichere Base64-Rundtrip-Routine (btoa scheitert an Umlauten/Unicode). */
+    function b64encode(text) {
+      return btoa(unescape(encodeURIComponent(text)));
     }
-    function saveNotes() {
-      try {
-        let data = notes;
-        if (notesPassword) {
-          data = notes.map(function (n) {
-            return {
-              id: n.id,
-              title: n.title,
-              tags: n.tags,
-              updated: n.updated,
-              content: btoa(unescape(encodeURIComponent(n.content || ''))),
-            };
-          });
-        }
-        localStorage.setItem(SK_NOTES, JSON.stringify(data));
-      } catch (e) {}
+    function b64decode(data) {
+      return decodeURIComponent(escape(atob(data)));
+    }
+    var notesReady = false;
+
+    function flashSaved() {
       const indicator = document.getElementById('ntSaved');
       if (indicator) {
         indicator.textContent = 'Gespeichert';
@@ -8266,19 +7935,89 @@
         }, 1000);
       }
     }
-    function decryptNote(n) {
-      if (!notesPassword || !n.content) return n;
+
+    function loadNotes() {
       try {
-        return {
-          id: n.id,
-          title: n.title,
-          tags: n.tags,
-          updated: n.updated,
-          content: decodeURIComponent(escape(atob(n.content))),
-        };
+        notes = JSON.parse(localStorage.getItem(SK_NOTES) || '[]');
       } catch (e) {
-        return n;
+        notes = [];
       }
+      const sealed = notes.some(function (n) {
+        return n && n.enc;
+      });
+      notesVault = sealed ? 'aes-gcm' : null;
+      if (!sealed) {
+        /* Altbestand aus der btoa-Zeit: einmalig im Klartext übernehmen. */
+        const hadLegacy = notes.some(window.NotesCrypto.isLegacyEntry);
+        if (hadLegacy) {
+          notes = notes.map(function (n) {
+            if (window.NotesCrypto.isLegacyEntry(n)) {
+              return Object.assign({}, n, { content: window.NotesCrypto.decodeLegacy(n.content) });
+            }
+            return n;
+          });
+          saveNotes();
+        }
+        notesReady = true;
+        return;
+      }
+      notesReady = false;
+      promptForVaultPassword();
+    }
+
+    function promptForVaultPassword() {
+      const pw = prompt(
+        'Notizen sind mit AES-GCM verschlüsselt.\nPasswort eingeben (leer = nur ansehen):',
+      );
+      if (pw === null) {
+        notes = [];
+        notesReady = true;
+        renderList();
+        renderTags();
+        return;
+      }
+      if (!pw) {
+        notes = notes.map(function (n) {
+          return Object.assign({}, n, { content: '' });
+        });
+        notesReady = true;
+        renderList();
+        renderTags();
+        toast('Verschlüsselte Inhalte ausgeblendet');
+        return;
+      }
+      window.NotesCrypto.decryptAll(notes, pw).then(function (opened) {
+        if (opened[0] === null) {
+          alert('Falsches Passwort.');
+          notes = [];
+          notesReady = true;
+          renderList();
+          renderTags();
+          return;
+        }
+        notesPassword = pw;
+        notes = opened;
+        notesReady = true;
+        renderList();
+        renderTags();
+      });
+    }
+
+    function saveNotes() {
+      const payload = notesVault === 'aes-gcm' && notesPassword;
+      if (!payload) {
+        try {
+          localStorage.setItem(SK_NOTES, JSON.stringify(notes));
+        } catch (e) {}
+        flashSaved();
+        return;
+      }
+      window.NotesCrypto.encryptAll(notes, notesPassword).then(function (sealed) {
+        try {
+          localStorage.setItem(SK_NOTES, JSON.stringify(sealed));
+        } catch (e) {}
+        flashSaved();
+      });
     }
 
     /* Markdown-ish render */

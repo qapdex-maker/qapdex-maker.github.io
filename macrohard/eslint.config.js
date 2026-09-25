@@ -63,7 +63,24 @@ const browserGlobals = {
 
 export default [
   {
-    files: ['assets/**/*.js'],
+    // Unvollständige bzw. nicht geladene ES-Module (siehe ROADMAP).
+    ignores: [
+      'assets/js/main.js',
+      'assets/js/i18n.js',
+      'assets/js/window-manager.js',
+      'assets/js/radio-stations.js',
+      'assets/safe-eval.js',
+    ],
+  },
+  {
+    files: [
+      'assets/**/*.js',
+      '!assets/js/main.js',
+      '!assets/js/i18n.js',
+      '!assets/js/window-manager.js',
+      '!assets/js/radio-stations.js',
+      '!assets/safe-eval.js',
+    ],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'script',

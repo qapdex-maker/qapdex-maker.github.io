@@ -1,6 +1,6 @@
 # ROADMAP — macrohard/ (MakerOS)
 
-Stand: 2026-09-25 · v2.11.45 · 25 Apps · 119 Tests grün
+Stand: 2026-09-25 · v2.11.45 · 25 Apps · 165 Tests grün
 
 ## 1. Aktueller Status (v2.11.45)
 
@@ -29,7 +29,7 @@ Stand: 2026-09-25 · v2.11.45 · 25 Apps · 119 Tests grün
 | QRGen | qrgen | v2.11.41 | Farbe + Größe wählbar, SVG Export |
 | Viewer | viewer | v2.11.41 | Zoom +/-/Fit, Bildinfo, Vollbild |
 | Game | game | v2.11.41 | vs CPU (KI), 4×4 Modus, PvP/PvE |
-| Editor | editor | v2.11.40 | Undo/Redo, Suchen/Ersetzen, Font-Size, Shortcuts |
+| Editor | editor | v2.11.45 | Undo/Redo, Suchen/Ersetzen (Overlay), Font-Size persistent, Tab-Einrückung, Shortcuts; Logik in `assets/js/editor.js` |
 | ImgEditor | imgeditor | v2.11.30 | Crop, Rotate, Resize, Filter, Export |
 | Pomodoro | pomodoro | v2.11.30 | 25/5 Timer, SVG-Ring, Sessions |
 | Notes | notes | v2.11.30 | Tags, Suche, Markdown-Preview, Verschlüsselung, Papierkorb |
@@ -60,7 +60,7 @@ Stand: 2026-09-25 · v2.11.45 · 25 Apps · 119 Tests grün
 - [x] QRGen: Farbe, Größe, SVG
 - [x] Viewer: Zoom, Bildinfo
 - [x] Game: CPU-KI, 4×4 Modus
-- [x] Editor: Undo/Redo, Suchen/Ersetzen
+- [x] Editor: Undo/Redo, Suchen/Ersetzen (Overlay statt blockierendem Dialog)
 - [x] ImgEditor: Crop, Rotate, Resize, Filter
 - [x] Pomodoro: 25/5 Timer, SVG-Ring
 - [x] Notes: Tags, Suche, Markdown, Verschlüsselung
@@ -84,7 +84,6 @@ Stand: 2026-09-25 · v2.11.45 · 25 Apps · 119 Tests grün
 - [ ] PWGen: Clipboard-Copy
 - [ ] QRGen: Download-Button
 - [ ] Game: Bessere KI (Minimax)
-- [ ] Editor: Syntax-Highlighting
 - [ ] ImgEditor: Undo/Redo
 - [ ] Pomodoro: Long Break, CSV Export
 - [ ] Notes: Tags-Filter, Autosave
@@ -109,7 +108,7 @@ Stand: 2026-09-25 · v2.11.45 · 25 Apps · 119 Tests grün
 - [ ] Code: Kommentare, JSDoc
 - [ ] Performance: Lazy Loading für App-Bodies
 - [ ] Architektur: `assets/js/*` als unabhängige Parallelmodule bereinigen oder in `app.js` migrieren; aktuell nur `storage.js` als Classic-Facade geladen, `main.js`/`i18n.js`/`window-manager.js` bleiben wegen unvollständiger Parallelimplementierung außen vor
-- [ ] Lint: `assets/app.js` schrittweise von Warnungen auf Fehler-Gate umstellen; nach dem Prettier-Lauf 2.029 Warnungen, davon 1.260 `no-var` und 0 `indent`
+- [ ] Lint: `assets/app.js` schrittweise von Warnungen auf Fehler-Gate umstellen; aktuell 125 Warnungen (0 Fehler), davon 55 `no-var`, 41 `no-unused-vars`, 18 `no-undef`
 
 ---
 
@@ -120,8 +119,8 @@ Stand: 2026-09-25 · v2.11.45 · 25 Apps · 119 Tests grün
 - Fix: Music-X-Button schließt Fenster; Kalender-X-Button mit ungültigem Event-Cache abgesichert
 - Radio: 20 geprüfte Fallback-Sender, API auf 12 plausible HTTPS-Streams begrenzt
 - 25/25 App-Fenster-X-Buttons dynamisch im Browser verifiziert
-- 119 Tests grün
-- Live verifiziert nach Push auf Commits `5aed13a` (Prettier) und `ab8c447` (Samples/CORS)
+- 165 Tests grün
+- Live verifiziert nach Push auf `5aed13a` (Prettier), `ab8c447` (Samples/CORS), `7d90ac8` (Paint/Analog-Uhr), `9076d6a` (Notes/Snap)
 
 ### v2.11.45 (2026-09-21)
 - Fix: Explorer Mobile Sidebar-Drawer overflow:hidden überschrieben

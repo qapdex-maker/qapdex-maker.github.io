@@ -1,14 +1,14 @@
 # MakerOS — Code Quality & Debugging Report
 
 **URL:** https://qapdex-maker.github.io/macrohard/
-**Stand:** 2026-09-25 | v2.11.45 | Remote-Commit `ab8c447` | Cache `app.js?v=55`
+**Stand:** 2026-09-25 | v2.11.45 | Cache `app.js?v=62`
 **Scope:** `assets/app.js` (~6.4K ZL), `index.html`, `assets/site.css`, `assets/js/storage.js`, `tests/*`
 
 ---
 
 ## Executive Summary
 
-Die Live-Seite läuft. `npm test` liefert 119/119 grüne Tests. Der Live-Close-Test für alle 25 Apps ist erfolgreich; der Kalender schützt zusätzlich ungültige gespeicherte Event-Daten.
+Die Live-Seite läuft. `npm test` liefert 165/165 grüne Tests. Der Live-Close-Test für alle 25 Apps ist erfolgreich; der Kalender schützt zusätzlich ungültige gespeicherte Event-Daten.
 
 Die Codebasis bleibt strukturell belastet: `assets/app.js` ist weiterhin ein Monolith. `storage.js` wurde als Classic-Facade migriert; die übrigen Module unter `assets/js/*` bleiben wegen unvollständiger Parallelimplementierung nicht geladen.
 
@@ -67,7 +67,7 @@ Das gesamte UI-Rendering läuft über `innerHTML`. Weniger als 10 nutzen `create
 6 JSDoc-Kommentare für 121+ Funktionen. `eslint.config.js` fordert Konsistenz, kann aber nicht ausgeführt werden.
 
 ### 2.4 ESLint-Config ausführbar, Bestand als Warnungen
-`eslint.config.js` ist auf ESLint-9-Flat-Config migriert. `npm run lint` läuft mit Exit 0. Nach dem Prettier-Lauf (Commit `5aed13a`) 2.029 Warnungen im Monolith, davon 0 `indent` (0 Fehler).
+`eslint.config.js` ist auf ESLint-9-Flat-Config migriert. `npm run lint` läuft mit Exit 0. Aktuell 125 Warnungen im Monolith, davon 0 `indent` und 0 Fehler.
 
 ### 2.5 Testabdeckung
 `tests/app.test.js` enthält weiterhin umfangreiche Mock-Tests. Zusätzlich gibt es inzwischen echte Regressionstests für `app.js`, Storage-Facade, Safe-Evaluator, XSS, Music und den gemeinsamen Close-Handler. Die Monolith-Abdeckung ist dennoch nicht vollständig.
@@ -78,7 +78,7 @@ Das gesamte UI-Rendering läuft über `innerHTML`. Weniger als 10 nutzen `create
 
 ### 3.1 Render-Blocking Script
 
-`<script src="./assets/app.js?v=55">` ist synchron. Der Browser muss circa 9.9K ZL JS parsen und ausführen, bevor der Desktop gerendert wird. Dazu kommt die Boot-Animation als visueller Workaround.
+`<script src="./assets/app.js?v=62">` ist synchron. Der Browser muss circa 9.9K ZL JS parsen und ausführen, bevor der Desktop gerendert wird. Dazu kommt die Boot-Animation als visueller Workaround.
 
 **Mit `<script defer>` oder Module + Lazy Loading:** Desktop sofort sicher.
 
@@ -135,8 +135,8 @@ Keine 404-Fehler. Alle Assets laden.
 ## Verifikation
 
 ```
-119/119 Tests grün
-ESLint: 0 Fehler, 2.029 Warnungen (Monolith-Schuld)
+165/165 Tests grün
+ESLint: 0 Fehler, 125 Warnungen (Monolith-Schuld)
 25/25 App-X-Buttons im Browser geschlossen
 ```
 

@@ -5,7 +5,7 @@ Stand 2026-09-25 · v2.11.45 · Cache `?v=55` / `?v=40`.
 ## Live
 - **URL**: https://qapdex-maker.github.io/macrohard/
 - **Branch**: `main`
-- **Tests**: 119/119 passing (`npm test`)
+- **Tests**: 165/165 passing (`npm test`)
 - **Cache-Bust**: `?v=55`
 
 ## Domain
@@ -24,7 +24,7 @@ Stand 2026-09-25 · v2.11.45 · Cache `?v=55` / `?v=40`.
 - `sw.js` — service worker (stale-while-revalidate, network-first, quota check, offline fallback)
 - `assets/ami-bios-setup.html` — AMIBIOS Setup utility (Award BIOS simulation, CRT-style)
 - `assets/samples/` — 31 drum samples (MP3 + WAV) für Pattern Sequencer
-- `tests/` — 119 Tests (`npm test`), darunter echte app.js-, Storage-, Safe-Evaluator-, XSS-, Music-, Close- und Hardening-Regressionen
+- `tests/` — 165 Tests (`npm test`), darunter echte app.js-, Storage-, Safe-Evaluator-, XSS-, Music-, Close-, Hardening-, Notes-Crypto- und Editor-Regressionen
 
 ## Apps (25 Apps)
 
@@ -52,7 +52,7 @@ Stand 2026-09-25 · v2.11.45 · Cache `?v=55` / `?v=40`.
 19. **Bildbetrachter** — Zoom +/-/Fit, Bildinfo (Größe/KB), Vollbild-Modus, Drag & Drop
 20. **Tic-Tac-Toe** — vs CPU (KI blockiert), 4×4 Modus, PvP/PvE Toggle
 21. **AMIBIOS Setup** — Boot-Sequenz, 7 Tabs, CRT-Style, PC Speaker
-22. **Editor** — Undo/Redo, Suchen/Ersetzen, Font-Size, Zeilennummern, Ctrl+S/F, Dark Theme
+22. **Editor** — Undo/Redo, Suchen/Ersetzen als Overlay, Font-Size (persistent), Zeilennummern, Tab-Einrückung, Ctrl+S/F/Z/Y, Sprachauswahl für Dateiendung
 23. **Image Editor** — Ebenen (Layers), Clone/Stamp, Text, Größe ändern, Drehung, Filter, Undo/Redo
 24. **Pomodoro** — Statistik (heute/gesamt), Long Break (alle 4 Sessions), CSV Export, Pausen-Übungen, Ton
 25. **Notes** — Verschlüsselung (Base64), Papierkorb (Wiederherstellen), Teilen (URL), Autosave-Indikator, Drag & Drop Sortierung
