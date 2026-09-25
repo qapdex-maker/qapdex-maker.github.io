@@ -1858,7 +1858,7 @@ if(!document.getElementById('skipLink')){
     var radioStatus=document.getElementById('musRadioStatus');
 
     /* Storage Keys */
-    var SK_FAV='mus_favs',SK_CUSTOM='mus_custom',SK_RADIO='mus_radio';
+    var SK_FAV='mus_favs',SK_CUSTOM='mus_custom',SK_RADIO='mus_radio_v2';
 
     /* State */
     var songs=[
@@ -2225,18 +2225,19 @@ if(!document.getElementById('skipLink')){
           o.frequency.exponentialRampToValueAtTime(freq * 0.3, t + 0.15);
           g.gain.setValueAtTime(0.8, t);
           g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-          o.stop(t + 0.2);
         } else if (freq < 1000) {
           g.gain.setValueAtTime(0.5, t);
           g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-          o.stop(t + 0.1);
         } else {
           g.gain.setValueAtTime(0.2, t);
           g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-          o.stop(t + 0.05);
         }
-        g.gain.setValueAtTime(0, t + 0.3);
         try { o.start(t); } catch(e) {}
+        try {
+          if (freq < 100) o.stop(t + 0.2);
+          else if (freq < 1000) o.stop(t + 0.1);
+          else o.stop(t + 0.05);
+        } catch(e) {}
       }
 
       try { o.connect(g); g.connect(SEQ.master); } catch(e) {}
@@ -2295,15 +2296,11 @@ if(!document.getElementById('skipLink')){
     function startSequencer() {
       if (!SEQ.loaded) return;
 
-      // Get or create AudioContext - MUST be resumed synchronously in click handler
-      if (window.audioCtx) {
-        SEQ.ctx = window.audioCtx;
-      } else {
+      // Get or create AudioContext - keep the context used to decode samples
+      if (!SEQ.ctx) {
         var AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return;
-        // Create new context and expose globally so Radio/Tracks reuse it
         SEQ.ctx = new AC();
-        window.audioCtx = SEQ.ctx;
       }
 
       // Resume synchronously (must be in call stack of user gesture)
@@ -3172,49 +3169,17 @@ if(!document.getElementById('skipLink')){
       {name:'SomaFM: Suburbs of Goa',u:'https://ice1.somafm.com/suburbsofgoa-128-mp3',codec:'MP3',votes:3000},
       {name:'SomaFM: Underground 80s',u:'https://ice1.somafm.com/u80s-128-mp3',codec:'MP3',votes:2800},
       {name:'SomaFM: Deep Space One',u:'https://ice1.somafm.com/deepspaceone-128-mp3',codec:'MP3',votes:2600},
-      {name:'SomaFM: Space Station Soma',u:'https://ice1.somafm.com/spacestation-128-mp3',codec:'MP3',votes:2400},
-      {name:'SomaFM: Secret Agent',u:'https://ice1.somafm.com/secretagent-128-mp3',codec:'MP3',votes:2200},
       {name:'SomaFM: Lush',u:'https://ice1.somafm.com/lush-128-mp3',codec:'MP3',votes:2000},
-      {name:'SomaFM: Digitalis',u:'https://ice1.somafm.com/digitalis-128-mp3',codec:'MP3',votes:1800},
-      {name:'SomaFM: ThistleRadio',u:'https://ice1.somafm.com/thistle-128-mp3',codec:'MP3',votes:1600},
-      {name:'SomaFM: Folk Forward',u:'https://ice1.somafm.com/folkfwd-128-mp3',codec:'MP3',votes:1400},
-      {name:'SomaFM: Christmas Lounge',u:'https://ice1.somafm.com/christmas-128-mp3',codec:'MP3',votes:1200},
-      {name:'SomaFM: Boot Liquor',u:'https://ice1.somafm.com/bootliquor-128-mp3',codec:'MP3',votes:1000},
-      {name:'SomaFM: Black Rock FM',u:'https://ice1.somafm.com/brfm-128-mp3',codec:'MP3',votes:900},
-      {name:'SomaFM: The Trip',u:'https://ice1.somafm.com/thetrip-128-mp3',codec:'MP3',votes:800},
-      {name:'SomaFM: Dub Step Beyond',u:'https://ice1.somafm.com/dubstep-128-mp3',codec:'MP3',votes:700},
-      {name:'Subcity Radio',u:'https://fdn0.subcity.org/subcity-192.mp3',codec:'MP3',votes:2800},
-      {name:'NTS Radio 1',u:'https://stream-relay-geo.ntslive.net/stream1',codec:'MP3',votes:2500},
-      {name:'NTS Radio 2',u:'https://stream-relay-geo.ntslive.net/stream2',codec:'MP3',votes:2300},
       {name:'Radio Paradise',u:'https://stream.radioparadise.com/aac-320',codec:'AAC',votes:4000},
-      {name:'KCRW Eclectic24',u:'https://kcrw.streamguys1.com/kcrw_192k_mp3_on_air',codec:'MP3',votes:1500},
       {name:'FIP Radio',u:'https://icecast.radiofrance.fr/fip-midfi.mp3',codec:'MP3',votes:3500},
       {name:'Jazz Radio',u:'https://jazz-wr01.ice.infomaniak.ch/jazz-wr01-128.mp3',codec:'MP3',votes:2000},
       {name:'Classic FM',u:'https://media-ice.musicradio.com/ClassicFMMP3',codec:'MP3',votes:3000},
-      {name:'BBC Radio 6 Music',u:'https://stream.live.vc.bbcmedia.co.uk/bbc_6music',codec:'MP3',votes:2800},
-      {name:'Radio X UK',u:'https://media-ice.musicradio.com/RadioXMP3',codec:'MP3',votes:1800},
-      {name:'Kiss FM',u:'https://stream-kiss.planetradio.co.uk/kissnational.mp3',codec:'MP3',votes:2200},
       {name:'Capital FM',u:'https://media-ice.musicradio.com/CapitalMP3',codec:'MP3',votes:2000},
-      {name:'Radio 1 UK',u:'https://stream.live.vc.bbcmedia.co.uk/bbc_radio_one',codec:'MP3',votes:2600},
       {name:'BBC World Service',u:'https://stream.live.vc.bbcmedia.co.uk/bbc_world_service',codec:'MP3',votes:2400},
       {name:'NPR News',u:'https://npr-ice.streamguys1.com/live.mp3',codec:'MP3',votes:2000},
       {name:'WNYC FM',u:'https://fm939.wnyc.org/wnycfm',codec:'MP3',votes:1500},
       {name:'KEXP FM',u:'https://kexp-mp3-128.streamguys1.com/kexp128.mp3',codec:'MP3',votes:1800},
-      {name:'Ibiza Global Radio',u:'https://listenssl.ibizaglobalradio.com:8025/stream',codec:'MP3',votes:1200},
-      {name:'Venice Classic Radio',u:'https://uk2.streamingpulse.com/ssl/vcr1',codec:'MP3',votes:1400},
-      {name:'Radio Swiss Jazz',u:'https://stream.srg-ssr.ch/m/rsj/mp3_128',codec:'MP3',votes:1600},
-      {name:'Planet Radio',u:'https://stream.planetradio.co.uk/planet.mp3',codec:'MP3',votes:1500},
-      {name:'Radio Bob',u:'https://streams.radiobob.de/bob-live/mp3-192',codec:'MP3',votes:1800},
-      {name:'FFH',u:'https://mp3.ffh.de/ffhchannels/hqlivestream.mp3',codec:'MP3',votes:2000},
-      {name:'Deutschlandfunk',u:'https://st01.dlf.de/dlf/01/128/mp3/stream.mp3',codec:'MP3',votes:2000},
-      {name:'Radio Eins',u:'https://www.radioeins.de/live.m3u',codec:'MP3',votes:1200},
-      {name:'1Live',u:'https://wdr-1live-live.icecastssl.wdr.de/wdr/1live/live/mp3/128/stream.mp3',codec:'MP3',votes:2400},
-      {name:'WDR 2',u:'https://wdr-wdr2-rheinland.icecastssl.wdr.de/wdr/wdr2/rheinland/mp3/128/stream.mp3',codec:'MP3',votes:1800},
-      {name:'BBC Radio 3',u:'https://stream.live.vc.bbcmedia.co.uk/bbc_radio_three',codec:'MP3',votes:2000},
-      {name:'BBC Radio 4',u:'https://stream.live.vc.bbcmedia.co.uk/bbc_radio_fourfm',codec:'MP3',votes:2200},
-      {name:'France Inter',u:'https://icecast.radiofrance.fr/franceinter-midfi.mp3',codec:'MP3',votes:2600},
-      {name:'Rai Radio 1',u:'https://icestreaming.rai.it/1.mp3',codec:'MP3',votes:1800},
-      {name:'ABC Radio National',u:'https://mediaserviceslive.akamaized.net/hls/live/2038163/rnnational/master.m3u8',codec:'HLS',votes:1500}
+      {name:'Deutschlandfunk',u:'https://st01.dlf.de/dlf/01/128/mp3/stream.mp3',codec:'MP3',votes:2000}
     ];
     var radioServers=['de1','de2','nl1','at1','fr1','us1'];
     var radioSearchTerm='';
@@ -3234,11 +3199,13 @@ if(!document.getElementById('skipLink')){
           var seen={};
           var found=arr.filter(function(s){
             if(!s.url_resolved||s.url_resolved.length<5)return false;
+            if(!/^https:\/\//i.test(s.url_resolved))return false;
+            if(/\.(html?|m3u8|mpd)$/i.test(s.url_resolved))return false;
             var key=s.url_resolved.split('/')[2];
             if(seen[key])return false;
             seen[key]=true;
             return true;
-          }).slice(0,30).map(function(s){
+          }).slice(0,12).map(function(s){
             return{name:(s.name||'Unbekannt').replace(/[^\x20-\x7E]/g,'').trim(),u:s.url_resolved,codec:s.codec||'',votes:s.votes||0,country:s.country||'',tags:s.tags||''}
           });
           if(found.length){radioStations=found;saveRadios();}
