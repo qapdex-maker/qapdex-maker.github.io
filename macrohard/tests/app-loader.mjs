@@ -7,6 +7,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const appPath = path.join(__dirname, '..', 'assets', 'app.js');
 const appSource = fs.readFileSync(appPath, 'utf8');
+const storagePath = path.join(__dirname, '..', 'assets', 'js', 'storage.js');
+const storageSource = fs.readFileSync(storagePath, 'utf8');
 
 // Shared storage
 const sharedStorage = { _ls: {}, _ss: {} };
@@ -55,6 +57,20 @@ for (const name of utilityFunctions) {
     } catch (e) { /* skip */ }
   }
 }
+
+if (extracted.storeSet) delete extracted.storeSet;
+if (extracted.storeGet) delete extracted.storeGet;
+if (extracted.storeDel) delete extracted.storeDel;
+try {
+  const storageContext = createContext();
+  storageContext.window = storageContext;
+  vm.runInContext(storageSource, storageContext);
+  Object.assign(extracted, {
+    storeSet: storageContext.storeSet,
+    storeGet: storageContext.storeGet,
+    storeDel: storageContext.storeDel,
+  });
+} catch (e) { /* app.js no longer owns storage; loader test fails below */ }
 
 export function getApp() {
   return extracted;

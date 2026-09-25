@@ -35,27 +35,7 @@
   var trashPath='C:\\Papierkorb';
   var curPath='C:\\Users\\macrohard\\Desktop';
 
-  /* localStorage Wrapper with quota check + fallback to sessionStorage */
-  /**
-   * Speichert einen Wert in localStorage mit Fallback auf sessionStorage
-   * @param {string} k - Schlüssel
-   * @param {string} v - Wert
-   * @returns {boolean} Erfolg
-   */
-  function storeSet(k,v){
-    try{localStorage.setItem(k,v);return true;}catch(e){}
-    try{sessionStorage.setItem(k,v);return true;}catch(e){}
-    return false;
-  }
-  function storeGet(k){
-    try{var v=localStorage.getItem(k);if(v!==null&&v!==undefined)return v;}catch(e){}
-    try{return sessionStorage.getItem(k);}catch(e){}
-    return null;
-  }
-  function storeDel(k){
-    try{localStorage.removeItem(k);}catch(e){}
-    try{sessionStorage.removeItem(k);}catch(e){}
-  }
+  /* localStorage wrapper lives in assets/js/storage.js and is loaded before app.js. */
 
   var I18N={
     de:{
@@ -463,7 +443,7 @@
   }
 
   /* Start menu — mit Fix für z-index und Click-Blockade durch Boot/Lock */
-  document.addEventListener('DOMContentLoaded',function(){
+  function initShell(){
 
 /* Add skip link for accessibility */
 if(!document.getElementById('skipLink')){
@@ -500,7 +480,7 @@ if(!document.getElementById('skipLink')){
         if(focused&&focused._escClose) focused._escClose();
       }
     });
-  });
+  }
 
   /* Lock → Desktop */
   var lockEl=document.getElementById('lock');if(lockEl) lockEl.addEventListener('click',function(){
@@ -3550,7 +3530,9 @@ if(!document.getElementById('skipLink')){
 
     function addChatBubble(el,m){
       var d=document.createElement('div');d.className='cpMsg'+(m.self?' self':'');
-      d.innerHTML='<span class="chatBubbleText">'+m.text+'</span><span class="chatBubbleTime">'+m.time+'</span>';
+      var textSpan=document.createElement('span');textSpan.className='chatBubbleText';textSpan.textContent=String(m.text||'');
+      var timeSpan=document.createElement('span');timeSpan.className='chatBubbleTime';timeSpan.textContent=String(m.time||'');
+      d.appendChild(textSpan);d.appendChild(timeSpan);
       el.appendChild(d);el.scrollTop=el.scrollHeight;
     }
 
@@ -3972,7 +3954,11 @@ if(!document.getElementById('skipLink')){
       itemDiv.appendChild(favSpan);
       /* Link */
       var a=document.createElement('a');a.className='clLink';a.href=l.u;a.target='_blank';a.rel='noopener';
-      a.innerHTML='<span class="clIco">🔗</span><span>'+l.n+' <span style="font-size:9px;opacity:.6">'+l.cat+'</span></span>';
+      var ico=document.createElement('span');ico.className='clIco';ico.textContent='🔗';
+      var label=document.createElement('span');label.appendChild(document.createTextNode(String(l.n||'')));
+      var cat=document.createElement('span');cat.style.cssText='font-size:9px;opacity:.6';cat.textContent=String(l.cat||'');
+      label.appendChild(document.createTextNode(' '));label.appendChild(cat);
+      a.appendChild(ico);a.appendChild(label);
       a.addEventListener('click',function(){
         l.lastVisit=Date.now();
         var idx3=linksData.indexOf(l);
@@ -3990,7 +3976,7 @@ if(!document.getElementById('skipLink')){
   }
 
   /* Init */
-  window.addEventListener('DOMContentLoaded',function(){
+  function initDesktop(){
     var desk=document.getElementById('deskIcons');
 
     /* Hide landing page (os-shell) once lock screen is dismissed */
@@ -4081,7 +4067,7 @@ if(!document.getElementById('skipLink')){
     buildMusic();buildBrowser();buildLinks();buildSettings();
     buildOmarchyLinks();
     // lock click handler already registered above
-  });
+  }
 
   /* Browser — S1+S2+S3: Tabs + Shortcuts + Bookmarks + History */
   function buildBrowser(){
@@ -4277,8 +4263,14 @@ if(!document.getElementById('skipLink')){
     showHome();
   }
 
-  window.addEventListener('DOMContentLoaded',function(){
+  function initBoot(){
     setTimeout(startOS,1500);
+  }
+
+  window.addEventListener('DOMContentLoaded',function(){
+    initShell();
+    initDesktop();
+    initBoot();
   });
 
   /* PWA register */
@@ -5689,7 +5681,7 @@ function buildSysinfo(){
   
   /* OS */
   addSection('Betriebssystem');
-  addRow('OS','MakerOS v2.11.20 (Neo-Brutalist)');
+  addRow('OS','MakerOS v2.11.45 (Neo-Brutalist)');
   addRow('Benutzer','macrohard');
   addRow('Plattform',navigator.platform);
   addRow('Sprache',navigator.language);

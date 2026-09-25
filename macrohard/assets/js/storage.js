@@ -1,29 +1,31 @@
-/**
- * Storage Wrapper - localStorage mit Fallback auf sessionStorage
- * @module storage
- */
+/* Storage facade for the classic app.js runtime. */
+(function (global) {
+  function storeSet(key, value) {
+    try { global.localStorage.setItem(key, value); return true; } catch (error) {}
+    try { global.sessionStorage.setItem(key, value); return true; } catch (error) {}
+    return false;
+  }
 
-export function storeSet(k, v) {
-  try {
-    localStorage.setItem(k, v);
-    return true;
-  } catch (e) {}
-  try {
-    sessionStorage.setItem(k, v);
-    return true;
-  } catch (e) {}
-  return false;
-}
+  function storeGet(key) {
+    try {
+      var value = global.localStorage.getItem(key);
+      if (value !== null && value !== undefined) return value;
+    } catch (error) {}
+    try { return global.sessionStorage.getItem(key); } catch (error) {}
+    return null;
+  }
 
-export function storeGet(k) {
-  return localStorage.getItem(k) || sessionStorage.getItem(k);
-}
+  function storeDel(key) {
+    try { global.localStorage.removeItem(key); } catch (error) {}
+    try { global.sessionStorage.removeItem(key); } catch (error) {}
+  }
 
-export function storeDel(k) {
-  try { localStorage.removeItem(k); } catch (e) {}
-  try { sessionStorage.removeItem(k); } catch (e) {}
-}
+  function storeHas(key) {
+    return storeGet(key) !== null;
+  }
 
-export function storeHas(k) {
-  return !!(localStorage.getItem(k) || sessionStorage.getItem(k));
-}
+  global.storeSet = storeSet;
+  global.storeGet = storeGet;
+  global.storeDel = storeDel;
+  global.storeHas = storeHas;
+})(window);
