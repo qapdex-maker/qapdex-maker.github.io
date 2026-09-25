@@ -3025,18 +3025,23 @@
     }, 100);
   }
 
+  /* Paint state lives at IIFE scope: floodFill(), drawShapePreview() and
+   * commitShape() are defined outside buildPaint() and share this state. */
+  let paintColor = '#000',
+    pTool = 'pen',
+    pShape = null,
+    pCtx = null;
+
   function buildPaint() {
     const colors = document.getElementById('ptColors');
     const canvas = document.getElementById('ptCanvas');
     if (!colors || !canvas) return;
-    let paintColor = '#000',
-      pTool = 'pen',
-      painting = false,
+    let painting = false,
       pStart = null,
       undoStack = [],
       redoStack = [],
       maxUndo = 50;
-    const pCtx = canvas.getContext('2d');
+    pCtx = canvas.getContext('2d');
     pCtx.fillStyle = '#fff';
     pCtx.fillRect(0, 0, canvas.width, canvas.height);
     function saveState() {
@@ -9236,6 +9241,84 @@ function playSound(type) {
       osc.stop(now + 0.3);
     }
   } catch (e) {}
+}
+
+/* Analoge Uhr — Canvas-Zeichenfläche für den Modus "analog" */
+let analogClockTimer = null;
+function drawAnalogClock() {
+  const canvas = document.getElementById('clkAnalogCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  const size = canvas.width;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = size / 2 - 12;
+
+  const paint = function () {
+    const now = new Date();
+    ctx.clearRect(0, 0, size, size);
+
+    // Zifferblatt
+    ctx.strokeStyle = '#0b0b0c';
+    ctx.fillStyle = '#f1ede3';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Stunden-Marker
+    ctx.fillStyle = '#0b0b0c';
+    ctx.font = 'bold 14px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (let h = 1; h <= 12; h++) {
+      const a = (h / 12) * Math.PI * 2 - Math.PI / 2;
+      ctx.fillText(String(h), cx + Math.cos(a) * (r - 16), cy + Math.sin(a) * (r - 16));
+    }
+
+    const h = now.getHours();
+    const m = now.getMinutes();
+    const s = now.getSeconds();
+
+    // Stundenzeiger
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    const ha = (((h % 12) + m / 60) / 12) * Math.PI * 2 - Math.PI / 2;
+    ctx.lineTo(cx + Math.cos(ha) * (r - 34), cy + Math.sin(ha) * (r - 34));
+    ctx.stroke();
+
+    // Minutenzeiger
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    const ma = (m / 60) * Math.PI * 2 - Math.PI / 2;
+    ctx.lineTo(cx + Math.cos(ma) * (r - 20), cy + Math.sin(ma) * (r - 20));
+    ctx.stroke();
+
+    // Sekundenzeiger
+    ctx.strokeStyle = '#2547ff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    const sa = (s / 60) * Math.PI * 2 - Math.PI / 2;
+    ctx.lineTo(cx + Math.cos(sa) * (r - 12), cy + Math.sin(sa) * (r - 12));
+    ctx.stroke();
+
+    // Mittelachse
+    ctx.fillStyle = '#0b0b0c';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+    ctx.fill();
+  };
+
+  paint();
+  if (analogClockTimer) clearInterval(analogClockTimer);
+  analogClockTimer = setInterval(paint, 1000);
+  window.osIntervals['analogClock'] = analogClockTimer;
 }
 
 function buildClock() {

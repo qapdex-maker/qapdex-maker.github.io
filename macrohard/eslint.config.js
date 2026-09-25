@@ -42,6 +42,23 @@ const browserGlobals = {
   Proxy: 'readonly',
   Reflect: 'readonly',
   Intl: 'readonly',
+  fetch: 'readonly',
+  XMLHttpRequest: 'readonly',
+  btoa: 'readonly',
+  atob: 'readonly',
+  Audio: 'readonly',
+  performance: 'readonly',
+  cancelAnimationFrame: 'readonly',
+  TextDecoder: 'readonly',
+  TextEncoder: 'readonly',
+  Event: 'readonly',
+  KeyboardEvent: 'readonly',
+  MouseEvent: 'readonly',
+  WheelEvent: 'readonly',
+  HTMLElement: 'readonly',
+  Node: 'readonly',
+  DOMParser: 'readonly',
+  crypto: 'readonly',
 };
 
 export default [
@@ -53,7 +70,10 @@ export default [
       globals: browserGlobals,
     },
     rules: {
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', caughtErrors: 'none' }],
+      // IIFE-local cross-function references (pCtx, SEQ, toast, openApp, ...) and
+      // deliberate `typeof fn === 'function'` probes are resolved at runtime, not
+      // in the global scope. Verified in the browser, so this stays a warning.
       'no-undef': 'warn',
       'prefer-const': 'warn',
       'no-var': 'warn',
@@ -65,7 +85,9 @@ export default [
       'no-trailing-spaces': 'warn',
       'eol-last': 'warn',
       'comma-dangle': ['warn', 'always-multiline'],
-      'no-empty': 'warn',
+      // `catch (e) {}` is intentional here: localStorage/QuotaExceededError and
+      // optional browser APIs are guarded with an empty block on purpose.
+      'no-empty': ['warn', { allowEmptyCatch: true }],
       'no-extra-semi': 'warn',
     },
   },
