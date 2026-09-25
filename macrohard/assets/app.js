@@ -766,7 +766,7 @@ if(!document.getElementById('skipLink')){
       }
       if(wId==='explorer'){EXPLOADER_INITIALIZED=false;}
       if(wId==='browser'){BROWSER_INITIALIZED=false;}
-      if(wId==='music'){MUSIC_INITIALIZED=false;setupDone=false;}
+      if(wId==='music'){MUSIC_INITIALIZED=false;}
       // Stop music-specific resources
       try{
         if(wId==='music'){
@@ -5791,8 +5791,10 @@ function buildCalendar(){
   var events=loadEvents();
 
   function loadEvents(){
-    try{return JSON.parse(localStorage.getItem('macrohard_calendar_events')||'[]');}
-    catch(e){return [];}
+    try{
+      var parsed=JSON.parse(localStorage.getItem('macrohard_calendar_events')||'[]');
+      return Array.isArray(parsed)?parsed:[];
+    }catch(e){return [];}
   }
   function saveEvents(){
     try{localStorage.setItem('macrohard_calendar_events',JSON.stringify(events));}catch(e){}
