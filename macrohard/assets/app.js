@@ -7015,7 +7015,7 @@
         ny = my - dy;
       dragging.style.left = nx + 'px';
       dragging.style.top = ny + 'px';
-      showSnapHint(nx, ny);
+      showSnapHint(nx, ny, dragging);
     }
     function onup(ev) {
       document.removeEventListener('mousemove', onmove);
@@ -7040,7 +7040,7 @@
     document.addEventListener('touchmove', onmove, { passive: false });
     document.addEventListener('touchend', onup);
   }
-  function showSnapHint(x, y) {
+  function showSnapHint(x, y, dragged) {
     const wW = window.innerWidth;
     let hint = document.getElementById('snapHint');
     if (!hint) {
@@ -7051,7 +7051,7 @@
     if (x < 60) {
       hint.className = 'snap-left';
       hint.style.display = 'block';
-    } else if (x > wW - w.offsetWidth - 60) {
+    } else if (x > wW - (dragged ? dragged.offsetWidth : 0) - 60) {
       hint.className = 'snap-right';
       hint.style.display = 'block';
     } else if (y < 60) {
@@ -8210,7 +8210,8 @@
           notes.push(n);
           saveNotes();
           saveTrash(trash);
-          render();
+          renderList();
+          renderTags();
           toast('Wiederhergestellt');
         }
       }
@@ -8324,7 +8325,7 @@
       allSpan.textContent = 'Alle (' + notes.length + ')';
       allSpan.addEventListener('click', function () {
         filterTag = '';
-        render();
+        renderList();
       });
       tagsEl.appendChild(allSpan);
       Object.keys(tags).forEach(function (t) {
@@ -8333,7 +8334,7 @@
         s.textContent = t + ' (' + tags[t] + ')';
         s.addEventListener('click', function () {
           filterTag = t;
-          render();
+          renderList();
         });
         tagsEl.appendChild(s);
       });
@@ -8344,7 +8345,7 @@
       listEl.innerHTML = '';
       notes
         .filter(function (n) {
-          if (filterTag && !(n.tags || []).indexOf(filterTag) >= 0) return false;
+          if (filterTag && (n.tags || []).indexOf(filterTag) === -1) return false;
           if (
             q &&
             n.title.toLowerCase().indexOf(q) === -1 &&
@@ -8382,7 +8383,8 @@
             if (currentId === n.id) {
               currentId = null;
             }
-            render();
+            renderList();
+            renderTags();
             toast('In Papierkorb');
           });
           item.appendChild(del);
@@ -8454,7 +8456,8 @@
         });
       }
       saveNotes();
-      render();
+      renderList();
+      renderTags();
       toast('Gespeichert');
     }
 
