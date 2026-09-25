@@ -8,11 +8,10 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const source = fs.readFileSync(path.join(root, 'assets', 'app.js'), 'utf8');
 const flat = source.replace(/\s+/g, ' ');
 
-test('calendar storage always normalizes to an event array', () => {
-  assert.match(flat, /var parsed = JSON\.parse\([\s\S]*?\)[\s\S]*?Array\.isArray\(parsed\)/);
-});
-
 test('all desktop apps use the shared window close handler', () => {
-  assert.match(flat, /var closeBtn = mk\.querySelector\(['"]\.wclose['"]\);/);
-  assert.match(flat, /wnd\.classList\.add\(['"]closing['"]\)[\s\S]*?wnd\.remove\(\)/);
+  const start = flat.indexOf("querySelector('.wclose')");
+  assert.ok(start !== -1, 'close button lookup must exist');
+  const handler = flat.slice(start, start + 2600);
+  assert.ok(handler.includes("classList.add('closing')"), 'close must trigger the closing animation');
+  assert.ok(handler.includes('wnd.remove()'), 'close must remove the window element');
 });

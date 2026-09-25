@@ -1199,6 +1199,15 @@
         if (wId === 'explorer') {
           EXPLOADER_INITIALIZED = false;
         }
+        if (wId === 'terminal') {
+          TERM_INITIALIZED = false;
+        }
+        if (wId === 'chat') {
+          CHAT_INITIALIZED = false;
+        }
+        if (wId === 'calendar') {
+          CALENDAR_INITIALIZED = false;
+        }
         if (wId === 'browser') {
           BROWSER_INITIALIZED = false;
         }
@@ -3518,7 +3527,6 @@
         localStorage.setItem(SK_RADIO, JSON.stringify(radioStations));
       } catch (e) {}
     }
-    loadCustomSamples();
 
     /* === Audio Graph === */
     var setupDone = false;
@@ -3665,8 +3673,9 @@
       { f: 100, n: '808 Tom', c: '#f2f', file: '808tom' },
     ];
 
-    var SEQ_CUSTOM_KEY = 'seq_custom_samples';
-    var customSamples = [];
+    const SEQ_CUSTOM_KEY = 'seq_custom_samples';
+    let customSamples = [];
+    loadCustomSamples();
 
     function loadCustomSamples() {
       try {
