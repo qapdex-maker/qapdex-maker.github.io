@@ -1315,22 +1315,19 @@
         if (wId === 'music') {
           MUSIC_INITIALIZED = false;
         }
-        // Stop music-specific resources
+        /* Stop music-specific resources.
+         * visRafId, SEQ and stopSequencer live in buildMusic() and are NOT in
+         * scope here. Reading them threw ReferenceError, which the surrounding
+         * catch(err){} swallowed — so the visualizer's requestAnimationFrame
+         * loop and the sequencer were never stopped when the window closed.
+         * buildMusic() registers window.osTimeouts['music_cleanup'] for exactly
+         * this; the close handler only has to call it, like clock/chat do. */
         try {
-          if (wId === 'music') {
-            if (visRafId) {
-              cancelAnimationFrame(visRafId);
-              visRafId = null;
-            }
-            if (typeof stopSequencer === 'function') stopSequencer();
-            /* Radio cleanup via main pipeline */
-            if (SEQ) {
-              SEQ.playing = false;
-              SEQ.controlsInitialized = false;
-            }
-            EQ_INITIALIZED = false;
+          if (wId === 'music' && window.osTimeouts && window.osTimeouts['music_cleanup']) {
+            window.osTimeouts['music_cleanup']();
           }
         } catch (err) {}
+
         // Chat cleanup
         try {
           if (wId === 'chat' && window.osTimeouts && window.osTimeouts['chat_cleanup']) {
@@ -3195,14 +3192,24 @@
     pShape = null,
     pCtx = null;
 
+  /* Music state at IIFE scope: the cleanup registered in buildMusic() and the
+   * close handler both have to reach the visualizer's rAF handle. Declared
+   * inside buildMusic() it was invisible to the close handler, which threw a
+   * ReferenceError into a silent catch(err){} and left the rAF loop running
+   * against a removed canvas. */
+  let visRafId = null;
+  /* Chat state at IIFE scope, same reason: cleanupChat() runs from the shared
+   * close handler and must be able to clear the pending reply timer. */
+  let chatReplyTimer = null;
+
   function buildPaint() {
     const colors = document.getElementById('ptColors');
     const canvas = document.getElementById('ptCanvas');
     if (!colors || !canvas) return;
     let painting = false,
       pStart = null,
-      undoStack = [],
-      redoStack = [],
+      redoStack = [];
+    const undoStack = [],
       maxUndo = 50;
     pCtx = canvas.getContext('2d');
     pCtx.fillStyle = '#fff';
@@ -3665,7 +3672,6 @@
       }
     }
     let audioEl = null;
-    let visRafId = null;
 
     /* === Storage Helpers === */
     function loadFavs() {
@@ -5781,7 +5787,6 @@
       return def[Math.floor(Math.random() * def.length)];
     }
 
-    let chatReplyTimer = null;
     let typingEl = null;
 
     function sendMsg(text) {
