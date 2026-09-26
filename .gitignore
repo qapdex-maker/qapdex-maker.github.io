@@ -10,3 +10,9 @@ commitmsg*.txt
 
 # dependencies (package-lock.json IS tracked, node_modules is not)
 node_modules/
+
+# editor backups: app.js.bak was tracked since 26f246b (the ES6 module split)
+# and shipped on every deploy without ever being referenced. It now lives in
+# ~/archive/makeros/ instead of in the repo.
+*.bak
+*.orig
