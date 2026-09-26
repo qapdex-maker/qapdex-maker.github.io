@@ -1901,7 +1901,10 @@
       } else if (key === 'Backspace') {
         e.preventDefault();
         const ex = document.getElementById('cExpr');
-        if (ex) ex.value = ex.value.slice(0, -1) || '0';
+        if (ex) {
+          ex.value = ex.value.slice(0, -1) || '0';
+          if (typeof calcPreview === 'function') calcPreview();
+        }
       } else if (/^[0-9.+\-*/()]$/.test(key)) {
         e.preventDefault();
         const ex2 = document.getElementById('cExpr');
@@ -1909,11 +1912,65 @@
           if (ex2.value === '0') ex2.value = key;
           else ex2.value += key;
           ex2.focus();
+          if (typeof calcPreview === 'function') calcPreview();
         }
       }
     });
     wnd.setAttribute('tabindex', '-1');
   }
+  /*
+   * Live preview: show the running result in #cCur while the user is still
+   * typing, the way a pocket calculator does. The expression input keeps the
+   * raw text, the side panel shows the value of the part that is already
+   * complete (everything up to the last trailing operator).
+   *
+   * "2+3×"   -> 5
+   * "2+3×4"  -> 14   (keeps updating as you type)
+   * "7"      -> 7
+   * "7×"     -> 7    (operand complete, operator pending)
+   */
+  function calcPreview() {
+    const expr = document.getElementById('cExpr');
+    const cur = document.getElementById('cCur');
+    if (!expr || !cur) return;
+    const raw = String(expr.value || '').trim();
+    if (!raw || raw === '0' || raw === 'Error') {
+      cur.textContent = raw === 'Error' ? 'Error' : '';
+      return;
+    }
+    const norm = raw.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
+    /*
+     * A real calculator evaluates the WHOLE expression as soon as it is
+     * syntactically valid, and only falls back to the completed prefix when
+     * the tail is still open. "7*8" -> 56, "2+3*" -> 5, "(1+2)*3" -> 9.
+     */
+    const tryEval = (text) => {
+      if (!text || !/^[-+*/().,\s\d_a-zA-Zπφ]*$/.test(text)) return null;
+      try {
+        const v = safeEvalCalc(text);
+        return v === undefined || Number.isNaN(v) ? null : v;
+      } catch (e) {
+        return null;
+      }
+    };
+
+    let out = tryEval(norm);
+
+    if (out === null) {
+      // Still incomplete. Evaluate the longest balanced prefix instead.
+      let best = null;
+      for (let i = norm.length; i > 0; i--) {
+        const cand = tryEval(norm.slice(0, i));
+        if (cand !== null) {
+          best = cand;
+          break;
+        }
+      }
+      out = best;
+    }
+    cur.textContent = out === null || out === undefined ? '' : String(out);
+  }
+  window.calcPreview = calcPreview;
   function calcPress(b) {
     const expr = document.getElementById('cExpr');
     if (!expr) return;
@@ -1933,8 +1990,9 @@
       expr.value += map[b] + '(';
     } else if (b === 'C') {
       expr.value = '0';
-      document.getElementById('cCur').textContent = '0';
+      document.getElementById('cCur').textContent = '';
       document.getElementById('calcHist').textContent = '';
+      return;
     } else if (b === '±') {
       expr.value = (parseFloat(expr.value || '0') * -1).toString();
     } else if (b === '%') {
@@ -1947,13 +2005,17 @@
         document.getElementById('cCur').textContent = '';
         expr.value = r;
         renderHist();
+        return;
       } catch (e) {
         expr.value = 'Error';
+        document.getElementById('cCur').textContent = 'Error';
+        return;
       }
     } else {
       if (expr.value === '0') expr.value = b;
       else expr.value += b;
     }
+    calcPreview();
   }
   window.calcPress = calcPress;
   function renderHist() {
