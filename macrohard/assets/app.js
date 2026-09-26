@@ -8217,6 +8217,11 @@
     });
   });
   window.openApp = openApp;
+  // Apps that live OUTSIDE this IIFE (everything below the closing brace) call
+  // toast(). Without this export they threw "ReferenceError: toast is not
+  // defined" at runtime — e.g. the 4x4 toggle in the Tic-Tac-Toe app.
+  // startOS is already exported at line 192 as window.startOS = function(){}.
+  window.toast = toast;
 })();
 
 /* AMIBIOS Setup — iframe window */
