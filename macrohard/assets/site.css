@@ -177,7 +177,13 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
 #snapHint.snap-left{display:block}
 #snapHint.snap-right{display:block}
 #snapHint.snap-max{display:block}
-.wnd{position:absolute;background:var(--surface);border:3px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;min-width:280px;min-height:180px;z-index:100;animation:wndOpen .18s ease-out}
+/* overflow:hidden is load-bearing. Without it a window grows to fit its
+ * content instead of scrolling it: the Editor toolbar and the Explorer body
+ * then render outside the frame. Reproduced at 300x240 in Chromium —
+ * 4 elements past the right edge in the Editor, 38 past the bottom in the
+ * Explorer, with .feBody itself 348px over. .wbody keeps overflow:auto, so
+ * the content becomes scrollable rather than invisible. */
+.wnd{position:absolute;background:var(--surface);border:3px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;min-width:280px;min-height:180px;overflow:hidden;z-index:100;animation:wndOpen .18s ease-out}
 .wnd.focused{box-shadow:var(--shadow-hover);border-color:var(--accent)}
 .wnd.closing{animation:wndClose .2s ease-in forwards}
 @keyframes wndOpen{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
@@ -185,7 +191,24 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
 .wtitle{display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--accent);color:#fff;font-size:12px;font-weight:600;cursor:move;flex:0 0 auto}
 .wnd .wact{width:10px;height:10px;border-radius:50%;background:var(--accent);flex:0 0 auto}
 /* ===== window body ===== */
-.wbody{flex:1;overflow:auto;position:relative}
+/* min-height:0 is required, not cosmetic. As a flex child of .wnd, .wbody
+ * defaults to min-height:auto and grows to its content instead of being
+ * clamped by the window.
+ *
+ * display:flex + flex-direction:column is the other half. Apps that fill the
+ * body (Explorer .feBody, Editor .edContainer) rely on a flex box to divide
+ * the available height — `flex:1` in a block container resolves against
+ * nothing and the child grows to its content instead. Measured with a 240px
+ * Explorer before this: .wbody was 198px while .feBody inside it was 579px,
+ * 38 elements rendering below the frame. */
+.wbody{flex:1;min-height:0;overflow:auto;position:relative;display:flex;flex-direction:column}
+/* Direct children of the body must be allowed to shrink: the Explorer splits
+ * its body into a capped sidebar plus a file grid, and if the grid cannot
+ * shrink it clamps to whatever height the sidebar leaves over (34px in a
+ * 240px window) while its 100px tiles keep their size and hang up to 181px
+ * past the bottom edge. min-height:0 lets the grid take the real remainder and
+ * scroll internally, which is what it already declares with overflow-y:auto. */
+.wbody>*{min-height:0}
 
 /* ===== scrollbar (neo-brutalist) ===== */
 ::-webkit-scrollbar{width:10px;height:10px}
@@ -255,13 +278,26 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .feSide .feItem{padding:4px 6px;font-size:11px;cursor:pointer;border-radius:2px;font-family:"IBM Plex Mono",monospace}
 .feSide .feItem:hover{background:var(--accent);color:#fff}
 .feSide .feDir{font-weight:700;margin-top:6px;color:var(--muted);font-size:10px;text-transform:uppercase}
-.feGrid{flex:1;padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;overflow-y:auto}
+/* flex:1 with basis 0 makes this a flex item that divides the remaining
+ * height, but a wrapped flex container with align-content:flex-start does
+ * not scroll: the tiles keep their 100px and render past the frame. Measured
+ * in a 240px window: grid height 34px, tiles from y=273 to y=373, i.e. 73px
+ * to 181px below the window edge.
+ *
+ * `flex:1 1 100%` gives it the real remainder, and align-items:stretch
+ * replaces align-content:flex-start. In a wrapping flex container the
+ * cross-axis alignment is what decides where the LINES start: with
+ * align-content:flex-start the first line is pinned to the top and grows
+ * past the container, so overflow-y:auto never engages and the last row
+ * hangs below the frame. With stretch, rows are laid out to fill the box and
+ * the container scrolls. */
+.feGrid{flex:1 1 100%;min-height:0;padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;align-content:stretch;overflow-y:auto}
 .feFile{width:80px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:2px solid var(--line);cursor:pointer;background:var(--surface)}
 .feFile:hover{border-color:var(--accent)}
 .feFile .fn{font-size:10px;text-align:center;word-break:break-all;font-family:"IBM Plex Mono",monospace}
 .fePath{padding:4px 10px;border-bottom:2px solid var(--line);font-family:"IBM Plex Mono",monospace;font-size:11px;background:var(--paper);display:flex;align-items:center;gap:6px}
 .fePath input{flex:1;border:none;background:transparent;font-family:"IBM Plex Mono",monospace;font-size:11px;outline:none;color:var(--ink)}
-.feToolbar{display:flex;gap:4px;padding:4px 10px;border-bottom:2px solid var(--line);background:var(--paper)}
+.feToolbar{display:flex;flex-wrap:wrap;gap:4px;padding:4px 10px;border-bottom:2px solid var(--line);background:var(--paper);min-height:0}
 
 /* ===== paint ===== */
 .ptCanvas{border:2px solid var(--line);cursor:crosshair;display:block;background:#fff}
@@ -528,13 +564,26 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .pill{display:inline-flex;align-items:center;padding:2px 8px;border:2px solid var(--line);background:var(--surface);font-size:10px;font-weight:600}
 
 /* ===== explorer ===== */
-.feBody{display:flex;flex:1;overflow:hidden;position:relative}
+.feBody{display:flex;flex:1;overflow:hidden;position:relative;min-height:0}
+/* Container query, not a media query. The Explorer lives in a freely
+ * resizable window, so @media(max-width:...) measures the BROWSER, not the
+ * app: with a 1280px viewport and a 300px window the media query never fires
+ * and the sidebar pushes 61px past the right frame edge. .wbody is the
+ * container, so the breakpoint follows the window instead.
+ *
+ * Support: Chrome/Edge 105+, Safari 16+, Firefox 110+. Verified working in
+ * the Chromium this project is tested against. */
+.wbody{container-type:inline-size;container-name:appbody}
+@container appbody (max-width:420px){
+  .feBody{flex-direction:column}
+  .feSide{width:auto;max-height:33%;overflow-y:auto;flex-shrink:0}
+}
 /* Mobile: Sidebar als Drawer außerhalb des overflow-Containers */
 @media(max-width:760px){
   .feBody{overflow:visible}
 }
 .feSidebarToggle{display:none;position:absolute;top:6px;left:6px;width:36px;height:36px;border:2px solid var(--line);background:var(--surface);font-size:16px;cursor:pointer;z-index:1000}
-.feToolbar{display:flex;gap:4px;padding:4px 10px;border-bottom:2px solid var(--line);background:var(--paper)}
+.feToolbar{display:flex;flex-wrap:wrap;gap:4px;padding:4px 10px;border-bottom:2px solid var(--line);background:var(--paper);min-height:0}
 .feSearchBar{display:flex;gap:4px;padding:4px 10px;border-bottom:2px solid var(--line);background:var(--surface)}
 .feSearchBar input{flex:1;padding:4px 8px;border:2px solid var(--line);background:var(--paper);font-family:var(--font-mono);font-size:11px}
 .feFile{display:flex;align-items:center;gap:8px;padding:6px 10px;border:2px solid var(--line);background:var(--surface);box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .1s}
@@ -834,7 +883,10 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .gmCell.gmO{color:var(--ink)}
 
 /* ===== File Editor ===== */
-.edToolbar{display:flex;gap:4px;padding:4px 6px;border-bottom:2px solid var(--line);background:var(--paper);align-items:center}
+/* flex-wrap is not only for the mobile query: a window narrowed inside a wide
+ * browser never matches max-width:760px, and without wrapping the last four
+ * controls (edLang, edStats, font-size, zoom) render outside the frame. */
+.edToolbar{display:flex;flex-wrap:wrap;gap:4px;padding:4px 6px;border-bottom:2px solid var(--line);background:var(--paper);align-items:center;min-height:0}
 .edStats{margin-left:auto;font-size:10px;font-family:var(--font-mono);color:var(--muted)}
 #edLang{padding:4px 6px;border:2px solid var(--line);background:var(--surface);font-family:var(--font-mono);font-size:10px;color:var(--ink)}
 .edContainer{display:flex;flex:1;overflow:hidden;position:relative}
