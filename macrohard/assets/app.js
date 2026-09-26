@@ -233,7 +233,7 @@
    * openApp() has not been re-exported yet, and it must not resurrect apps
    * whose builder was removed.
    */
-  var sessionRestored = false;
+  let sessionRestored = false;
   /*
    * The app ids openApp() can build, read from the desktop icons. The
    * `apps` object at the top of this file is never populated, and duplicating
@@ -965,7 +965,7 @@
   }
 
   /* Task View (Win+Tab) - shows all open windows */
-  var taskViewOpen = false;
+  let taskViewOpen = false;
   function toggleTaskView() {
     let tv = document.getElementById('taskView');
     if (taskViewOpen) {
@@ -1020,7 +1020,7 @@
   }
 
   /* Help Overlay (Ctrl+?) */
-  var helpOverlayOpen = false;
+  let helpOverlayOpen = false;
   function toggleHelpOverlay() {
     let ho = document.getElementById('helpOverlay');
     if (helpOverlayOpen) {
@@ -1107,7 +1107,7 @@
       w.style.zIndex = ++zIdx;
       focused = id;
       updateFocus();
-      var tbIcon = document.getElementById('tb-' + instId);
+      const tbIcon = document.getElementById('tb-' + instId);
       if (tbIcon) tbIcon.classList.remove('minimized');
       return;
     }
@@ -1396,7 +1396,7 @@
 
     /* Taskbar-Icon erstellen wenn nicht vorhanden */
     if (!document.getElementById('tb-' + instId)) {
-      var tbIcon = document.createElement('div');
+      const tbIcon = document.createElement('div');
       tbIcon.className = 'tbIcon running focused';
       tbIcon.id = 'tb-' + instId;
       tbIcon.title = t(id);
@@ -2158,7 +2158,7 @@
         termHist.push(cmd);
         termHistI = termHist.length;
         const args = cmd.split(/\s+/);
-        var c = args[0].toLowerCase();
+        let c = args[0].toLowerCase();
         switch (c) {
         case 'help':
           w('Befehle: ' + commands.join(', '));
@@ -2209,7 +2209,7 @@
             w('Usage: cat <file>');
             break;
           }
-          var cur = fsData[curPath];
+          const cur = fsData[curPath];
           if (cur && cur.files.indexOf(target) !== -1) {
             w('--- ' + target + ' ---');
             w('[Inhalt von ' + target + ' — mock]');
@@ -2218,40 +2218,40 @@
           break;
         }
         case 'head': {
-          var fn = args[1];
+          const fn = args[1];
           if (!fn) {
             w('Usage: head <file> [n]');
             break;
           }
-          var cur = fsData[curPath];
+          const cur = fsData[curPath];
           if (cur && cur.files.indexOf(fn) !== -1) {
-            var n = parseInt(args[2]) || 10;
+            let n = parseInt(args[2]) || 10;
             w('--- ' + fn + ' (erste ' + n + ' Zeilen) ---');
             w('[Mock content — ' + n + ' lines]');
           } else w('Datei nicht gefunden: ' + fn);
           break;
         }
         case 'tail': {
-          var fn = args[1];
+          const fn = args[1];
           if (!fn) {
             w('Usage: tail <file> [n]');
             break;
           }
-          var cur = fsData[curPath];
+          const cur = fsData[curPath];
           if (cur && cur.files.indexOf(fn) !== -1) {
-            var n = parseInt(args[2]) || 10;
+            let n = parseInt(args[2]) || 10;
             w('--- ' + fn + ' (letzte ' + n + ' Zeilen) ---');
             w('[Mock content — ' + n + ' lines]');
           } else w('Datei nicht gefunden: ' + fn);
           break;
         }
         case 'wc': {
-          var fn = args[1];
+          const fn = args[1];
           if (!fn) {
             w('Usage: wc <file>');
             break;
           }
-          var cur = fsData[curPath];
+          const cur = fsData[curPath];
           if (cur && cur.files.indexOf(fn) !== -1) {
             w('  1   3 42 ' + fn);
           } else w('Datei nicht gefunden: ' + fn);
@@ -2264,7 +2264,7 @@
             break;
           }
           if (dest === '..') {
-            var parts = curPath.split('\\');
+            const parts = curPath.split('\\');
             if (parts.length > 2) {
               parts.pop();
               curPath = parts.join('\\');
@@ -2278,7 +2278,7 @@
             w(curPath);
             renderExplorer();
           } else {
-            var np = curPath === 'C:\\' ? 'C:\\' + dest : curPath + '\\' + dest;
+            const np = curPath === 'C:\\' ? 'C:\\' + dest : curPath + '\\' + dest;
             if (fsData[np]) {
               curPath = np;
               w('→ ' + curPath);
@@ -2290,12 +2290,12 @@
           break;
         }
         case 'touch': {
-          var fn = args[1];
+          const fn = args[1];
           if (!fn) {
             w('Usage: touch <file>');
             break;
           }
-          var c = fsData[curPath];
+          let c = fsData[curPath];
           if (!c) {
             w('Kein Verzeichnis.');
             break;
@@ -2359,7 +2359,7 @@
             w('Existiert bereits: ' + dn);
           } else {
             c3.dirs.push(dn);
-            var np = curPath === 'C:\\' ? 'C:\\' + dn : curPath + '\\' + dn;
+            const np = curPath === 'C:\\' ? 'C:\\' + dn : curPath + '\\' + dn;
             fsData[np] = { dirs: [], files: [] };
             w('Erstellt: ' + dn);
             renderExplorer();
@@ -2434,7 +2434,7 @@
             w('Kein Verzeichnis.');
             break;
           }
-          var matches = c6.files.filter(function (f) {
+          const matches = c6.files.filter(function (f) {
             return f.toLowerCase().indexOf(term.toLowerCase()) !== -1;
           });
           w(matches.length ? matches.join('\n') : 'Kein Treffer.');
@@ -2512,9 +2512,9 @@
             else if (cmdMatch.length > 1) w('Befehle: ' + cmdMatch.join(', '));
           } else {
             /* Path completion */
-            var parts = curVal.split(' ');
+            const parts = curVal.split(' ');
             const last = parts[parts.length - 1];
-            var matches = Object.keys(fsData).filter(function (p) {
+            const matches = Object.keys(fsData).filter(function (p) {
               return p.startsWith(last);
             });
             if (matches.length === 1) {
@@ -2541,7 +2541,7 @@
       }
     });
   }
-  var TERM_INITIALIZED = false;
+  let TERM_INITIALIZED = false;
 
   /* Explorer — S1: New Folder / New File */
   /* Globale Suche */
@@ -2775,9 +2775,9 @@
 
     renderExplorer();
   }
-  var EXPLOADER_INITIALIZED = false;
-  var BROWSER_INITIALIZED = false;
-  var MUSIC_INITIALIZED = false;
+  let EXPLOADER_INITIALIZED = false;
+  let BROWSER_INITIALIZED = false;
+  let MUSIC_INITIALIZED = false;
 
   function newExplorerItem(type) {
     const name = prompt(type === 'folder' ? 'Ordnername:' : 'Dateiname:');
@@ -3063,14 +3063,14 @@
         } else if (act === 'rename') {
           const nn = prompt('Neuer Name:', f);
           if (nn && nn !== f) {
-            var idx = files.indexOf(f);
+            let idx = files.indexOf(f);
             if (idx !== -1) files[idx] = nn;
             renderExplorer();
           }
         } else if (act === 'copy') {
           const c = fsData[path];
           if (c) {
-            var idx = c.files.indexOf(f);
+            let idx = c.files.indexOf(f);
             if (idx !== -1) {
               c.files.push(f + ' (Kopie)');
               renderExplorer();
@@ -3778,7 +3778,7 @@
     }
 
     /* === Pattern Sequencer (Lookahead + Sample Library) === */
-    var SEQ = {
+    const SEQ = {
       pattern: [],
       playing: false,
       bpm: 120,
@@ -4877,7 +4877,7 @@
         }
       });
     }
-    var EQ_INITIALIZED = false;
+    let EQ_INITIALIZED = false;
 
     /* === Progress === */
     function onTimeUpdate() {
@@ -5761,7 +5761,7 @@
       }
     });
   }
-  var CHAT_INITIALIZED = false;
+  let CHAT_INITIALIZED = false;
 
   /* Docs — S1: editable + export + preview */
   function buildDocs() {
@@ -6097,7 +6097,7 @@
         if (is) {
           const isEl = document.getElementById('stIconSize');
           if (isEl) isEl.value = is;
-          var desk = document.getElementById('deskIcons');
+          const desk = document.getElementById('deskIcons');
           if (desk) desk.dataset.iconSize = is;
         }
       } catch (e) {}
@@ -6106,7 +6106,7 @@
         if (gd === '0') {
           const gdEl = document.getElementById('stGrid');
           if (gdEl) gdEl.checked = false;
-          var desk = document.getElementById('deskIcons');
+          const desk = document.getElementById('deskIcons');
           if (desk) desk.classList.remove('show-grid');
         }
       } catch (e) {}
@@ -6514,7 +6514,7 @@
       ico.textContent = '🔗';
       const label = document.createElement('span');
       label.appendChild(document.createTextNode(String(l.n || '')));
-      var cat = document.createElement('span');
+      const cat = document.createElement('span');
       cat.style.cssText = 'font-size:9px;opacity:.6';
       cat.textContent = String(l.cat || '');
       label.appendChild(document.createTextNode(' '));
@@ -6560,7 +6560,7 @@
     if (lockEl && lockEl.classList.contains('hide')) {
       hideShell();
     } else {
-      var hideShellInterval = setInterval(function () {
+      const hideShellInterval = setInterval(function () {
         const lockEl2 = document.getElementById('lock');
         const shellEl2 = document.querySelector('.os-shell');
         if (
@@ -7332,11 +7332,14 @@
         ctx.fillText(text, e.offsetX, e.offsetY);
       }
     });
-    /* Resize */
-    var ieResizeBtn = document.createElement('button');
-    ieResizeBtn.className = 'cBtn';
-    ieResizeBtn.textContent = 'Größe ändern';
-    ieResizeBtn.addEventListener('click', function () {
+    /* Resize. This button is a different element from the toolbar's #ieResize
+     * handled further down, which is why it needs its own name: both were
+     * called `ieResizeBtn`, and `var` silently let the second overwrite the
+     * first. With `let` that redeclaration would be a SyntaxError. */
+    const ieSizeBtn = document.createElement('button');
+    ieSizeBtn.className = 'cBtn';
+    ieSizeBtn.textContent = 'Größe ändern';
+    ieSizeBtn.addEventListener('click', function () {
       const w = prompt('Breite:', canvas.width);
       if (!w) return;
       const h = prompt('Höhe:', canvas.height);
@@ -7351,7 +7354,7 @@
       canvas.height = parseInt(h);
       ctx.drawImage(tmpCanvas, 0, 0, canvas.width, canvas.height);
     });
-    toolbar.appendChild(ieResizeBtn);
+    toolbar.appendChild(ieSizeBtn);
     /* Rotate slider */
     const ieRotateWrap = document.createElement('label');
     ieRotateWrap.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:10px';
@@ -7392,7 +7395,7 @@
         const imgData = ctx.getImageData(0, 0, w, h);
         const d = imgData.data;
         if (drawState.filters === 'grayscale') {
-          for (var i = 0; i < d.length; i += 4) {
+          for (let i = 0; i < d.length; i += 4) {
             const avg = (d[i] + d[i + 1] + d[i + 2]) / 3;
             d[i] = avg;
             d[i + 1] = avg;
@@ -7400,7 +7403,7 @@
           }
           ctx.putImageData(imgData, 0, 0);
         } else if (drawState.filters === 'sepia') {
-          for (var i = 0; i < d.length; i += 4) {
+          for (let i = 0; i < d.length; i += 4) {
             const r = d[i],
               g = d[i + 1],
               b = d[i + 2];
@@ -7410,7 +7413,7 @@
           }
           ctx.putImageData(imgData, 0, 0);
         } else if (drawState.filters === 'invert') {
-          for (var i = 0; i < d.length; i += 4) {
+          for (let i = 0; i < d.length; i += 4) {
             d[i] = 255 - d[i];
             d[i + 1] = 255 - d[i + 1];
             d[i + 2] = 255 - d[i + 2];
@@ -7479,7 +7482,7 @@
         toast('Rotiert: ' + drawState.rotation + '°');
       });
 
-    var ieResizeBtn = toolbar.querySelector('#ieResize');
+    const ieResizeBtn = toolbar.querySelector('#ieResize');
     if (ieResizeBtn)
       ieResizeBtn.addEventListener('click', function () {
         if (!origImage) return;
@@ -7847,6 +7850,14 @@
     const togglePrevBtn = document.querySelector('#ntTogglePreview');
     const newBtn = document.querySelector('#ntNew');
 
+    /* Vault state, declared FIRST. paintVaultBtn() below reads it and is called
+     * during setup, so it must exist before the first call. It used to be a
+     * `var` further down, which is why the order never mattered — `var` is
+     * hoisted and reads as undefined. With `let` the same layout throws
+     * "Cannot access 'notesVault' before initialization", which is how this was
+     * found: the unit tests passed and the Notes app failed on open. */
+    let notesVault = null; // 'aes-gcm' | null (Klartext)
+
     /* Vault-Button: AES-GCM ein-/ausschalten */
     const encryptBtn = document.createElement('button');
     encryptBtn.className = 'cBtn op';
@@ -8010,14 +8021,14 @@
     if (!listEl) return;
 
     const SK_NOTES = 'notes_data';
-    var currentId = null;
-    var notes = [];
+    let currentId = null;
+    let notes = [];
     let filterTag = '';
     let showPreview = false;
 
     /* Passwort lebt nur im Speicher, nie persistiert. */
-    var notesPassword = null;
-    var notesVault = null; // 'aes-gcm' | null (Klartext)
+    let notesPassword = null;
+    /* notesVault ist weiter oben deklariert, vor paintVaultBtn(). */
 
     /* UTF-8-sichere Base64-Rundtrip-Routine (btoa scheitert an Umlauten/Unicode). */
     function b64encode(text) {
@@ -8026,7 +8037,7 @@
     function b64decode(data) {
       return decodeURIComponent(escape(atob(data)));
     }
-    var notesReady = false;
+    let notesReady = false;
 
     function flashSaved() {
       const indicator = document.getElementById('ntSaved');
@@ -8836,7 +8847,7 @@ function buildSysinfo() {
  * initialization) und der Kalender war ab dem zweiten Oeffnen tot.
  * renderCalendar() liest den Body daher immer frisch aus calState.body.
  */
-var calState = {
+const calState = {
   body: null,
   today: null,
   year: 0,
@@ -9063,12 +9074,12 @@ function buildCalendar() {
 
   renderCalendar();
 }
-var CALENDAR_INITIALIZED = false;
+let CALENDAR_INITIALIZED = false;
 
 /* Uhr/Wecker */
 /* Sound-Effekte */
-var SoundCtx = window.AudioContext || window.webkitAudioContext;
-var soundCtx = null;
+const SoundCtx = window.AudioContext || window.webkitAudioContext;
+let soundCtx = null;
 
 function playSound(type) {
   try {
@@ -9746,8 +9757,10 @@ function buildGame() {
         return i !== null;
       });
     if (!empty.length) return -1;
+    /* Two loops, each with its own binding. Both were `var i`, which worked but
+     * would be a redeclaration under `let`. */
     /* Try to win */
-    for (var i = 0; i < empty.length; i++) {
+    for (let i = 0; i < empty.length; i++) {
       board[empty[i]] = 'O';
       if (checkWin() === 'O') {
         board[empty[i]] = '';
@@ -9756,7 +9769,7 @@ function buildGame() {
       board[empty[i]] = '';
     }
     /* Block player */
-    for (var i = 0; i < empty.length; i++) {
+    for (let i = 0; i < empty.length; i++) {
       board[empty[i]] = 'X';
       if (checkWin() === 'X') {
         board[empty[i]] = '';

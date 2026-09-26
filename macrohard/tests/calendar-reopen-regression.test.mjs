@@ -8,10 +8,13 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const source = fs.readFileSync(path.join(root, 'assets', 'app.js'), 'utf8');
 
-/* Extract a top-level statement by name (function or var declaration). */
+/* Extract a top-level statement by name (function or var declaration).
+ * `isVar` means "an object/primitive literal bound to a name", which may be
+ * declared with var, let or const — the kind must not be pinned, or a
+ * legitimate `var` -> `const` cleanup turns this test red for no reason. */
 function extractDeclaration(src, name, isVar) {
   const re = isVar
-    ? new RegExp(`(?:^|\\n)\\s*var\\s+${name}\\s*=\\s*\\{`)
+    ? new RegExp(`(?:^|\\n)\\s*(?:var|let|const)\\s+${name}\\s*=\\s*\\{`)
     : new RegExp(`function\\s+${name}\\s*\\([^)]*\\)\\s*\\{`);
   const m = re.exec(src);
   if (!m) return null;
@@ -39,9 +42,10 @@ function extractDeclaration(src, name, isVar) {
   return null;
 }
 
-/* `var X = false;` — a plain boolean flag, not an object literal. */
+/* `X = false;` — a plain boolean flag, not an object literal. The kind
+ * (var/let/const) is deliberately not pinned, for the same reason as above. */
 function extractFlag(src, name) {
-  const m = new RegExp(`(?:^|\\n)\\s*var\\s+${name}\\s*=\\s*(?:false|true)\\s*;`).exec(src);
+  const m = new RegExp(`(?:^|\\n)\\s*(?:var|let|const)\\s+${name}\\s*=\\s*(?:false|true)\\s*;`).exec(src);
   return m ? m[0].trim() : null;
 }
 
@@ -120,8 +124,15 @@ function loadCalendar(ctx) {
   ];
   for (const p of pieces) {
     assert.ok(p, 'calendar source fragment must exist in app.js');
+    // `var` at top level of a vm context becomes a property of the context
+    // object, but `let`/`const` do not — they live in the script's lexical
+    // scope, which is discarded after runInContext returns. So the test has to
+    // reach calState the same way app.js does: through the context. Declare it
+    // explicitly rather than relying on the declaration kind leaking out.
     vm.runInContext(p, ctx);
   }
+  // Expose the lexical bindings the rest of this suite needs.
+  vm.runInContext('globalThis.calState = calState;', ctx);
   return ctx;
 }
 
