@@ -8699,203 +8699,239 @@ function buildSysinfo() {
   }
 }
 
-/* Kalender mit Ereignissen */
+/* Kalender mit Ereignissen
+ *
+ * State liegt bewusst auf IIFE-Ebene und nicht in buildCalendar(): beim
+ * Reopen springt buildCalendar() in den CALENDAR_INITIALIZED-Zweig und ruft
+ * renderCalendar() sofort auf. Mit funktionslokalem `let` standen viewYear /
+ * viewMonth dort im TDZ (ReferenceError: Cannot access 'viewMonth' before
+ * initialization) und der Kalender war ab dem zweiten Oeffnen tot.
+ * renderCalendar() liest den Body daher immer frisch aus calState.body.
+ */
+var calState = {
+  body: null,
+  today: null,
+  year: 0,
+  month: 0,
+  selectedDay: 1,
+  events: [],
+};
+
+function calLoadEvents() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem('macrohard_calendar_events') || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+function calSaveEvents() {
+  try {
+    localStorage.setItem('macrohard_calendar_events', JSON.stringify(calState.events));
+  } catch (e) {}
+}
+function calEventsForDate(y, m, d) {
+  return calState.events.filter(function (e) {
+    return e.year === y && e.month === m && e.day === d;
+  });
+}
+function calAddEvent(y, m, d, title, time, color) {
+  calState.events.push({
+    year: y,
+    month: m,
+    day: d,
+    title: title,
+    time: time || '',
+    color: color || 'var(--accent)',
+  });
+  calSaveEvents();
+  renderCalendar();
+}
+function calDeleteEvent(idx) {
+  calState.events.splice(idx, 1);
+  calSaveEvents();
+  renderCalendar();
+}
+
+const CAL_MONTH_NAMES = [
+  'Januar',
+  'Februar',
+  'März',
+  'April',
+  'Mai',
+  'Juni',
+  'Juli',
+  'August',
+  'September',
+  'Oktober',
+  'November',
+  'Dezember',
+];
+const CAL_DAY_NAMES = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+
+function renderCalendar() {
+  const body = calState.body;
+  if (!body) return;
+  const viewYear = calState.year;
+  const viewMonth = calState.month;
+  const selectedDay = calState.selectedDay;
+  const today = calState.today || new Date();
+  const events = calState.events;
+
+  body.innerHTML = '';
+  const monthNames = CAL_MONTH_NAMES;
+  const dayNames = CAL_DAY_NAMES;
+
+  // Header with navigation
+  const header = document.createElement('div');
+  header.className = 'calHeader';
+  header.innerHTML =
+    '<button class="calNav" id="calPrev">◀</button><span class="calTitle">' +
+    monthNames[viewMonth] +
+    ' ' +
+    viewYear +
+    '</span><button class="calNav" id="calNext">▶</button>';
+  body.appendChild(header);
+
+  // Grid
+  const grid = document.createElement('div');
+  grid.className = 'calGrid';
+  dayNames.forEach(function (d) {
+    grid.innerHTML += '<div class="calDayName">' + d + '</div>';
+  });
+
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const prevMonthDays = new Date(viewYear, viewMonth, 0).getDate();
+  const startOffset = (firstDay + 6) % 7;
+
+  // Previous month days
+  for (let i = startOffset - 1; i >= 0; i--) {
+    grid.innerHTML += '<div class="calDay otherMonth">' + (prevMonthDays - i) + '</div>';
+  }
+  // Current month days
+  for (let day = 1; day <= daysInMonth; day++) {
+    const isToday =
+      day === today.getDate() &&
+      viewMonth === today.getMonth() &&
+      viewYear === today.getFullYear();
+    const isSelected = day === selectedDay;
+    const dayEvents = calEventsForDate(viewYear, viewMonth, day);
+    const hasEvents = dayEvents.length > 0;
+    grid.innerHTML +=
+      '<div class="calDay' +
+      (isToday ? ' today' : '') +
+      (isSelected ? ' selected' : '') +
+      (hasEvents ? ' hasEvents' : '') +
+      '" data-day="' +
+      day +
+      '">' +
+      day +
+      (hasEvents ? '<span class="calDot"></span>' : '') +
+      '</div>';
+  }
+  // Next month days
+  const totalCells = startOffset + daysInMonth;
+  const remaining = 42 - totalCells;
+  for (let j = 1; j <= remaining; j++) {
+    grid.innerHTML += '<div class="calDay otherMonth">' + j + '</div>';
+  }
+  body.appendChild(grid);
+
+  // Event panel
+  const panel = document.createElement('div');
+  panel.className = 'calPanel';
+  const panelDayEvents = calEventsForDate(viewYear, viewMonth, selectedDay);
+  let panelHtml =
+    '<div class="calPanelHeader"><strong>' +
+    selectedDay +
+    '. ' +
+    monthNames[viewMonth] +
+    ' ' +
+    viewYear +
+    '</strong><button class="cBtn" id="calAddEvent">+ Ereignis</button></div>';
+  if (panelDayEvents.length) {
+    panelHtml += '<div class="calEvents">';
+    panelDayEvents.forEach(function (e) {
+      panelHtml +=
+        '<div class="calEvent" style="border-left-color:' +
+        e.color +
+        '"><span class="calEventTime">' +
+        (e.time || 'Ganztägig') +
+        '</span><span class="calEventTitle">' +
+        e.title +
+        '</span><button class="calEventDel" data-idx="' +
+        events.indexOf(e) +
+        '">×</button></div>';
+    });
+    panelHtml += '</div>';
+  } else {
+    panelHtml += '<div class="calNoEvents">Keine Ereignisse</div>';
+  }
+  panel.innerHTML = panelHtml;
+  body.appendChild(panel);
+
+  // Event listeners
+  const prevBtn = document.getElementById('calPrev');
+  if (prevBtn)
+    prevBtn.addEventListener('click', function () {
+      calState.month--;
+      if (calState.month < 0) {
+        calState.month = 11;
+        calState.year--;
+      }
+      calState.selectedDay = 1;
+      renderCalendar();
+    });
+  const nextBtn = document.getElementById('calNext');
+  if (nextBtn)
+    nextBtn.addEventListener('click', function () {
+      calState.month++;
+      if (calState.month > 11) {
+        calState.month = 0;
+        calState.year++;
+      }
+      calState.selectedDay = 1;
+      renderCalendar();
+    });
+  const addBtn = document.getElementById('calAddEvent');
+  if (addBtn)
+    addBtn.addEventListener('click', function () {
+      const title = prompt('Ereignis-Titel:');
+      if (!title) return;
+      const time = prompt('Zeit (HH:MM, leer für ganztägig):');
+      calAddEvent(calState.year, calState.month, calState.selectedDay, title, time);
+    });
+  grid.querySelectorAll('.calDay:not(.otherMonth)').forEach(function (el) {
+    el.addEventListener('click', function () {
+      calState.selectedDay = parseInt(this.dataset.day, 10);
+      renderCalendar();
+    });
+  });
+  panel.querySelectorAll('.calEventDel').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      calDeleteEvent(parseInt(this.dataset.idx, 10));
+    });
+  });
+}
+
 function buildCalendar() {
   const body = document.getElementById('calBody');
   if (!body) return;
+  // Body-Pointer IMMER neu setzen, auch im Reopen-Zweig: der alte Body
+  // hängt am geschlossenen Fenster.
+  calState.body = body;
   if (CALENDAR_INITIALIZED) {
     renderCalendar();
     return;
   }
   CALENDAR_INITIALIZED = true;
 
-  // State
-  const today = new Date();
-  let viewYear = today.getFullYear();
-  let viewMonth = today.getMonth();
-  let selectedDay = today.getDate();
-  const events = loadEvents();
-
-  function loadEvents() {
-    try {
-      const parsed = JSON.parse(localStorage.getItem('macrohard_calendar_events') || '[]');
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-      return [];
-    }
-  }
-  function saveEvents() {
-    try {
-      localStorage.setItem('macrohard_calendar_events', JSON.stringify(events));
-    } catch (e) {}
-  }
-  function getEventsForDate(y, m, d) {
-    return events.filter(function (e) {
-      return e.year === y && e.month === m && e.day === d;
-    });
-  }
-  function addEvent(y, m, d, title, time, color) {
-    events.push({
-      year: y,
-      month: m,
-      day: d,
-      title: title,
-      time: time || '',
-      color: color || 'var(--accent)',
-    });
-    saveEvents();
-    renderCalendar();
-  }
-  function deleteEvent(idx) {
-    events.splice(idx, 1);
-    saveEvents();
-    renderCalendar();
-  }
-
-  function renderCalendar() {
-    body.innerHTML = '';
-    const monthNames = [
-      'Januar',
-      'Februar',
-      'März',
-      'April',
-      'Mai',
-      'Juni',
-      'Juli',
-      'August',
-      'September',
-      'Oktober',
-      'November',
-      'Dezember',
-    ];
-    const dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-
-    // Header with navigation
-    const header = document.createElement('div');
-    header.className = 'calHeader';
-    header.innerHTML =
-      '<button class="calNav" id="calPrev">◀</button><span class="calTitle">' +
-      monthNames[viewMonth] +
-      ' ' +
-      viewYear +
-      '</span><button class="calNav" id="calNext">▶</button>';
-    body.appendChild(header);
-
-    // Grid
-    const grid = document.createElement('div');
-    grid.className = 'calGrid';
-    dayNames.forEach(function (d) {
-      grid.innerHTML += '<div class="calDayName">' + d + '</div>';
-    });
-
-    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
-    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-    const prevMonthDays = new Date(viewYear, viewMonth, 0).getDate();
-    const startOffset = (firstDay + 6) % 7;
-
-    // Previous month days
-    for (let i = startOffset - 1; i >= 0; i--) {
-      grid.innerHTML += '<div class="calDay otherMonth">' + (prevMonthDays - i) + '</div>';
-    }
-    // Current month days
-    for (let day = 1; day <= daysInMonth; day++) {
-      const isToday =
-        day === today.getDate() &&
-        viewMonth === today.getMonth() &&
-        viewYear === today.getFullYear();
-      const isSelected = day === selectedDay;
-      var dayEvents = getEventsForDate(viewYear, viewMonth, day);
-      const hasEvents = dayEvents.length > 0;
-      grid.innerHTML +=
-        '<div class="calDay' +
-        (isToday ? ' today' : '') +
-        (isSelected ? ' selected' : '') +
-        (hasEvents ? ' hasEvents' : '') +
-        '" data-day="' +
-        day +
-        '">' +
-        day +
-        (hasEvents ? '<span class="calDot"></span>' : '') +
-        '</div>';
-    }
-    // Next month days
-    const totalCells = startOffset + daysInMonth;
-    const remaining = 42 - totalCells;
-    for (let j = 1; j <= remaining; j++) {
-      grid.innerHTML += '<div class="calDay otherMonth">' + j + '</div>';
-    }
-    body.appendChild(grid);
-
-    // Event panel
-    const panel = document.createElement('div');
-    panel.className = 'calPanel';
-    var dayEvents = getEventsForDate(viewYear, viewMonth, selectedDay);
-    let panelHtml =
-      '<div class="calPanelHeader"><strong>' +
-      selectedDay +
-      '. ' +
-      monthNames[viewMonth] +
-      ' ' +
-      viewYear +
-      '</strong><button class="cBtn" id="calAddEvent">+ Ereignis</button></div>';
-    if (dayEvents.length) {
-      panelHtml += '<div class="calEvents">';
-      dayEvents.forEach(function (e, idx) {
-        panelHtml +=
-          '<div class="calEvent" style="border-left-color:' +
-          e.color +
-          '"><span class="calEventTime">' +
-          (e.time || 'Ganztägig') +
-          '</span><span class="calEventTitle">' +
-          e.title +
-          '</span><button class="calEventDel" data-idx="' +
-          events.indexOf(e) +
-          '">×</button></div>';
-      });
-      panelHtml += '</div>';
-    } else {
-      panelHtml += '<div class="calNoEvents">Keine Ereignisse</div>';
-    }
-    panel.innerHTML = panelHtml;
-    body.appendChild(panel);
-
-    // Event listeners
-    document.getElementById('calPrev').addEventListener('click', function () {
-      viewMonth--;
-      if (viewMonth < 0) {
-        viewMonth = 11;
-        viewYear--;
-      }
-      selectedDay = 1;
-      renderCalendar();
-    });
-    document.getElementById('calNext').addEventListener('click', function () {
-      viewMonth++;
-      if (viewMonth > 11) {
-        viewMonth = 0;
-        viewYear++;
-      }
-      selectedDay = 1;
-      renderCalendar();
-    });
-    document.getElementById('calAddEvent').addEventListener('click', function () {
-      const title = prompt('Ereignis-Titel:');
-      if (!title) return;
-      const time = prompt('Zeit (HH:MM, leer für ganztägig):');
-      addEvent(viewYear, viewMonth, selectedDay, title, time);
-    });
-    grid.querySelectorAll('.calDay:not(.otherMonth)').forEach(function (el) {
-      el.addEventListener('click', function () {
-        selectedDay = parseInt(this.dataset.day);
-        renderCalendar();
-      });
-    });
-    panel.querySelectorAll('.calEventDel').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        deleteEvent(parseInt(this.dataset.idx));
-      });
-    });
-  }
+  calState.today = new Date();
+  calState.year = calState.today.getFullYear();
+  calState.month = calState.today.getMonth();
+  calState.selectedDay = calState.today.getDate();
+  calState.events = calLoadEvents();
 
   renderCalendar();
 }
