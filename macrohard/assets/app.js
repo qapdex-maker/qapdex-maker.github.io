@@ -5409,9 +5409,13 @@
           return i;
         });
         shuffled = shuffleArray(shuffled);
-        this.style.background = 'var(--accent)';
+        // Capture the button: inside setTimeout, `this` is the global object,
+        // so `this.style.background = ''` threw
+        // "Cannot set properties of undefined (setting 'background')".
+        const btn = this;
+        btn.style.background = 'var(--accent)';
         setTimeout(function () {
-          this.style.background = '';
+          btn.style.background = '';
         }, 500);
       });
     if (repeatBtn)
