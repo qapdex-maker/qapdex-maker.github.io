@@ -8650,7 +8650,7 @@ function buildSysinfo() {
 
   /* OS */
   addSection('Betriebssystem');
-  addRow('OS', 'MakerOS v2.11.45 (Neo-Brutalist)');
+  addRow('OS', 'MakerOS v2.11.46 (Neo-Brutalist)');
   addRow('Benutzer', 'macrohard');
   addRow('Plattform', navigator.platform);
   addRow('Sprache', navigator.language);

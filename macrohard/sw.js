@@ -2,7 +2,7 @@
  * v2 — stale-while-revalidate, network-first for AMI BIOS,
  * offline fallback, quota check, cache versioning
  */
-const CACHE='macrohard-v2-11-45';
+const CACHE='macrohard-v2-11-46';
 const STATIC_ASSETS=['./','./index.html','./assets/site.css','./assets/app.js','./manifest.json','./assets/ami-bios-setup.html'];
 const FALLBACK='<html><head><meta charset="utf-8"/><title>Offline — MakerOS</title><style>body{background:#0d0e0f;color:#e3e2e2;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}</style></head><body><div><h1>⬢ OFFLINE</h1><p>Keine Verbindung. Check deine Netzwerkverbindung.</p><p style="font-size:10px;color:#849493">Refresh zum Retry</p></div></body></html>';
 
