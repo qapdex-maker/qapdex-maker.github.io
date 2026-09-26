@@ -388,7 +388,7 @@
         m = document.createElement('div');
         m.id = 'deskCtx';
         m.innerHTML =
-          '<div class="ctxItem" data-action="wallpaper"><span class="ctxIco">🖼</span>Wallpaper wechseln</div><div class="ctxItem" data-action="wallpaper-upload"><span class="ctxIco">⬆</span>Wallpaper hochladen</div><div class="ctxSep"></div><div class="ctxItem" data-action="theme"><span class="ctxIco">🌙</span>Theme umschalten</div><div class="ctxItem" data-action="show-desktop"><span class="ctxIco">🗗</span>Desktop anzeigen</div><div class="ctxItem" data-action="close-all"><span class="ctxIco">✕</span>Alle Fenster schließen</div><div class="ctxSep"></div><div class="ctxItem" data-a="notepad"><span class="ctxIco">📝</span>Notepad</div><div class="ctxItem" data-a="terminal"><span class="ctxIco">⬛</span>Terminal</div><div class="ctxItem" data-a="explorer"><span class="ctxIco">📁</span>Explorer</div><div class="ctxItem" data-a="paint"><span class="ctxIco">🎨</span>Paint</div><div class="ctxSep"></div><div class="ctxItem" data-action="about"><span class="ctxIco">ℹ</span>Über MakerOS</div><div class="ctxItem" data-a="settings"><span class="ctxIco">⚙</span>Settings</div>';
+          '<div class="ctxItem" data-action="wallpaper"><span class="ctxIco">🖼</span>Wallpaper wechseln</div><div class="ctxItem" data-action="wallpaper-upload"><span class="ctxIco">⬆</span>Wallpaper hochladen</div><div class="ctxSep"></div><div class="ctxItem" data-action="toggle-icons"><span class="ctxIco">🗂</span><span id="deskCtxIconLabel">Desktop-Icons ausblenden</span></div><div class="ctxItem" data-action="theme"><span class="ctxIco">🌙</span>Theme umschalten</div><div class="ctxItem" data-action="show-desktop"><span class="ctxIco">🗗</span>Desktop anzeigen</div><div class="ctxItem" data-action="close-all"><span class="ctxIco">✕</span>Alle Fenster schließen</div><div class="ctxSep"></div><div class="ctxItem" data-a="notepad"><span class="ctxIco">📝</span>Notepad</div><div class="ctxItem" data-a="terminal"><span class="ctxIco">⬛</span>Terminal</div><div class="ctxItem" data-a="explorer"><span class="ctxIco">📁</span>Explorer</div><div class="ctxItem" data-a="paint"><span class="ctxIco">🎨</span>Paint</div><div class="ctxSep"></div><div class="ctxItem" data-action="about"><span class="ctxIco">ℹ</span>Über MakerOS</div><div class="ctxItem" data-a="settings"><span class="ctxIco">⚙</span>Settings</div>';
         document.body.appendChild(m);
         m.querySelectorAll('.ctxItem').forEach(function (it) {
           it.addEventListener('click', function () {
@@ -397,6 +397,8 @@
             if (a) openApp(a);
             if (act === 'theme') {
               toggleTheme();
+            } else if (act === 'toggle-icons') {
+              setDesktopIconsHidden(!desktopIconsHidden);
             } else if (act === 'wallpaper') {
               openApp('settings');
               toast('Wähle ein Wallpaper');
@@ -948,6 +950,44 @@
   });
 
   /* Theme Toggle — Ctrl+Shift+L + Button */
+  /* Desktop-Icons ausblenden. Hidden icons stay reachable: the start menu,
+   * Ctrl+K search, the taskbar and the desktop context menu all still work,
+   * and the context menu is the way back. A wall of icons is what makes a
+   * desktop feel cluttered, and this is the cheapest way to clear it. */
+  let desktopIconsHidden = false;
+
+  function setDesktopIconsHidden(hidden) {
+    desktopIconsHidden = !!hidden;
+    const desk = document.getElementById('deskIcons');
+    if (desk) desk.classList.toggle('hidden', desktopIconsHidden);
+    try {
+      storeSet('os_icons', desktopIconsHidden ? '0' : '1');
+    } catch (e) {}
+    /* Keep the context menu label truthful — it is created once and reused. */
+    const label = document.getElementById('deskCtxIconLabel');
+    if (label) {
+      label.textContent = desktopIconsHidden
+        ? 'Desktop-Icons anzeigen'
+        : 'Desktop-Icons ausblenden';
+    }
+    const box = document.getElementById('stShowIcons');
+    if (box) box.checked = !desktopIconsHidden;
+  }
+
+  function isDesktopIconsHidden() {
+    return desktopIconsHidden;
+  }
+
+  /* Restore the preference on boot. os_icons is '0' when hidden, so the
+   * absence of the key means "shown" — the default. */
+  function restoreDesktopIcons() {
+    let v = null;
+    try {
+      v = storeGet('os_icons');
+    } catch (e) {}
+    if (v === '0') setDesktopIconsHidden(true);
+  }
+
   function toggleTheme() {
     const cur = document.documentElement.dataset.theme;
     const next = cur === 'dark' ? '' : 'dark';
@@ -5849,7 +5889,7 @@
   }
 
   /* Settings-Import: nur definierte Präferenz-Keys dürfen geschrieben werden */
-  const SETTINGS_IMPORT_KEYS = ['os_dark', 'os_scan', 'os_accent', 'os_fs', 'os_lang', 'os_wall'];
+  const SETTINGS_IMPORT_KEYS = ['os_dark', 'os_scan', 'os_accent', 'os_fs', 'os_lang', 'os_wall', 'os_icons'];
 
   /* Settings — S1+S2: 4 Tabs (Allgemein, Aussehen, Tastenkürzel, Datenschutz) */
   function buildSettings() {
@@ -6128,6 +6168,19 @@
         }
       });
       grid.appendChild(gridLabel);
+      /* Desktop icons visibility — same preference as the context menu item */
+      const iconsLabel = document.createElement('label');
+      iconsLabel.innerHTML =
+        '<input type="checkbox" id="stShowIcons" checked> Desktop-Icons anzeigen';
+      iconsLabel.addEventListener('change', function () {
+        setDesktopIconsHidden(!document.getElementById('stShowIcons').checked);
+        toast(
+          isDesktopIconsHidden()
+            ? 'Desktop-Icons ausgeblendet'
+            : 'Desktop-Icons wieder sichtbar',
+        );
+      });
+      grid.appendChild(iconsLabel);
       /* Restore icon size/grid */
       try {
         const is = localStorage.getItem('os_iconsize');
@@ -7040,6 +7093,8 @@
     initShell();
     initDesktop();
     initBoot();
+    /* After initDesktop, so #deskIcons exists when the class is applied. */
+    restoreDesktopIcons();
   });
 
   /* PWA register */

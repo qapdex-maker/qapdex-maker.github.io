@@ -86,6 +86,11 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
 /* ============ desktop (neo-brutalist) ============ */
 #desktop{position:fixed;inset:0;background:var(--paper);background-image:radial-gradient(rgba(11,11,12,.07) 1px, transparent 1px);background-size:22px 22px;z-index:1}
 #deskIcons{position:fixed;top:8px;left:6px;z-index:2;display:flex;flex-direction:column;flex-wrap:wrap;align-content:flex-start;height:calc(100% - 60px)}
+/* "Aufgeräumter Desktop": hides the icon column entirely. Everything stays
+ * reachable — start menu, Ctrl+K, taskbar, and the desktop context menu,
+ * whose label flips to "Desktop-Icons anzeigen". Without that escape the
+ * only way back would be the Settings checkbox. */
+#deskIcons.hidden{display:none}
 .dskApp{margin:3px;width:78px;height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:2px;border:3px solid var(--line);box-shadow:var(--shadow);cursor:pointer;background:var(--surface);padding:4px}
 .dskApp:hover{transform:translate(-2px,-2px);box-shadow:var(--shadow-hover);border-color:var(--accent)}
 .dskApp.selected{transform:translate(-1px,-1px);box-shadow:var(--shadow-hover);border-color:var(--accent);background:var(--accent-2)}
