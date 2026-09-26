@@ -12,7 +12,12 @@ test('legacy facades are loaded, incomplete parallel modules are not', () => {
   assert.match(index, /assets\/js\/notes-crypto\.js/);
   assert.match(index, /assets\/js\/editor\.js/);
   assert.doesNotMatch(index, /assets\/js\/(main|i18n|window-manager)\.js/);
-  assert.match(index, /assets\/app\.js\?v=63/);
+  /*
+   * Assert the SHAPE of the cache buster, not a pinned number. Hardcoding
+   * "?v=63" made this test fail on every deploy for a reason that has nothing
+   * to do with the module boundary it is supposed to guard.
+   */
+  assert.match(index, /assets\/app\.js\?v=\d+/, 'app.js must carry a cache-busting version');
 });
 
 test('legacy window manager remains documented as an incomplete parallel implementation', () => {
