@@ -726,7 +726,33 @@
           toggleHelpOverlay();
           return;
         }
-        if (focused && focused._escClose) focused._escClose();
+        /* Esc-Close: `focused` holds an app id string, not an element, so
+         * `focused._escClose` was always undefined and Escape never closed a
+         * window. Drive the real close button of the focused window instead,
+         * which also runs the interval/init-flag cleanup. */
+        if (focused) {
+          const fw = document.getElementById('w-' + focused);
+          const fc = fw && fw.querySelector('.wclose');
+          if (fc) {
+            fc.click();
+            return;
+          }
+        }
+        // Fallback: close the topmost window when nothing is marked focused.
+        const anyOpen = document.querySelectorAll('.wnd');
+        if (anyOpen.length) {
+          let top = null;
+          let topZ = -1;
+          anyOpen.forEach(function (w) {
+            const z = parseInt(w.style.zIndex || '0', 10);
+            if (z > topZ) {
+              topZ = z;
+              top = w;
+            }
+          });
+          const tc = top && top.querySelector('.wclose');
+          if (tc) tc.click();
+        }
       }
     });
   }
