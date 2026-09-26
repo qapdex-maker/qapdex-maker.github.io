@@ -84,8 +84,10 @@ test('docs preview escapes user text before line breaks', () => {
 });
 
 test('calendar storage normalizes to an event array', () => {
-  const start = flat.indexOf('function loadEvents()');
-  assert.ok(start !== -1, 'loadEvents must exist');
-  const body = flat.slice(start, flat.indexOf('function saveEvents', start));
-  assert.ok(body.includes('Array.isArray'), 'loadEvents must guard against non-array data');
+  // The calendar state was lifted out of buildCalendar() to IIFE level, so the
+  // load/save helpers are now cal-prefixed top-level functions.
+  const start = flat.indexOf('function calLoadEvents()');
+  assert.ok(start !== -1, 'calLoadEvents must exist');
+  const body = flat.slice(start, flat.indexOf('function calSaveEvents', start));
+  assert.ok(body.includes('Array.isArray'), 'calLoadEvents must guard against non-array data');
 });
