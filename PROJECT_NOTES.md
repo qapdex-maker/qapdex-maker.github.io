@@ -1,7 +1,7 @@
 # PROJECT_NOTES — qapdex-maker.github.io (Portal + msgraph/react)
 
-Stand: 2026-09-26 (MakerOS-Session abgeschlossen, Push-Tip `02270b2`).
-Letztes Push-Tip: `02270b2`; lokaler und remote `main` waren nach dem Push identisch.
+Stand: 2026-09-26 (MakerOS-Session abgeschlossen, Push-Tip `fee79f2`).
+Letztes Push-Tip: `fee79f2`; lokaler und remote `main` waren nach dem Push identisch.
 Vollständiges Protokoll: `macrohard/SESSION-2026-09-26.md`
 Detaillierter Fahrplan + tiefe Bereiche: siehe ROADMAP.md (im Repo-Root).
 
@@ -216,10 +216,15 @@ Alles unten ist echter Tool-Output, keine Annahme:
 - Portal-Karte `PEPEMEME` verlinkt direkt auf `https://linktr.ee/PEPEMEM`
 - `pepemem/` Änderungen Stand 2026-09-09:
   - Header geleert: MEMEPEPE-Branding, DexScreener-Button, Personen-Icon, Nav-Tabs entfernt
-  - Section „Liquidity & Tithes“ inklusive „Sacred Interactive Contract Altar“ entfernt
+  - Section „Liquidity & Tithes“ ist weiterhin vorhanden; entfernt wurde nur der
+    darin liegende Block „Sacred Interactive Contract Altar“
+    (verifiziert 2026-09-26 gegen `pepemem/index.html`: Section-Header und
+    „Allow Cookies.“-Card stehen, der Altar-Text kommt dort nicht mehr vor)
   - Hero-Fresco-Slideshow mit 3 lokalen Bildern unter `pepemem/images/`
   - Bento-Cards nutzen lokale Bilder statt Icons
-  - Abschnitt „Pontiff Original“ unten über Footer mit `images/PepeTheFrog_PEPE_Dollars_1.jpg`
+  - Abschnitt mit „Pontiff“-Bezug (ohne das Wort „Original“ im Markup) steht über
+    dem Footer und nutzt `images/PepeTheFrog_PEPE_Dollars_1.jpg`; Datei vorhanden
+    (verifiziert 2026-09-26)
   - Book-of-Degens-Avatar zurück auf Original-Bild von `lh3.googleusercontent.com`
   - Button-Reihe im Base-Card-Bereich:
     - `GODPEPE Chart` → `https://app.uniswap.org/swap?outputCurrency=0x40A5808B104cE2A4E1b95E2E497d8E8a847CEE26&chain=base`
