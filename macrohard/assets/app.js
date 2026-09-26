@@ -200,6 +200,9 @@
       const lock = document.getElementById('lock');
       if (lock) lock.classList.add('hide');
       bootDone = true;
+      // Restore the previous session only now: before this the lock screen
+      // would still cover the desktop and the windows would appear behind it.
+      if (typeof restoreSession === 'function') restoreSession();
     }, 4200);
   };
 
@@ -215,39 +218,108 @@
         width: w.style.width,
         height: w.style.height,
         visible: w.style.display !== 'none',
+        // Needed to bring a minimized window back in the same state.
+        minimized: w.classList.contains('minimized'),
       });
     });
     try {
       localStorage.setItem(SESSION_KEY, JSON.stringify(wins));
     } catch (e) {}
   }
+  /*
+   * restoreSession() existed but was never called: saveSession() ran on every
+   * open/close/drag, so os_session filled up in localStorage and nothing ever
+   * read it back. Session Restore as documented simply did not exist.
+   *
+   * It must run AFTER the lock screen is dismissed, otherwise the restored
+   * windows appear behind it. Restore also has to survive a reload where
+   * openApp() has not been re-exported yet, and it must not resurrect apps
+   * whose builder was removed.
+   */
+  var sessionRestored = false;
+  /*
+   * The app ids openApp() can build, read from the desktop icons. The
+   * `apps` object at the top of this file is never populated, and duplicating
+   * the switch case list here would drift out of sync on the next new app.
+   */
+  function knownAppIds() {
+    const ids = [];
+    document.querySelectorAll('.dskApp[data-app]').forEach(function (el) {
+      const id = el.getAttribute('data-app');
+      if (id && ids.indexOf(id) < 0) ids.push(id);
+    });
+    return ids;
+  }
   function restoreSession() {
+    if (sessionRestored) return;
+    sessionRestored = true;
+    let saved;
     try {
-      var saved = JSON.parse(localStorage.getItem(SESSION_KEY) || '[]');
-      if (!saved.length) return;
+      saved = JSON.parse(localStorage.getItem(SESSION_KEY) || '[]');
     } catch (e) {
       return;
     }
+    if (!Array.isArray(saved) || !saved.length) return;
+    /*
+     * Only restore app ids that openApp() can actually build. The source of
+     * truth is the switch in openApp() — the `apps` object is declared but
+     * never filled, so it cannot be used as a whitelist here.
+     */
+    const knownIds = knownAppIds();
+    const valid = saved.filter((s) => s && typeof s.id === 'string' && knownIds.indexOf(s.id) >= 0);
+    if (!valid.length) return;
     const _isMobile = window.innerWidth <= 760;
-    saved.forEach(function (s) {
-      if (s.visible) {
+    valid.forEach(function (s) {
+      /*
+       * A minimized window was saved with visible:false, so it still has to be
+       * opened here — only the display state is restored afterwards. Skipping
+       * invisible entries made every minimized window vanish on reload.
+       */
+      try {
         openApp(s.id);
-        const w = document.getElementById('w-' + s.id);
-        if (w) {
-          if (_isMobile) {
-            w.style.left = '0';
-            w.style.top = '0';
-            w.style.width = '100vw';
-            w.style.height = 'calc(100vh - 52px)';
-          } else {
-            if (s.left) w.style.left = s.left;
-            if (s.top) w.style.top = s.top;
-            if (s.width) w.style.width = s.width;
-            if (s.height) w.style.height = s.height;
-          }
-        }
+      } catch (e) {
+        return;
       }
+      // openApp() may be wrapped (taskmanager) or replaced; look the window up
+      // by its real id, which carries the instance suffix.
+      const w =
+        document.getElementById('w-' + s.id) ||
+        Array.from(document.querySelectorAll('.wnd')).find(
+          (el) => el.getAttribute('data-app') === s.id,
+        );
+      if (!w) return;
+      /*
+       * Multi-instance apps (notepad, terminal, editor) get an instance suffix
+       * in their ids, so the taskbar icon is `tb-notepad-inst-1`, not
+       * `tb-notepad`. Read the real id off the window we just found.
+       */
+      const realId = w.id && w.id.indexOf('w-') === 0 ? w.id.slice(2) : s.id;
+      if (_isMobile) {
+        w.style.left = '0';
+        w.style.top = '0';
+        w.style.width = '100vw';
+        w.style.height = 'calc(100vh - 52px)';
+      } else {
+        if (s.left) w.style.left = s.left;
+        if (s.top) w.style.top = s.top;
+        if (s.width) w.style.width = s.width;
+        if (s.height) w.style.height = s.height;
+      }
+      // A window that was minimized stays minimized: display:none plus the
+      // class and the dimmed taskbar icon. Anything else comes back visible.
+      const tbIcon = document.getElementById('tb-' + realId);
+      if (s.minimized) {
+        w.classList.add('minimized');
+        w.style.display = 'none';
+        if (tbIcon) tbIcon.classList.add('minimized');
+      } else {
+        w.classList.remove('minimized');
+        w.style.display = '';
+        if (tbIcon) tbIcon.classList.remove('minimized');
+      }
+      if (tbIcon) tbIcon.classList.add('running');
     });
+    updateTaskbarFocus();
   }
   /* Wallpaper */
   function setWallpaper(url) {
@@ -768,6 +840,9 @@
           lk.classList.add('hide');
           lk.classList.remove('unlocking');
         }
+        // Clicking through the lock screen skips the boot timer, so the
+        // session has to be restored here too. restoreSession() is idempotent.
+        if (typeof restoreSession === 'function') restoreSession();
       }, 700);
     });
 
