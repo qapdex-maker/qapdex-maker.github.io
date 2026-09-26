@@ -1155,7 +1155,7 @@
       break;
     case 'browser':
       body =
-          '<div class="brTabs" id="brTabs"></div><div class="brBar"><button class="brBtn" id="brBack" title="Zurück">←</button><button class="brBtn" id="brFwd" title="Vor">→</button><button class="brBtn" id="brRefresh" title="Aktualisieren">↻</button><button class="brBtn" id="brHome" title="Startseite">⌂</button><input id="brAddr" value="https://duckduckgo.com" placeholder="URL oder Suche..."><button class="brBtn" id="brGo" title="Los">➜</button><button class="brBtn" id="brBm" title="Lesezeichen">☆</button><button class="brBtn" id="brNewTab" title="Neuer Tab">+</button><button class="brBtn" id="brExt" title="Im externen Browser öffnen">↗</button></div><div class="brContent" id="brContent"></div>';
+          '<div class="brTabs" id="brTabs"></div><div class="brBar"><button class="brBtn" id="brBack" title="Zurück">←</button><button class="brBtn" id="brFwd" title="Vor">→</button><button class="brBtn" id="brRefresh" title="Aktualisieren">↻</button><button class="brBtn" id="brHome" title="Startseite">⌂</button><input id="brAddr" value="https://duckduckgo.com" placeholder="URL oder Suche..."><button class="brBtn" id="brGo" title="Los">➜</button><button class="brBtn" id="brBm" title="Lesezeichen">☆</button><button class="brBtn" id="brNewTab" title="Neuer Tab">+</button><button class="brBtn" id="brWarn" title="Seite blockiert? Hilfe anzeigen">⚠</button><button class="brBtn" id="brExt" title="Im externen Browser öffnen">↗</button></div><div class="brContent" id="brContent"></div>';
       break;
     case 'music':
       body =
@@ -6756,7 +6756,7 @@
       err.style.cssText =
         'display:none;height:100%;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center';
       err.innerHTML =
-        '<div style="font-size:48px">🔒</div><div style="font-weight:700;font-size:13px">Diese Seite blockiert das Einbetten.</div><div style="font-size:11px;color:var(--muted);max-width:300px">Die Seite sendet CSP <code>frame-ancestors</code> oder <code>X-Frame-Options</code> und lässt sich nicht in einem iframe anzeigen. Öffne sie im echten Browser — der Link funktioniert dort normal.</div><button class="cBtn" id="brOpenExt" style="margin-top:10px">↗ Im externen Browser öffnen</button><button class="cBtn op" id="brRetry" style="margin-top:4px">↻ Erneut im Frame versuchen</button><button class="cBtn op" id="brBmThis" style="margin-top:4px">⭐ Lesezeichen</button>';
+        '<div style="font-size:48px">🔒</div><div style="font-weight:700;font-size:13px">Diese Seite lässt sich nicht einbetten.</div><div style="font-size:11px;color:var(--muted);max-width:320px">Die Seite selbst blockiert das Einbetten — meist per <code>X-Frame-Options</code> oder <code>CSP frame-ancestors</code>. MakerOS ist dabei nicht kaputt: dieselbe Adresse funktioniert im normalen Browser. Ein Browser kann diese Sperre aus Sicherheitsgründen nicht umgehen.</div><button class="cBtn" id="brOpenExt" style="margin-top:10px">↗ Im externen Browser öffnen</button><button class="cBtn op" id="brRetry" style="margin-top:4px">↻ Erneut im Frame versuchen</button><button class="cBtn op" id="brBmThis" style="margin-top:4px">⭐ Lesezeichen</button>';
       content.appendChild(iframe);
       content.appendChild(err);
 
@@ -6772,31 +6772,31 @@
       }
 
       let brLoaded = false;
+      /* Measured in Chromium: a frame blocked by X-Frame-Options/CSP is
+       * indistinguishable from a normal cross-origin frame. Every observable
+       * is identical — contentDocument throws a TypeError, contentWindow
+       * .location throws a SecurityError, window.length is 0, the rendered
+       * size is the same, and postMessage gets no reply in either case. So
+       * the parent CANNOT detect the block, and pretending otherwise breaks
+       * every ordinary site (Wikipedia, MDN, …) that frames perfectly well.
+       * Therefore the blocked screen is opened on request (see the ⚠ button
+       * below) instead of guessed at. onload therefore only reports that the
+       * load event arrived; the browser renders either the page or its own
+       * error document, and the user decides which one it is. */
       iframe.onload = function () {
         brLoaded = true;
         loading.style.display = 'none';
-        /* A blocked frame still fires `load`, so onload alone tells us
-         * nothing. What distinguishes a block is that the document is
-         * cross-origin: we cannot read it. If we can read it, the page
-         * loaded and we take the title. */
-        let readable = false;
-        let title = '';
-        try {
-          title = iframe.contentDocument.title;
-          readable = true;
-        } catch (e) {
-          readable = false;
-        }
-        if (!readable) {
-          err.style.display = 'flex';
-          iframe.style.display = 'none';
-          return;
-        }
         err.style.display = 'none';
-        if (title) {
-          tabs[i].title = title;
-          renderTabs();
-        }
+        iframe.style.display = '';
+        /* Same-origin pages let us read the title. Cross-origin ones throw,
+         * which is expected and not an error. */
+        try {
+          const title = iframe.contentDocument.title;
+          if (title) {
+            tabs[i].title = title;
+            renderTabs();
+          }
+        } catch (e) {}
       };
       iframe.onerror = function () {
         if (!brLoaded) showBlocked();
@@ -6813,11 +6813,13 @@
       });
     }
 
-    /* The permanent toolbar button: works for every tab, blocked or not. */
     function currentTabUrl() {
       const t = tabs[activeTab];
       return t && t.url && t.url !== 'home' ? t.url : null;
     }
+    /* Permanent toolbar controls. ↗ works for every tab and needs no
+     * detection. ⚠ reveals the blocked-page screen for the current tab, for
+     * the case where the frame shows the browser's own error document. */
     const extBtn = document.getElementById('brExt');
     if (extBtn) {
       extBtn.addEventListener('click', function () {
@@ -6827,6 +6829,27 @@
           return;
         }
         window.open(u, '_blank', 'noopener');
+      });
+    }
+    /* The blocked screen for the current tab, on request. Kept as a separate
+     * helper so the ⚠ button and the retry path share one implementation. */
+    function showBlockedFor(url) {
+      const err = content.querySelector('.brErr');
+      const frame = document.getElementById('brFrame');
+      if (err) err.style.display = 'flex';
+      if (frame && frame.src === url) frame.style.display = 'none';
+    }
+
+    const warnBtn = document.getElementById('brWarn');
+    if (warnBtn) {
+      warnBtn.addEventListener('click', function () {
+        const u = currentTabUrl();
+        if (!u) {
+          toast('Keine Seite geöffnet');
+          return;
+        }
+        showBlockedFor(u);
+        toast('Zeigt der Frame die Seite an? Dann ist sie nicht blockiert — ↻ versucht es erneut.');
       });
     }
 
