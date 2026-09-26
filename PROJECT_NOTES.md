@@ -1,7 +1,8 @@
 # PROJECT_NOTES — qapdex-maker.github.io (Portal + msgraph/react)
 
-Stand: 2026-09-25 (MakerOS-Session; zuletzt gepusht `9076d6a`, danach Editor-Refactor und Notes-Vault lokal).
-Letztes Push-Tip: `9076d6a`; lokaler und remote `main` waren nach dem Push identisch.
+Stand: 2026-09-26 (MakerOS-Session abgeschlossen, Push-Tip `02270b2`).
+Letztes Push-Tip: `02270b2`; lokaler und remote `main` waren nach dem Push identisch.
+Vollständiges Protokoll: `macrohard/SESSION-2026-09-26.md`
 Detaillierter Fahrplan + tiefe Bereiche: siehe ROADMAP.md (im Repo-Root).
 
 ## Architektur
