@@ -1155,7 +1155,7 @@
       break;
     case 'browser':
       body =
-          '<div class="brTabs" id="brTabs"></div><div class="brBar"><button class="brBtn" id="brBack" title="Zurück">←</button><button class="brBtn" id="brFwd" title="Vor">→</button><button class="brBtn" id="brRefresh" title="Aktualisieren">↻</button><button class="brBtn" id="brHome" title="Startseite">⌂</button><input id="brAddr" value="https://duckduckgo.com" placeholder="URL oder Suche..."><button class="brBtn" id="brGo" title="Los">➜</button><button class="brBtn" id="brBm" title="Lesezeichen">☆</button><button class="brBtn" id="brNewTab" title="Neuer Tab">+</button></div><div class="brContent" id="brContent"></div>';
+          '<div class="brTabs" id="brTabs"></div><div class="brBar"><button class="brBtn" id="brBack" title="Zurück">←</button><button class="brBtn" id="brFwd" title="Vor">→</button><button class="brBtn" id="brRefresh" title="Aktualisieren">↻</button><button class="brBtn" id="brHome" title="Startseite">⌂</button><input id="brAddr" value="https://duckduckgo.com" placeholder="URL oder Suche..."><button class="brBtn" id="brGo" title="Los">➜</button><button class="brBtn" id="brBm" title="Lesezeichen">☆</button><button class="brBtn" id="brNewTab" title="Neuer Tab">+</button><button class="brBtn" id="brExt" title="Im externen Browser öffnen">↗</button></div><div class="brContent" id="brContent"></div>';
       break;
     case 'music':
       body =
@@ -6756,44 +6756,77 @@
       err.style.cssText =
         'display:none;height:100%;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center';
       err.innerHTML =
-        '<div style="font-size:48px">🔒</div><div style="font-weight:700;font-size:13px">Diese Seite kann nicht in einem iframe geladen werden.</div><div style="font-size:11px;color:var(--muted);max-width:280px">Viele Webseiten blockieren iframes aus Sicherheitsgründen (CSP/X-Frame-Options).</div><button class="cBtn" id="brOpenExt" style="margin-top:8px">↗ Im externen Browser öffnen</button><button class="cBtn op" id="brBmThis" style="margin-top:4px">⭐ Lesezeichen</button>';
+        '<div style="font-size:48px">🔒</div><div style="font-weight:700;font-size:13px">Diese Seite blockiert das Einbetten.</div><div style="font-size:11px;color:var(--muted);max-width:300px">Die Seite sendet CSP <code>frame-ancestors</code> oder <code>X-Frame-Options</code> und lässt sich nicht in einem iframe anzeigen. Öffne sie im echten Browser — der Link funktioniert dort normal.</div><button class="cBtn" id="brOpenExt" style="margin-top:10px">↗ Im externen Browser öffnen</button><button class="cBtn op" id="brRetry" style="margin-top:4px">↻ Erneut im Frame versuchen</button><button class="cBtn op" id="brBmThis" style="margin-top:4px">⭐ Lesezeichen</button>';
       content.appendChild(iframe);
       content.appendChild(err);
+
+      /* Open the current tab in the user's real browser. This is the escape
+       * hatch: it must not depend on detecting the block at all. */
+      function openExternally() {
+        window.open(t.url, '_blank', 'noopener');
+      }
+      function showBlocked() {
+        loading.style.display = 'none';
+        err.style.display = 'flex';
+        iframe.style.display = 'none';
+      }
 
       let brLoaded = false;
       iframe.onload = function () {
         brLoaded = true;
         loading.style.display = 'none';
-        err.style.display = 'none';
-        /* Update tab title from iframe */
+        /* A blocked frame still fires `load`, so onload alone tells us
+         * nothing. What distinguishes a block is that the document is
+         * cross-origin: we cannot read it. If we can read it, the page
+         * loaded and we take the title. */
+        let readable = false;
+        let title = '';
         try {
-          const title = iframe.contentDocument.title;
-          if (title) {
-            tabs[i].title = title;
-            renderTabs();
-          }
-        } catch (e) {}
+          title = iframe.contentDocument.title;
+          readable = true;
+        } catch (e) {
+          readable = false;
+        }
+        if (!readable) {
+          err.style.display = 'flex';
+          iframe.style.display = 'none';
+          return;
+        }
+        err.style.display = 'none';
+        if (title) {
+          tabs[i].title = title;
+          renderTabs();
+        }
       };
       iframe.onerror = function () {
-        if (!brLoaded) {
-          loading.style.display = 'none';
-          err.style.display = 'flex';
-          iframe.style.display = 'none';
-        }
+        if (!brLoaded) showBlocked();
       };
-      setTimeout(function () {
-        if (!brLoaded && loading.parentNode) {
-          loading.style.display = 'none';
-          err.style.display = 'flex';
-          iframe.style.display = 'none';
-        }
-      }, 5000);
-      err.querySelector('#brOpenExt').addEventListener('click', function () {
-        window.open(t.url, '_blank');
+      err.querySelector('#brOpenExt').addEventListener('click', openExternally);
+      err.querySelector('#brRetry').addEventListener('click', function () {
+        err.style.display = 'none';
+        iframe.style.display = '';
+        iframe.src = t.url;
       });
       err.querySelector('#brBmThis').addEventListener('click', function () {
         addBookmark(t.url, t.url, '🔖');
         toast('Lesezeichen hinzugefügt: ' + t.url);
+      });
+    }
+
+    /* The permanent toolbar button: works for every tab, blocked or not. */
+    function currentTabUrl() {
+      const t = tabs[activeTab];
+      return t && t.url && t.url !== 'home' ? t.url : null;
+    }
+    const extBtn = document.getElementById('brExt');
+    if (extBtn) {
+      extBtn.addEventListener('click', function () {
+        const u = currentTabUrl();
+        if (!u) {
+          toast('Keine Seite geöffnet');
+          return;
+        }
+        window.open(u, '_blank', 'noopener');
       });
     }
 
