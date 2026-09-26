@@ -16,10 +16,8 @@
       localStorage.setItem('os_lang', l);
     } catch (e) {}
   }
-  const apps = {};
   let focused = null;
   let zIdx = 100;
-  let bootDone = false;
   window.osIntervals = window.osIntervals || {};
   window.osTimeouts = window.osTimeouts || {};
 
@@ -199,7 +197,6 @@
     setTimeout(function () {
       const lock = document.getElementById('lock');
       if (lock) lock.classList.add('hide');
-      bootDone = true;
       // Restore the previous session only now: before this the lock screen
       // would still cover the desktop and the windows would appear behind it.
       if (typeof restoreSession === 'function') restoreSession();
@@ -1071,7 +1068,6 @@
     const w = document.querySelector('.wnd.focused');
     if (!w) return;
     const curLeft = w.style.left || '0';
-    const wW = window.innerWidth;
     if (curLeft === '0') {
       snapWindow(w, 'right');
       toast('Right snap');
@@ -1291,7 +1287,6 @@
         } catch (err) {}
         // App-specific cleanup flags (reset on close so re-init works)
         if (wId === 'taskmgr') {
-          TASKMGR_INITIALIZED = false;
           if (window.osIntervals['taskmgr']) {
             clearInterval(window.osIntervals['taskmgr']);
             delete window.osIntervals['taskmgr'];
@@ -2150,12 +2145,6 @@
       out.appendChild(d);
       out.scrollTop = out.scrollHeight;
     }
-    function wc(str) {
-      return str.split(/\s+/).filter(Boolean).length;
-    }
-    function filesize(n) {
-      return n + ' B';
-    }
     w('MakerOS — Terminal v2.0');
     w('Tippe "help" für Befehle.');
 
@@ -2789,8 +2778,6 @@
   var EXPLOADER_INITIALIZED = false;
   var BROWSER_INITIALIZED = false;
   var MUSIC_INITIALIZED = false;
-  var TASKMGR_INITIALIZED = false;
-  var EQ_INITIALIZED = false;
 
   function newExplorerItem(type) {
     const name = prompt(type === 'folder' ? 'Ordnername:' : 'Dateiname:');
@@ -3752,10 +3739,6 @@
       audioEl.addEventListener('ended', onEnded);
       audioEl.addEventListener('error', onError);
       setupDone = true;
-    }
-    function ensureResumed() {
-      if (audioCtx && audioCtx.state === 'suspended') return audioCtx.resume();
-      return Promise.resolve();
     }
 
     /* === Visualizer === */
@@ -4720,28 +4703,6 @@
       rebuildGrid();
     }
 
-    function loadPresetPattern() {
-      clearPattern();
-      [0, 4, 8, 12].forEach(function (s) {
-        SEQ.pattern[0][s] = true;
-      });
-      [4, 12].forEach(function (s) {
-        SEQ.pattern[1][s] = true;
-      });
-      [0, 2, 4, 6, 8, 10, 12, 14].forEach(function (s) {
-        SEQ.pattern[2][s] = true;
-      });
-      rebuildGrid();
-    }
-
-    function savePattern() {
-      try {
-        localStorage.setItem('macrohard_seq_pattern', JSON.stringify(SEQ.pattern));
-        localStorage.setItem('macrohard_seq_tracks', JSON.stringify(seqTracks));
-        alert('Pattern saved!');
-      } catch (e) {}
-    }
-
     function loadSavedPattern() {
       try {
         const p = JSON.parse(localStorage.getItem('macrohard_seq_pattern') || 'null');
@@ -4761,44 +4722,6 @@
         const row = parseInt(el.dataset.row);
         const col = parseInt(el.dataset.col);
         el.classList.toggle('active', SEQ.pattern[row] && SEQ.pattern[row][col]);
-      });
-    }
-
-    function buildFallbackPad(pad) {
-      pad.innerHTML = '';
-      const samples = [
-        { n: 'Kick', f: 60, c: '#ff4000' },
-        { n: 'Snare', f: 200, c: '#2547ff' },
-        { n: 'Hat', f: 8000, c: '#ffd400' },
-        { n: 'Clap', f: 1200, c: '#0f0' },
-        { n: 'Tom', f: 100, c: '#f0f' },
-        { n: 'Bass', f: 80, c: '#ff8000' },
-        { n: 'Stab', f: 440, c: '#800' },
-        { n: 'Crash', f: 5000, c: '#666' },
-      ];
-      samples.forEach(function (s, i) {
-        const b = document.createElement('button');
-        b.className = 'beatpad-btn';
-        b.textContent = s.n;
-        b.style.background = s.c;
-        b.addEventListener('click', function () {
-          if (!SEQ.ctx) {
-            const AC = window.AudioContext || window.webkitAudioContext;
-            if (!AC) return;
-            SEQ.ctx = new AC();
-          }
-          if (!SEQ.master) {
-            SEQ.master = SEQ.ctx.createGain();
-            SEQ.master.gain.value = 0.3;
-            SEQ.master.connect(SEQ.ctx.destination);
-          }
-          playSample(i);
-          b.style.transform = 'scale(.92)';
-          setTimeout(function () {
-            b.style.transform = '';
-          }, 80);
-        });
-        pad.appendChild(b);
       });
     }
 
@@ -4892,14 +4815,7 @@
         slider.addEventListener('input', function () {
           const v = parseFloat(this.value);
           eqValues[freq] = v;
-          if (biquadFilters[i] && audioCtx && audioCtx.state === 'running') {
-            biquadFilters[i].gain.setValueAtTime(v, audioCtx.currentTime);
-          }
-          if (seqBiquadFilters[i] && SEQ.ctx && SEQ.ctx.state === 'running') {
-            try {
-              seqBiquadFilters[i].gain.setValueAtTime(v, SEQ.ctx.currentTime);
-            } catch (e) {}
-          }
+          applyEQValues();
           // Update value display
           const valEl = this.parentNode.querySelector('.eq-value');
           if (valEl) valEl.textContent = (v >= 0 ? '+' : '') + v + 'dB';
@@ -5032,9 +4948,6 @@
       playAudio();
       playing = true;
       updateUI();
-    }
-    function cleanupRadio() {
-      // Main pipeline handles all cleanup via setupAudio on next source switch
     }
     function stop() {
       if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
@@ -5612,7 +5525,6 @@
       } catch (e) {}
     };
     window.SEQ = SEQ; /* expose for debugging */
-    window.SEQ = SEQ;
     initSequencer();
     initEqualizer();
     loadFavs();
@@ -5640,14 +5552,6 @@
       window.audioCtx.resume();
   }
 
-  /* Chat — S3: Timestamps in every message */
-  const chatContacts = [
-    { name: 'Alice', color: '#2547ff' },
-    { name: 'Bob', color: '#ff4d00' },
-    { name: 'Carol', color: '#0f0' },
-    { name: 'Dave', color: '#ffd400' },
-  ];
-  const chatMsgKey = 'cp_msgs';
   function buildChat() {
     const msgs = document.getElementById('cpMsgs');
     const sug = document.getElementById('cpSugs');

@@ -21,7 +21,6 @@ test('every app init flag is reset when its window closes', () => {
     'EXPLOADER_INITIALIZED',
     'BROWSER_INITIALIZED',
     'MUSIC_INITIALIZED',
-    'TASKMGR_INITIALIZED',
     'CALENDAR_INITIALIZED',
   ];
   for (const flag of flags) {
@@ -30,6 +29,27 @@ test('every app init flag is reset when its window closes', () => {
       `${flag} must be reset on close, otherwise the app stays dead after reopen`,
     );
   }
+});
+
+test('a reset flag must actually be set somewhere', () => {
+  // A flag that is only ever reset, never set, protects nothing: the
+  // `if (FLAG) return;` guard it belongs to does not exist, so the assignment
+  // is dead code. TASKMGR_INITIALIZED was exactly that and has been removed.
+  const flags = ['TERM_INITIALIZED', 'CHAT_INITIALIZED', 'EXPLOADER_INITIALIZED', 'BROWSER_INITIALIZED', 'MUSIC_INITIALIZED', 'CALENDAR_INITIALIZED'];
+  for (const flag of flags) {
+    assert.ok(
+      new RegExp(`(?:let|var)\\s+${flag}\\b`).test(source),
+      `${flag} must still be declared`,
+    );
+    assert.ok(
+      new RegExp(`if\\s*\\(\\s*${flag}\\s*\\)`).test(source),
+      `${flag} must guard a build function, otherwise resetting it is pointless`,
+    );
+  }
+  assert.ok(
+    !/(?<![.\w$])TASKMGR_INITIALIZED/.test(source),
+    'TASKMGR_INITIALIZED had no build guard and must stay removed',
+  );
 });
 
 test('terminal and chat re-initialize after reopen', () => {
