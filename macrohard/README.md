@@ -1,12 +1,12 @@
 # MakerOS — qapdex-maker.github.io/macrohard/
 
-Stand 2026-09-25 · v2.11.45 · Cache `?v=55` / `?v=40`.
+Stand 2026-09-26 · v2.11.45 · Cache `?v=64`.
 
 ## Live
 - **URL**: https://qapdex-maker.github.io/macrohard/
 - **Branch**: `main`
-- **Tests**: 165/165 passing (`npm test`)
-- **Cache-Bust**: `?v=55`
+- **Tests**: 209/209 passing (`npm test`)
+- **Cache-Bust**: `?v=64`
 
 ## Domain
 - **qapdex.com**: Gekauft am 2026-09-19 (0,87 Cent für 1 Jahr, checkdomain.de)
@@ -56,6 +56,22 @@ Stand 2026-09-25 · v2.11.45 · Cache `?v=55` / `?v=40`.
 23. **Image Editor** — Ebenen (Layers), Clone/Stamp, Text, Größe ändern, Drehung, Filter, Undo/Redo
 24. **Pomodoro** — Statistik (heute/gesamt), Long Break (alle 4 Sessions), CSV Export, Pausen-Übungen, Ton
 25. **Notes** — Verschlüsselung (Base64), Papierkorb (Wiederherstellen), Teilen (URL), Autosave-Indikator, Drag & Drop Sortierung
+
+## New in v2.11.45 (2026-09-26, Bughunting)
+Vier Windowing-Bugs behoben, die trotz 172 grüner Tests live waren:
+- Fix: Kalender ab dem zweiten Öffnen tot (TDZ auf `viewMonth`) — State jetzt auf IIFE-Ebene
+- Fix: Tic-Tac-Toe 4×4-Schalter warf `toast is not defined` — `toast` für Apps außerhalb der IIFE exportiert
+- Fix: Music-Shuffle warf `Cannot set properties of undefined` — `this` im setTimeout war das globale Objekt
+- Fix: Escape schloss nie ein Fenster — `focused` ist ein App-ID-String, kein Element
+
+Zwei tote Features wiederbelebt:
+- Feature: Session-Restore war implementiert, aber nie aufgerufen. Läuft jetzt nach dem
+  Unlock, stellt Positionen und Minimiert-Zustand wieder her, idempotent
+- Feature: Calculator-`#cCur` war totes Element, zeigt jetzt das laufende Ergebnis beim Tippen
+
+Repo: `app.js.bak` (seit v2.11.18 getrackt, 105 KB, nie referenziert) archiviert und
+entfernt. Suite: 172 → 209 Tests, alle gegen den Vor-Fix-Code geprüft.
+Details in `SESSION-2026-09-26b.md`.
 
 ## New in v2.11.45 (2026-09-21)
 - Fix: Explorer Mobile Sidebar-Drawer (overflow:visible)

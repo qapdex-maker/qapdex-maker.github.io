@@ -1,6 +1,6 @@
 # ROADMAP — macrohard/ (MakerOS)
 
-Stand: 2026-09-25 · v2.11.45 · 25 Apps · 165 Tests grün
+Stand: 2026-09-26 · v2.11.45 · 25 Apps · 209 Tests grün
 
 ## 1. Aktueller Status (v2.11.45)
 
