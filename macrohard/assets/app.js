@@ -642,7 +642,6 @@
   }
 
   /* Notifikationen-System */
-  const notifQueue = [];
   const notifCenter = [];
   /**
    * Zeigt eine Desktop-Benachrichtigung
@@ -2158,7 +2157,7 @@
         termHist.push(cmd);
         termHistI = termHist.length;
         const args = cmd.split(/\s+/);
-        let c = args[0].toLowerCase();
+        const c = args[0].toLowerCase();
         switch (c) {
         case 'help':
           w('Befehle: ' + commands.join(', '));
@@ -2225,7 +2224,7 @@
           }
           const cur = fsData[curPath];
           if (cur && cur.files.indexOf(fn) !== -1) {
-            let n = parseInt(args[2]) || 10;
+            const n = parseInt(args[2]) || 10;
             w('--- ' + fn + ' (erste ' + n + ' Zeilen) ---');
             w('[Mock content — ' + n + ' lines]');
           } else w('Datei nicht gefunden: ' + fn);
@@ -2239,7 +2238,7 @@
           }
           const cur = fsData[curPath];
           if (cur && cur.files.indexOf(fn) !== -1) {
-            let n = parseInt(args[2]) || 10;
+            const n = parseInt(args[2]) || 10;
             w('--- ' + fn + ' (letzte ' + n + ' Zeilen) ---');
             w('[Mock content — ' + n + ' lines]');
           } else w('Datei nicht gefunden: ' + fn);
@@ -2295,7 +2294,7 @@
             w('Usage: touch <file>');
             break;
           }
-          let c = fsData[curPath];
+          const c = fsData[curPath];
           if (!c) {
             w('Kein Verzeichnis.');
             break;
@@ -3063,14 +3062,14 @@
         } else if (act === 'rename') {
           const nn = prompt('Neuer Name:', f);
           if (nn && nn !== f) {
-            let idx = files.indexOf(f);
+            const idx = files.indexOf(f);
             if (idx !== -1) files[idx] = nn;
             renderExplorer();
           }
         } else if (act === 'copy') {
           const c = fsData[path];
           if (c) {
-            let idx = c.files.indexOf(f);
+            const idx = c.files.indexOf(f);
             if (idx !== -1) {
               c.files.push(f + ' (Kopie)');
               renderExplorer();
@@ -4988,7 +4987,6 @@
 
     /* === Upload === */
     const AUDIO_MAX_SIZE = 10 * 1024 * 1024; // 10 MB
-    const AUDIO_MIME = /^audio\/(mpeg|mp3|mp4|ogg|wav|webm|aac|flac|x-m4a)$/;
     const AUDIO_EXT = /\.(mp3|mp4|ogg|wav|webm|aac|flac|m4a)$/i;
     function handleUpload(file) {
       if (!file) return;
@@ -5038,8 +5036,17 @@
       { name: 'Deutschlandfunk', u: 'https://st01.dlf.de/dlf/01/128/mp3/stream.mp3', codec: 'MP3', votes: 3100 },
       { name: 'WDR 1Live', u: 'https://wdr-1live-live.icecastssl.wdr.de/wdr/1live/live/mp3/128/stream.mp3', codec: 'MP3', votes: 3200 },
       { name: 'KEXP 90.3 Seattle', u: 'https://kexp-mp3-128.streamguys1.com/kexp128.mp3', codec: 'MP3', votes: 2800 },
-      { name: 'NPR Music', u: 'https://npr-ice.streamguys1.com/live.mp3', codec: 'MP3', votes: 2700 },
-      { name: 'WNYC FM', u: 'https://fm939.wnyc.org/wnycfm', codec: 'MP3', votes: 2500 },
+      { name: 'BBC World Service', u: 'https://stream.live.vc.bbcmedia.co.uk/bbc_world_service', codec: 'MP3', votes: 2700 },
+      /* Replaces WNYC FM (https://fm939.wnyc.org/wnycfm). WNYC serves audio but
+       * sends no Access-Control-Allow-Origin, and radio runs through the same
+       * WebAudio graph as the local tracks:
+       *     createMediaElementSource -> AnalyserNode -> destination
+       * A cross-origin element without CORS taints that graph — the audio plays,
+       * but the analyser outputs silence, so the visualizer never moves and the
+       * EQ cannot act. Verified 2026-09-26 with a real HTTP probe of all 22
+       * curated stations: this was one of two offenders. Radio Swiss Classic was
+       * measured to send CORS `*` and is reachable. */
+      { name: 'Radio Swiss Classic', u: 'https://stream.srg-ssr.ch/m/rsc_de/mp3_128', codec: 'MP3', votes: 2500 },
       { name: 'Jazz Radio', u: 'https://jazz-wr01.ice.infomaniak.ch/jazz-wr01-128.mp3', codec: 'MP3', votes: 2400 },
       { name: 'NTS Radio 1', u: 'https://stream-relay-geo.ntslive.net/stream', codec: 'MP3', votes: 2200 },
       { name: 'NTS Radio 2', u: 'https://stream-relay-geo.ntslive.net/stream2', codec: 'MP3', votes: 2100 },
@@ -7201,9 +7208,6 @@
       ieRedoStack = [];
     const ieLayers = [];
     let ieCurrentLayer = 0;
-    const ieSelectMode = false;
-    const ieSelectStart = null,
-      ieSelectEnd = null;
 
     function ieAddLayer(name) {
       const layerCanvas = document.createElement('canvas');
@@ -7654,10 +7658,20 @@
         playSound('notify');
         if (isWork) {
           sessions++;
-          isWork = false;
-          totalSeconds = (parseInt(breakMinInput.value) || 5) * 60;
-          showNotif('Pomodoro', 'Zeit für eine Pause! 🍅', '🍅');
-          showBreakExercise();
+          recordSession();
+          /* Long break every 4th finished work round. This used to live in a
+           * second function `tick2()` that was never wired to the interval, so
+           * the documented feature never actually happened. */
+          if (sessions % 4 === 0) {
+            isWork = false;
+            totalSeconds = 15 * 60;
+            showNotif('Pomodoro', 'Long Break! 15 Minuten 🧘', '🧘');
+          } else {
+            isWork = false;
+            totalSeconds = (parseInt(breakMinInput.value) || 5) * 60;
+            showNotif('Pomodoro', 'Zeit für eine Pause! 🍅', '🍅');
+            showBreakExercise();
+          }
         } else {
           isWork = true;
           totalSeconds = (parseInt(workMinInput.value) || 25) * 60;
@@ -7760,42 +7774,6 @@
         '<strong>Statistik:</strong> Heute: ' + (stats[today] || 0) + ' · Gesamt: ' + total;
     }
     updateStats();
-
-    /* Long Break after 4 sessions */
-    function tick2() {
-      remaining--;
-      update();
-      if (remaining <= 0) {
-        clearInterval(interval);
-        interval = null;
-        running = false;
-        startBtn.textContent = 'Start';
-        playSound('notify');
-        if (isWork) {
-          recordSession();
-          sessions++;
-          if (sessions % 4 === 0) {
-            isWork = false;
-            totalSeconds = 15 * 60;
-            showNotif('Pomodoro', 'Long Break! 15 Minuten 🧘', '🧘');
-          } else {
-            isWork = false;
-            totalSeconds = (parseInt(breakMinInput.value) || 5) * 60;
-            showNotif('Pomodoro', 'Zeit für eine Pause! 🍅', '🍅');
-          }
-        } else {
-          isWork = true;
-          totalSeconds = (parseInt(workMinInput.value) || 25) * 60;
-          showNotif('Pomodoro', 'Pause vorbei — weiter gehts!', '💪');
-        }
-        remaining = totalSeconds;
-        update();
-      }
-    }
-
-    /* Replace tick with tick2 */
-    /* Note: tick is already defined, we just override its behavior */
-    /* Actually we can't easily replace, so we add long break logic to existing tick */
 
     /* CSV Export */
     function exportStats() {
@@ -8030,12 +8008,12 @@
     let notesPassword = null;
     /* notesVault ist weiter oben deklariert, vor paintVaultBtn(). */
 
-    /* UTF-8-sichere Base64-Rundtrip-Routine (btoa scheitert an Umlauten/Unicode). */
+    /* b64encode is only used by the pre-AES save path at line ~7956; the vault
+     * itself goes through window.NotesCrypto. b64decode() was the matching
+     * half and had no caller — the legacy import uses
+     * window.NotesCrypto.decodeLegacy(). */
     function b64encode(text) {
       return btoa(unescape(encodeURIComponent(text)));
-    }
-    function b64decode(data) {
-      return decodeURIComponent(escape(atob(data)));
     }
     let notesReady = false;
 
