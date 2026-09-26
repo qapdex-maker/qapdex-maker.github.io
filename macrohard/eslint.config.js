@@ -59,6 +59,24 @@ const browserGlobals = {
   Node: 'readonly',
   DOMParser: 'readonly',
   crypto: 'readonly',
+
+  /* Globals that app.js and its siblings provide at runtime, but that ESLint
+   * cannot see as declarations:
+   *   storeSet/storeGet/storeDel/storeHas — assigned in assets/js/storage.js
+   *     via `global.storeSet = storeSet` on the window object.
+   *   startOS — assigned in app.js as window.startOS = function(){}.
+   *   openApp/toast — assigned on window at the end of app.js's IIFE, and read
+   *     by the apps that live outside that IIFE. See the comment there: without
+   *     the exports they threw "ReferenceError: toast is not defined".
+   * These are real window properties in the browser, so declaring them removes
+   * the false positive without hiding a genuine bug. */
+  storeSet: 'readonly',
+  storeGet: 'readonly',
+  storeDel: 'readonly',
+  storeHas: 'readonly',
+  startOS: 'readonly',
+  openApp: 'readonly',
+  toast: 'readonly',
 };
 
 export default [

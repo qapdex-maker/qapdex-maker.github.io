@@ -1695,8 +1695,8 @@
     if (!/^[-+*/().,\s\d_a-zA-Zπφ]+$/.test(expr)) {
       throw new Error('Invalid');
     }
-    let p = 0,
-      s = expr;
+    let p = 0;
+    const s = expr;
     function pk() {
       return s[p];
     }
@@ -5043,7 +5043,7 @@
       { name: 'Jazz Radio', u: 'https://jazz-wr01.ice.infomaniak.ch/jazz-wr01-128.mp3', codec: 'MP3', votes: 2400 },
       { name: 'NTS Radio 1', u: 'https://stream-relay-geo.ntslive.net/stream', codec: 'MP3', votes: 2200 },
       { name: 'NTS Radio 2', u: 'https://stream-relay-geo.ntslive.net/stream2', codec: 'MP3', votes: 2100 },
-    ];;
+    ];
     const radioServers = ['de1', 'de2', 'nl1', 'at1', 'fr1', 'us1'];
     /* Search hits live here so a query can never destroy radioStations. */
     let radioSearchHits = [];
@@ -7141,7 +7141,7 @@
     ctx.fillText('Bild hierher ziehen oder laden', canvas.width / 2, canvas.height / 2);
 
     /* Undo/Redo + Layers */
-    let ieUndoStack = [],
+    const ieUndoStack = [],
       ieRedoStack = [];
     const ieLayers = [];
     let ieCurrentLayer = 0;
@@ -9363,8 +9363,8 @@ function buildColorpicker() {
     const max = Math.max(r1, g1, b1),
       min = Math.min(r1, g1, b1);
     let h,
-      s,
-      l = (max + min) / 2;
+      s;
+    const l = (max + min) / 2;
     if (max === min) {
       h = s = 0;
     } else {
