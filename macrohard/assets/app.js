@@ -3296,6 +3296,11 @@
       'Strich: <input type="range" id="ptLW" min="1" max="20" value="3" style="width:60px">';
     tb.appendChild(lwWrap);
     /* Actions */
+    const pngBtn = document.createElement('button');
+    pngBtn.className = 'cBtn';
+    pngBtn.textContent = 'PNG';
+    pngBtn.title = 'Als PNG exportieren';
+    pngBtn.addEventListener('click', exportPaintPNG);
     const undoBtn = document.createElement('button');
     undoBtn.className = 'cBtn';
     undoBtn.textContent = '↩';
@@ -3316,6 +3321,7 @@
       pCtx.fillRect(0, 0, canvas.width, canvas.height);
       toast('Leer');
     });
+    tb.appendChild(pngBtn);
     tb.appendChild(undoBtn);
     tb.appendChild(redoBtn);
     tb.appendChild(clearBtn);
@@ -5120,8 +5126,13 @@
       { name: 'NTS Radio 2', u: 'https://stream-relay-geo.ntslive.net/stream2', codec: 'MP3', votes: 2100 },
     ];;
     const radioServers = ['de1', 'de2', 'nl1', 'at1', 'fr1', 'us1'];
-    const radioSearchTerm = '';
+    /* Search hits live here so a query can never destroy radioStations. */
+    let radioSearchHits = [];
+    /* The active query. renderRadio() rebuilds the search bar, so the term has
+     * to live outside the DOM or it would be wiped on every result update. */
+    let radioSearchTerm = '';
     function fetchRadios(search, forceRefresh) {
+      radioSearchTerm = search || '';
       if (!forceRefresh && radioStations.length > 0 && !search) {
         renderRadio();
         return;
@@ -5166,16 +5177,27 @@
               };
             });
           if (found.length) {
-            radioStations = found;
-            saveRadios();
+            /* A search must never touch radioStations: the guard at the top of
+             * fetchRadios() would then suppress every later refetch and the
+             * verified list would stay lost until the window is reopened. */
+            if (search) {
+              radioSearchHits = found;
+            } else {
+              radioStations = found;
+              saveRadios();
+            }
           } else if (!search) {
             radioStations = fallbackStations;
             saveRadios();
+            radioSearchHits = [];
+          } else {
+            radioSearchHits = [];
           }
           renderRadio();
           if (radioStatus) {
+            const shown = search ? radioSearchHits.length : radioStations.length;
             radioStatus.textContent =
-              radioStations.length + ' Sender geladen' + (search ? ' (Suche: ' + search + ')' : '');
+              shown + ' Sender geladen' + (search ? ' (Suche: ' + search + ')' : '');
             radioStatus.style.color = 'var(--muted)';
           }
         } catch (e) {
@@ -5294,6 +5316,7 @@
         '<input type="text" id="radioSearchInput" placeholder="Sender suchen..." class="radioSearchInput"><button id="radioSearchBtn" class="radioSearchBtn">🔍</button><button id="radioRefreshBtn" class="radioRefreshBtn">↻</button>';
       el.appendChild(searchWrap);
       const searchInput = document.getElementById('radioSearchInput');
+      if (searchInput && radioSearchTerm) searchInput.value = radioSearchTerm;
       const searchBtn = document.getElementById('radioSearchBtn');
       const refreshBtn = document.getElementById('radioRefreshBtn');
       searchBtn.addEventListener('click', function () {
@@ -5310,15 +5333,18 @@
       /* Station count */
       const count = document.createElement('div');
       count.className = 'radioCount';
-      count.textContent = radioStations.length + ' Sender';
+      const shown = searchInput.value ? radioSearchHits : radioStations;
+      count.textContent = shown.length + ' Sender';
       el.appendChild(count);
 
-      if (radioStations.length === 0) {
+      if (shown.length === 0) {
         el.innerHTML +=
-          '<div style="padding:20px;color:var(--muted);text-align:center">Keine Sender geladen.</div>';
+          '<div style="padding:20px;color:var(--muted);text-align:center">' +
+          (searchInput.value ? 'Keine Treffer für diese Suche.' : 'Keine Sender geladen.') +
+          '</div>';
         return;
       }
-      radioStations.forEach(function (s, i) {
+      shown.forEach(function (s, i) {
         const isCur = isRadio && curStation === s;
         const item = document.createElement('div');
         item.className = 'musItem' + (isCur ? ' playing' : '');
