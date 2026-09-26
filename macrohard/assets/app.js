@@ -5052,11 +5052,32 @@
       { name: 'NTS Radio 2', u: 'https://stream-relay-geo.ntslive.net/stream2', codec: 'MP3', votes: 2100 },
     ];
     const radioServers = ['de1', 'de2', 'nl1', 'at1', 'fr1', 'us1'];
+    /* Cursor into radioServers. Measured 2026-09-26 from a real browser:
+     * de1 and de2 answer 200, nl1/at1/fr1/us1 all fail with a TypeError. The
+     * old code picked one mirror at random, so roughly two out of three
+     * searches landed in the offline branch even though the API was right
+     * there. Now the list is walked in order and the first mirror that
+     * answers wins; a success resets the cursor so the good one is reused. */
+    let radioServerIndex = 0;
     /* Search hits live here so a query can never destroy radioStations. */
     let radioSearchHits = [];
     /* The active query. renderRadio() rebuilds the search bar, so the term has
      * to live outside the DOM or it would be wiped on every result update. */
     let radioSearchTerm = '';
+
+    /* `search` is passed in rather than read from an enclosing scope: this
+     * helper is declared next to fetchRadios, not inside it, so a bare `search`
+     * here would be a ReferenceError the moment the retry chain reaches the
+     * offline branch. */
+    function showRadioOffline(reason, search) {
+      if (!search) radioStations = fallbackStations;
+      renderRadio();
+      if (radioStatus) {
+        radioStatus.textContent = reason + ' → ' + radioStations.length + ' Fallback';
+        radioStatus.style.color = 'var(--muted)';
+      }
+    }
+
     function fetchRadios(search, forceRefresh) {
       radioSearchTerm = search || '';
       if (!forceRefresh && radioStations.length > 0 && !search) {
@@ -5068,96 +5089,105 @@
         radioStatus.style.color = 'var(--accent)';
       }
       const query = search || '';
-      const server = radioServers[Math.floor(Math.random() * radioServers.length)];
-      let url =
-        'https://' +
-        server +
-        '.api.radio-browser.info/json/stations?limit=50&order=clickcount&reverse=true';
-      if (query) url += '&name=' + encodeURIComponent(query);
-      const x = new XMLHttpRequest();
-      x.open('GET', url, true);
-      x.timeout = 10000;
-      x.onload = function () {
-        try {
-          const arr = JSON.parse(x.responseText);
-          const seen = {};
-          const found = arr
-            .filter(function (s) {
-              if (!s.url_resolved || s.url_resolved.length < 5) return false;
-              if (!/^https:\/\//i.test(s.url_resolved)) return false;
-              if (/\.(html?|m3u8|mpd)$/i.test(s.url_resolved)) return false;
-              const key = s.url_resolved.split('/')[2];
-              if (seen[key]) return false;
-              seen[key] = true;
-              return true;
-            })
-            .slice(0, 12)
-            .map(function (s) {
-              return {
-                name: (s.name || 'Unbekannt').replace(/[^\x20-\x7E]/g, '').trim(),
-                u: s.url_resolved,
-                codec: s.codec || '',
-                votes: s.votes || 0,
-                country: s.country || '',
-                tags: s.tags || '',
-              };
-            });
-          if (found.length) {
+      let attemptsLeft = radioServers.length;
+
+      /* Walk the mirrors until one answers. `search` is passed to
+       * showRadioOffline explicitly — see the note on that helper. */
+      const tryNext = () => {
+        if (attemptsLeft-- <= 0) {
+          showRadioOffline('Offline', search);
+          return;
+        }
+        const server = radioServers[radioServerIndex % radioServers.length];
+        let url =
+          'https://' +
+          server +
+          '.api.radio-browser.info/json/stations?limit=50&order=clickcount&reverse=true';
+        if (query) url += '&name=' + encodeURIComponent(query);
+        const x = new XMLHttpRequest();
+        x.open('GET', url, true);
+        x.timeout = 10000;
+        x.onload = function () {
+          /* A mirror can answer with a non-2xx status and an HTML body. That
+           * is a failed attempt, not a result. */
+          if (x.status && (x.status < 200 || x.status >= 300)) {
+            radioServerIndex = (radioServerIndex + 1) % radioServers.length;
+            tryNext();
+            return;
+          }
+          try {
+            const arr = JSON.parse(x.responseText);
+            const seen = {};
+            const found = arr
+              .filter(function (s) {
+                if (!s.url_resolved || s.url_resolved.length < 5) return false;
+                if (!/^https:\/\//i.test(s.url_resolved)) return false;
+                if (/\.(html?|m3u8|mpd)$/i.test(s.url_resolved)) return false;
+                const key = s.url_resolved.split('/')[2];
+                if (seen[key]) return false;
+                seen[key] = true;
+                return true;
+              })
+              .slice(0, 12)
+              .map(function (s) {
+                return {
+                  name: (s.name || 'Unbekannt').replace(/[^\x20-\x7E]/g, '').trim(),
+                  u: s.url_resolved,
+                  codec: s.codec || '',
+                  votes: s.votes || 0,
+                  country: s.country || '',
+                  tags: s.tags || '',
+                };
+              });
+            if (found.length) {
             /* A search must never touch radioStations: the guard at the top of
              * fetchRadios() would then suppress every later refetch and the
              * verified list would stay lost until the window is reopened. */
-            if (search) {
-              radioSearchHits = found;
-            } else {
-              radioStations = found;
+              if (search) {
+                radioSearchHits = found;
+              } else {
+                radioStations = found;
+                saveRadios();
+              }
+            } else if (!search) {
+              radioStations = fallbackStations;
               saveRadios();
+              radioSearchHits = [];
+            } else {
+              radioSearchHits = [];
             }
-          } else if (!search) {
-            radioStations = fallbackStations;
-            saveRadios();
-            radioSearchHits = [];
-          } else {
-            radioSearchHits = [];
-          }
-          renderRadio();
-          if (radioStatus) {
-            const shown = search ? radioSearchHits.length : radioStations.length;
-            radioStatus.textContent =
+            renderRadio();
+            if (radioStatus) {
+              const shown = search ? radioSearchHits.length : radioStations.length;
+              radioStatus.textContent =
               shown + ' Sender geladen' + (search ? ' (Suche: ' + search + ')' : '');
-            radioStatus.style.color = 'var(--muted)';
+              radioStatus.style.color = 'var(--muted)';
+            }
+          } catch (e) {
+            if (!search) radioStations = fallbackStations;
+            renderRadio();
+            if (radioStatus) {
+              radioStatus.textContent = 'Fallback: ' + radioStations.length + ' Sender';
+              radioStatus.style.color = 'var(--muted)';
+            }
           }
-        } catch (e) {
-          if (!search) {
-            radioStations = fallbackStations;
-          }
-          renderRadio();
-          if (radioStatus) {
-            radioStatus.textContent = 'Fallback: ' + radioStations.length + ' Sender';
-            radioStatus.style.color = 'var(--muted)';
-          }
-        }
+          /* This mirror worked, so prefer it next time. */
+          radioServerIndex = 0;
+        };
+        x.onerror = function () {
+          /* Advance and try the next mirror instead of giving up: four of the
+           * six are dead, so one failure means nothing yet. */
+          radioServerIndex = (radioServerIndex + 1) % radioServers.length;
+          tryNext();
+        };
+        x.ontimeout = function () {
+          radioServerIndex = (radioServerIndex + 1) % radioServers.length;
+          tryNext();
+        };
+        x.send();
       };
-      x.onerror = function () {
-        if (!search) {
-          radioStations = fallbackStations;
-        }
-        renderRadio();
-        if (radioStatus) {
-          radioStatus.textContent = 'Offline → ' + radioStations.length + ' Fallback';
-          radioStatus.style.color = 'var(--muted)';
-        }
-      };
-      x.ontimeout = function () {
-        if (!search) {
-          radioStations = fallbackStations;
-        }
-        renderRadio();
-        if (radioStatus) {
-          radioStatus.textContent = 'Timeout → ' + radioStations.length + ' Fallback';
-          radioStatus.style.color = 'var(--muted)';
-        }
-      };
-      x.send();
+
+      tryNext();
     }
 
     /* === UI Helpers === */
