@@ -7,6 +7,17 @@ const {
   useMemo
 } = React;
 const RAW = 'https://raw.githubusercontent.com/qapdex-maker/metadata-msgraph/master/';
+
+/* Absolute URL for a data file next to the page.
+ *
+ * window.location.href may carry a query string or a hash, and both break the
+ * naive `href.replace(/index\.html?$/, '')`:
+ *   /?v=1  ->  http://host/?v=1data/index.beta.json  ->  404 HTML -> res.json() throws
+ * That failure is invisible: the worker reports it, the caller swallows it, and
+ * the feature silently does nothing. Normal use has no query string, so it only
+ * shows up when someone adds one for cache-busting — which is exactly when it
+ * matters. */
+const dataUrl = rel => window.location.href.split(/[?#]/)[0].replace(/index\.html?$/, '') + rel;
 const SITE = {
   'v1.0': 'openapi/v1.0/openapi.yaml',
   beta: 'openapi/beta/openapi.yaml'
@@ -152,6 +163,22 @@ const I18N = {
     sketch_err: 'Fehler beim Laden',
     sketch_v10: 'v1.0',
     sketch_beta: 'beta',
+    // Type -> endpoint join (2026-09-27) — see the DE table.
+    sketch_join: '{a} of {b} types with endpoints',
+    sketch_join_none: 'none',
+    sketch_ep: 'endpoints',
+    sketch_noep: 'no direct endpoints',
+    sketch_navonly: 'navigation only',
+    sketch_types: 'linked types',
+    // Type -> endpoint join (2026-09-27). Measured on beta-Mooncake: 54 types
+    // have an EntitySet, 53 of them reach endpoints. `message` has none — it is
+    // only a NavigationProperty of `user`, so saying so is the honest text.
+    sketch_join: '{a} von {b} Typen mit Endpoints',
+    sketch_join_none: 'keine',
+    sketch_ep: 'Endpoints',
+    sketch_noep: 'ohne direkte Endpoints',
+    sketch_navonly: 'nur über Navigation',
+    sketch_types: 'Typen mit Verknüpfung',
     nl_reasons: {
       teams: 'Teams',
       mails: 'Mails',
@@ -333,10 +360,9 @@ function Reference({
   // Web Worker löst relatives fetch() gegen die Worker-Skript-URL auf
   // (/msgraph/react/assets/), nicht gegen die Seite (/msgraph/react/).
   // Deshalb hier ABSOLUTE URLs bauen und an den Worker durchreichen.
-  const base = window.location.href.replace(/index\.html?$/, '');
   const fileMap = {
-    'v1.0': base + 'data/index.v1.0.json',
-    beta: base + 'data/index.beta.json'
+    'v1.0': dataUrl('data/index.v1.0.json'),
+    beta: dataUrl('data/index.beta.json')
   };
   const workerRef = useRef(null);
   const variantRef = useRef(variant);
@@ -997,6 +1023,11 @@ function Sketch({
   const [busy, setBusy] = useState(null);
   const [errs, setErrs] = useState({});
   const [filter, setFilter] = useState('all');
+  // The endpoint path segments, for the type -> endpoint join. The sketch
+  // panel and the reference list are separate React trees, so Reference's
+  // parsed items are not reachable from here. The worker is asked once.
+  const [segments, setSegments] = useState(null);
+  const [segsBusy, setSegsBusy] = useState(true);
   const wref = useRef(null);
   useEffect(() => {
     const w = new Worker('assets/worker.js');
@@ -1008,6 +1039,16 @@ function Sketch({
         counts: c,
         error
       } = e.data;
+      if (type === 'segments') {
+        setSegsBusy(false);
+        // A plain object, NOT a Set: the value per segment is the PATH COUNT.
+        // Wrapping it in a Set here was left over from the first version and
+        // silently turned the counts into a list of segments, so every type
+        // read as "no endpoint" and the panel showed "nur über Navigation" for
+        // all 25 types — the worker was right, the state was not.
+        if (ok) setSegments(e.data.segments);
+        return;
+      }
       if (type !== 'csdl') return;
       setBusy(null);
       // KEY ON THE FILE NAME, NOT THE URL.
@@ -1028,6 +1069,24 @@ function Sketch({
       }));
     };
     wref.current = w;
+    // Beta, because a ring file is a beta document and the reference list
+    // defaults to the same variant.
+    //
+    // The base URL must drop the query string AND the hash, not just a
+    // trailing index.html. With /?v=1 the old expression produced
+    // "http://host/?v=1data/index.beta.json", the server answered with the
+    // 404 HTML page, and res.json() threw
+    //   SyntaxError: Unexpected token '<' ... is not valid JSON
+    // The panel then showed no join at all, with no error anywhere — the
+    // worker reported the failure, the panel dropped it silently.
+    //
+    // The Reference panel has the same expression and the same latent bug; it
+    // only never fired because nothing in normal use appends a query string.
+    // Fixed here, and the test pins it.
+    w.postMessage({
+      type: 'segments',
+      file: dataUrl('data/index.beta.json')
+    });
     return () => w.terminate();
   }, []);
 
@@ -1054,6 +1113,30 @@ function Sketch({
   const missing = [...new Set(SKETCHES.map(s => s.sketch))].filter(n => !SKETCHES.some(o => o.sketch === n && o.variant === 'v1.0'));
   const totalKb = SKETCHES.reduce((a, s) => a + s.kb, 0);
   const mb = kb => kb >= 1024 ? (kb / 1024).toFixed(1) + ' MB' : kb + ' KB';
+  // The join, recomputed from the counts already in state. `entitySets` maps a
+  // type to its set names; a set name matches an endpoint when it is the last
+  // path segment. Types with a set but no matching segment are kept and
+  // marked — dropping them would make the panel look more complete than the
+  // data is.
+  // Only the types that actually reach endpoints. Kept separate from join()
+  // so the header can say "N of M" and the list can show every type, including
+  // the dead ones — hiding them would overstate the coverage.
+  const linked = c => join(c).filter(r => r.n > 0);
+  const join = c => {
+    if (!c || !c.entitySets) return [];
+    return Object.keys(c.entitySets).map(type => {
+      // Sum the PATH COUNT per set, not the number of sets that exist. One
+      // EntitySet can carry many endpoints — accessReview is a single set
+      // and 58 endpoints — so counting sets reported 1 for every type and
+      // made the column meaningless. Measured: administrativeUnit showed 1
+      // while the index holds 2 paths ending in /administrativeUnits.
+      const n = c.entitySets[type].reduce((acc, set) => acc + (segments && segments[set] ? segments[set] : 0), 0);
+      return {
+        type,
+        n
+      };
+    }).sort((a, b) => b.n - a.n || a.type.localeCompare(b.type));
+  };
   return /*#__PURE__*/React.createElement("div", {
     className: "panel-inner"
   }, /*#__PURE__*/React.createElement("h2", {
@@ -1090,11 +1173,24 @@ function Sketch({
       key: s.name
     }, /*#__PURE__*/React.createElement("h3", null, s.sketch), /*#__PURE__*/React.createElement("div", {
       className: "role"
-    }, s.variant, " \xB7 ", mb(s.kb)), c ? /*#__PURE__*/React.createElement("div", {
+    }, s.variant, " \xB7 ", mb(s.kb)), c ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "sketch-counts"
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, c.entityTypes), " ", t.sketch_entity), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, c.complexTypes), " ", t.sketch_complex), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, c.enumTypes), " ", t.sketch_enum), /*#__PURE__*/React.createElement("div", {
       className: "sketch-total"
-    }, /*#__PURE__*/React.createElement("b", null, c.totalTypes), " ", t.sketch_total)) : e ? /*#__PURE__*/React.createElement("p", {
+    }, /*#__PURE__*/React.createElement("b", null, c.totalTypes), " ", t.sketch_total)), linked(c).length > 0 && /*#__PURE__*/React.createElement("div", {
+      className: "sketch-join"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "sketch-join-head"
+    }, t.sketch_join.replace('{a}', String(linked(c).length)).replace('{b}', String(c.entitySetCount))), join(c).map(r => /*#__PURE__*/React.createElement("div", {
+      className: 'sketch-type' + (r.n ? ' has-ep' : ' no-ep'),
+      key: r.type
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "sk-type-name"
+    }, r.type), r.n > 0 ? /*#__PURE__*/React.createElement("span", {
+      className: "sk-ep"
+    }, r.n, " ", t.sketch_ep) : /*#__PURE__*/React.createElement("span", {
+      className: "sk-noep"
+    }, t.sketch_navonly))))) : e ? /*#__PURE__*/React.createElement("p", {
       className: "err"
     }, t.sketch_err, ": ", e) : /*#__PURE__*/React.createElement("div", {
       className: "sketch-actions"
