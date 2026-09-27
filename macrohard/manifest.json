@@ -7,7 +7,7 @@
   "background_color": "#0d0e0f",
   "theme_color": "#2547ff",
   "icons": [],
-  "version": "2.11.50",
+  "version": "2.11.51",
   "changelog": {
     "v2.11.50": "Window overflow fixed, desktop icons hideable, dark mode separated from the colour schemes; settings checkboxes read real state; checkbox lookup fixed for detached labels",
     "v2.11.49": "Window overflow fixed, desktop icons hideable, dark mode separated from the colour schemes",
