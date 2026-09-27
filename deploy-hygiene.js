@@ -22,6 +22,10 @@ const REACT = path.join(ROOT, 'msgraph', 'react');
 let fail = 0;
 const failm = (m) => { console.log('  FAIL: ' + m); fail++; };
 const ok = (m) => console.log('  ok:   ' + m);
+// A tool problem must be visible without blocking. A gate that cries wolf
+// trains you to skip it — and then it is skipped the one time it is right.
+let warnCount = 0;
+const warnm = (m) => { console.log('  WARN: ' + m); warnCount++; };
 
 console.log('=== Phase 5 Deploy-Hygiene (Portal + macrohard + msgraph/react) ===');
 
@@ -34,15 +38,100 @@ try {
 } catch (e) { failm('macrohard/app.js Syntax: ' + e.message); }
 
 // Babel — msgraph/react/app.jsx
-try {
-  if (fs.existsSync(path.join(REACT, 'assets', 'app.jsx'))) {
-    const c = fs.readFileSync(path.join(REACT, 'assets', 'app.jsx'), 'utf8');
-    require('@babel/standalone').transform(c, { presets: ['react'] });
-    ok('msgraph/react/app.jsx Babel transpile OK');
-  } else {
-    ok('msgraph/react/app.jsx nicht vorhanden (skip)');
-  }
-} catch (e) { failm('msgraph/react Babel: ' + e.message); }
+// This check used to be: require('@babel/standalone').transform(...)
+// @babel/standalone is a BROWSER bundle and is not in package.json, so the
+// require throws MODULE_NOT_FOUND on any clean checkout and the gate blocked
+// the push for a missing tool rather than for broken code. The working Termux
+// recipe (documented in the msgraph-react-evolution skill) is to fetch
+// babel.min.js from unpkg, evaluate it, and read .exports.
+//
+// A tool problem must never block a deploy, so this is an async function that
+// resolves to a status and only records a FAIL for real code problems.
+function checkBabel() {
+  const jsxPath = path.join(REACT, 'assets', 'app.jsx');
+  if (!fs.existsSync(jsxPath)) return { status: 'skip', msg: 'app.jsx nicht vorhanden' };
+  const c = fs.readFileSync(jsxPath, 'utf8');
+  return new Promise((resolve) => {
+    let Babel = null;
+    try {
+      Babel = require('@babel/standalone');
+    } catch (e) {
+      // Not installed — the expected case on this machine. Fetch the browser
+      // build and evaluate it, which is what the skill documents.
+      const https = require('https');
+      const url = 'https://unpkg.com/@babel/standalone@7/babel.min.js';
+      let currentUrl = url;
+      const followHttp = (u) => {
+        currentUrl = u;
+        return https.get(u, (res) => {
+        // unpkg answers 302 and points at the versioned CDN path. One level of
+        // redirect is followed; measured, a 302 is what a healthy request
+        // returns here, so treating it as a failure would skip a working check.
+        let hops = 0;
+        const follow = (r) => {
+          if (r.statusCode >= 300 && r.statusCode < 400 && r.headers.location) {
+            hops++;
+            if (hops > 3) {
+              r.resume();
+              resolve({ status: 'warn', msg: 'Redirect-Schleife bei ' + url });
+              return;
+            }
+            r.resume();
+            // The Location header is a PATH ("/@babel/standalone@7.29.9/..."),
+            // not an absolute URL. https.get rejects it with ERR_INVALID_URL.
+            // Resolve against the URL that produced it.
+            let nextUrl;
+            try {
+              nextUrl = new URL(r.headers.location, currentUrl).href;
+            } catch (e) {
+              resolve({ status: 'warn', msg: 'Location unbrauchbar: ' + r.headers.location });
+              return;
+            }
+            followHttp(nextUrl);
+            return;
+          }
+          if (r.statusCode !== 200) {
+            r.resume();
+            resolve({ status: 'warn', msg: 'unpkg HTTP ' + r.statusCode });
+            return;
+          }
+          let b = '';
+          r.setEncoding('utf8');
+          r.on('data', (d) => (b += d));
+          r.on('end', () => {
+            try {
+              const m = { exports: {} };
+              new Function('module', 'exports', b)(m, m.exports);
+              resolve({ status: 'got', Babel: m.exports });
+            } catch (e) {
+              resolve({ status: 'warn', msg: 'babel.min.js nicht auswertbar: ' + e.message });
+            }
+          });
+        };
+          follow(res);
+        })
+        .on('error', (e) => resolve({ status: 'warn', msg: 'kein Netz: ' + e.message }))
+        .setTimeout(15000, () => resolve({ status: 'warn', msg: 'Download-Timeout' }));
+      };
+      followHttp(url);
+      return;
+    }
+    resolve({ status: 'got', Babel: Babel });
+  }).then((r) => {
+    if (r.status === 'skip') return ok('msgraph/react ' + r.msg + ' (skip)');
+    if (r.status === 'warn') return warnm('msgraph/react Babel: SKIP — ' + r.msg);
+    if (!r.Babel || typeof r.Babel.transform !== 'function') {
+      return warnm('msgraph/react Babel: SKIP — kein transform verfügbar');
+    }
+    try {
+      r.Babel.transform(c, { presets: ['react'] });
+      ok('msgraph/react/app.jsx Babel transpile OK');
+    } catch (e) {
+      // A real problem in the JSX — this one DOES block.
+      failm('msgraph/react/app.jsx Babel transpile: ' + e.message);
+    }
+  });
+}
 
 // 2. relative Pfade — macrohard
 const macroIndex = fs.readFileSync(path.join(MACROHARD, 'index.html'), 'utf8');
@@ -60,8 +149,27 @@ if (fs.existsSync(path.join(REACT, 'index.html'))) {
 
 // 3. sw.js Prüfung — macrohard
 const swJs = fs.readFileSync(path.join(MACROHARD, 'sw.js'), 'utf8');
-if (/CACHE\s*=\s*['"]macrohard-v\d['"]/.test(swJs)) ok('macrohard/sw.js: Cache-Version vorhanden');
-else failm('macrohard/sw.js: Cache-Version fehlt oder falsch');
+// The cache name is the full dotted version (macrohard-v2-11-50). An earlier
+// version of this check was /macrohard-v\d['"]/ — exactly one digit — so it
+// never matched and the gate reported a missing cache version for several
+// releases. The cache was versioned the whole time; the check was wrong.
+const cacheName = /CACHE\s*=\s*['"]macrohard-v([\d]+(?:[.-][\d]+)*)['"]/.exec(swJs);
+if (cacheName) {
+  const inName = cacheName[1];
+  ok('macrohard/sw.js: Cache-Version vorhanden (' + inName + ')');
+  // The cache name and package.json must agree, otherwise returning visitors
+  // keep a stale app.js. This is the check that actually protects the deploy.
+  const pkgVersion = JSON.parse(
+    fs.readFileSync(path.join(MACROHARD, 'package.json'), 'utf8'),
+  ).version;
+  if (inName.split(/[.-]/).join('.') === pkgVersion) {
+    ok('macrohard/sw.js: Cache-Version == package.json (' + pkgVersion + ')');
+  } else {
+    failm(
+      'macrohard/sw.js: Cache-Version ' + inName + ' != package.json ' + pkgVersion,
+    );
+  }
+} else failm('macrohard/sw.js: Cache-Version fehlt oder falsch');
 if (/(stale-while-revalidate|network-first|cache-first)/.test(swJs)) ok('macrohard/sw.js: Strategien definiert');
 else failm('macrohard/sw.js: keine Fetch-Strategie gefunden');
 if (/FALLBACK/.test(swJs) || /Offline/.test(swJs)) ok('macrohard/sw.js: Offline-Fallback vorhanden');
@@ -94,5 +202,21 @@ try {
   else { console.log('  WARN: lokaler HEAD != remote (unpushte Commits) — Push zuerst.'); }
 } catch (e) { console.log('  WARN: git-Remote-Check fehlgeschlagen: ' + e.message); }
 
-console.log(fail ? ('\nRESULT: ' + fail + ' FAILURE(S) ❌ — Push blockiert') : '\nRESULT: Deploy-Hygiene sauber ✅ — push erlaubt');
-process.exit(fail ? 1 : 0);
+function finish() {
+  if (warnCount) {
+    console.log('  (' + warnCount + ' WARN — Werkzeugproblem, kein Codefehler)');
+  }
+  console.log(
+    fail
+      ? '\nRESULT: ' + fail + ' FAILURE(S) ❌ — Push blockiert'
+      : '\nRESULT: Deploy-Hygiene sauber ✅ — push erlaubt',
+  );
+  process.exit(fail ? 1 : 0);
+}
+
+// The Babel check is async (it may fetch the compiler). Nothing may report a
+// result before it settles, and the exit code must include its verdict.
+checkBabel().then(finish, (e) => {
+  failm('msgraph/react Babel: unerwarteter Fehler — ' + e.message);
+  finish();
+});
