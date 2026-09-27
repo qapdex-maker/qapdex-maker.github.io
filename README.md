@@ -28,16 +28,19 @@ darf **nie** in einer Datei landen, die GitHub Pages ausliefert — jede
 Pages-Datei ist öffentlich abrufbar (HTTP 200, keine Authentifizierung).
 
 ## Tests
-Vor jedem Push: `node deploy-hygiene.js` (Phase-5-Gate).
+Die CI (`.github/workflows/`, Job `lint-and-test`) läuft bei jedem Push auf
+`main` und deckt alle Seiten ab. Lokal dasselbe:
 
 ```
 node deploy-hygiene.js                            # Gate
 node --test tests/deploy-hygiene-gate.test.mjs     # 6
 cd macrohard && npm test                           # 298
-cd msgraph/react && node --test tests/*.test.mjs   # 15
+cd msgraph/react && node --test tests/*.test.mjs   # 27
 ```
+
+Vor einem Push: `node deploy-hygiene.js`. Das Gate blockiert bei Exit 1.
 
 `msgraph/react/assets/app.js` ist ein **vorkompiliertes** Kompilat von
 `assets/app.jsx`. Nach jeder JSX-Änderung `sh build_appjs.sh` ausführen —
 sonst bleibt der Browser auf dem alten Stand, während alle Quelltext-Tests
-grün sind. Die Testdateien prüfen das mit.
+grün sind. Die CI baut es nach und schlägt bei Abweichung fehl.

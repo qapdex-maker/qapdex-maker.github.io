@@ -80,6 +80,12 @@ jobs:
       - name: Gate-Tests
         run: node --test tests/deploy-hygiene-gate.test.mjs
 
+      - name: Doku gegen Repository pruefen
+        # Jede Zahl in der README ist eine Behauptung. Diese vergleicht sie mit
+        # den echten Dateien — inklusive der Zusicherung, dass dieser Workflow
+        # das tut, was die README ueber ihn behauptet.
+        run: bash scripts/check-docs.sh
+
   deploy:
     needs: lint-and-test
     runs-on: ubuntu-latest
