@@ -1,7 +1,7 @@
 # MakerOS Bug-Hunting Report
 
-Stand: 2026-09-26, Release 2.11.47. 25 Desktop-Apps, 250 Unit-Tests,
-0 ESLint-Fehler bei 26 Warnungen.
+Stand: 2026-09-27, Release 2.11.50. 25 Desktop-Apps, 302 Unit-Tests,
+0 ESLint-Fehler, 0 Warnungen.
 
 Dieser Bericht ersetzt den Stand vom 18. September. Er dokumentiert die
 Bugs der letzten beiden Bug-Hunting-Läufe, wie sie **tatsächlich gefunden und
@@ -14,7 +14,7 @@ verifiziert** wurden — nicht als Absichtserklärung.
 | Ebene | Werkzeug | Was es findet | Was es nicht findet |
 |---|---|---|---|
 | AST | `espree` via `node --test` | Scope-Fehler, toter Code, IFFE-Grenzen | alles zur Laufzeit |
-| Unit | `node --test` (250 Tests) | Zustandslogik, DOM-Stubs, Regressionen | Fehler ohne Testabdeckung |
+| Unit | `node --test` (302 Tests) | Zustandslogik, DOM-Stubs, Regressionen | Fehler ohne Testabdeckung |
 | Lint | ESLint | `no-undef`, `no-var`, unbenutzte Namen | Semantik |
 | Browser | agent-browser + Chromium | **echte** Laufzeitfehler, Autoplay, CORS | Kopfhörer-Akustik |
 | Netz | HTTPS-Probe | CORS-Header, erreichbare Streams | was der Browser daraus macht |
@@ -115,11 +115,45 @@ kaputten Browser geliefert.
     *Test:* `tests/dead-code-regression.test.mjs`.
 
 11. **`no-undef` als Fehlalarm etikettiert, obwohl drei davon echte Bugs waren**
-    18 Warnungen. 8 davon (`storeSet`, `startOS`, `openApp`, `toast` …) sind
+    *(Zahlen beziehen sich auf diesen Lauf, Release 2.11.47)*. 18 Warnungen.
+    8 davon (`storeSet`, `startOS`, `openApp`, `toast` …) sind
     echte `window`-Properties und in `eslint.config.js` dokumentiert. Die
     anderen waren — wie sich herausstellte — **genau der Close-Handler-Bug
     aus 2.1 Nr. 1**. Die Konfiguration trug den Satz
     „Verified in the browser, so this stays a warning". Das war falsch.
+    Ein viertes `no-undef` kam später hinzu und war wieder echt: 2.4 Nr. 12.
+
+### 2.4 Laufzeit (Release 2.11.50)
+
+12. **`no-undef` war kein Fehlalarm, sondern ein echter Bug.**
+    `buildSysinfo()` liegt außerhalb der Haupt-IIFE (siehe Abschnitt 4) und las
+    `APP_VERSION`, eine `const` innerhalb dieser Closure. Beim Öffnen der
+    Systeminfo-App warf die erste `addRow`-Zeile einen `ReferenceError` und
+    die Funktion brach ab: Überschrift „Betriebssystem", dann keine Zeile
+    mehr. Kein Error-Event, keine Konsolenausgabe.
+
+    *Fix:* `window.APP_VERSION = APP_VERSION;` neben die anderen
+    Grenz-Exports (`window.toast`).
+    *Tests:* `tests/iife-version-export.test.mjs`,
+    `tests/theme-darkmode-separation.test.mjs`.
+
+13. **Sechs tote Bindings in `app.js`** — alle mit Null Aufrufern und Null
+    String-Referenzen: `restoreFromTaskbar(wId)` (eine vierte Kopie der
+    Minimize/Restore-Logik, die es an vier anderen Stellen bereits gibt — und
+    die mit der bloßen App-ID arbeiten würde, also für Mehrfachinstanz-Apps
+    nie funktioniert hätte), `sortDeskIcons(by)` (der `by`-Parameter wurde nie
+    gelesen, es wurde immer nach Label sortiert — ein halb fertiges Feature,
+    keine Versehentlichkeit), `currentFile` in `buildViewer()` (bei Drop
+    gesetzt, nie gelesen), `musArt` in `buildMusic()`,
+    `data-app` in `buildTaskmgr()`.
+
+    `notesReady` wurde an sieben Stellen **gesetzt und an keiner gelesen**,
+    was nach einem unfertigen Guard aussieht. Geprüft, ob Klartext-Notes vor
+    dem Unlock gespeichert werden können: nicht erreichbar (blockierendes
+    `prompt()`, alle `saveNotes()`-Aufrufe sind User-Aktionen danach,
+    `saveNotes()` prüft selbst `notesVault === 'aes-gcm' && notesPassword`).
+
+    *Ergebnis:* ESLint 0 Fehler, 0 Warnungen.
 
 ---
 
@@ -177,16 +211,37 @@ Node-Test und kein headless-Browser beantworten.
 ## 4. Zustand
 
 ```
-Release        2.11.47   (app.js?v=66, sw.js macrohard-v2-11-47)
-Unit-Tests     250 / 250 grün
-ESLint         0 Fehler, 26 Warnungen (20 no-unused-vars, 6 prefer-const)
+Release        2.11.50   (app.js?v=71, sw.js macrohard-v2-11-50)
+Unit-Tests     302 / 302 grün
+ESLint         0 Fehler, 0 Warnungen
 var            0
-Browser-Smoke  24 Apps geöffnet, 0 Laufzeitfehler
+Browser-Smoke  25 Apps geöffnet, 0 Laufzeitfehler
 ```
 
-Die 26 verbleibenden Warnungen sind klassifiziert, nicht behoben:
-20 `no-unused-vars` (unbenutzte Funktionsparameter und -lokale) und
-6 `prefer-const`. Keine davon ist ein Laufzeitproblem.
+**Update 2026-09-27 (Release 2.11.50, Commits 9414caa + b7bb808):** Die
+Warnungen sind nicht mehr "klassifiziert, nicht behoben", sie sind weg. Die 14
+verbliebenen waren sechs tote Bindings (siehe 2.4 Nr. 13) und acht unbenutzte
+Funktionsparameter. Für die Parameter ist ein `_`-Präfix die richtige Antwort,
+kein Entfernen — ein Handler, der kein Event braucht, ist kein Fehler.
+
+**Der Grund, warum das hier steht und nicht im Kleingedruckten:** In diesem
+Lauf war eine der 14 Warnungen der *einzige* `no-undef`, und sie war ein
+Laufzeitbug. `buildSysinfo()` liegt außerhalb der Haupt-IIFE und las eine
+`const`, die darin deklariert ist. Beim Öffnen der Systeminfo-App:
+
+```
+ReferenceError: APP_VERSION is not defined
+  at buildSysinfo (assets/app.js?v=71:8806:30)
+```
+
+Die OS-Zeile ist die erste Zeile der ersten Sektion, also brach die Funktion
+sofort ab — Überschrift, dann nichts, keine Konsolenmeldung. Der Test, der
+das hätte fangen können, prüfte die Stringform `'MakerOS v' + APP_VERSION`,
+und die hat auch der kaputte Code. Sie war grün gegen den kaputten Build.
+
+*Tests:* `tests/iife-version-export.test.mjs` (geht an der IIFE-Grenze entlang
+und verlangt für jeden Zugriff außerhalb `window.APP_VERSION`),
+`tests/theme-darkmode-separation.test.mjs` (die schwache Assertion ist ersetzt).
 
 ---
 
@@ -219,7 +274,7 @@ mode und wirft erst zur Laufzeit. Umgekehrt ist `node --check` bei der
 startete.
 
 **Regel:** Bei Änderungen an Sperren-Zuständen in Code ohne Testabdeckung
-ist ein Browser-Smoke-Test Pflicht, nicht Kür. Konkret: 24 Apps öffnen,
+ist ein Browser-Smoke-Test Pflicht, nicht Kür. Konkret: alle 25 Apps öffnen,
 Fehler-Listener setzen, warten, Ergebnis melden.
 
 ### 5.3 Zwei Analysen waren falsch, bevor sie brauchbar waren
@@ -257,6 +312,12 @@ nicht in den Standardlauf. Sie werden separat benannt und bewusst ausgeführt.
 | Punkt | Grund |
 |---|---|
 | Radio akustisch prüfen | headless Chromium blockiert Autoplay; braucht echtes Gerät |
-| 20 `no-unused-vars`, 6 `prefer-const` | klassifiziert, kein Laufzeitrisiko, bewusst offen |
 | Browser-Blockier-Erkennung | technisch unmöglich; `⚠` als manueller Weg |
 | `find-tdz-traps.mjs` | O(n³), diagnostisch, nicht Teil von `npm test` |
+| `assets/app.js` unformatiert | Prettier meldet es schon im HEAD; ein Format-Lauf wäre ~2000 Zeilen Fremd-Diff und gehört in einen eigenen Commit |
+| `#stGrid` („Desktop-Raster") | steuert die Klasse `show-grid`, für die es keine CSS-Regel gibt. Toter Schalter, bewusst nicht angefasst; `tests/settings-checkbox-timing.test.mjs` hält den Zustand fest und schlägt in beide Richtungen an |
+
+**Abgehakt (2026-09-27):** die 20 `no-unused-vars` und 6 `prefer-const` sind
+weg (Commit b7bb808), der `no-undef` in `buildSysinfo()` ist behoben
+(Commit 9414caa). Beide waren in dieser Tabelle als „klassifiziert, kein
+Laufzeitrisiko" geführt — die Einordnung war falsch, siehe 2.4 Nr. 12.
