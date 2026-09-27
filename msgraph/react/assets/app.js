@@ -170,6 +170,8 @@ const I18N = {
     sketch_noep: 'no direct endpoints',
     sketch_navonly: 'navigation only',
     sketch_types: 'linked types',
+    sketch_more: '+ {n} more',
+    sketch_less: 'show less',
     // Type -> endpoint join (2026-09-27). Measured on beta-Mooncake: 54 types
     // have an EntitySet, 53 of them reach endpoints. `message` has none — it is
     // only a NavigationProperty of `user`, so saying so is the honest text.
@@ -179,6 +181,8 @@ const I18N = {
     sketch_noep: 'ohne direkte Endpoints',
     sketch_navonly: 'nur über Navigation',
     sketch_types: 'Typen mit Verknüpfung',
+    sketch_more: '+ {n} weitere',
+    sketch_less: 'weniger anzeigen',
     nl_reasons: {
       teams: 'Teams',
       mails: 'Mails',
@@ -1029,6 +1033,11 @@ function Sketch({
   const [segments, setSegments] = useState(null);
   const [segsBusy, setSegsBusy] = useState(true);
   const wref = useRef(null);
+  // Which cards have their type list expanded. A counted card is 2510 px tall
+  // with all 53 types shown, and a phone viewport is ~640 px, so the next card
+  // lands far outside the view. Collapsed by default, per card.
+  const [open, setOpen] = useState({});
+  const TOP = 5;
   useEffect(() => {
     const w = new Worker('assets/worker.js');
     w.onmessage = e => {
@@ -1181,16 +1190,33 @@ function Sketch({
       className: "sketch-join"
     }, /*#__PURE__*/React.createElement("div", {
       className: "sketch-join-head"
-    }, t.sketch_join.replace('{a}', String(linked(c).length)).replace('{b}', String(c.entitySetCount))), join(c).map(r => /*#__PURE__*/React.createElement("div", {
-      className: 'sketch-type' + (r.n ? ' has-ep' : ' no-ep'),
-      key: r.type
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "sk-type-name"
-    }, r.type), r.n > 0 ? /*#__PURE__*/React.createElement("span", {
-      className: "sk-ep"
-    }, r.n, " ", t.sketch_ep) : /*#__PURE__*/React.createElement("span", {
-      className: "sk-noep"
-    }, t.sketch_navonly))))) : e ? /*#__PURE__*/React.createElement("p", {
+    }, t.sketch_join.replace('{a}', String(linked(c).length)).replace('{b}', String(c.entitySetCount))), (() => {
+      // Top 5 by endpoint count, then the rest. The
+      // no-endpoint types sort last (n === 0), so they are
+      // only visible after expanding — which is fine,
+      // because the header already states the coverage and
+      // the "rest" line counts them.
+      const all = join(c);
+      const shown = open[s.name] ? all : all.slice(0, TOP);
+      const rest = all.slice(TOP);
+      return /*#__PURE__*/React.createElement(React.Fragment, null, shown.map(r => /*#__PURE__*/React.createElement("div", {
+        className: 'sketch-type' + (r.n ? ' has-ep' : ' no-ep'),
+        key: r.type
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "sk-type-name"
+      }, r.type), r.n > 0 ? /*#__PURE__*/React.createElement("span", {
+        className: "sk-ep"
+      }, r.n, " ", t.sketch_ep) : /*#__PURE__*/React.createElement("span", {
+        className: "sk-noep"
+      }, t.sketch_navonly))), rest.length > 0 && /*#__PURE__*/React.createElement("button", {
+        className: "sk-more",
+        onClick: () => setOpen(prev => ({
+          ...prev,
+          [s.name]: !prev[s.name]
+        })),
+        "aria-expanded": !!open[s.name]
+      }, open[s.name] ? t.sketch_less : t.sketch_more.replace('{n}', String(rest.length))));
+    })())) : e ? /*#__PURE__*/React.createElement("p", {
       className: "err"
     }, t.sketch_err, ": ", e) : /*#__PURE__*/React.createElement("div", {
       className: "sketch-actions"
