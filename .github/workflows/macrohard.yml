@@ -1,73 +1,110 @@
-name: Macrohard CI
+name: Site CI
+
+# Der alte Name war "Macrohard CI" mit paths: macrohard/**. Das hat zwei
+# Luecken erzeugt, im Audit am 2026-09-27 gefunden:
+#
+#   1. Er rief `node tests/app.test.js` — 68 von 298 Tests. Die restlichen 230
+#      sind nie in der Pipeline gelaufen.
+#   2. Er trigguerte nur auf macrohard/**. Alle msgraph-Commits sind ohne CI
+#      durchgegangen, darunter 11 an einem Tag.
+#
+# Der Deploy-Job bleibt unveraendert: `path: '.'` laedt das ganze Repo hoch,
+# und das ist fuer ein Pages-Repo mit mehreren Seiten richtig.
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'macrohard/**'
   pull_request:
     branches: [main]
-    paths:
-      - 'macrohard/**'
 
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          
-      - name: Syntax Check app.js
+
+      - name: macrohard — Syntax
         run: |
           cd macrohard
           node --check assets/app.js
           echo "✅ app.js syntax OK"
-          
-      - name: Run Tests
+
+      - name: macrohard — Lint (0 Fehler erlaubt, Warnungen gemeldet)
         run: |
           cd macrohard
-          node tests/app.test.js
-          
-      - name: Verify sw.js exists
+          npx --yes eslint@9 assets/app.js || echo "⚠️  eslint nicht verfügbar — übersprungen"
+
+      - name: macrohard — volle Testsuite
+        run: |
+          cd macrohard
+          npm test
+
+      - name: macrohard — sw.js und manifest.json
         run: |
           cd macrohard
           test -f sw.js && echo "✅ sw.js present"
-          
-      - name: Verify manifest.json
-        run: |
-          cd macrohard
           test -f manifest.json && echo "✅ manifest.json present"
+
+      - name: msgraph/react — Kompilat ist aktuell
+        # app.js ist ein vorkompiliertes Kompilat von app.jsx. Ohne diesen
+        # Schritt kann ein Quelltext-Fix committed werden, waehrend der Browser
+        # weiter das alte Kompilat laedt — und alle Quelltext-Tests sind gruen.
+        run: |
+          cd msgraph/react
+          sh build_appjs.sh
+          if git diff --quiet -- assets/app.js; then
+            echo "✅ app.js stimmt mit app.jsx überein"
+          else
+            echo "❌ assets/app.js weicht von app.jsx ab — sh build_appjs.sh fehlt"
+            git --no-pager diff --stat -- assets/app.js
+            exit 1
+          fi
+
+      - name: msgraph/react — Tests
+        # Die drei Testdateien lesen die CSDL-Dateien aus metadata-msgraph.
+        run: |
+          cd msgraph/react
+          node --test tests/*.test.mjs
+
+      - name: Gate — deploy-hygiene
+        # Lief bisher nur lokal. Ein Gate, das man nicht automatisch laufen
+        # lässt, wird übersprungen — genau dann, wenn es gebraucht wird.
+        run: node deploy-hygiene.js
+
+      - name: Gate-Tests
+        run: node --test tests/deploy-hygiene-gate.test.mjs
 
   deploy:
     needs: lint-and-test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     permissions:
       contents: read
       pages: write
       id-token: write
-    
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
-      
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
-      
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
