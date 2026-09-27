@@ -25,12 +25,25 @@ html.ignite{--accent:#ff4d00;--accent-2:#ffb000;--shadow-hover:8px 8px 0 var(--a
 html.ocean{--accent:#0066cc;--accent-2:#00ccff;--shadow-hover:8px 8px 0 var(--accent);--ink:#001122;--paper:#e6f0ff;--surface:#fff;--muted:#5d7a99;--line:#001122;}
 html.forest{--accent:#2d6a4f;--accent-2:#95d5b2;--shadow-hover:8px 8px 0 var(--accent);--ink:#1b4332;--paper:#d8f3dc;--surface:#fff;--muted:#52796f;--line:#1b4332;}
 html.mono{--accent:#333;--accent-2:#666;--shadow-hover:8px 8px 0 var(--accent);--ink:#000;--paper:#fff;--surface:#f5f5f5;--muted:#666;--line:#000;}
+/* Dark mode and the palettes are two separate layers: this block owns the
+ * surfaces, the ink and the shadows. It deliberately does NOT set --accent or
+ * --accent-2.
+ *
+ * html.ocean/.forest/.mono/.ignite and html[data-theme="dark"] have identical
+ * specificity (0,1,1), and this block comes later in the file, so it used to
+ * win. Measured in Chromium: with class="ocean" and data-theme="dark" the
+ * accent was #4a8aff instead of #0066cc, and with forest it was #4a8aff
+ * instead of #2d6a4f. Choosing a palette in dark mode changed nothing while
+ * the button implied it would. The accent now belongs to the palette alone;
+ * the :not() below supplies a dark-mode default only when no palette is
+ * chosen, so a dark desktop without a palette still reads correctly. */
 html[data-theme="dark"]{
   --ink:#e0e0e0;--paper:#1a1a1e;--surface:#2a2a2e;--muted:#999;
-  --accent:#4a8aff;--accent-2:#ffd400;--line:#555;--tb:#111;
+  --line:#555;--tb:#111;
   --shadow:4px 4px 0 #000;--shadow-hover:8px 8px 0 var(--accent);
   --shadow-sm:2px 2px 0 #000;--shadow-lg:12px 12px 0 #000;
 }
+html[data-theme="dark"]:not(.ignite):not(.ocean):not(.forest):not(.mono){--accent:#4a8aff;--accent-2:#ffd400}
 html[data-theme="dark"] .wtitle{background:var(--accent)}
 html[data-theme="dark"] #taskbar{background:var(--surface);background:var(--surface)}
 html[data-theme="dark"] .os-notif{background:var(--surface)}
