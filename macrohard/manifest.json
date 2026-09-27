@@ -14,5 +14,7 @@
     "v2.8": "Service Worker v2 — stale-while-revalidate, network-first AMI BIOS, offline fallback, quota check",
     "v2.7": "Initial PWA shell",
     "v2.0": "stale-while-revalidate for app.js, offline fallback"
-  }
+  },
+  "siteVersion": "2.11.50",
+  "buildDate": "2026-09-27"
 }
