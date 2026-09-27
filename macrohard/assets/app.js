@@ -6245,8 +6245,14 @@
       /* Grid toggle */
       const gridLabel = document.createElement('label');
       gridLabel.innerHTML = '<input type="checkbox" id="stGrid"> Desktop-Raster anzeigen';
-      /* Reflect the real state instead of hardcoding `checked`. */
-      const gridEl = document.getElementById('stGrid');
+      /* Reflect the real state instead of hardcoding `checked`.
+       *
+       * Scoped to gridLabel, NOT document.getElementById: innerHTML on a
+       * detached element does not put it in the document, so the global lookup
+       * returned null and the `if` guard silently skipped the assignment. Both
+       * controls stayed unchecked while the desktop showed grid and icons.
+       * Measured in Chromium 2026-09-27 on a fresh boot. */
+      const gridEl = gridLabel.querySelector('#stGrid');
       const deskIcons = document.getElementById('deskIcons');
       if (gridEl) gridEl.checked = !(deskIcons && !deskIcons.classList.contains('show-grid'));
       gridLabel.addEventListener('change', function () {
@@ -6262,8 +6268,9 @@
       /* Desktop icons visibility — same preference as the context menu item */
       const iconsLabel = document.createElement('label');
       iconsLabel.innerHTML = '<input type="checkbox" id="stShowIcons"> Desktop-Icons anzeigen';
-      /* Reflect the real state instead of hardcoding `checked`. */
-      const showIconsEl = document.getElementById('stShowIcons');
+      /* Reflect the real state instead of hardcoding `checked`. Scoped for the
+       * same reason as #stGrid above — the label is still detached here. */
+      const showIconsEl = iconsLabel.querySelector('#stShowIcons');
       if (showIconsEl) showIconsEl.checked = !isDesktopIconsHidden();
       iconsLabel.addEventListener('change', function () {
         setDesktopIconsHidden(!document.getElementById('stShowIcons').checked);
@@ -6287,7 +6294,10 @@
       try {
         const gd = localStorage.getItem('os_grid');
         if (gd === '0') {
-          const gdEl = document.getElementById('stGrid');
+          /* This block runs after grid.appendChild(gridLabel), so the global
+           * lookup works here — but the same control is reached through
+           * gridEl above, so keep both paths on the one element. */
+          const gdEl = gridEl || document.getElementById('stGrid');
           if (gdEl) gdEl.checked = false;
           const desk = document.getElementById('deskIcons');
           if (desk) desk.classList.remove('show-grid');
