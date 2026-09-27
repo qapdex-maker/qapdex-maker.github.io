@@ -567,34 +567,21 @@
     });
   }
 
-  /* Restore minimized windows (click on taskbar icon) */
-  function restoreFromTaskbar(wId) {
-    const w = document.getElementById('w-' + wId);
-    if (w) {
-      w.classList.remove('minimized');
-      w.style.display = 'flex';
-      w.classList.add('focused');
-      w.style.zIndex = ++zIdx;
-      focused = wId;
-      updateFocus();
-      const tbIcon = document.getElementById('tb-' + wId);
-      if (tbIcon) tbIcon.classList.remove('minimized');
-    }
-  }
+  /* Restore minimized windows (click on taskbar icon).
+   *
+   * This used to be a function, restoreFromTaskbar(wId), and it was never
+   * called - a fourth copy of the same logic, which is also present at the
+   * taskbar click (line ~1527), the taskbar thumb (line ~1122), the start-menu
+   * restore (line ~1219) and the session-restore path (line ~315). Each of
+   * those handles the instance id; this one assumed the bare app id and so
+   * could not have worked for multi-instance apps anyway. Removed 2026-09-27
+   * after confirming zero call sites and zero string references. */
 
-  function sortDeskIcons(by) {
-    const c = document.getElementById('deskIcons');
-    if (!c) return;
-    const items = Array.from(c.children);
-    items.sort(function (a, b) {
-      const la = a.querySelector('.lbl').textContent.toLowerCase();
-      const lb = b.querySelector('.lbl').textContent.toLowerCase();
-      return la.localeCompare(lb);
-    });
-    items.forEach(function (i) {
-      c.appendChild(i);
-    });
-  }
+  /* sortDeskIcons(by) was removed 2026-09-27: zero call sites, zero string
+   * references, and its `by` parameter was never read - it sorted by label
+   * whatever the caller asked for. The desktop context menu has a sort entry;
+   * whether it should sort by name, size or type is a design decision, so the
+   * dead half-written version is gone rather than half-finished. */
   document.addEventListener('click', function (e) {
     const m = document.getElementById('deskCtx');
     if (m && !m.contains(e.target)) m.classList.remove('open');
@@ -1520,7 +1507,7 @@
       tbIcon.dataset.inst = instId;
       const lbl = t(id) + (allowMulti && instCounter[id] > 1 ? ' #' + instCounter[id] : '');
       tbIcon.innerHTML = '<span>' + lbl + '</span><span class="tbRun"></span>';
-      tbIcon.addEventListener('click', function (e) {
+      tbIcon.addEventListener('click', function (_e) {
         const w = document.getElementById('w-' + instId);
         if (!w) return;
         if (w.classList.contains('minimized')) {
@@ -2209,7 +2196,7 @@
         return '<div class="chItem">' + h + '</div>';
       })
       .join('');
-    hist.querySelectorAll('.chItem').forEach(function (el, idx) {
+    hist.querySelectorAll('.chItem').forEach(function (el) {
       el.style.cursor = 'pointer';
       el.addEventListener('click', function () {
         const parts = el.textContent.split(' = ');
@@ -3061,7 +3048,7 @@
         e.preventDefault();
         this.classList.add('dragover');
       });
-      el.addEventListener('dragleave', function (e) {
+      el.addEventListener('dragleave', function (_e) {
         this.classList.remove('dragover');
       });
       el.addEventListener('drop', function (e) {
@@ -3663,7 +3650,6 @@
     if (!player) return;
     if (MUSIC_INITIALIZED) return;
     MUSIC_INITIALIZED = true;
-    const art = document.getElementById('musArt');
     const artIcon = document.getElementById('musArtIcon');
     const titleEl = document.getElementById('musTitle');
     const artistEl = document.getElementById('musArtist');
@@ -4887,7 +4873,7 @@
       // Presets
       const presetWrap = document.createElement('div');
       presetWrap.className = 'eq-presets';
-      Object.keys(EQ_PRESETS).forEach(function (name, idx) {
+      Object.keys(EQ_PRESETS).forEach(function (name) {
         const btn = document.createElement('button');
         btn.className = 'eq-preset-btn' + (name === 'Flat' ? ' active' : '');
         btn.textContent = name;
@@ -6030,7 +6016,7 @@
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker
             .register('./sw.js')
-            .then(function (r) {
+            .then(function () {
               regBtn.textContent = '✅ SW registriert';
             })
             .catch(function (e) {
@@ -8179,7 +8165,18 @@
     function b64encode(text) {
       return btoa(unescape(encodeURIComponent(text)));
     }
-    let notesReady = false;
+    /* notesReady was removed 2026-09-27. It was assigned in seven places and
+     * read in none - the guard it looks like it implements does not exist.
+     * Checked whether that is a bug before removing it:
+     *   - the unlock path uses a BLOCKING prompt(), so no user input can reach
+     *     a handler before it returns
+     *   - every saveNotes() call site is a user action afterwards: drag-reorder,
+     *     restore from trash, delete, edit, create
+     *   - saveNotes() itself keys off `notesVault === 'aes-gcm' && notesPassword`,
+     *     which is the real precondition and is checked
+     * So a plaintext save before unlock is not reachable, and the variable was
+     * only ever scaffolding for a guard that turned out to be unnecessary. */
+
 
     function flashSaved() {
       const indicator = document.getElementById('ntSaved');
@@ -8214,10 +8211,8 @@
           });
           saveNotes();
         }
-        notesReady = true;
         return;
       }
-      notesReady = false;
       promptForVaultPassword();
     }
 
@@ -8227,7 +8222,6 @@
       );
       if (pw === null) {
         notes = [];
-        notesReady = true;
         renderList();
         renderTags();
         return;
@@ -8236,7 +8230,6 @@
         notes = notes.map(function (n) {
           return Object.assign({}, n, { content: '' });
         });
-        notesReady = true;
         renderList();
         renderTags();
         toast('Verschlüsselte Inhalte ausgeblendet');
@@ -8246,14 +8239,12 @@
         if (opened[0] === null) {
           alert('Falsches Passwort.');
           notes = [];
-          notesReady = true;
           renderList();
           renderTags();
           return;
         }
         notesPassword = pw;
         notes = opened;
-        notesReady = true;
         renderList();
         renderTags();
       });
@@ -8597,7 +8588,6 @@ function buildTaskmgr() {
       const nameEl = w.querySelector('.wtxt');
       if (!nameEl) return;
       const name = nameEl.textContent;
-      const id = w.getAttribute('data-app') || '';
       const cpu = Math.random() * 15;
       const ram = 20 + Math.floor(Math.random() * 80);
       totalCpu += cpu;
@@ -8918,7 +8908,7 @@ function buildSysinfo() {
         );
         addRow('Genauigkeit', pos.coords.accuracy.toFixed(0) + ' m');
       },
-      function (err) {
+      function (_err) {
         addRow('Breitengrad', 'Zugriff verweigert');
         addRow('Längengrad', 'Zugriff verweigert');
         addRow('Höhe', 'Zugriff verweigert');
@@ -9816,7 +9806,9 @@ function buildViewer() {
   const placeholder = document.getElementById('vwPlaceholder');
   const canvas = document.getElementById('vwCanvas');
   let scale = 1;
-  let currentFile = null;
+  /* currentFile was removed 2026-09-27: declared, assigned on drop, read
+   * never. Kept as state for a future "which file is open" indicator, which
+   * never arrived. */
   body.addEventListener('dragover', function (e) {
     e.preventDefault();
   });
@@ -9824,7 +9816,6 @@ function buildViewer() {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (!file || !file.type.startsWith('image/')) return;
-    currentFile = file;
     const img = new Image();
     img.onload = function () {
       canvas.width = img.width;
