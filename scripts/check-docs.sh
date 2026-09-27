@@ -12,7 +12,14 @@
 #     ein tabellarischer Abstand dazwischensteht. Das grep-Muster muss zur
 #     tatsaechlichen Zeile passen, sonst meldet es eine fehlende Zahl, die
 #     vorhanden ist.
-cd "$HOME/github/repo/qapdex-maker.github.io" || exit 1
+# Das Repo-Root ist das Verzeichnis, in dem das Skript liegt — zwei Ebenen
+# hoeher. Ein fester Pfad unter $HOME funktionierte zu Hause, aber auf dem
+# Runner liegt der Workspace unter /home/runner/work/<owner>/<repo>, und
+# $HOME/github/repo/... existiert dort nicht. Genau das hat der erste Lauf
+# gemeldet: "cd: /home/runner/github/repo/...: No such file or directory".
+#
+# $0 ist hier scripts/check-docs.sh, also liegt das Root zwei Ebenen höher.
+cd "$(dirname "$0")/.." || exit 1
 fail=0
 chk() { if [ "$2" = "$3" ]; then echo "  ok   $1"; else echo "  FAIL $1: Doku '$2', real '$3'"; fail=$((fail+1)); fi; }
 has()  { if [ "$2" -gt 0 ]; then echo "  ok   $1"; else echo "  FAIL $1"; fail=$((fail+1)); fi; }
