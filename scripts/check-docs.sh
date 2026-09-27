@@ -18,7 +18,7 @@ chk() { if [ "$2" = "$3" ]; then echo "  ok   $1"; else echo "  FAIL $1: Doku '$
 has()  { if [ "$2" -gt 0 ]; then echo "  ok   $1"; else echo "  FAIL $1"; fail=$((fail+1)); fi; }
 hasnt(){ if [ "$2" -eq 0 ]; then echo "  ok   $1"; else echo "  FAIL $1 ($2 Treffer im Code)"; fail=$((fail+1)); fi; }
 
-WF=.github/workflows/macrohard.yml
+WF=.github/workflows/site-ci.yml
 # Nur Codezeilen: kein Kommentar, kein Leerzeichen-Praefix.
 code() { grep -vE '^\s*#' "$WF" | grep -vE '^\s*$'; }
 

@@ -1,7 +1,7 @@
 {
   "name": "macrohard-doors-os",
   "version": "2.11.50",
-  "description": "Windows-stil Desktop OS im Browser — Neo-Brutalist, 22 Apps, PWA",
+  "description": "Windows-stil Desktop OS im Browser \u2014 Neo-Brutalist, 22 Apps, PWA",
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.*",
@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "eslint": "^9.0.0",
+    "espree": "^10.4.0",
     "prettier": "^3.0.0"
   },
   "engines": {

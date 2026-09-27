@@ -1,6 +1,8 @@
 name: Site CI
 
-# Der alte Name war "Macrohard CI" mit paths: macrohard/**. Das hat zwei
+# Datei umbenannt von macrohard.yml: sie testet nicht mehr nur macrohard.
+#
+# Der alte Workflow-Name war "Macrohard CI" mit paths: macrohard/**. Das hat zwei
 # Luecken erzeugt, im Audit am 2026-09-27 gefunden:
 #
 #   1. Er rief `node tests/app.test.js` — 68 von 298 Tests. Die restlichen 230
@@ -29,6 +31,16 @@ jobs:
         with:
           node-version: '20'
 
+      # Ohne diesen Schritt fehlen node_modules UND alles darin. Neun Test-
+      # dateien importieren espree direkt; es ist eine transitive Dependency von
+      # eslint und war deshalb lokal vorhanden, aber nie deklariert. Der erste
+      # Lauf dieser CI starb genau daran, 19 Sekunden nach dem Push.
+      - name: Dependencies
+        run: |
+          cd macrohard
+          npm install --no-audit --no-fund
+          node -e "require('espree'); console.log('✅ espree auflösbar')"
+
       - name: macrohard — Syntax
         run: |
           cd macrohard
@@ -38,7 +50,7 @@ jobs:
       - name: macrohard — Lint (0 Fehler erlaubt, Warnungen gemeldet)
         run: |
           cd macrohard
-          npx --yes eslint@9 assets/app.js || echo "⚠️  eslint nicht verfügbar — übersprungen"
+          npx eslint assets/app.js || echo "⚠️  eslint nicht verfügbar — übersprungen"
 
       - name: macrohard — volle Testsuite
         run: |
@@ -66,8 +78,20 @@ jobs:
             exit 1
           fi
 
+      # Die msgraph-Tests lesen die CSDL-Dateien aus metadata-msgraph/schemas —
+      # ein anderes Repository, 50 MB, 23 Dateien. Ohne dieses Klonen schlagen
+      # die Tests mit "metadata-msgraph not found" fehl, und die Pruefungen, die
+      # den Join gegen echte Daten messen, laufen nie.
+      - name: metadata-msgraph fuer die Skizzen-Tests
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse \
+            https://github.com/qapdex-maker/metadata-msgraph.git \
+            "$HOME/github/repo/metadata-msgraph"
+          cd "$HOME/github/repo/metadata-msgraph"
+          git sparse-checkout set schemas
+          ls schemas/*.csdl | wc -l | sed 's/^/  CSDL-Dateien: /'
+
       - name: msgraph/react — Tests
-        # Die drei Testdateien lesen die CSDL-Dateien aus metadata-msgraph.
         run: |
           cd msgraph/react
           node --test tests/*.test.mjs

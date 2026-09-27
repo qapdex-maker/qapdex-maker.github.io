@@ -28,7 +28,7 @@ darf **nie** in einer Datei landen, die GitHub Pages ausliefert — jede
 Pages-Datei ist öffentlich abrufbar (HTTP 200, keine Authentifizierung).
 
 ## Tests
-Die CI (`.github/workflows/`, Job `lint-and-test`) läuft bei jedem Push auf
+Die CI (`.github/workflows/site-ci.yml`, Job `lint-and-test`) läuft bei jedem Push auf
 `main` und deckt alle Seiten ab. Lokal dasselbe:
 
 ```
