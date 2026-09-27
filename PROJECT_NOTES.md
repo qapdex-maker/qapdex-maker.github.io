@@ -342,5 +342,5 @@ GitHub Functions: 404 auf diesem Account, ob Plan oder keine Functions ist von
 der Shell nicht unterscheidbar. Notizen: `msgraph/react/NOTES-API-PROXY.md`.
 
 ### Testzahlen
-macrohard 302 · msgraph/react 15 (sketch 9, radar 6) · Gate 6. Alle grün,
+macrohard 312 · msgraph/react 15 (sketch 9, radar 6) · Gate 6. Alle grün,
 `node deploy-hygiene.js` inklusive echtem Babel-Transpile.

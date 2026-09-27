@@ -8,9 +8,15 @@
      in app.js; tests/version-consistency.test.mjs fails if they drift. Without
      this tag the test only passed by accident, on a substring that happened to
      be in the file. -->
-<meta name="makeros-version" content="2.11.51"/>
+<meta name="makeros-version" content="2.11.52"/>
 <meta name="description" content="Windows-style desktop OS — qapdex-maker.github.io · Omarchy Quattro links · Boot screen, taskbar, start menu, 13 Apps: Notepad, Calculator, Terminal, Explorer, Paint, Browser, Music, Chat, Docs, Settings, Links, Omarchy, AMIBIOS Setup"/>
 <link rel="manifest" href="./manifest.json"/>
+<!-- Favicon. Ohne diese Zeilen fragte der Browser /favicon.ico an und bekam
+     404 (im Serverlog sichtbar). Quelle ist assets/icon-source.svg; die
+     abgeleiteten Dateien liegen in assets/. -->
+<link rel="icon" href="./assets/favicon.ico" sizes="any"/>
+<link rel="icon" href="./assets/icon-192.png" type="image/png" sizes="192x192"/>
+<link rel="apple-touch-icon" href="./assets/apple-touch-icon.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">

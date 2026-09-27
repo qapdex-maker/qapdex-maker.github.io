@@ -10,7 +10,7 @@ https://docs.github.com/de/pages/quickstart
 
 ## Seiten
 - Portal-Root `index.html` = Portal
-- `macrohard/` = MakerOS — Neo-Brutalist Windows-Style Desktop OS (25 Apps, v2.11.51, Mobile-optimiert)
+- `macrohard/` = MakerOS — Neo-Brutalist Windows-Style Desktop OS (25 Apps, v2.11.52, Mobile-optimiert)
 - `idun/` = idun console
 - `msgraph/react/` = Graph Metadata Hub (5 Tabs + Skizzen-Panel)
 - `catpop/` = CatPop Meme/Announcement
@@ -34,7 +34,7 @@ Die CI (`.github/workflows/site-ci.yml`, Job `lint-and-test`) läuft bei jedem P
 ```
 node deploy-hygiene.js                            # Gate
 node --test tests/deploy-hygiene-gate.test.mjs     # 6
-cd macrohard && npm test                           # 302
+cd macrohard && npm test                           # 312
 cd msgraph/react && node --test tests/*.test.mjs   # 27
 ```
 

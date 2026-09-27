@@ -2,8 +2,11 @@
  * v2 — stale-while-revalidate, network-first for AMI BIOS,
  * offline fallback, quota check, cache versioning
  */
-const CACHE='macrohard-v2-11-51';
-const STATIC_ASSETS=['./','./index.html','./assets/site.css','./assets/app.js','./manifest.json','./assets/ami-bios-setup.html'];
+const CACHE='macrohard-v2-11-52';
+/* Die Icons sind bewusst Teil der Precache-Liste. Sie sind klein (3 KB und
+ * 14 KB) und ohne sie fehlt der installierten PWA das Symbol — der Browser
+ * fragt es ab, bekommt im Offline-Fall aber nur den generischen 503-Pfad. */
+const STATIC_ASSETS=['./','./index.html','./assets/site.css','./assets/app.js','./manifest.json','./assets/ami-bios-setup.html','./assets/icon-192.png','./assets/icon-512.png','./assets/apple-touch-icon.png'];
 const FALLBACK='<html><head><meta charset="utf-8"/><title>Offline — MakerOS</title><style>body{background:#0d0e0f;color:#e3e2e2;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}</style></head><body><div><h1>⬢ OFFLINE</h1><p>Keine Verbindung. Check deine Netzwerkverbindung.</p><p style="font-size:10px;color:#849493">Refresh zum Retry</p></div></body></html>';
 
 self.addEventListener('install',e=>{

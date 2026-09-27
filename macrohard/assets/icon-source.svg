@@ -1,0 +1,19 @@
+<!--
+  Quelle fuer favicon.ico / apple-touch-icon.png / icon-192.png / icon-512.png.
+  Bewusst als SVG im Repo: eine .ico ist ein Container, den man nicht mehr
+  sinnvoll diffen kann, und die PNG-Groessen sind daraus eindeutig ableitbar.
+  Der 404 im Serverlog kam daher, dass der Browser /favicon.ico anfragt und
+  es keine Datei gab — nicht weil eines kaputt war.
+
+  Stil: vier Quadrate in der Akzentfarbe, dunkler Rand, wie die
+  Taskbar-Icons. 128x128, damit es als Favicon und als PWA-Icon taugt.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <rect width="128" height="128" fill="#1a1a1e"/>
+  <g fill="#ff4d00" stroke="#0d0d10" stroke-width="4">
+    <rect x="18" y="18" width="40" height="40"/>
+    <rect x="70" y="18" width="40" height="40"/>
+    <rect x="18" y="70" width="40" height="40"/>
+    <rect x="70" y="70" width="40" height="40"/>
+  </g>
+</svg>

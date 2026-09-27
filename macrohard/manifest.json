@@ -6,15 +6,30 @@
   "display": "standalone",
   "background_color": "#0d0e0f",
   "theme_color": "#2547ff",
-  "icons": [],
-  "version": "2.11.51",
+  "icons": [
+    {
+      "src": "./assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "version": "2.11.52",
   "changelog": {
+    "v2.11.52": "PWA icons added (manifest, favicon, apple-touch) and precached by the service worker; the TDZ scanner now finishes in under a second",
+    "v2.11.51": "System info app no longer crashes on its first row (APP_VERSION was read outside the IIFE that declares it); app.js lint clean",
     "v2.11.50": "Window overflow fixed, desktop icons hideable, dark mode separated from the colour schemes; settings checkboxes read real state; checkbox lookup fixed for detached labels",
     "v2.11.49": "Window overflow fixed, desktop icons hideable, dark mode separated from the colour schemes",
     "v2.8": "Service Worker v2 — stale-while-revalidate, network-first AMI BIOS, offline fallback, quota check",
     "v2.7": "Initial PWA shell",
     "v2.0": "stale-while-revalidate for app.js, offline fallback"
   },
-  "siteVersion": "2.11.50",
+  "siteVersion": "2.11.52",
   "buildDate": "2026-09-27"
 }
