@@ -495,6 +495,56 @@
     toast('Desktop anzeigen');
   }
 
+  /* Single version source. The About dialog used to hardcode its own number
+   * while the system info reported another one — two places, two answers, and
+   * the About dialog kept the stale value across several releases. Both read
+   * this constant now; tests/theme-darkmode-separation.test.mjs checks that it
+   * matches package.json and manifest.json and that no other release literal
+   * survives anywhere in app.js. */
+  const APP_VERSION = '2.11.49';
+
+  /* Restore the display layer on boot, not when Settings happens to open.
+   *
+   * This used to live at the end of buildSettings(), which meant the stored
+   * preference was applied the first time the user opened Settings — a dark
+   * desktop that came up light and only turned dark when you visited the
+   * settings window. Verified in Chromium: with os_dark='1' in localStorage a
+   * reload produced dataset.theme='' and the "Dunkles Design" checkbox
+   * rendered unchecked while the desktop was plainly light.
+   *
+   * Called from DOMContentLoaded, before the first paint of the desktop. */
+  function restoreAppearance() {
+    /* Dark mode: an explicit preference wins; without one, follow the OS. */
+    let sd = null;
+    try {
+      sd = storeGet('os_dark');
+    } catch (e) {}
+    if (sd === '1') {
+      document.documentElement.dataset.theme = 'dark';
+    } else if (
+      sd === null &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches
+    ) {
+      document.documentElement.dataset.theme = 'dark';
+    }
+    /* Scanlines default to on unless the user turned them off. */
+    let sc = null;
+    try {
+      sc = storeGet('os_scan');
+    } catch (e) {}
+    if (sc !== '0') {
+      document.documentElement.classList.add('scanlines');
+    }
+    /* Colour scheme */
+    let st = null;
+    try {
+      st = storeGet('os_theme');
+    } catch (e) {}
+    if (st) setColorScheme(st);
+    updateThemeToggleBtn();
+  }
+
   /* About Dialog */
   function showAboutDialog() {
     const existing = document.getElementById('aboutDialog');
@@ -505,7 +555,9 @@
     const d = document.createElement('div');
     d.id = 'aboutDialog';
     d.innerHTML =
-      '<div class="aboutOverlay"></div><div class="aboutBox"><div class="aboutHeader">Über MakerOS<button class="aboutClose">×</button></div><div class="aboutBody"><div class="aboutLogo">MD</div><div class="aboutInfo"><h3>MakerOS</h3><p>Windows-Style Desktop OS im Browser</p><p>Version 2.11.45 (2026-09-26)</p><p>25 Apps · Neo-Brutalist · PWA</p><p style="margin-top:8px;font-size:11px;color:var(--muted)">Made by Alexander Kleine<br>info@qapdex.com<br>qapdex-maker.github.io<br>MIT License</p><p style="margin-top:8px;font-size:10px;color:var(--muted)">Made with Hermes Agent<br>by Nous Research</p></div></div></div>';
+      '<div class="aboutOverlay"></div><div class="aboutBox"><div class="aboutHeader">Über MakerOS<button class="aboutClose">×</button></div><div class="aboutBody"><div class="aboutLogo">MD</div><div class="aboutInfo"><h3>MakerOS</h3><p>Windows-Style Desktop OS im Browser</p><p>Version ' +
+      APP_VERSION +
+      '</p><p>25 Apps · Neo-Brutalist · PWA</p><p style="margin-top:8px;font-size:11px;color:var(--muted)">Made by Alexander Kleine<br>info@qapdex.com<br>qapdex-maker.github.io<br>MIT License</p><p style="margin-top:8px;font-size:10px;color:var(--muted)">Made with Hermes Agent<br>by Nous Research</p></div></div></div>';
     document.body.appendChild(d);
     d.querySelector('.aboutOverlay').addEventListener('click', function () {
       d.remove();
@@ -988,6 +1040,31 @@
     if (v === '0') setDesktopIconsHidden(true);
   }
 
+  /* The four palettes, in one place. Reset and the settings buttons both read
+   * this, so a fifth palette only has to be added once. */
+  const COLOR_SCHEMES = ['ignite', 'ocean', 'forest', 'mono'];
+
+  function setColorScheme(name) {
+    const root = document.documentElement;
+    COLOR_SCHEMES.forEach(function (c) {
+      root.classList.remove(c);
+    });
+    if (name && COLOR_SCHEMES.indexOf(name) !== -1) root.classList.add(name);
+  }
+
+  /* Reset the display layer WITHOUT wiping the whole class attribute.
+   * className = '' removes every class on <html>, including ones another
+   * module may have added. Only the four known palette classes and the
+   * scanlines flag belong to this feature. */
+  function resetAppearance() {
+    const root = document.documentElement;
+    setColorScheme('');
+    root.style.removeProperty('--accent');
+    root.style.removeProperty('--fs');
+    root.dataset.theme = '';
+    root.classList.remove('scanlines');
+  }
+
   function toggleTheme() {
     const cur = document.documentElement.dataset.theme;
     const next = cur === 'dark' ? '' : 'dark';
@@ -1210,7 +1287,7 @@
       break;
     case 'settings':
       body =
-          '<div class="stGrid" id="stGrid"><div class="stNav"><button data-tab="general" class="active" data-de="Allgemein" data-en="General">Allgemein</button><button data-tab="appearance" data-de="Aussehen" data-en="Appearance">Aussehen</button><button data-tab="shortcuts" data-de="Tastenkürzel" data-en="Shortcuts">Tastenkürzel</button><button data-tab="privacy" data-de="Datenschutz" data-en="Privacy">Datenschutz</button></div><div class="stPane active" data-pane="general"><label><input type="checkbox" id="stDark"> Dark Mode</label><label><input type="checkbox" id="stScan" checked> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div><div class="stPane" data-pane="appearance" id="stAppearance"></div><div class="stPane" data-pane="shortcuts" id="stShortcuts"></div><div class="stPane" data-pane="privacy" id="stPrivacy"></div></div>';
+          '<div class="stGrid" id="stGrid"><div class="stNav"><button data-tab="general" class="active" data-de="Allgemein" data-en="General">Allgemein</button><button data-tab="appearance" data-de="Aussehen" data-en="Appearance">Aussehen</button><button data-tab="shortcuts" data-de="Tastenkürzel" data-en="Shortcuts">Tastenkürzel</button><button data-tab="privacy" data-de="Datenschutz" data-en="Privacy">Datenschutz</button></div><div class="stPane active" data-pane="general"><label><input type="checkbox" id="stDark"> Dunkles Design</label><label><input type="checkbox" id="stScan"> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div><div class="stPane" data-pane="appearance" id="stAppearance"></div><div class="stPane" data-pane="shortcuts" id="stShortcuts"></div><div class="stPane" data-pane="privacy" id="stPrivacy"></div></div>';
       break;
     case 'links':
       body = '<div class="clPane" id="clPane"></div>';
@@ -5914,7 +5991,12 @@
     }
     /* General */
     const stDarkEl = document.getElementById('stDark');
-    if (stDarkEl)
+    /* Mirror the current state into the control. The dark mode can be toggled
+     * from the taskbar, the desktop context menu or Ctrl+Shift+L, so opening
+     * Settings used to show an unchecked box while the desktop was plainly
+     * dark — a control that contradicts what it controls. */
+    if (stDarkEl) {
+      stDarkEl.checked = document.documentElement.dataset.theme === 'dark';
       stDarkEl.addEventListener('change', function () {
         document.documentElement.dataset.theme = this.checked ? 'dark' : '';
         try {
@@ -5922,12 +6004,17 @@
         } catch (e) {}
         updateThemeToggleBtn();
       });
+    }
     const stScan = document.getElementById('stScan');
-    if (stScan)
+    /* Same reason as stDark: the scanlines flag can be set at boot, so the
+     * checkbox must show the real state rather than a hardcoded default. */
+    if (stScan) {
+      stScan.checked = document.documentElement.classList.contains('scanlines');
       stScan.addEventListener('change', function () {
         document.documentElement.classList.toggle('scanlines', this.checked);
         storeSet('os_scan', this.checked ? '1' : '0');
       });
+    }
     const stLangEl = document.getElementById('stLang');
     if (stLangEl) {
       stLangEl.innerHTML =
@@ -6108,7 +6195,7 @@
       /* Theme Presets */
       const themeLabel = document.createElement('div');
       themeLabel.style.cssText = 'font-weight:bold;margin-top:10px';
-      themeLabel.textContent = 'Themes:';
+      themeLabel.textContent = 'Farbschema:';
       grid.appendChild(themeLabel);
       const themeBtns = document.createElement('div');
       themeBtns.style.cssText = 'display:flex;gap:6px;margin-top:4px';
@@ -6126,11 +6213,11 @@
           ';display:inline-block;margin-right:4px;border:1px solid #000"></span>' +
           t.n;
         b.addEventListener('click', function () {
-          document.documentElement.className = t.c;
+          setColorScheme(t.c);
           try {
             localStorage.setItem('os_theme', t.c);
           } catch (e) {}
-          toast('Theme: ' + t.n);
+          toast('Farbschema: ' + t.n);
         });
         themeBtns.appendChild(b);
       });
@@ -6157,7 +6244,11 @@
       grid.appendChild(iconSizeLabel);
       /* Grid toggle */
       const gridLabel = document.createElement('label');
-      gridLabel.innerHTML = '<input type="checkbox" id="stGrid" checked> Desktop-Raster anzeigen';
+      gridLabel.innerHTML = '<input type="checkbox" id="stGrid"> Desktop-Raster anzeigen';
+      /* Reflect the real state instead of hardcoding `checked`. */
+      const gridEl = document.getElementById('stGrid');
+      const deskIcons = document.getElementById('deskIcons');
+      if (gridEl) gridEl.checked = !(deskIcons && !deskIcons.classList.contains('show-grid'));
       gridLabel.addEventListener('change', function () {
         const desk = document.getElementById('deskIcons');
         if (desk) {
@@ -6170,8 +6261,10 @@
       grid.appendChild(gridLabel);
       /* Desktop icons visibility — same preference as the context menu item */
       const iconsLabel = document.createElement('label');
-      iconsLabel.innerHTML =
-        '<input type="checkbox" id="stShowIcons" checked> Desktop-Icons anzeigen';
+      iconsLabel.innerHTML = '<input type="checkbox" id="stShowIcons"> Desktop-Icons anzeigen';
+      /* Reflect the real state instead of hardcoding `checked`. */
+      const showIconsEl = document.getElementById('stShowIcons');
+      if (showIconsEl) showIconsEl.checked = !isDesktopIconsHidden();
       iconsLabel.addEventListener('change', function () {
         setDesktopIconsHidden(!document.getElementById('stShowIcons').checked);
         toast(
@@ -6204,11 +6297,7 @@
       resetBtn.className = 'cBtn op';
       resetBtn.textContent = 'Reset Defaults';
       resetBtn.addEventListener('click', function () {
-        document.documentElement.className = '';
-        document.documentElement.style.removeProperty('--accent');
-        document.documentElement.style.removeProperty('--fs');
-        document.documentElement.dataset.theme = '';
-        document.documentElement.classList.remove('scanlines');
+        resetAppearance();
         try {
           localStorage.removeItem('os_accent');
           localStorage.removeItem('os_fs');
@@ -6295,11 +6384,11 @@
             try {
               sessionStorage.clear();
             } catch (e) {}
-            document.documentElement.className = '';
-            document.documentElement.style.removeProperty('--accent');
-            document.documentElement.style.removeProperty('--fs');
             document.documentElement.dataset.theme = '';
             document.documentElement.classList.remove('scanlines');
+            /* Same targeted reset as the appearance tab: clearing storage
+             * should not be the only way the palette classes go away. */
+            resetAppearance();
             refreshUI();
             toast('Alle Daten gelöscht');
           }
@@ -6380,32 +6469,9 @@
       });
       info.appendChild(importBtn);
     }
-    /* Restore dark/scan — auto-detect if no stored preference */
-    try {
-      const sd = localStorage.getItem('os_dark');
-      if (sd === '1') {
-        document.documentElement.dataset.theme = 'dark';
-        const dk = document.getElementById('stDark');
-        if (dk) dk.checked = true;
-      } else if (
-        sd === null &&
-        window.matchMedia &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches
-      ) {
-        document.documentElement.dataset.theme = 'dark';
-        const dk2 = document.getElementById('stDark');
-        if (dk2) dk2.checked = true;
-      }
-    } catch (e) {}
-    try {
-      const sc = localStorage.getItem('os_scan');
-      if (sc !== '0') {
-        document.documentElement.classList.add('scanlines');
-      } else {
-        const scEl = document.getElementById('stScan');
-        if (scEl) scEl.checked = false;
-      }
-    } catch (e) {}
+    /* Dark mode, scanlines and the colour scheme are restored on boot by
+     * restoreAppearance(); the controls above mirror that state. Nothing is
+     * applied here, so opening Settings can no longer change the desktop. */
   }
 
   function refreshUI() {
@@ -7090,6 +7156,9 @@
   }
 
   window.addEventListener('DOMContentLoaded', function () {
+    /* Before initShell, so the desktop is already dark/scanlined when it
+     * first paints instead of flipping a moment later. */
+    restoreAppearance();
     initShell();
     initDesktop();
     initBoot();
@@ -8724,7 +8793,7 @@ function buildSysinfo() {
 
   /* OS */
   addSection('Betriebssystem');
-  addRow('OS', 'MakerOS v2.11.49 (Neo-Brutalist)');
+  addRow('OS', 'MakerOS v' + APP_VERSION + ' (Neo-Brutalist)');
   addRow('Benutzer', 'macrohard');
   addRow('Plattform', navigator.platform);
   addRow('Sprache', navigator.language);
