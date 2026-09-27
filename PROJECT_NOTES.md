@@ -251,3 +251,96 @@ Alles unten ist echter Tool-Output, keine Annahme:
 - Interne Nav-Links (About/Tokenomics/How-to-Buy/Live-Chart/Meme-Generator) sind Platzhalter (`#`) — Same-Page-Sektionen noch nicht angelegt
 - Linktr-Subseite: `/catpop/linktr/` → `$CATPOP — Kapow Linktree`
 - Letzter Commit: `194c641 docs(catpop): add catpop README` (READMEDatei hinzugefügt)
+
+## Session 2026-09-27 — macrohard Dark/Light + msgraph Radar, Skizzen, Gate
+
+Vier zusammenhängende Blöcke, alle im selben Monorepo. 6 Commits macrohard,
+11 Commits msgraph. **Alles verifiziert, nichts gepusht ohne Auftrag.**
+
+### macrohard — Dark Mode und Farbschema waren vermischt (Release 2.11.50)
+Dark Mode und die vier Paletten sind zwei Schichten, die sich kombinieren. Sie
+hießen beide "Theme", daher der Eindruck. Dazu ein Spezifitäts-Unfall:
+`html.ocean` und `html[data-theme="dark"]` haben identische Spezifität, und der
+Dark-Block stand später — also gewann Dark. Gemessen vorher: ocean+dark ergab
+`--accent #4a8aff` statt `#0066cc`. Ein Palettenwechsel im Dark Mode tat sichtbar
+nichts. Dark setzt jetzt nur Flächen/Ink/Line/Schatten, der Akzent gehört der
+Palette, mit `:not()`-Fallback.
+
+Zwei Nebenbefunde, die echter waren als geplant:
+- Der Dark-Restore lag am ENDE von `buildSettings()` — ein gespeichertes
+  Dark-Mode wurde erst angewendet, wenn man die Einstellungen öffnete. Ein
+  dunkler Desktop kam hell hoch. Jetzt im DOMContentLoaded, vor initShell.
+- `documentElement.className = ''` in beiden Reset-Buttons riss `lang-de` mit
+  weg, das `setLang()` gesetzt hatte. Jetzt `resetAppearance()`.
+
+Und einer, der von der eigenen Fix-Idee stammte: das State-Mirroring der
+Checkboxen funktionierte nicht. `innerHTML` auf einem **detached** Element landet
+nicht im Dokument, `getElementById` lieferte null, und der `if`-Guard — als
+Robustheit gedacht — verwandelte einen harten Fehler in falsche UI. Ein Test,
+der die Reihenfolge prüft (angehängt vor nachgeschlagen), statt die Existenz des
+Guards.
+
+### msgraph — Breaking Radar: "Bald" war ein toter Button
+Der Filter verglich `it.status === 'soon'`, aber die Daten sind **asymmetrisch**:
+`v1.0` hat `{removed: 47, planned: 38}`, `beta` hat `{removed: 1617, soon: 137,
+planned: 38}`. Auf v1.0 traf "bald" also nichts. Gemessen: ALLE 85 → BALD 85
+(nichts passierte) → ENTFERNT 47. "Bald" ist jetzt eine *Bezeichnung*, kein
+Status: "noch nicht entfernt" = soon + planned → 38 auf v1.0, 175 auf beta.
+Dazu: der Zähler zeigte `data.count` (Gesamtzahl) statt der gefilterten Liste
+(47 Karten neben Badge "85"), und ein leerer Filter war nicht von einem Hänger
+zu unterscheiden.
+
+### msgraph — Skizzen-Panel, und ein Button, der nicht das tat, was er sagte
+Der Header-Button "React" war ein **Themeswitch-Rest** aus der Vor-React-Zeit:
+im Commit 68e7d1f stand dort noch `data-set-theme="idun-retro"`, das Label war
+der Themenname, die Aktion längst auf "springe zum Reference-Tab" reduziert.
+`idun-retro` kommt null Mal im React-Code vor. Jetzt öffnet er ein Panel über
+die 17 Cloud-CSDL-Dokumente aus metadata-msgraph (5-8 MB, zusammen ~90 MB) und
+zählt pro Klick eine Datei im Worker.
+
+**Drei Fehler, die erst das Ausführen zeigte:**
+1. `DOMParser` existiert im Web-Worker nicht (gemessen: `typeof DOMParser ===
+   'undefined'`). Ein Quelltext-Test kann das nicht fangen — es passiert erst
+   beim Klick in einem echten Worker.
+2. Der Backslash in `'[\s>]'` verlor eine Ebene, das Muster suchte einen
+   literalen Backslash-s und fand **0**, obwohl beta-Review 36 EntityTypes hat.
+   Vollkommen lautlos: kein Fehler, keine Konsolenmeldung.
+3. Der Worker echoed die volle raw-URL, das Rendering las `counts[s.name]`
+   (nackter Dateiname) — zwei String-Keys, die sich nie treffen.
+
+Gegenprobe: Regex-Zähler und echter XML-Parser stimmen exakt überein
+(beta-Review 36/85/45, beta-Mooncake 1231/1386/975, beta-Prod 2512/3364/1877).
+
+**Und der Test, der das finden sollte, war selbst schuld:** er hatte das
+Muster *nachgebaut* statt aus worker.js extrahiert und übernahm denselben
+Doppel-Escape-Fehler. Ein Test, der den geprüften Code kopiert, findet keinen
+Bug im Escaping — er kopiert ihn mit.
+
+### deploy-hygiene.js — zwei self-inflicted FAILs
+Das Gate meldete 2 FAILUREs und blockierte den Push. Beide waren Bugs im Gate:
+- Der Cache-Check verlangte genau *eine* Ziffer nach `macrohard-v`; `sw.js`
+  trägt `macrohard-v2-11-50` seit mehreren Releases. Er fand also nie etwas.
+  Jetzt wird die Version gekappt und mit package.json verglichen.
+- `require('@babel/standalone')` wirft MODULE_NOT_FOUND (Browser-Bundle, nicht
+  in package.json). Jetzt: require, sonst unpkg-Fetch mit Redirect-Auflösung,
+  sonst WARN statt FAIL. Ein echter JSX-Fehler blockiert weiter.
+
+Ein Gate, das auto-fixiert statt zu failen, hatte einen Widerspruch über ein
+Release versteckt: `siteVersion`/`buildDate` waren im Release-Commit entfernt
+worden ("nichts liest sie"), das Gate hat sie beim nächsten Lauf kommentarlos
+wieder eingefügt.
+
+### Sicherheitsbefund — API-Proxy wartet auf den GitHub-Plan
+Geplant war ein Live-Punkt gegen die echte Graph-Instanz. **Jede GitHub-Pages-
+Datei ist öffentlich** (geprüft: `manifest.json` → HTTP 200, keine Auth). Ein
+Graph-Token in einer deployten Config-Datei ist kein Secret; mit der
+Mail-Adresse aus `/me` ist das eine vollwertige Kontooption.
+
+Graph erlaubt aber CORS (`Allow-Origin: *`, `authorization` erlaubt) — ein
+Proxy ist nicht nötig, das OpenRouter-Feld macht es seit F3 genauso.
+GitHub Functions: 404 auf diesem Account, ob Plan oder keine Functions ist von
+der Shell nicht unterscheidbar. Notizen: `msgraph/react/NOTES-API-PROXY.md`.
+
+### Testzahlen
+macrohard 298 · msgraph/react 15 (sketch 9, radar 6) · Gate 6. Alle grün,
+`node deploy-hygiene.js` inklusive echtem Babel-Transpile.
