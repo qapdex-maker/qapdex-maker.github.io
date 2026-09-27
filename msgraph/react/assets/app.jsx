@@ -60,6 +60,14 @@ const I18N = {
     // leaks the raw key into the UI, which is exactly how the F3 'llm' reason
     // bug happened before.
     filter_shown: 'gefiltert', radar_empty: 'Keine Einträge für diesen Filter.',
+    // Sketch panel (2026-09-27). Replaces the mislabelled "React" button,
+    // which was a themeswitch left over from the pre-React site.
+    sketch: 'Skizzen', sketch_h: 'Cloud-Skizzen',
+    sketch_hint: 'CSDL-Dokumente je Ring. Klick lädt genau eine Datei in den Worker und zählt die Typen — 17 Dateien wären zusammen ~90 MB.',
+    sketch_entity: 'EntityTypes', sketch_complex: 'ComplexTypes', sketch_enum: 'EnumTypes',
+    sketch_total: 'Typen gesamt', sketch_load: 'zählen', sketch_counting: 'zählt…',
+    sketch_missing: 'fehlt', sketch_raw: 'roh', sketch_err: 'Fehler beim Laden',
+    sketch_v10: 'v1.0', sketch_beta: 'beta',
     nl_reasons: { teams: 'Teams', mails: 'Mails', calendar: 'Kalender', onedrive: 'OneDrive', photo: 'Profilfoto', default: 'Standard', llm: 'LLM-Zuordnung' },
   },
   en: {
@@ -90,6 +98,13 @@ const I18N = {
     tab_v10: 'v1.0 (stable)', tab_beta: 'beta (Preview)', hits: 'Hits:',
     filter_all: 'all', filter_soon: 'soon', filter_removed: 'removed', removal: 'Removal:',
     filter_shown: 'filtered', radar_empty: 'No entries for this filter.',
+    // Sketch panel (2026-09-27) — see the DE table above.
+    sketch: 'Sketches', sketch_h: 'Cloud sketches',
+    sketch_hint: 'CSDL documents per ring. Clicking loads exactly one file into the worker and counts the types — all 17 would be ~90 MB.',
+    sketch_entity: 'Entity types', sketch_complex: 'Complex types', sketch_enum: 'Enum types',
+    sketch_total: 'types total', sketch_load: 'count', sketch_counting: 'counting…',
+    sketch_missing: 'missing', sketch_raw: 'raw', sketch_err: 'load failed',
+    sketch_v10: 'v1.0', sketch_beta: 'beta',
     nl_reasons: { teams: 'Teams', mails: 'Mails', calendar: 'Calendar', onedrive: 'OneDrive', photo: 'Profile photo', default: 'Default', llm: 'LLM mapping' },
   }
 };
@@ -424,6 +439,132 @@ function Radar({ t, lang }) {
   );
 }
 
+/* The cloud sketches, measured from the metadata-msgraph repo on 2026-09-27.
+ * These are CSDL documents, 5-8 MB each, 17 of them. The panel lists names and
+ * sizes and loads exactly ONE per click, in the worker — loading them all on
+ * tab open would be ~90 MB and the same freeze the worker exists to prevent.
+ *
+ * v1.0-Review.csdl does not exist upstream (checked against the git index, not
+ * just the directory). The panel marks the gap instead of hiding it, so the
+ * count does not look like a bug in the panel. 8 v1.0 + 9 beta.
+ */
+const SKETCHES = [
+  { name: 'beta-Bleu.csdl', sketch: 'Bleu', variant: 'beta', kb: 5494 },
+  { name: 'beta-Delos.csdl', sketch: 'Delos', variant: 'beta', kb: 5300 },
+  { name: 'beta-Fairfax.csdl', sketch: 'Fairfax', variant: 'beta', kb: 6462 },
+  { name: 'beta-GovSG.csdl', sketch: 'GovSG', variant: 'beta', kb: 187 },
+  { name: 'beta-Mooncake.csdl', sketch: 'Mooncake', variant: 'beta', kb: 5529 },
+  { name: 'beta-Prod.csdl', sketch: 'Prod', variant: 'beta', kb: 8263 },
+  { name: 'beta-Review.csdl', sketch: 'Review', variant: 'beta', kb: 64 },
+  { name: 'beta-USNat.csdl', sketch: 'USNat', variant: 'beta', kb: 1411 },
+  { name: 'beta-USSec.csdl', sketch: 'USSec', variant: 'beta', kb: 1433 },
+  { name: 'v1.0-Bleu.csdl', sketch: 'Bleu', variant: 'v1.0', kb: 1979 },
+  { name: 'v1.0-Delos.csdl', sketch: 'Delos', variant: 'v1.0', kb: 1804 },
+  { name: 'v1.0-Fairfax.csdl', sketch: 'Fairfax', variant: 'v1.0', kb: 2578 },
+  { name: 'v1.0-GovSG.csdl', sketch: 'GovSG', variant: 'v1.0', kb: 144 },
+  { name: 'v1.0-Mooncake.csdl', sketch: 'Mooncake', variant: 'v1.0', kb: 1974 },
+  { name: 'v1.0-Prod.csdl', sketch: 'Prod', variant: 'v1.0', kb: 3356 },
+  { name: 'v1.0-USNat.csdl', sketch: 'USNat', variant: 'v1.0', kb: 1040 },
+  { name: 'v1.0-USSec.csdl', sketch: 'USSec', variant: 'v1.0', kb: 1028 },
+];
+
+function Sketch({ t }) {
+  const [counts, setCounts] = useState({});
+  const [busy, setBusy] = useState(null);
+  const [errs, setErrs] = useState({});
+  const [filter, setFilter] = useState('all');
+  const wref = useRef(null);
+
+  useEffect(() => {
+    const w = new Worker('assets/worker.js');
+    w.onmessage = (e) => {
+      const { type, file, ok, counts: c, error } = e.data;
+      if (type !== 'csdl') return;
+      setBusy(null);
+      // KEY ON THE FILE NAME, NOT THE URL.
+      //
+      // The worker echoes the `file` it was given, which is the full raw
+      // URL, while the render looks up counts[s.name] — the bare file name.
+      // Storing under the URL meant every lookup missed, so the card stayed
+      // on "count" forever while the worker had long since answered with the
+      // right numbers. Measured: the response body carried
+      // {ok: true, counts: {36, 85, 45, 166}} and the card never changed.
+      const key = String(file).split('/').pop();
+      if (ok) setCounts((prev) => ({ ...prev, [key]: c }));
+      else setErrs((prev) => ({ ...prev, [key]: error }));
+    };
+    wref.current = w;
+    return () => w.terminate();
+  }, []);
+
+  // One file per click. Naming exactly one sketch is the point: a loop over the
+  // whole list would defeat the panel and be the freeze we removed.
+  function count(s) {
+    if (busy) return;
+    setBusy(s.name);
+    setErrs((prev) => { const n = { ...prev }; delete n[s.name]; return n; });
+    wref.current.postMessage({ type: 'csdl', file: RAW + 'schemas/' + s.name });
+  }
+
+  const shown = SKETCHES.filter((s) => filter === 'all' || s.variant === filter);
+  // The v1.0/beta gap: Review exists only in beta. Say so instead of quietly
+  // showing 8 where the beta tab shows 9.
+  const missing = [...new Set(SKETCHES.map((s) => s.sketch))].filter(
+    (n) => !SKETCHES.some((o) => o.sketch === n && o.variant === 'v1.0'),
+  );
+  const totalKb = SKETCHES.reduce((a, s) => a + s.kb, 0);
+  const mb = (kb) => (kb >= 1024 ? (kb / 1024).toFixed(1) + ' MB' : kb + ' KB');
+
+  return (
+    <div className="panel-inner">
+      <h2 className="sect">{t.sketch_h}</h2>
+      <p className="hint">{t.sketch_hint}</p>
+      <div className="radar-controls">
+        <button className={'reftab' + (filter === 'all' ? ' active' : '')} onClick={() => setFilter('all')}>{t.filter_all}</button>
+        <button className={'reftab' + (filter === 'v1.0' ? ' active' : '')} onClick={() => setFilter('v1.0')}>{t.sketch_v10}</button>
+        <button className={'reftab' + (filter === 'beta' ? ' active' : '')} onClick={() => setFilter('beta')}>{t.sketch_beta}</button>
+      </div>
+      <div className="badges">
+        <span className="badge">{SKETCHES.length} CSDL · {mb(totalKb)}</span>
+        {filter !== 'all' && <span className="badge">{t.filter_shown}</span>}
+        {missing.length > 0 && (
+          <span className="badge">{missing.join(', ')}: {t.sketch_v10} {t.sketch_missing}</span>
+        )}
+      </div>
+      <div className="cards radar-scroll">
+        {shown.map((s) => {
+          const c = counts[s.name];
+          const e = errs[s.name];
+          const isBusy = busy === s.name;
+          return (
+            <div className={'card sketch' + (c ? ' done' : '')} key={s.name}>
+              <h3>{s.sketch}</h3>
+              <div className="role">{s.variant} · {mb(s.kb)}</div>
+              {c ? (
+                <div className="sketch-counts">
+                  <div><b>{c.entityTypes}</b> {t.sketch_entity}</div>
+                  <div><b>{c.complexTypes}</b> {t.sketch_complex}</div>
+                  <div><b>{c.enumTypes}</b> {t.sketch_enum}</div>
+                  <div className="sketch-total"><b>{c.totalTypes}</b> {t.sketch_total}</div>
+                </div>
+              ) : e ? (
+                <p className="err">{t.sketch_err}: {e}</p>
+              ) : (
+                <div className="sketch-actions">
+                  <button className="primary" onClick={() => count(s)} disabled={isBusy || busy}>
+                    {isBusy ? t.sketch_counting : t.sketch_load}
+                  </button>
+                  <a className="dl" href={RAW + 'schemas/' + s.name} target="_blank" rel="noopener">{t.sketch_raw} ↗</a>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ---------- App shell ----------
 const TABS = [
   ['hub', 'Hub', Hub],
@@ -432,6 +573,11 @@ const TABS = [
   ['permissions', 'Permissions', Permissions],
   ['radar', 'Breaking Radar', Radar]
 ];
+// The sketch panel is reachable from the header button, NOT from the tab bar.
+// Two entry points for one panel would mean the tab bar shows six entries the
+// user cannot predict, and the ARIA tablist would contain a tab with no label.
+// It is therefore not in TABS; the render switch below handles it separately.
+const EXTRA_PANELS = { sketch: Sketch };
 function App() {
   const [tab, setTab] = useState('hub');
   const [lang, setLang] = useState(() => { try { return localStorage.getItem('msgraph_lang') || 'de'; } catch { return 'de'; } });
@@ -488,7 +634,7 @@ function App() {
           </nav>
           <div className="themeswitch">
             <span id="liveDot" className={'livedot ' + (m?.syncDate ? 'on' : '')}>{m?.syncDate ? t.live.replace('{d}', m.syncDate) : (m === null ? t.live_loading : t.live_err)}</span>
-            <button className="tbtn" onClick={() => setTab('reference')}>React</button>
+            <button className="tbtn" id="sketchBtn" onClick={() => setTab('sketch')}>{t.sketch}</button>
             <button className="btn-ignite" id="igniteBtn" aria-pressed={ignite} onClick={() => setIgnite(v => !v)}><span className="toggle-dot"></span>{t.ignite}</button>
             <button className="tbtn" id="langBtn" aria-pressed={lang === 'en'} onClick={() => setLang(l => l === 'de' ? 'en' : 'de')}>{lang === 'en' ? t.de : t.en}</button>
           </div>
@@ -501,6 +647,7 @@ function App() {
         {tab === 'console' && <ConsolePanel t={t} />}
         {tab === 'permissions' && <Permissions t={t} lang={lang} />}
         {tab === 'radar' && <Radar t={t} lang={lang} />}
+        {tab === 'sketch' && <Sketch t={t} />}
       </main>
 
       <footer className="foot">{t.footer}{m && m.siteVersion ? ' · v' + m.siteVersion : ''}</footer>

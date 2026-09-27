@@ -136,6 +136,18 @@ html.ignite .toggle-dot{background:var(--accent-2);box-shadow:var(--glow)}
   letter-spacing:.04em;border:3px dashed var(--line);border-radius:var(--radius)}
 .card.removed{opacity:.7;border-left:6px solid #ff6b6b}
 
+/* sketch panel */
+.card.sketch{border-left:6px solid var(--muted)}
+.card.sketch.done{border-left:6px solid var(--accent)}
+.card.sketch h3{font-size:17px}
+.sketch-actions{display:flex;align-items:center;gap:10px;margin-top:10px}
+.sketch-actions button.primary{padding:6px 14px;font-size:11px}
+.sketch-counts{margin-top:10px;font-family:"IBM Plex Mono",monospace;font-size:12px;
+  line-height:1.8;color:var(--muted)}
+.sketch-counts b{color:var(--ink);font-size:14px}
+.sketch-counts .sketch-total{border-top:3px solid var(--line);margin-top:6px;padding-top:6px;
+  color:var(--ink)}
+
 /* reference */
 .ref-tabs{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
 .reftab{
