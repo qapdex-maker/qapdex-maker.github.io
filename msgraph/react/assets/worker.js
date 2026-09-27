@@ -3,7 +3,15 @@
 // Supports three call shapes:
 //   { type: 'reference', variant, file } -> endpoint list (path/method/summary)
 //   { type: 'console',  file }           -> same list PLUS opId (Console uses operationId)
-//   { type: 'csdl', file }               -> element-type COUNTS for one sketch (XML)
+//   { type: 'csdl', file }               -> type COUNTS + entity-set join for one sketch (XML)
+//   { type: 'segments', file }           -> the set of last path segments in an index JSON
+//
+// The last one exists because the sketch panel and the reference list are
+// separate React trees: the panel cannot see Reference's parsed `items`. Rather
+// than lifting state to App (which would rebuild the whole tab switch on every
+// keystroke in the reference search), the panel asks the worker for the segment
+// set. One extra parse of an index JSON, off the main thread, and the two
+// panels stay independent.
 //
 // The CSDL branch exists because the cloud sketches are XML, 5-8 MB each, 17
 // of them. The JSON branch below cannot read them, and parsing them on the UI
@@ -43,6 +51,25 @@ const countSketch = async (file) => {
   // visible: whitespace or the closing angle bracket. Asserted in
   // tests/sketch-panel.test.mjs against the real documents.
   const open = (tag) => (xml.match(new RegExp('<' + tag + '[\\s>]', 'g')) || []).length;
+  // The type -> endpoint join, from the same single pass over the document.
+  //
+  //   <EntitySet Name="accessReviews" EntityType="microsoft.graph.accessReview" />
+  //
+  // The set NAME is the last segment of the endpoint paths that touch that
+  // type, which is what makes the join work without the 40MB openapi.yaml.
+  //
+  // Both type prefixes occur and only the long one is stripped: EntitySet uses
+  // the full "microsoft.graph.x" while Action parameters use the short
+  // "graph.x". Comparing either literally would leave every set unresolved.
+  const entitySets = {};
+  for (const m of xml.matchAll(
+    /<EntitySet\s+Name="([^"]+)"\s+EntityType="([A-Za-z0-9_.]+)"/g,
+  )) {
+    const type = m[2].split('.').pop();
+    if (!entitySets[type]) entitySets[type] = [];
+    if (entitySets[type].indexOf(m[1]) === -1) entitySets[type].push(m[1]);
+  }
+  const entitySetCount = Object.keys(entitySets).length;
   const entityTypes = open('EntityType');
   const complexTypes = open('ComplexType');
   const enumTypes = open('EnumType');
@@ -53,6 +80,14 @@ const countSketch = async (file) => {
     // A CSDL document is mostly EnumType, so this is the number that actually
     // says something about the size of the file.
     totalTypes: entityTypes + complexTypes + enumTypes,
+    // The join. `entitySets` maps a type name to its set names, e.g.
+    // {accessReview: ['accessReviews']}. The caller joins those set names
+    // against the endpoint paths it has already parsed — the worker does not
+    // hold the index itself, so the caller decides which variant to compare
+    // against. entitySetCount is how many types the join can speak about at
+    // all; entityTypes is usually much larger.
+    entitySets,
+    entitySetCount,
   };
 };
 
@@ -62,6 +97,31 @@ self.onmessage = async (e) => {
     try {
       const counts = await countSketch(file);
       self.postMessage({ type, file, ok: true, counts });
+    } catch (err) {
+      self.postMessage({ type, file, ok: false, error: String(err) });
+    }
+    return;
+  }
+  if (type === 'segments') {
+    // Just the last path segment of every endpoint, as a Set. This is the join
+    // key: an EntitySet named "accessReviews" means every path ending in
+    // /accessReviews belongs to the accessReview type.
+    try {
+      const res = await fetch(file);
+      const data = await res.json();
+      // A MAP of segment -> how many paths end in it, not a Set.
+      //
+      // A Set answers "does this segment exist", which is the wrong question:
+      // accessReview has one EntitySet "accessReviews" but 58 endpoints, so a
+      // Set-based join reported 1 endpoint for every type and made the whole
+      // column meaningless. Measured: administrativeUnit showed 1 while the
+      // index has 2 paths ending in /administrativeUnits.
+      const segs = {};
+      for (const p of Object.keys(data.paths || {})) {
+        const seg = p.replace(/\/$/, '').split('/').pop();
+        segs[seg] = (segs[seg] || 0) + 1;
+      }
+      self.postMessage({ type, file, ok: true, segments: segs });
     } catch (err) {
       self.postMessage({ type, file, ok: false, error: String(err) });
     }
