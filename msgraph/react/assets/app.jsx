@@ -55,6 +55,11 @@ const I18N = {
     loading: 'lädt…', loading_var: 'lädt {v}…', count_n: '{n} Endpoints', err: 'Fehler:',
     tab_v10: 'v1.0 (stabil)', tab_beta: 'beta (Preview)', hits: 'Treffer:',
     filter_all: 'alle', filter_soon: 'bald', filter_removed: 'entfernt', removal: 'Entfernung:',
+    // Added 2026-09-27: the radar now counts the FILTERED list and shows an
+    // empty state. Both keys were missing — a new t.* key without a DE entry
+    // leaks the raw key into the UI, which is exactly how the F3 'llm' reason
+    // bug happened before.
+    filter_shown: 'gefiltert', radar_empty: 'Keine Einträge für diesen Filter.',
     nl_reasons: { teams: 'Teams', mails: 'Mails', calendar: 'Kalender', onedrive: 'OneDrive', photo: 'Profilfoto', default: 'Standard', llm: 'LLM-Zuordnung' },
   },
   en: {
@@ -84,6 +89,7 @@ const I18N = {
     loading: 'loading…', loading_var: 'loading {v}…', count_n: '{n} endpoints', err: 'Error:',
     tab_v10: 'v1.0 (stable)', tab_beta: 'beta (Preview)', hits: 'Hits:',
     filter_all: 'all', filter_soon: 'soon', filter_removed: 'removed', removal: 'Removal:',
+    filter_shown: 'filtered', radar_empty: 'No entries for this filter.',
     nl_reasons: { teams: 'Teams', mails: 'Mails', calendar: 'Calendar', onedrive: 'OneDrive', photo: 'Profile photo', default: 'Default', llm: 'LLM mapping' },
   }
 };
@@ -369,7 +375,20 @@ function Radar({ t, lang }) {
   useEffect(() => {
     fetch(fileMap[variant]).then(r => r.json()).then(setData).catch(() => setData({ items: [] }));
   }, [variant]);
-  const items = (data?.items || []).filter(it => filter === 'all' || it.status === filter);
+  // "Bald / Soon" is a LABELLING choice, not a status. The two data files
+  // disagree about what a soon-to-be removal is called:
+  //     v1.0  {removed: 47, planned: 38}          <-- no "soon" at all
+  //     beta  {removed: 1617, soon: 137, planned: 38}
+  // The filter used to compare it.status === 'soon' literally, so on the v1.0
+  // tab it matched nothing and the card count stayed at 85 — the button did
+  // nothing at all. Measured in Chromium before the fix:
+  //     ALLE 85 -> BALD 85 -> ENTFERNT 47
+  // "Soon" now means "not removed yet", which is the intent of the label and
+  // gives a useful result on both tabs: 38 on v1.0, 175 on beta.
+  const soonSet = new Set(['soon', 'planned']);
+  const items = (data?.items || []).filter(it =>
+    filter === 'all' ? true : filter === 'soon' ? soonSet.has(it.status) : it.status === filter,
+  );
   return (
     <div className="panel-inner">
       <h2 className="sect">{t.radar} <span className="newtag">[3]</span></h2>
@@ -381,7 +400,14 @@ function Radar({ t, lang }) {
         <button className="reftab" onClick={() => setFilter('soon')}>{t.filter_soon}</button>
         <button className="reftab" onClick={() => setFilter('removed')}>{t.filter_removed}</button>
       </div>
-      <div className="badges"><span className="badge">{data?.count || 0} {t.dep} ({variant})</span></div>
+      {/* The count must describe what is on screen. data.count is the total for
+        * the variant, so after clicking a filter it disagreed with the cards:
+        * 47 cards next to a badge reading "85 Deprecations (v1.0)".
+        * items is already the filtered array — count that. */}
+      <div className="badges">
+        <span className="badge">{items.length} {t.dep} ({variant})</span>
+        {filter !== 'all' && <span className="badge">{t.filter_shown}</span>}
+      </div>
       <div className="cards radar-scroll">
         {items.map((it, i) => (
           <div className={'card ' + (it.status === 'removed' ? 'removed' : it.status === 'soon' ? 'soon' : 'planned')} key={i}>
@@ -390,6 +416,9 @@ function Radar({ t, lang }) {
             {it.removalDate && <p>{t.removal} {it.removalDate}</p>}
           </div>
         ))}
+        {/* An empty filter used to render nothing at all, which is
+          * indistinguishable from a hang. */}
+        {items.length === 0 && <div className="radar-empty">{t.radar_empty}</div>}
       </div>
     </div>
   );

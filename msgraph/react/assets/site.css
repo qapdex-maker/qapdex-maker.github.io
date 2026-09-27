@@ -129,6 +129,11 @@ html.ignite .toggle-dot{background:var(--accent-2);box-shadow:var(--glow)}
 .card a.dl:hover{transform:translate(-2px,-2px);box-shadow:var(--shadow-hover);border-color:var(--accent)}
 .card.soon{border-left:6px solid var(--accent-2)}
 .card.planned{border-left:6px solid var(--accent)}
+/* Empty filter result. Without this the radar rendered a blank scroll area,
+   which the user cannot tell apart from a hang. */
+.radar-empty{padding:24px;text-align:center;color:var(--muted);
+  font-family:"IBM Plex Mono",monospace;font-size:13px;text-transform:uppercase;
+  letter-spacing:.04em;border:3px dashed var(--line);border-radius:var(--radius)}
 .card.removed{opacity:.7;border-left:6px solid #ff6b6b}
 
 /* reference */
