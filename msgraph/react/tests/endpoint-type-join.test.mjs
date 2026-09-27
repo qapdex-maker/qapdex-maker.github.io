@@ -189,6 +189,44 @@ test('the join counts ENDPOINTS, not the number of sets', () => {
   );
 });
 
+test('the type list is collapsed to the top 5, not fully expanded', () => {
+  // Measured on beta-Mooncake, 2026-09-27: a counted card is 2510 px tall
+  // because the join lists all 53 types. A phone viewport is ~640 px, so the
+  // next card sits at y=2032 — far outside the view. Nine counted cards make
+  // the panel ~42000 px inside a 520 px scroll container.
+  //
+  // The user reported "an empty page" on first click; the cause turned out to
+  // be a stale browser cache, but this height is a real usability defect
+  // independent of that. Expanded-by-default is the wrong default.
+  const panel = jsx.slice(jsx.indexOf('function Sketch'), jsx.indexOf('// ---------- App shell'));
+  assert.match(
+    panel,
+    /const TOP = 5|slice\(0, ?5\)|TOP_N/,
+    'the list must be capped at a small number of rows',
+  );
+  // And there must be a way to see the rest.
+  assert.match(
+    panel,
+    /mehr|more|showAll|expand/i,
+    'there must be a control that reveals the remaining types',
+  );
+  // The count of hidden rows must be stated, not implied by a "..." — the
+  // panel already states join coverage precisely, and a bare ellipsis would
+  // be the opposite of that.
+  assert.match(
+    panel,
+    /\{rest\.length\}|\+\{|length - TOP|rest\.length/,
+    'the control must state how many types are hidden',
+  );
+  // Collapsing must not lose the information that a type has no endpoint:
+  // those rows are the reason the join is honest.
+  assert.match(
+    panel,
+    /no-ep/,
+    'the no-endpoint marking must survive the collapse',
+  );
+});
+
 test('data URLs survive a query string and a hash', () => {
   // The join silently produced nothing when the page URL had a query string.
   // `location.href.replace(/index\.html?$/, '')` leaves "?v=1" in place, so the
