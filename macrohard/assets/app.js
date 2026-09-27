@@ -8503,6 +8503,13 @@
   // defined" at runtime — e.g. the 4x4 toggle in the Tic-Tac-Toe app.
   // startOS is already exported at line 192 as window.startOS = function(){}.
   window.toast = toast;
+  // buildSysinfo() lives outside this IIFE (below the closing brace) and reads
+  // the release version. A `const` in this closure is invisible out there -
+  // without this export it threw a ReferenceError on the FIRST addRow call, so
+  // the Systeminfo app rendered its "Betriebssystem" heading and then no rows
+  // at all, with nothing in the console. ESLint had filed it as one no-undef
+  // warning among 13 unused-variable warnings.
+  window.APP_VERSION = APP_VERSION;
 })();
 
 /* AMIBIOS Setup — iframe window */
@@ -8803,7 +8810,7 @@ function buildSysinfo() {
 
   /* OS */
   addSection('Betriebssystem');
-  addRow('OS', 'MakerOS v' + APP_VERSION + ' (Neo-Brutalist)');
+  addRow('OS', 'MakerOS v' + window.APP_VERSION + ' (Neo-Brutalist)');
   addRow('Benutzer', 'macrohard');
   addRow('Plattform', navigator.platform);
   addRow('Sprache', navigator.language);

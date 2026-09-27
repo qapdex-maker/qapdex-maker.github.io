@@ -252,10 +252,15 @@ test('the About dialog and the system info report the same version', () => {
     /Version ' \+\s*\n\s*APP_VERSION \+/,
     'the About dialog must read the version constant',
   );
+  // buildSysinfo() sits outside the IIFE, so it reads window.APP_VERSION. The
+  // bare form was a ReferenceError at runtime: the app rendered its
+  // "Betriebssystem" heading and then no rows at all. This assertion was the
+  // only thing that would have caught it, and it passed, because it checked a
+  // string shape rather than whether the name is actually reachable there.
   assert.match(
     app,
-    /addRow\('OS', 'MakerOS v' \+ APP_VERSION/,
-    'the system info must read it too',
+    /addRow\('OS', 'MakerOS v' \+ window\.APP_VERSION/,
+    'the system info must read the exported version — it lives outside the IIFE',
   );
   // No other VERSION literal may exist. Restrict the pattern to plausible
   // release versions so IP addresses like 007.54.54 and 1.82.33 in comments
