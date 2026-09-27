@@ -179,8 +179,12 @@ test('the worker result is stored under the key the render reads', () => {
   assert.ok(panel.length > 0, 'the Sketch panel must exist');
 
   // What the worker is asked to load, and what the render looks up.
-  const sent = /postMessage\(\{[^}]*file: ([^}]*)\}\)/.exec(panel);
-  assert.ok(sent, 'the panel must post a file to the worker');
+  // Anchor on the csdl message specifically. A bare postMessage match picks up
+  // the FIRST one in the panel, which is now the segments request, not the
+  // sketch request — the same "pattern too loose" mistake this file has now
+  // made twice.
+  const sent = /postMessage\(\{ type: 'csdl', file: ([^}]*)\}\)/.exec(panel);
+  assert.ok(sent, 'the panel must post a csdl request to the worker');
   assert.match(
     sent[1],
     /RAW \+ 'schemas\/' \+ s\.name/,
