@@ -4,18 +4,15 @@
   "description": "Windows-style desktop OS — qapdex-maker.github.io",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#f1ede3",
+  "background_color": "#0d0e0f",
   "theme_color": "#2547ff",
   "icons": [],
-  "version": "2.8",
+  "version": "2.11.50",
   "changelog": {
+    "v2.11.50": "Window overflow fixed, desktop icons hideable, dark mode separated from the colour schemes; settings checkboxes read real state; checkbox lookup fixed for detached labels",
+    "v2.11.49": "Window overflow fixed, desktop icons hideable, dark mode separated from the colour schemes",
     "v2.8": "Service Worker v2 — stale-while-revalidate, network-first AMI BIOS, offline fallback, quota check",
-    "v2.7": "AMIBIOS Setup app",
-    "v2.6": "Bugfix per Videoanalyse: Browser '://settings' URL-Fix, Shortcuts ohne https://, Settings 'canceled-verse' → qapdex-maker.github.io, docs/about updated",
-    "v2.5": "Phase 1+2+3+4: localStorage, Tastatur, SCI-Modus, Shape-Tools, Audio, Tabs, ContentEditable, Kontakte, Session Restore, Wallpaper, Snapping, a11y",
-    "v2.4": "Full-window resize, taskbar fix, drag, dark mode",
-    "v2.3": "Initial stable build"
-  },
-  "siteVersion": "2.8.0",
-  "buildDate": "2026-09-14"
+    "v2.7": "Initial PWA shell",
+    "v2.0": "stale-while-revalidate for app.js, offline fallback"
+  }
 }
