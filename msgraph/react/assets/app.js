@@ -130,6 +130,12 @@ const I18N = {
     filter_soon: 'bald',
     filter_removed: 'entfernt',
     removal: 'Entfernung:',
+    // Added 2026-09-27: the radar now counts the FILTERED list and shows an
+    // empty state. Both keys were missing — a new t.* key without a DE entry
+    // leaks the raw key into the UI, which is exactly how the F3 'llm' reason
+    // bug happened before.
+    filter_shown: 'gefiltert',
+    radar_empty: 'Keine Einträge für diesen Filter.',
     nl_reasons: {
       teams: 'Teams',
       mails: 'Mails',
@@ -217,6 +223,8 @@ const I18N = {
     filter_soon: 'soon',
     filter_removed: 'removed',
     removal: 'Removal:',
+    filter_shown: 'filtered',
+    radar_empty: 'No entries for this filter.',
     nl_reasons: {
       teams: 'Teams',
       mails: 'Mails',
@@ -801,7 +809,18 @@ function Radar({
       items: []
     }));
   }, [variant]);
-  const items = (data?.items || []).filter(it => filter === 'all' || it.status === filter);
+  // "Bald / Soon" is a LABELLING choice, not a status. The two data files
+  // disagree about what a soon-to-be removal is called:
+  //     v1.0  {removed: 47, planned: 38}          <-- no "soon" at all
+  //     beta  {removed: 1617, soon: 137, planned: 38}
+  // The filter used to compare it.status === 'soon' literally, so on the v1.0
+  // tab it matched nothing and the card count stayed at 85 — the button did
+  // nothing at all. Measured in Chromium before the fix:
+  //     ALLE 85 -> BALD 85 -> ENTFERNT 47
+  // "Soon" now means "not removed yet", which is the intent of the label and
+  // gives a useful result on both tabs: 38 on v1.0, 175 on beta.
+  const soonSet = new Set(['soon', 'planned']);
+  const items = (data?.items || []).filter(it => filter === 'all' ? true : filter === 'soon' ? soonSet.has(it.status) : it.status === filter);
   return /*#__PURE__*/React.createElement("div", {
     className: "panel-inner"
   }, /*#__PURE__*/React.createElement("h2", {
@@ -831,14 +850,18 @@ function Radar({
     className: "badges"
   }, /*#__PURE__*/React.createElement("span", {
     className: "badge"
-  }, data?.count || 0, " ", t.dep, " (", variant, ")")), /*#__PURE__*/React.createElement("div", {
+  }, items.length, " ", t.dep, " (", variant, ")"), filter !== 'all' && /*#__PURE__*/React.createElement("span", {
+    className: "badge"
+  }, t.filter_shown)), /*#__PURE__*/React.createElement("div", {
     className: "cards radar-scroll"
   }, items.map((it, i) => /*#__PURE__*/React.createElement("div", {
     className: 'card ' + (it.status === 'removed' ? 'removed' : it.status === 'soon' ? 'soon' : 'planned'),
     key: i
   }, /*#__PURE__*/React.createElement("h3", null, it.endpoint || it.path || '?'), /*#__PURE__*/React.createElement("div", {
     className: "role"
-  }, it.method || '', " \xB7 ", t.status[lang][it.status]), it.removalDate && /*#__PURE__*/React.createElement("p", null, t.removal, " ", it.removalDate)))));
+  }, it.method || '', " \xB7 ", t.status[lang][it.status]), it.removalDate && /*#__PURE__*/React.createElement("p", null, t.removal, " ", it.removalDate))), items.length === 0 && /*#__PURE__*/React.createElement("div", {
+    className: "radar-empty"
+  }, t.radar_empty)));
 }
 
 // ---------- App shell ----------
