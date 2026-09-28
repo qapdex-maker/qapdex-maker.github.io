@@ -168,26 +168,126 @@ test('the desktop-icons checkbox reads the same state the desktop uses', () => {
   );
 });
 
-test('the grid switch is either wired to a real style or gone', () => {
-  // `stGrid` toggles a `show-grid` class on #deskIcons. Verified 2026-09-27:
-  //   grep 'show-grid' assets/site.css   -> no match
-  //   grep 'show-grid' index.html        -> no match
-  // The class has no rule anywhere, so the switch changes nothing on screen and
-  // its initial state is derived from a class that is never present. That is a
-  // pre-existing dead control, not part of the dark-mode work — so this test
-  // does NOT demand a fix, it records the fact and fails if the situation
-  // changes silently in either direction. Flip the expectation to
-  // `assert.ok(hasRule)` when a real rule is added.
+test('the grid switch drives a real style rule', () => {
+  // `stGrid` toggles a `show-grid` class on #deskIcons. Until 2026-09-27 the
+  // class had no rule anywhere, so the switch persisted a preference and
+  // changed nothing on screen. This test recorded that as a known dead
+  // control and said: flip the expectation when a real rule is added.
+  //
+  // That is what happened. #deskIcons.show-grid now paints the icon cells as a
+  // grid, in its own rule plus one for the mobile breakpoint (the icons are
+  // 88x98 there, not 78x88, so the desktop cell size would not line up).
   const css = fs.readFileSync(path.join(root, 'assets', 'site.css'), 'utf8');
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const hasRule = /show-grid/.test(css) || /show-grid/.test(html);
-  assert.equal(
-    hasRule,
-    false,
-    'show-grid now has a style rule — #stGrid became real. Update this test: ' +
-      'verify the rule actually does something, then flip the expectation.',
+  assert.ok(hasRule, 'show-grid lost its rule again — the switch is dead again');
+
+  // A rule that only sets background-color would still be a no-op visually,
+  // because #deskIcons sits on #desktop and the grid has to be a repeating
+  // image. So the assertion is about the mechanism, not the selector alone.
+  const rule = /#deskIcons\.show-grid\{([^}]*)\}/.exec(css);
+  assert.ok(rule, 'the rule must be an #deskIcons.show-grid selector');
+  assert.match(
+    rule[1],
+    /background-image/,
+    'the rule must paint something — a bare background-color is invisible on ' +
+      'the desktop background',
   );
-  // The preference is still persisted, so the state is at least honest.
+  assert.match(
+    rule[1],
+    /background-size/,
+    'a repeating grid needs a cell size, otherwise the lines are one cell apart ' +
+      'for the whole icon area',
+  );
+  // Ohne width:max-content zieht der position:fixed-Container das Raster ueber
+  // die halbe Bildschirmbreite. Im Screenshot sichtbar geworden: Linien liefen
+  // rechts neben der fuenften Icon-Spalte ins Leere. Gemessen bei 1280x633:
+  // Container 420px, Icon-Reihe endet bei 423px.
+  assert.match(
+    rule[1],
+    /width:max-content/,
+    'das Raster muss auf die Icon-Flaeche begrenzt werden, sonst laeuft es ' +
+      'quer ueber den Desktop',
+  );
+  assert.match(
+    rule[1],
+    /max-width:calc\(100vw/,
+    'max-content allein wuerde auf schmalen Fenstern ueberstehen — die ' +
+      'Breite muss begrenzt bleiben',
+  );
+
+  // Zwei Regeln: Desktop und Mobil. Ohne die zweite laeuft das Raster auf
+  // Handys neben den Icons vorbei (88x98 statt 78x88 plus 12px Padding).
+  const rules = css.match(/#deskIcons\.show-grid\{/g) || [];
+  assert.equal(
+    rules.length,
+    2,
+    'genau zwei Regeln erwartet — Desktop und der max-width:760px-Block. ' +
+      'Fehlt eine, laeuft das Raster auf dem anderen Breakpoint daneben.',
+  );
+
+  /*
+   * Die Mobil-Regel muss in einem @media(max-width:760px)-Block stehen, der
+   * auch .dskApp umfasst — denn es geht darum, dass die Icon-Groesse dort
+   * abweicht. Es gibt fuenf Blöcke mit dieser Breite in site.css, und der
+   * ERSTE ist nicht der richtige: er endet nach 289 Zeichen, also lange vor
+   * der show-grid-Regel. Ein Regex-Aufruf auf den ersten Treffer war gruen
+   * gebaut und hat die Regel nie gesehen — dieselbe Falle wie beim
+   * Timer-Callback-Scan, nur mit Media-Queries.
+   *
+   * Deshalb: alle Bloecke per Klammerzaehler (Regex kann Verschachtelung nicht)
+   * und derjenige, der die show-grid-Regel enthaelt.
+   */
+  const mediaStarts = [];
+  for (let i = 0; i < css.length; i++) {
+    if (css.startsWith('@media(max-width:760px)', i)) mediaStarts.push(i);
+  }
+  const mediaBlocks = mediaStarts.map((s) => {
+    let depth = 0;
+    for (let j = s; j < css.length; j++) {
+      if (css[j] === '{') depth++;
+      else if (css[j] === '}') {
+        depth--;
+        if (depth === 0) return css.slice(s, j + 1);
+      }
+    }
+    return css.slice(s);
+  });
+  const withGrid = mediaBlocks.filter((b) => b.includes('#deskIcons.show-grid'));
+  assert.equal(
+    withGrid.length,
+    1,
+    `die show-grid-Regel muss in genau einem Mobil-Block stehen, ` +
+      `gefunden in ${withGrid.length}`,
+  );
+  assert.match(
+    withGrid[0],
+    /#deskIcons\.show-grid\{[^}]*background-size/,
+    'die Mobil-Regel muss eine eigene Zellgroesse setzen',
+  );
+  assert.match(
+    withGrid[0],
+    /\.dskApp\{[^}]*height/,
+    'der Mobil-Block muss die Icon-Groesse mitsetzen — sonst ist die ' +
+      'eigene Zellgroesse nicht begruendet',
+  );
+  // Und sie muss sich von der Desktop-Zellgroesse unterscheiden, sonst ist
+  // die zweite Regel ein Duplikat mit demselben Ergebnis.
+  const desktopSize = /#deskIcons\.show-grid\{[^}]*background-size:\s*([0-9a-z]+)\s+([0-9a-z]+)/.exec(
+    css,
+  );
+  const mobileSize = /#deskIcons\.show-grid\{[^}]*background-size:\s*([0-9a-z]+)\s+([0-9a-z]+)/.exec(
+    withGrid[0],
+  );
+  assert.ok(desktopSize && mobileSize, 'beide Regeln muessen eine Zellgroesse setzen');
+  assert.notEqual(
+    desktopSize[1] + desktopSize[2],
+    mobileSize[1] + mobileSize[2],
+    'Desktop- und Mobil-Zellgroesse sind identisch — die Mobilregel ist ' +
+      'wirkungslos',
+  );
+
+  // The preference is persisted and read back, so the switch survives a reload.
   assert.match(
     pane,
     /localStorage\.setItem\('os_grid'/,

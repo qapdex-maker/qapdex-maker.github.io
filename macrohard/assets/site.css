@@ -104,6 +104,29 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
  * whose label flips to "Desktop-Icons anzeigen". Without that escape the
  * only way back would be the Settings checkbox. */
 #deskIcons.hidden{display:none}
+/* "Desktop-Raster anzeigen" (#stGrid in Settings).
+ *
+ * Der Schalter existierte seit langem, steuerte aber eine Klasse ohne CSS-Regel
+ * — show-grid hatte keinen Treffer in site.css noch in index.html. Er war damit
+ * ein toter Schalter: der Zustand wurde in localStorage gespeichert, das
+ * Kontrollkästchen zeigte ihn an, und am Bildschirm passierte nichts.
+ *
+ * Die Regel zeichnet die Icon-Zellen als Raster: eine dünne Hilfslinie um jede
+ * Zelle, im Akzentton und bewusst zurückhaltend. Ohne die Linien ist nicht
+ * erkennbar, dass die Icons in Zellen sitzen; mit ihnen wird das Raster zu etwas,
+ * das man beim Einrasten benutzt. Die Zelle selbst ist 78x88 plus 3px Rahmen und
+ * 3px Aussenabstand, also 84x94 — das Grid muss dazu passen, sonst laeuft es
+ * neben den Icons vorbei.
+ *
+ * Bewusst keine Aenderung an Groesse, Position oder Reihenfolge: der Schalter
+ * soll den Desktop lesbarer machen, nicht ihn umbauen.
+ *
+ * width:max-content schrumpft den Container auf die tatsaechliche Icon-Flaeche.
+ * Ohne das streckt #deskIcons (position:fixed, height:calc(100% - 60px)) das
+ * Raster ueber die halbe Bildschirmbreite — im Screenshot sichtbar als Linien,
+ * die rechts neben der fuenften Icon-Spalte ins Leere weiterliefen. Gemessen
+ * bei 1280x633: Container 420px, Icon-Reihe endet bei 423px, 5 Spalten. */
+#deskIcons.show-grid{background-image:linear-gradient(to right,var(--line) 1px,transparent 1px),linear-gradient(to bottom,var(--line) 1px,transparent 1px);background-size:84px 94px;background-position:6px 8px;width:max-content;max-width:calc(100vw - 12px)}
 .dskApp{margin:3px;width:78px;height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:2px;border:3px solid var(--line);box-shadow:var(--shadow);cursor:pointer;background:var(--surface);padding:4px}
 .dskApp:hover{transform:translate(-2px,-2px);box-shadow:var(--shadow-hover);border-color:var(--accent)}
 .dskApp.selected{transform:translate(-1px,-1px);box-shadow:var(--shadow-hover);border-color:var(--accent);background:var(--accent-2)}
@@ -429,6 +452,10 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 /* ===== mobile ===== */
 @media(max-width:760px){
   #deskIcons{flex-direction:row;flex-wrap:wrap;height:auto;max-height:calc(100% - 60px);overflow-y:auto;padding:12px;align-content:flex-start;gap:12px}
+  /* Rasterzellen auf Mobil: die Icons sind hier 88x98 statt 78x88, dazu 12px
+   * Padding und 12px Gap. Ohne diese Anpassung laeuft das 84x94-Raster des
+   * Desktop-Breakpoints neben den Icons vorbei und sieht kaputt aus. */
+  #deskIcons.show-grid{background-size:100px 110px;background-position:12px 12px}
   .dskApp{width:88px;height:98px;flex:0 0 auto}
   .dskApp .ico{width:44px;height:44px}
   .dskApp .ico svg{width:32px;height:32px}
