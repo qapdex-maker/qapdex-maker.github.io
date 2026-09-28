@@ -344,3 +344,63 @@ der Shell nicht unterscheidbar. Notizen: `msgraph/react/NOTES-API-PROXY.md`.
 ### Testzahlen
 macrohard 312 · msgraph/react 15 (sketch 9, radar 6) · Gate 6. Alle grün,
 `node deploy-hygiene.js` inklusive echtem Babel-Transpile.
+
+## Session 2026-09-28 — show-grid war ein toter Schalter, RAM-Deckel, Signal 9
+
+**show-grid: Ein Schalter, der nichts tat.** `stGrid` in den Einstellungen
+schaltete eine Klasse `show-grid` auf `#deskIcons`. Die Klasse hatte **keine
+Regel** — weder in `site.css` noch in `index.html`. Der Zustand wurde in
+localStorage gespeichert, das Kästchen zeigte ihn an, am Bildschirm passierte
+nichts. Der Test dafür hatte die Lage als "bekannter toter Schalter"
+festgehalten mit dem Hinweis, die Erwartung umzudrehen, wenn eine echte Regel
+kommt. Genau das ist jetzt passiert.
+
+Die Regel zeichnet die Icon-Zellen als Raster. Zwei Details, die ohne Messung
+falsch gewesen wären:
+- `width:max-content` ist **Pflicht**. `#deskIcons` ist `position:fixed` mit
+  `height:calc(100% - 60px)`, ohne das streckt das Raster quer über den halben
+  Bildschirm. Sichtbar geworden als Linien, die rechts neben der fünften Spalte
+  ins Leere liefen. Gemessen bei 1280x633: Container 420px, Icon-Reihe endet
+  bei 423px.
+- Die Zelle ist 78x88 plus 3px Rahmen und 3px Außenabstand = 84x94. Der Mobile-
+  Breakpoint hat eigene Maße (88x98 plus 12px Padding/Gap → 100x110), sonst
+  läuft das Raster neben den Icons vorbei.
+
+Live geprüft nach dem Deploy: beide Regeln sind auf qapdex-maker.github.io
+abrufbar, HTML auf `site.css?v=51`.
+
+**Signal 9 / OOM — meine erste Vermutung war falsch.** Bei 5,6 GB RAM, ~1,8 GB
+verfügbar und bereits 2 GB belegtem Swap ist `node --test` mit 8 CPU-Threads
+der naheliegende Verdächtige. Nachgemessen, mit Speicher-Tiefstand während des
+Laufs:
+
+| Lauf | Prozesse | RAM-Tiefstand | Ergebnis |
+|------|----------|---------------|----------|
+| Default (8 Threads) | 1 Runner + 8 Kinder | ~1,62 GB | 312/312 in 6,7 s |
+| `--test-concurrency=1` | 1 Runner + 1 Kind | ~1,66 GB | 312/312 in 24,9 s |
+| `--test-concurrency=4` | 1 Runner + 57 MB RSS + 4 Kinder | stabil | 312/312 in 8,5 s |
+
+Der Kill war **nicht** aus diesem Repo zu reproduzieren. Der Default-Lauf trug
+8 Kinder ohne Problem. Wahrscheinlichster Verursacher ist ein gleichzeitiger
+uv/pip-Build neben Node — uv ist in Termux der übliche SIGKILL-Kandidat, und
+`uv` ist hier gar nicht installiert, es lief also über ein anderes Tool. Die
+gebliche Ausgangslage bleibt: geteilte 5,6 GB, 2 GB Swap vor Teststart belegt.
+`--test-concurrency=4` ist billige Absicherung auf der Node-Seite, **kein
+Fix** für die uv-Seite.
+
+**Deployment-Signal:** beide CI-Läufe der Pushes grün, Pages deployed. Eine
+grüne CI entdeckt das hier nicht, weil die OOM-Grenze des Geräts nicht die
+Grenze des Runners ist.
+
+## Stash-Fund (2026-09-28) — `44ee21e`, gedroppt
+Ein WIP-Stash vom 2026-09-27 17:16 lag noch herum. Geprüft statt geraten:
+beide Testdateien waren **byte-identisch** mit HEAD, die Entfernung von
+`restoreFromTaskbar` (viertes Duplikat, null Aufrufer) und `sortDeskIcons`
+(null Aufrufer, `by`-Parameter nie gelesen) steckte ebenfalls in HEAD. Übrig
+waren 4 veraltete Kommentarzeilen (Em-Dash statt ASCII, also älter als der
+Prettier-Lauf) und `APP_VERSION='2.11.50'` statt 2.11.52. Reiner Fund, kein
+offener Stand. Backup trotzdem angelegt, bevor er weg war:
+`/data/data/com.termux/files/usr/tmp/stash-44ee21e-backup.patch`
+(sha256 ca32f921…). Lehre: bei "aufräumen" erst `git diff HEAD stash@{0}`
+lesen, dann entscheiden — ein Stash aus einer fremden Session sieht
+fremder aus, als er ist.

@@ -134,3 +134,21 @@ curl -s -o /dev/null -w "%{http_code}" https://qapdex-maker.github.io/macrohard/
 - **PWA:** sw.js stale-while-revalidate
 - **Tests:** 7/7 grün (storeSet, osIntervals, apps count, fsData, filter, shuffle)
 - **Live:** https://qapdex-maker.github.io/macrohard/
+
+## Nachtrag 2026-09-28 (verifiziert, nach Push freigegeben)
+
+- **macrohard v2.11.52**, `main` = 81b523a, identisch mit origin/main. CI grün,
+  Pages deployed.
+- **show-grid repariert**: der Schalter "Desktop-Raster anzeigen" war seit
+  Langem tot (Klasse ohne CSS-Regel). Jetzt Desktop-Raster 84x94 plus eigene
+  Mobile-Regel 100x110, mit `width:max-content` gegen das Auslaufen über den
+  halben Bildschirm. Live geprüft, `site.css?v=51`.
+- **Testdeckel dauerhaft**: `npm test` läuft mit `--test-concurrency=4`.
+  312/312 in 8,5 s. Grund: geteilte 5,6 GB RAM, 2 GB Swap vor Teststart belegt.
+  Siehe PROJECT_NOTES für die Messreihe — der Deckel war **nicht** die
+  Ursache des Signal 9, der Kill ließ sich aus diesem Repo nicht reproduzieren.
+- **Stash 44ee21e aufgeräumt**: Inhalt war nachweislich in HEAD, Backup liegt
+  unter `/data/data/com.termux/files/usr/tmp/stash-44ee21e-backup.patch`.
+- Offen und unangetastet: der API-Proxy für msgraph wartet weiter auf den
+  GitHub-Plan (Functions sind auf diesem Account per Shell nicht von "kein
+  Plan" unterscheidbar). Details in `msgraph/react/NOTES-API-PROXY.md`.
