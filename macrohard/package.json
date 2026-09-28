@@ -4,7 +4,7 @@
   "description": "Windows-stil Desktop OS im Browser \u2014 Neo-Brutalist, 22 Apps, PWA",
   "type": "module",
   "scripts": {
-    "test": "node --test tests/*.test.*",
+    "test": "node --test --test-concurrency=4 tests/*.test.*",
     "lint": "eslint assets/app.js",
     "format": "prettier --write assets/app.js assets/site.css",
     "verify": "node --check assets/app.js && echo 'JS OK'"
