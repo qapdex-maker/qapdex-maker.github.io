@@ -501,10 +501,24 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
   .dskApp .ico svg{width:32px;height:32px}
   .dskApp .lbl{font-size:11px}
   #startMenu{width:240px;max-height:300px}
-  .wnd{position:fixed;left:7.5vw!important;top:6vh!important;width:85vw!important;height:75vh!important;min-width:0;min-height:0}
+  /* Ohne !important. Vorher stand hier
+   * width:85vw!important / height:75vh!important
+   * und das schlug jeden Inline-Wert: der Resize-Griff, der Maximieren-Knopf
+   * und das Wiederherstellen einer Session setzen width, und die Breite
+   * wurde sofort zurueckgesetzt. Gemessen in Chromium bei 393x851: ein auf
+   * 200x150 gesetztes Fenster blieb bei 334x638. Auf dem Handy war die
+   * Fenstergroesse damit nicht veraenderbar.
+   *
+   * Die Vorgabe bleibt dieselbe (85vw/75vh), sie ist nur wieder ein normaler
+   * Inline-Kandidat und damit per Griff und per Touch ueberschreibbar. */
+  .wnd{position:fixed;left:7.5vw;top:6vh;width:85vw;height:75vh;min-width:0;min-height:0}
   .wnd-resize{display:block;width:48px;height:48px;right:-8px;bottom:-8px}
   .wnd-resize::after{width:24px;height:24px;font-size:18px;line-height:24px;border-width:3px}
-  .wmax{display:none}
+  /* .wmax ist auf dem Handy nicht mehr ausgeblendet: mit der Groesse frei
+   *stellbar ist der Vollbild-Knopf der zweite Weg dorthin, und ohne ihn
+   *bleibt nur der Griff in der unteren rechten Ecke — 48px Trefferflaeche
+   *am Rand des Bildschirms, leicht zu verfehlen. */
+  .wmax{display:flex;align-items:center;justify-content:center}
   .wtitle{cursor:grab;touch-action:none;padding:6px 8px}
   .wtitle-text{font-size:12px}
   .wbody{overflow:auto;-webkit-overflow-scrolling:touch}
@@ -515,7 +529,9 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .wnd{animation:wndOpen .22s var(--ease);touch-action:none}
 .wnd.focused{box-shadow:var(--shadow-hover);border-color:var(--accent);z-index:999}
 .wnd.focused .wtitle{background:var(--accent);box-shadow:inset 0 -3px 0 rgba(0,0,0,.15)}
-.wnd.focused .wact{box-shadow:0 0 6px var(--accent-2)}
+/* Kein Glow: der fokussierte Fensterkopf ist ueber die Akzentfarbe und die
+ * 3px-Kante erkennbar. Das genuegt, und es passt zur flachen Kante des
+ * Neo-Brutalismus. */
 .wnd.closing{animation:wndClose .18s ease-in forwards}
 @keyframes wndClose{from{opacity:1;transform:scale(1) translateY(0)}to{opacity:0;transform:scale(.94) translateY(8px)}}
 
