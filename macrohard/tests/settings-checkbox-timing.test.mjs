@@ -260,31 +260,32 @@ test('the grid switch drives a real style rule', () => {
     `die show-grid-Regel muss in genau einem Mobil-Block stehen, ` +
       `gefunden in ${withGrid.length}`,
   );
+  /* Der Schalter muss auf dem Handy etwas Sichtbares erzeugen — aber nicht
+   * mehr ueber background-size.
+   *
+   * Grund (gemessen, 29.09.): der Mobil-Launcher ist jetzt ein Grid mit
+   * repeat(auto-fill,minmax(72px,1fr)). Die Spaltenbreite steht erst nach dem
+   * Layout fest; eine feste background-size legte die Rasterlinien neben die
+   * Kacheln statt auf sie (genau der Fehler, den die alte Regel behoben
+   * hatte — nur jetzt in der anderen Richtung). Das Raster zeichnet deshalb
+   * die Kachel selbst per outline, und das wandert mit dem Grid mit.
+   *
+   * Der Test prueft weiterhin das Schaltverhalten, nicht die Technik. */
   assert.match(
     withGrid[0],
-    /#deskIcons\.show-grid\{[^}]*background-size/,
-    'die Mobil-Regel muss eine eigene Zellgroesse setzen',
+    /#deskIcons\.show-grid \.dskApp\{[^}]*outline/,
+    'die Mobil-Regel muss das Raster an die Kachel haengen',
+  );
+  assert.match(
+    withGrid[0],
+    /#deskIcons\.show-grid\{[^}]*background-image:\s*none/,
+    'die alte, feste Rasterflaeche muss auf dem Handy abgeschaltet sein — ' +
+      'sonst laufen Linien neben den Kacheln',
   );
   assert.match(
     withGrid[0],
     /\.dskApp\{[^}]*height/,
-    'der Mobil-Block muss die Icon-Groesse mitsetzen — sonst ist die ' +
-      'eigene Zellgroesse nicht begruendet',
-  );
-  // Und sie muss sich von der Desktop-Zellgroesse unterscheiden, sonst ist
-  // die zweite Regel ein Duplikat mit demselben Ergebnis.
-  const desktopSize = /#deskIcons\.show-grid\{[^}]*background-size:\s*([0-9a-z]+)\s+([0-9a-z]+)/.exec(
-    css,
-  );
-  const mobileSize = /#deskIcons\.show-grid\{[^}]*background-size:\s*([0-9a-z]+)\s+([0-9a-z]+)/.exec(
-    withGrid[0],
-  );
-  assert.ok(desktopSize && mobileSize, 'beide Regeln muessen eine Zellgroesse setzen');
-  assert.notEqual(
-    desktopSize[1] + desktopSize[2],
-    mobileSize[1] + mobileSize[2],
-    'Desktop- und Mobil-Zellgroesse sind identisch — die Mobilregel ist ' +
-      'wirkungslos',
+    'der Mobil-Block muss die Icon-Groesse mitsetzen',
   );
 
   // The preference is persisted and read back, so the switch survives a reload.

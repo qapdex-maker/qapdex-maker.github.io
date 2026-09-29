@@ -20,6 +20,20 @@
   --font-sans:"IBM Plex Sans",system-ui,sans-serif;
   --font-mono:"IBM Plex Mono",monospace;
   --font-display:"Space Grotesk",system-ui,sans-serif;
+  /* ===== editor surfaces =====
+   * Notepad, Editor und ImgEditor bekommen ihre eigene Token-Paarung, statt
+   * #1a1a1e/#e0e0e0 fest zu verdrahten. Der Grund ist nicht Geschmack: eine
+   * hart codierte Flaeche kann dem Schema nicht folgen. Bei "Ocean" war der
+   * Notepad-Textbereich fast schwarz, waehrend Toolbar, Zeilennummern und
+   * Statuszeile hellblau waren — ein halb dunkles Fenster in einem hellen OS.
+   *
+   * Die Voreinstellung ist bewusst neutral: sie folgt --paper/--ink und damit
+   * jedem Schema und jedem Dark Mode. Wer die Editorflaeche dunkel will,
+   * bekommt das ueber den Dark Mode, in dem --paper selbst dunkel ist —
+   * an einer Stelle statt an drei. */
+  --editor-bg:var(--paper);
+  --editor-ink:var(--ink);
+  --editor-gutter:var(--paper);
 }
 html.ignite{--accent:#ff4d00;--accent-2:#ffb000;--shadow-hover:8px 8px 0 var(--accent);}
 html.ocean{--accent:#0066cc;--accent-2:#00ccff;--shadow-hover:8px 8px 0 var(--accent);--ink:#001122;--paper:#e6f0ff;--surface:#fff;--muted:#5d7a99;--line:#001122;}
@@ -127,7 +141,12 @@ body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);backgroun
  * die rechts neben der fuenften Icon-Spalte ins Leere weiterliefen. Gemessen
  * bei 1280x633: Container 420px, Icon-Reihe endet bei 423px, 5 Spalten. */
 #deskIcons.show-grid{background-image:linear-gradient(to right,var(--line) 1px,transparent 1px),linear-gradient(to bottom,var(--line) 1px,transparent 1px);background-size:84px 94px;background-position:6px 8px;width:max-content;max-width:calc(100vw - 12px)}
-.dskApp{margin:3px;width:78px;height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:2px;border:3px solid var(--line);box-shadow:var(--shadow);cursor:pointer;background:var(--surface);padding:4px}
+/* color:var(--ink) ist nicht Dekoration: svgIcon() zeichnet die Icons mit
+ * stroke="currentColor". Ohne diese Angabe erbt .ico die Farbe des
+ * umgebenden Containers, und auf der weissen Kachel (--surface) war das
+ * Weiss auf Weiss — die Icons waren nur noch ueber ihren Schlagschatten zu
+ * erkennen. Dieselbe Factory fuellt das Startmenue, das ebenfalls weiss ist. */
+.dskApp{margin:3px;width:78px;height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:2px;border:3px solid var(--line);box-shadow:var(--shadow);cursor:pointer;background:var(--surface);padding:4px;color:var(--ink)}
 .dskApp:hover{transform:translate(-2px,-2px);box-shadow:var(--shadow-hover);border-color:var(--accent)}
 .dskApp.selected{transform:translate(-1px,-1px);box-shadow:var(--shadow-hover);border-color:var(--accent);background:var(--accent-2)}
 .dskApp:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
@@ -288,7 +307,13 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .calcHist .chItem:hover{background:var(--accent);color:#fff}
 
 /* ===== terminal ===== */
-.termOut{width:100%;height:100%;padding:8px;font-family:"IBM Plex Mono",monospace;font-size:12px;background:#0a0a0a;color:#0f0;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+/* Das Terminal ist die einzige Stelle, an der eine dunkle Flaeche korrekt
+ * ist: es IST ein Terminal. .termOut bleibt deshalb hart verdrahtet.
+ * Alle anderen Editoren (Notepad, Editor, ImgEditor) lesen ihre Farben aus
+ * den Tokens, sonst ist bei hellem Schema ein dunkles Fenster in der Mitte
+ * eines hellen OS — genau das "Dark Mode vermischt mit Notepad" aus dem
+ * Screenshot vom 29.09. */
+.termOut{width:100%;height:100%;padding:8px;font-family:IBM Plex Mono,monospace;font-size:12px;background:#0a0a0a;color:#0f0;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
 .termIn{display:flex;align-items:center;padding:4px 8px;border-top:2px solid var(--line);background:var(--paper)}
 .termIn .prompt{color:#0f0;font-family:"IBM Plex Mono",monospace;font-size:12px;margin-right:6px;white-space:nowrap}
 /* ===== terminal mobile ===== */
@@ -451,12 +476,27 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 
 /* ===== mobile ===== */
 @media(max-width:760px){
-  #deskIcons{flex-direction:row;flex-wrap:wrap;height:auto;max-height:calc(100% - 60px);overflow-y:auto;padding:12px;align-content:flex-start;gap:12px}
-  /* Rasterzellen auf Mobil: die Icons sind hier 88x98 statt 78x88, dazu 12px
-   * Padding und 12px Gap. Ohne diese Anpassung laeuft das 84x94-Raster des
-   * Desktop-Breakpoints neben den Icons vorbei und sieht kaputt aus. */
-  #deskIcons.show-grid{background-size:100px 110px;background-position:12px 12px}
-  .dskApp{width:88px;height:98px;flex:0 0 auto}
+  /* Auf dem Handy war der Launcher eine feste Zeile aus 3 Kacheln zu 88px:
+   * 3*88 + 2*12 Gap + 24 Padding = 312px von 393px Viewport, und der Inhalt
+   * war 1056px hoch bei 720px sichtbarer Hoehe — die Icons fraessen die halbe
+   * Breite und Notes war nur ueber Scrollen erreichbar.
+   *
+   * Ein Grid mit auto-fill/minmax(72px,1fr) haengt die Spaltenzahl von der
+   * tatsaechlichen Breite ab: 393px -> 4 Spalten, 320px -> 3, Tablet -> 6+.
+   * minmax statt fix, damit auf einem schmalen Geraet die Kachel schrumpft,
+   * statt die Zeile zu sprengen. */
+  #deskIcons{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px;align-content:start;justify-items:center;height:auto;max-height:calc(100% - var(--tb-h));overflow-y:auto;overflow-x:hidden;padding:12px;-webkit-overflow-scrolling:touch;left:6px;right:6px;width:auto}
+  /* Das Raster kann hier nicht mehr ueber background-size laufen: die Spalten-
+   * breite steht erst nach dem Layout fest (repeat(auto-fill,minmax(...))),
+   * eine feste Zellgroesse legt die Linien neben die Kacheln statt auf sie.
+   * Statt das Raster auf dem Handy zu verlieren, zeichnet es die Kachel
+   * selbst — outline haengt an der Kachel und wandert mit dem Grid mit. */
+  #deskIcons.show-grid{background-image:none}
+  #deskIcons.show-grid .dskApp{outline:2px dashed var(--accent-2);outline-offset:3px}
+  /* Kachelgroesse folgt der Grid-Spalte (minmax(72px,1fr)), deshalb max-width
+   * statt width: die Kachel waechst auf dem Tablet mit, verschwindet aber
+   * nicht als Ueberlauf auf einem 320px-Geraet. */
+  .dskApp{width:100%;max-width:96px;height:98px}
   .dskApp .ico{width:44px;height:44px}
   .dskApp .ico svg{width:32px;height:32px}
   .dskApp .lbl{font-size:11px}
@@ -937,13 +977,13 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .edContainer{display:flex;flex:1;overflow:hidden;position:relative}
 .edLines{width:40px;flex-shrink:0;background:var(--paper);border-right:2px solid var(--line);overflow:hidden;padding:8px 4px;font-family:var(--font-mono);font-size:12px;color:var(--muted);line-height:1.5;text-align:right}
 .edLine{height:18px}
-.edArea{flex:1;border:none;background:#1a1a1e;color:#e0e0e0;font-family:var(--font-mono);font-size:12px;line-height:1.5;padding:8px;resize:none;outline:none;tab-size:2}
+.edArea{flex:1;border:none;background:var(--editor-bg);color:var(--editor-ink);font-family:var(--font-mono);font-size:12px;line-height:1.5;padding:8px;resize:none;outline:none;tab-size:2}
 .edArea::selection{background:var(--accent)}
 
 /* ===== Image Editor ===== */
 .ieToolbar{display:flex;gap:4px;padding:4px 6px;border-bottom:2px solid var(--line);background:var(--paper);flex-wrap:wrap;align-items:center}
 #ieFilter{padding:4px 6px;border:2px solid var(--line);background:var(--surface);font-family:var(--font-mono);font-size:10px;color:var(--ink)}
-.ieContainer{flex:1;display:flex;align-items:center;justify-content:center;background:#1a1a1e;overflow:auto;padding:8px}
+.ieContainer{flex:1;display:flex;align-items:center;justify-content:center;background:var(--editor-bg);overflow:auto;padding:8px}
 #ieCanvas{max-width:100%;max-height:100%;image-rendering:auto;border:2px solid var(--line)}
 
 /* ===== Pomodoro ===== */
@@ -1024,8 +1064,8 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 .npBrand{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;color:var(--accent);margin-right:4px}
 .npSelect{font-family:var(--font-mono);font-size:10px;padding:2px;border:2px solid var(--line);background:var(--paper)}
 .npContainer{display:flex;flex:1;overflow:hidden}
-.npLines{width:40px;flex-shrink:0;background:var(--paper);border-right:2px solid var(--line);overflow:hidden;padding:8px 4px;font-family:var(--font-mono);font-size:14px;color:var(--muted);line-height:1.5;text-align:right}
-.npArea{flex:1;border:none;background:#1a1a1e;color:#e0e0e0;font-family:var(--font-mono);font-size:14px;line-height:1.5;padding:8px;resize:none;outline:none;tab-size:2}
+.npLines{width:40px;flex-shrink:0;background:var(--editor-gutter);border-right:2px solid var(--line);overflow:hidden;padding:8px 4px;font-family:var(--font-mono);font-size:14px;color:var(--muted);line-height:1.5;text-align:right}
+.npArea{flex:1;border:none;background:var(--editor-bg);color:var(--editor-ink);font-family:var(--font-mono);font-size:14px;line-height:1.5;padding:8px;resize:none;outline:none;tab-size:2}
 .npArea::selection{background:var(--accent)}
 .npStatus{padding:2px 8px;font-size:10px;font-family:var(--font-mono);color:var(--muted);border-top:2px solid var(--line);background:var(--paper)}
 .npSearchOverlay{display:none;position:absolute;top:40px;right:8px;background:var(--paper);border:2px solid var(--line);padding:4px;gap:4px;z-index:10;box-shadow:var(--shadow)}
