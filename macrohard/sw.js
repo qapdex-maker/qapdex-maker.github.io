@@ -2,7 +2,7 @@
  * v2 — stale-while-revalidate, network-first for AMI BIOS,
  * offline fallback, quota check, cache versioning
  */
-const CACHE='macrohard-v2-11-53';
+const CACHE='macrohard-v2-11-54';
 /* Die Icons sind bewusst Teil der Precache-Liste. Sie sind klein (3 KB und
  * 14 KB) und ohne sie fehlt der installierten PWA das Symbol — der Browser
  * fragt es ab, bekommt im Offline-Fall aber nur den generischen 503-Pfad. */

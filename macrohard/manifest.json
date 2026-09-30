@@ -20,8 +20,9 @@
       "purpose": "any"
     }
   ],
-  "version": "2.11.53",
+  "version": "2.11.54",
   "changelog": {
+    "v2.11.54": "The start-menu footer reads its version from APP_VERSION instead of a hardcoded literal that survived four releases; a browser smoke test that opens all 25 apps in Chromium and states what it cannot see",
     "v2.11.53": "Four duplicate element ids split apart (stGrid, ieRotate, musEq, beatpadBpm, mdPreview): the grid setting now survives close and reload, the rotate slider works, opening Music no longer deletes the visualizer canvas, the two BPM fields stay in step, and the ten dead Docs toolbar buttons are wired",
     "v2.11.52": "PWA icons added (manifest, favicon, apple-touch) and precached by the service worker; the TDZ scanner now finishes in under a second",
     "v2.11.51": "System info app no longer crashes on its first row (APP_VERSION was read outside the IIFE that declares it); app.js lint clean",

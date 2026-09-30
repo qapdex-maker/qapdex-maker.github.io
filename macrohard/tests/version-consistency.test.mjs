@@ -55,6 +55,14 @@ test('the start-menu footer reads its version from APP_VERSION', () => {
     'in index.html darf keine Version als Literal stehen — sie kam bei vier ' +
       'Releases nicht mit. Quelle der Wahrheit ist APP_VERSION.',
   );
+  // Auch kein Initialwert im Span: sonst ist er beim nächsten Bump eine
+  // veraltete Angabe, die der Literal-Scan oben meldet. Genau das ist beim
+  // 2.11.54-Bump passiert, nachdem der Fix schon gruen war.
+  assert.match(
+    html,
+    /<span id="smFooterVersion"><\/span>/,
+    'der Span muss leer sein — app.js fuellt ihn beim Boot aus APP_VERSION',
+  );
   assert.match(
     read('assets/app.js'),
     /smFooterVersion[\s\S]{0,140}APP_VERSION/,

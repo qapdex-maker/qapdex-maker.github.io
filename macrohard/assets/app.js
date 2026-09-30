@@ -501,7 +501,7 @@
    * this constant now; tests/theme-darkmode-separation.test.mjs checks that it
    * matches package.json and manifest.json and that no other release literal
    * survives anywhere in app.js. */
-  const APP_VERSION = '2.11.53';
+  const APP_VERSION = '2.11.54';
 
   /* Restore the display layer on boot, not when Settings happens to open.
    *
