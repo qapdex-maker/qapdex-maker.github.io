@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test --test-concurrency=4 tests/*.test.*",
+    "test:browser": "node tests/app-smoke.browser.mjs",
     "lint": "eslint assets/app.js",
     "format": "prettier --write assets/app.js assets/site.css",
     "verify": "node --check assets/app.js && echo 'JS OK'"
