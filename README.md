@@ -34,7 +34,7 @@ Die CI (`.github/workflows/site-ci.yml`, Job `lint-and-test`) läuft bei jedem P
 ```
 node deploy-hygiene.js                            # Gate
 node --test tests/deploy-hygiene-gate.test.mjs     # 6
-cd macrohard && npm test                           # 330
+cd macrohard && npm test                           # 332
 cd msgraph/react && node --test tests/*.test.mjs   # 27
 ```
 

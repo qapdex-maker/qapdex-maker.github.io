@@ -345,7 +345,7 @@ der Shell nicht unterscheidbar. Notizen: `msgraph/react/NOTES-API-PROXY.md`.
 macrohard 312 · msgraph/react 15 (sketch 9, radar 6) · Gate 6. Alle grün,
 `node deploy-hygiene.js` inklusive echtem Babel-Transpile.
 
-> Stand 2026-09-30: macrohard 330 (siehe Session unten). Die 312 oben sind der
+> Stand 2026-09-30: macrohard 332 (siehe Session unten). Die 312 oben sind der
 > Messwert dieses Tages und bleiben als Protokoll stehen.
 
 ## Session 2026-09-28 — show-grid war ein toter Schalter, RAM-Deckel, Signal 9
@@ -459,6 +459,70 @@ statt `unregister()`, denn ein zweites `navigate` direkt danach blieb bei
 Text hat. Dazu ein Testfehler, bei dem `veraendert: true` neben identischen
 ersten 90 Zeichen stand — mein Vergleichslängen, nicht das Verhalten.
 
-Stand: 330 Tests (45 Dateien), 0 Lint-Warnungen, 17/17 Browser-Prüfungen,
-Smoke über alle 25 Apps grün (öffnen, Reopen, schließen, Reopen).
-Nicht gepusht — Freigabe ausstehend.
+Stand des Duplicate-ID-Audits: 330 Tests zu diesem Zeitpunkt, heute 332 nach
+den Versions-Tests (siehe übernächster Abschnitt). Gepusht als `16846af`.
+
+## Session 2026-09-30 (b) — Foto vom Gerät: die Fußzeile lügt
+
+**Der Fund kam nicht aus dem Code, sondern aus einem Screenshot.** Die
+Startmenü-Fußzeile zeigte `v2.11.49`, die Seite war 2.11.53. Belegt, nicht
+vermutet:
+
+```
+=== A) Startmenue-Fusszeile (live, Chromium) ===
+  { smFooter: 'qapdex-maker.github.io · v2.11.49',
+    meta:     '2.11.53',
+    appVersion: '2.11.53' }
+```
+
+`#smFooter` kommt **einmal** im Repo vor, in `index.html`, hartkodiert. Kein
+JavaScript fasst ihn an — geprüft mit `grep "smFooter.*textContent"`, null
+Treffer.
+
+**Warum kein Test es fand.** `tests/version-consistency.test.mjs` prüft
+`assert.match(index.html, /2\.11\.53/)` — also nur, dass die Version
+*irgendwo* im File steht. Das `<meta name="makeros-version">` erfüllt das. Eine
+zweite, veraltete Angabe im selben File fällt durch. Ich hatte die Zahl
+„sechs Stellen" im Skill notiert und beim Bump sechs gepatcht — es waren sieben.
+
+**Fix:** eigene Node `#smFooterVersion`, die `app.js` beim Boot aus
+`window.APP_VERSION` befüllt. `window.`, weil die Zeile nach dem `})()` der
+Haupt-Closure steht — `tests/iife-version-export.test.mjs` hat mich beim ersten
+Versuch genau darauf rot gemacht, mit Zeilennummer und Dateiname.
+
+**Zwei neue Tests, beide gegengeprüft:**
+
+| Test | Altes Markup | Neu |
+|---|---|---|
+| `the start-menu footer reads its version from APP_VERSION` | rot: „die Fußzeile braucht eine eigene Node" | grün |
+| `no stale version literal survives in any shipped file` | rot: „index.html enthält veraltete Versionsliterale: 2.11.49" | grün |
+
+Der Literal-Scan fand beim ersten Lauf noch eine **zweite** Stelle: mein eigener
+erklärender Kommentar in `app.js` nannte die alte Version. Ein Kommentar, der
+den Wert dokumentiert, wird vom eigenen Test als Fehler gemeldet — berechtigt.
+
+**Von den vier Markierungen im Screenshot war genau eine ein Fehler.** Die
+anderen drei habe ich erst gemessen, dann als korrektes Design erkannt:
+
+- **„Glow weg" neben der Docs-Kachel**: Scan über `.dskApp`, `#startMenu`,
+  `.wnd`, `#taskbar`, `#tbStart` nach *farbigen weichen* Schatten
+  (`box-shadow` mit Farbe **und** Blur > 0). Ergebnis: **keine**. Die harten
+  Versatzschatten sind der dokumentierte Brutalismus.
+- **Blaue Linie / blauer Scrollbalken**: `--accent` ist `#2547ff`, die Default-
+  Akzentfarbe aus `site.css:5`. Der Scrollbalken zeigt `rgb(37,71,255)` auf
+  `rgb(241,237,227)` — das **ist** `var(--accent) var(--paper)`. Korrekt.
+- **Gelbe Linie unten**: `#taskbar` hat
+  `box-shadow: 0 -4px 0 var(--ink), 0 -7px 0 var(--accent-2)`, gemessen
+  `rgb(255,212,0) 0px -7px 0px`. Dokumentiertes 3D, kein Fremdkörper.
+- **„leer lassen" neben dem Startmenü**: Treffer waren `.dskApp`-Kacheln und
+  ihre Kindelemente. Menü 240 px breit, Zone daneben 260 px — die Kacheln
+  ragen hinein. Grid-Geometrie, kein Müll.
+
+**Ein Testfehler unterwegs:** `querySelectorAll(...).slice is not a function` —
+NodeList hat kein `slice`. Das Ergebnis dieser Zeile war ungültig, nicht nur
+fehlend; ich habe es mit `Array.from()` nachgezogen und neu gemessen.
+
+**Lehre für die Anzeige-Wahrheit:** Ein Gerätefoto zeigt Symptome, nicht
+Ursachen, und manchmal **überhaupt keine** — drei der vier Markierungen waren
+korrektes Design. Was es aber zeigte, war eine Zahl, die im Code niemand
+überwacht hat.
