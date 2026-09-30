@@ -1,0 +1,201 @@
+/* EXiL 126 — Party-Seite
+ *
+ * Zwei Ebenen, und die sind Absicht:
+ *   --ink      fast schwarz, die einzige Textfarbe
+ *   --accent   ein einziges Rot für "kommt noch"
+ * Alles andere ist Graustufe. Das Logo ist bereits zweifarbig konzipiert
+ * (Schwarz auf Transparent), also wiederholt die Seite seine Palette statt
+ * eine eigene zu erfinden.
+ */
+
+:root {
+  --ink: #111113;
+  --muted: #6b6b70;
+  --line: #d8d8dc;
+  --paper: #f7f6f3;
+  --surface: #ffffff;
+  --accent: #c8352b;
+
+  --fs: 17px;
+  --gap: clamp(1.5rem, 4vw, 3rem);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #ececf0;
+    --muted: #9a9aa2;
+    --line: #33333a;
+    --paper: #131316;
+    --surface: #1c1c20;
+    --accent: #e8635a;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: var(--fs);
+  line-height: 1.6;
+  /* Sanft, aber nicht weichgespült. */
+  padding: 0 var(--gap) 4rem;
+}
+
+p { margin: 0 0 1rem; }
+
+/* ---------- Kopf und Fuss ---------- */
+
+.site {
+  display: flex;
+  justify-content: center;
+  padding: clamp(1.75rem, 5vw, 3rem) 0;
+}
+
+.site:last-of-type {
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+/*
+ * Das Logo bleibt klein. 96px Breite auf Desktop, 76px auf dem Handy —
+ * genug, um erkannt zu werden, zu wenig, um die Seite zu dominieren.
+ * Das PNG hat 79% Transparenz, also braucht es keinen Kasten drumherum.
+ */
+.mark {
+  width: 96px;
+  height: auto;
+  opacity: 0.88;
+}
+
+@media (max-width: 640px) {
+  .mark { width: 76px; }
+}
+
+/* ---------- Hero ---------- */
+
+main {
+  max-width: 46rem;
+  margin: 0 auto;
+}
+
+.hero { padding: clamp(2rem, 7vw, 5rem) 0 0; }
+
+.kicker,
+.noteLabel {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  margin-bottom: 1.25rem;
+}
+
+h1 {
+  font-size: clamp(3rem, 14vw, 6.5rem);
+  line-height: 0.95;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  margin: 0 0 1.5rem;
+}
+
+/* Die Zahl ist der zweite Teil der Wortmarke — sie soll leiser sein
+ * als die Buchstaben, sonst zerreisst sie die Zeile. */
+h1 .num {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.lead {
+  font-size: clamp(1.05rem, 2.4vw, 1.25rem);
+  max-width: 34rem;
+  color: var(--ink);
+}
+
+/* ---------- Fakten ---------- */
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 1px;
+  margin-top: clamp(2.5rem, 6vw, 4rem);
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.fact {
+  background: var(--surface);
+  padding: 1.1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.factLabel {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.factValue {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Alles, was noch nicht feststeht, steht in derselben Akzentfarbe wie
+ * nichts anderes auf der Seite. Das ist das einzige Signal, das später
+ * wieder verschwinden muss. */
+.tbd { color: var(--accent); }
+
+/* ---------- Notiz und Bildmarke ---------- */
+
+.note,
+.signs {
+  margin-top: clamp(3.5rem, 9vw, 6rem);
+  padding-top: clamp(2rem, 5vw, 3rem);
+  border-top: 1px solid var(--line);
+}
+
+.note p:last-child { max-width: 34rem; }
+
+.signs .sign {
+  width: 140px;
+  height: auto;
+  opacity: 0.9;
+  /* JPEG auf weissem Grund — im Dark Mode sonst ein weisser Fleck.
+   * mix-blend hält die Kante weich statt hart abgeschnitten. */
+  mix-blend-mode: multiply;
+}
+
+@media (prefers-color-scheme: dark) {
+  .signs .sign { mix-blend-mode: screen; }
+}
+
+/* ---------- Bewegung ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero > * { animation: rise 0.5s ease-out both; }
+  .hero > :nth-child(2) { animation-delay: 0.06s; }
+  .hero > :nth-child(3) { animation-delay: 0.12s; }
+  .facts        { animation: rise 0.5s ease-out 0.18s both; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
