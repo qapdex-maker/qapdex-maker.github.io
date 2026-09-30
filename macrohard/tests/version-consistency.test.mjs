@@ -29,6 +29,54 @@ test('package version is the single release version source', () => {
   assert.deepEqual(others, [], `stale version literals in app.js: ${others.join(', ')}`);
 });
 
+/*
+ * Gefunden am 2026-09-30 über ein Foto vom Gerät: die Fußzeile des Startmenüs
+ * zeigte "v2.11.49", die Seite war 2.11.53.
+ *
+ * Sie stand als festes Literal in index.html und hat vier Release-Bumps
+ * überlebt. Der Test oben hat sie NICHT gefunden: `assert.match(index.html, …)`
+ * prüft nur, dass die Version irgendwo vorkommt — das
+ * <meta name="makeros-version"> erfüllt das. Eine zweite, veraltete Angabe
+ * im selben File fällt durch.
+ *
+ * Deshalb zwei zusätzliche Zusicherungen: kein Literal mehr in index.html,
+ * und die Fußzeile bezieht ihre Version aus APP_VERSION.
+ */
+test('the start-menu footer reads its version from APP_VERSION', () => {
+  const html = read('index.html');
+  assert.match(
+    html,
+    /id="smFooterVersion"/,
+    'die Fußzeile braucht eine eigene Node für die Version',
+  );
+  assert.doesNotMatch(
+    html,
+    /v\d+\.\d+\.\d+/,
+    'in index.html darf keine Version als Literal stehen — sie kam bei vier ' +
+      'Releases nicht mit. Quelle der Wahrheit ist APP_VERSION.',
+  );
+  assert.match(
+    read('assets/app.js'),
+    /smFooterVersion[\s\S]{0,140}APP_VERSION/,
+    'app.js muss #smFooterVersion aus APP_VERSION befüllen',
+  );
+});
+
+test('no stale version literal survives in any shipped file', () => {
+  // `(?<![\d.])` / `(?![\d.])` halten IPs und Uhrzeiten aus dem Raster.
+  const re = /(?<![\d.])2\.\d{1,3}\.\d{1,4}(?![\d.])/g;
+  for (const file of ['index.html', 'assets/app.js', 'assets/site.css']) {
+    const stale = [
+      ...new Set([...read(file).matchAll(re)].map((m) => m[0])),
+    ].filter((v) => v !== version);
+    assert.deepEqual(
+      stale,
+      [],
+      `${file} enthält veraltete Versionsliterale: ${stale.join(', ')}`,
+    );
+  }
+});
+
 test('manifest version matches the release', () => {
   const manifest = JSON.parse(read('manifest.json'));
   assert.equal(

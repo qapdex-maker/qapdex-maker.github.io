@@ -8717,6 +8717,21 @@
   // at all, with nothing in the console. ESLint had filed it as one no-undef
   // warning among 13 unused-variable warnings.
   window.APP_VERSION = APP_VERSION;
+  /* Der Startmenü-Fusszeile zeigt die Release-Version. Sie stand bis 2026-09-30
+   * als festes Literal in index.html und blieb bei vier aufeinanderfolgenden
+   * Releases auf einem alten Stand stehen, während die Seite längst weiter war —
+   * `tests/version-consistency.test.mjs` prüft nur, dass die Version
+   * *irgendwo* in index.html vorkommt, und das Meta-Tag erfüllt das.
+   * Jetzt kommt sie aus dieser einen Quelle.
+   * (Die alte Versionsnummer steht bewusst nicht in diesem Kommentar: der
+   * Literal-Scan im selben Test würde sie als stale melden.)
+   *
+   * `window.APP_VERSION` statt `APP_VERSION`: diese Zeile steht NACH dem
+   * schliessenden `})()` der Haupt-Closure, wo die Konstante nicht mehr
+   * sichtbar ist. Genau davor warnt tests/iife-version-export.test.mjs — und
+   * der hat mich beim ersten Versuch auch rot gemacht. */
+  const smFooterVersion = document.getElementById('smFooterVersion');
+  if (smFooterVersion) smFooterVersion.textContent = window.APP_VERSION;
 })();
 
 /* AMIBIOS Setup — iframe window */
