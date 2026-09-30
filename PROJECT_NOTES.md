@@ -526,3 +526,60 @@ fehlend; ich habe es mit `Array.from()` nachgezogen und neu gemessen.
 Ursachen, und manchmal **überhaupt keine** — drei der vier Markierungen waren
 korrektes Design. Was es aber zeigte, war eine Zahl, die im Code niemand
 überwacht hat.
+
+## Session 2026-09-30 (c) — EXiL 126: eine Seite für die Party
+
+Neuer Bereich `exil/`, ausgeliefert als
+`qapdex-maker.github.io/exil/`. Teaser für eine Party ohne Datum, gebaut, um
+später zur Party-Seite zu werden. **Kein JavaScript** — sie funktioniert
+offline und ohne Skripte.
+
+**Der Fund beim Prüfen der Logos statt beim Anschauen.** Die Bildanalyse meldete
+für `IMG_0409.PNG` eine „komplett schwarze Fläche". Das war falsch. Die
+Pixelmessung:
+
+```
+PNG 507x739, RGBA
+transparent (<20 alpha):  296912   79.2 %
+opaque schwarz:            74727   19.9 %
+opaque anders:                 0    0.0 %
+halbtransparent:            3034    0.8 %
+top colors: [((0,0,0), 74727)]
+```
+
+Es ist eine Schwarz-Wortmarke mit Alphakanal. Die Analyse hatte das
+Transparenz-Chanel als Fläche gelesen. Erst auf hellgrauem Grund flachgerechnet
+war **EXiL 126** lesbar. **Bei transparenten Bildern die Alpha-Werte messen,
+nicht die Vision-Analyse fragen** — die sieht nur eine Ebene.
+
+**Drei von vier Markierungen auf einem Gerätefoto waren korrektes Design.**
+Siehe die vorige Session. Dasselbe Muster: erst messen, dann urteilen.
+
+**Gemessen, nicht behauptet** (Chromium, echter Server, Desktop + 390 px):
+
+- beide Logos laden, `alt` und `width`/`height` gesetzt
+- kein horizontaler Overflow
+- Kontraste WCAG AA: 4,9:1 hell, 6,64:1 dunkel
+- Portal-Karte und Event-Filter zeigen auf die Seite
+- keine Console-Fehler, live 12/12 bestanden
+
+**Ein Hinweis vom Screenshot-Review war eine Fehlwarnung:** die kleinen
+Meta-Zeilen seien zu klein. Gemessen bestehen sie AA in beiden Modi. Das
+Fakten-Label trotzdem von 10,9 auf 11,5 px angehoben — das kostet nichts.
+
+**Zwei eigene Fehler, beide vor dem Push bemerkt:**
+
+1. Der Portal-Test schlug dreimal fehl. Ursache: mein alter `http.server` hing
+   noch auf Port 8144 und servierte aus `exil/` statt aus dem Repo-Root — ich
+   habe 404er gemessen und beinahe die Seite dafür verdächtigt. **Ein hängender
+   Server ist die billigste Erklärung für "alles 404".**
+2. Der Test war syntaktisch kaputt (verschachtelte Template-Literale). Nach dem
+   ersten `SyntaxError` habe ich nicht die Seite angefasst, sondern den Test.
+
+**Die Logos hatten fremde Rechte** (`root everybody`, `rw-rw----`). Vor dem
+Commit auf 644 normalisiert — im Repo ist alles andere so, und `deploy-hygiene`
+prüft Rechte nicht.
+
+Details zu Marke, Auftritt und Ausbauplan stehen in `~/EXiL-126-NOTES.md`
+(bewusst außerhalb des Repos — die Seite wird als GitHub Pages ausgeliefert,
+jede Datei darin ist öffentlich).
