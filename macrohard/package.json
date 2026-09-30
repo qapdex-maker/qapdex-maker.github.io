@@ -1,6 +1,6 @@
 {
   "name": "macrohard-doors-os",
-  "version": "2.11.52",
+  "version": "2.11.53",
   "description": "Windows-stil Desktop OS im Browser \u2014 Neo-Brutalist, 22 Apps, PWA",
   "type": "module",
   "scripts": {
