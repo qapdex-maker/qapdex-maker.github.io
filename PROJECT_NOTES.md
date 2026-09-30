@@ -345,6 +345,9 @@ der Shell nicht unterscheidbar. Notizen: `msgraph/react/NOTES-API-PROXY.md`.
 macrohard 312 · msgraph/react 15 (sketch 9, radar 6) · Gate 6. Alle grün,
 `node deploy-hygiene.js` inklusive echtem Babel-Transpile.
 
+> Stand 2026-09-30: macrohard 330 (siehe Session unten). Die 312 oben sind der
+> Messwert dieses Tages und bleiben als Protokoll stehen.
+
 ## Session 2026-09-28 — show-grid war ein toter Schalter, RAM-Deckel, Signal 9
 
 **show-grid: Ein Schalter, der nichts tat.** `stGrid` in den Einstellungen
@@ -404,3 +407,58 @@ offener Stand. Backup trotzdem angelegt, bevor er weg war:
 (sha256 ca32f921…). Lehre: bei "aufräumen" erst `git diff HEAD stash@{0}`
 lesen, dann entscheiden — ein Stash aus einer fremden Session sieht
 fremder aus, als er ist.
+
+## Session 2026-09-30 — doppelte Element-IDs, ein toter Toolbar
+
+**Eine Fehlerklasse, fünf Fundstellen.** Ein Audit-Scan über alle 25 Apps
+(Chromium, CDP) fand vier IDs, die zweimal im selben Fenster existierten:
+
+| ID | Knoten 1 | Knoten 2 | Folge |
+|----|----------|----------|-------|
+| `stGrid` | DIV (Pane) | INPUT (Checkbox) | Einstellung nicht persistent |
+| `ieRotate` | BUTTON | INPUT (range) | Regler wirkungslos |
+| `musEq` | DIV (Tab) | DIV (Bänder) | Visualizer-Canvas gelöscht |
+| `beatpadBpm` | SELECT | INPUT (number) | zwei BPM-Felder laufen auseinander |
+| `mdPreview` | BUTTON | DIV | Preview-Toggle ohne Wirkung |
+
+Warum das stumm war: `getElementById` und `querySelector('#id')` liefern bei
+Kollision **die erste passende Node im Dokument**, kein Fehler, keine Warnung.
+Bei `stGrid` kam dazu, dass `classList.toggle(klass, undefined)` flippt statt zu
+setzen — die Klasse wechselte also sichtbar korrekt, während
+`undefined ? '1' : '0'` immer `'0'` schrieb. Gemessen:
+
+```
+A) frisch geöffnet      deskClass=""          os_grid=null
+B) Nutzer schaltet ein  deskClass="show-grid"  os_grid="0"   <-- falsch
+D) neu geöffnet        deskClass=""          checkbox=false  <-- Einstellung weg
+```
+
+**Docs hatte eine tote Attrappe.** Zehn sichtbare Toolbar-Knöpfe, keiner
+verdrahtet — jede ID kam genau einmal im File vor, nämlich im
+openApp-Markup. Mit markiertem Text gemessen: `boldWirkt: false`, `innerHTML`
+vor und nach dem Klick byte-identisch. Nur die separat in `buildDocs()`
+erzeugte Leiste funktionierte, weshalb die App plausibel aussah.
+
+**Zwei Lücken, die der erste Fix nicht schloss.** Nach dem ID-Fix schrieb der
+Schalter korrekt `'1'`, ein Reload verlor es trotzdem: es gab nur einen
+Restore-Pfad für den *Aus*-Zustand (`gd === '0'`), niemand las `'1'`. Und
+`makeHeading()` las `range.startContainer.parentElement` *nach* `insertNode()` —
+das ist der neue Textknoten, nicht der Block, also blieb die Überschrift ein
+`<p>`. Beide erst nach der Verifikation aufgefallen, nicht davor.
+
+**Die Verifikation lief zunächst gegen die alte Datei.** Sieben
+Fehlschläge, keiner davon ein Produktfehler: das Chromium-Profil hatte noch
+den Service Worker aktiv (`swController: true`), also lief die gecachte
+`app.js`. Lehrpunkt aus dem Skill, erneut bestätigt — `curl` sah die Fixes
+(2 Treffer für `stGridPane`), der Browser nicht. Abhilfe: **frisches Profil**
+statt `unregister()`, denn ein zweites `navigate` direkt danach blieb bei
+`readyState: "loading"` hängen.
+
+**Messartefakte, die ich zuerst für Bugs hielt:** AMIBIOS meldet
+`innerText === 0`, weil die App ein iframe ist und im Host-Dokument keinen
+Text hat. Dazu ein Testfehler, bei dem `veraendert: true` neben identischen
+ersten 90 Zeichen stand — mein Vergleichslängen, nicht das Verhalten.
+
+Stand: 330 Tests (45 Dateien), 0 Lint-Warnungen, 17/17 Browser-Prüfungen,
+Smoke über alle 25 Apps grün (öffnen, Reopen, schließen, Reopen).
+Nicht gepusht — Freigabe ausstehend.
