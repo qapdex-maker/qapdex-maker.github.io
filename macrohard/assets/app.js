@@ -501,7 +501,7 @@
    * this constant now; tests/theme-darkmode-separation.test.mjs checks that it
    * matches package.json and manifest.json and that no other release literal
    * survives anywhere in app.js. */
-  const APP_VERSION = '2.11.52';
+  const APP_VERSION = '2.11.53';
 
   /* Restore the display layer on boot, not when Settings happens to open.
    *
@@ -542,6 +542,19 @@
       st = storeGet('os_theme');
     } catch (e) {}
     if (st) setColorScheme(st);
+    /* Desktop grid. Absent means off; '1' means on. Only the "off" case was
+     * handled anywhere (in buildSettings), so switching the grid on survived
+     * closing the Settings window but not a reload.
+     * Measured in Chromium 2026-09-30: os_grid='1' plus a reload produced
+     * `#deskIcons class=""` and an unchecked switch. */
+    let gridOn = null;
+    try {
+      gridOn = storeGet('os_grid');
+    } catch (e) {}
+    if (gridOn === '1') {
+      const desk = document.getElementById('deskIcons');
+      if (desk) desk.classList.add('show-grid');
+    }
     updateThemeToggleBtn();
   }
 
@@ -1262,7 +1275,7 @@
       break;
     case 'music':
       body =
-          '<div class="musPlayer"><div class="musHeader"><span class="musLogo">🎵 Music</span><button class="musToggle" id="musToggle">☰ Playlist</button><button id="musCloseBtn" class="musCloseBtn" title="Schließen">✕</button></div><div class="musBody"><div class="musMain"><div class="musArt" id="musArt"><span id="musArtIcon">♪</span></div><div class="musMeta"><div class="musTitle" id="musTitle">Player</div><div class="musArtist" id="musArtist">Wähle einen Song</div><div class="musAlbum" id="musAlbum">—</div></div><div class="musSeek"><input type="range" id="musProg" min="0" max="100" step="1" value="0"><div class="musTimes"><span id="musProgL">0:00</span><span id="musProgR">0:00</span></div></div><div class="musControls"><button id="musShuffle" title="Shuffle">🔀</button><button id="musPrev" title="Zurück">⏮</button><button id="musPlayBtn" class="musPlay" title="Play">▶</button><button id="musNext" title="Weiter">⏭</button><button id="musRepeat" title="Repeat">🔁</button></div><div class="musVolWrap"><span>🔊</span><input type="range" id="musVol" min="0" max="1" step="0.05" value="0.7"><span id="musVolL">70%</span></div></div><div class="musSidebar" id="musSidebar"><div class="musTabs"><button data-tab="playlist" class="musTab active">🎵 Playlist</button><button data-tab="radio" class="musTab">📻 Radio</button><button data-tab="favs" class="musTab">★ Favs</button></div><div id="musPlaylist" class="musList"></div><div id="musRadio" class="musList" style="display:none"></div><div id="musFavs" class="musList" style="display:none"></div><div class="musSidebarFoot"><label class="musUploadBtn">⬆ Upload<input type="file" id="musUploadIn" accept="audio/*" multiple style="display:none"></label><span id="musRadioStatus" style="font-size:9px;color:var(--muted)"></span></div></div></div><div class="musExtraTabs"><button data-extra="beatpad" class="musExtraTab active">🥁 Beatpad</button><button data-extra="eq" class="musExtraTab">🎛 EQ</button><button data-extra="vis" class="musExtraTab">📊 Visualizer</button></div><div id="musBeatpadSection" class="musExtra"><div class="beatpad-header"><span class="beatpad-title">🥁 Beatpad</span><button id="beatpadPlay" class="beatpad-btn-lg" title="Play Loop">▶ Play</button><button id="beatpadStop" class="beatpad-btn-lg beatpad-stop" title="Stop">⏹ Stop</button><select id="beatpadBpm" class="beatpad-bpm"><option value="100">100 BPM</option><option value="120" selected>120 BPM</option><option value="140">140 BPM</option><option value="160">160 BPM</option><option value="180">180 BPM</option></select></div><div class="musBeatpad" id="musBeatpad"></div><div class="beatpad-vol-wrap"><span>🔊</span><input type="range" id="beatpadVol" min="0" max="100" value="50"><span id="beatpadVolL">50%</span></div></div><div id="musEq" class="musExtra" style="display:none"><canvas id="musVisualizer" width="280" height="60"></canvas><div class="musEq" id="musEq"></div></div><div id="musVis" class="musExtra" style="display:none"><canvas id="musVisCanvas" width="280" height="100"></canvas></div></div>';
+          '<div class="musPlayer"><div class="musHeader"><span class="musLogo">🎵 Music</span><button class="musToggle" id="musToggle">☰ Playlist</button><button id="musCloseBtn" class="musCloseBtn" title="Schließen">✕</button></div><div class="musBody"><div class="musMain"><div class="musArt" id="musArt"><span id="musArtIcon">♪</span></div><div class="musMeta"><div class="musTitle" id="musTitle">Player</div><div class="musArtist" id="musArtist">Wähle einen Song</div><div class="musAlbum" id="musAlbum">—</div></div><div class="musSeek"><input type="range" id="musProg" min="0" max="100" step="1" value="0"><div class="musTimes"><span id="musProgL">0:00</span><span id="musProgR">0:00</span></div></div><div class="musControls"><button id="musShuffle" title="Shuffle">🔀</button><button id="musPrev" title="Zurück">⏮</button><button id="musPlayBtn" class="musPlay" title="Play">▶</button><button id="musNext" title="Weiter">⏭</button><button id="musRepeat" title="Repeat">🔁</button></div><div class="musVolWrap"><span>🔊</span><input type="range" id="musVol" min="0" max="1" step="0.05" value="0.7"><span id="musVolL">70%</span></div></div><div class="musSidebar" id="musSidebar"><div class="musTabs"><button data-tab="playlist" class="musTab active">🎵 Playlist</button><button data-tab="radio" class="musTab">📻 Radio</button><button data-tab="favs" class="musTab">★ Favs</button></div><div id="musPlaylist" class="musList"></div><div id="musRadio" class="musList" style="display:none"></div><div id="musFavs" class="musList" style="display:none"></div><div class="musSidebarFoot"><label class="musUploadBtn">⬆ Upload<input type="file" id="musUploadIn" accept="audio/*" multiple style="display:none"></label><span id="musRadioStatus" style="font-size:9px;color:var(--muted)"></span></div></div></div><div class="musExtraTabs"><button data-extra="beatpad" class="musExtraTab active">🥁 Beatpad</button><button data-extra="eq" class="musExtraTab">🎛 EQ</button><button data-extra="vis" class="musExtraTab">📊 Visualizer</button></div><div id="musBeatpadSection" class="musExtra"><div class="beatpad-header"><span class="beatpad-title">🥁 Beatpad</span><button id="beatpadPlay" class="beatpad-btn-lg" title="Play Loop">▶ Play</button><button id="beatpadStop" class="beatpad-btn-lg beatpad-stop" title="Stop">⏹ Stop</button><select id="beatpadBpm" class="beatpad-bpm"><option value="100">100 BPM</option><option value="120" selected>120 BPM</option><option value="140">140 BPM</option><option value="160">160 BPM</option><option value="180">180 BPM</option></select></div><div class="musBeatpad" id="musBeatpad"></div><div class="beatpad-vol-wrap"><span>🔊</span><input type="range" id="beatpadVol" min="0" max="100" value="50"><span id="beatpadVolL">50%</span></div></div><div id="musEq" class="musExtra" style="display:none"><canvas id="musVisualizer" width="280" height="60"></canvas><div class="musEq" id="musEqBands"></div></div><div id="musVis" class="musExtra" style="display:none"><canvas id="musVisCanvas" width="280" height="100"></canvas></div></div>';
       break;
     case 'chat':
       body =
@@ -1270,11 +1283,11 @@
       break;
     case 'docs':
       body =
-          '<div class="mdToolbar"><button class="cBtn" id="mdBold" title="Bold"><b>B</b></button><button class="cBtn" id="mdItalic" title="Italic"><i>I</i></button><button class="cBtn" id="mdHeading" title="Überschrift">H</button><button class="cBtn" id="mdLink" title="Link">Link</button><button class="cBtn" id="mdCode" title="Code">Code</button><button class="cBtn" id="mdQuote" title="Zitat">"</button><button class="cBtn" id="mdList" title="Liste">•</button><button class="cBtn" id="mdSave" title="Speichern">💾</button><button class="cBtn" id="mdExport" title="Export .md">📤</button><button class="cBtn" id="mdPreview" title="Preview">👁</button></div><div class="mdBody" id="mdBody" contenteditable="true" spellcheck="false"></div><div class="mdPreview" id="mdPreview"></div>';
+          '<div class="mdToolbar"><button class="cBtn" id="mdBold" title="Bold"><b>B</b></button><button class="cBtn" id="mdItalic" title="Italic"><i>I</i></button><button class="cBtn" id="mdHeading" title="Überschrift">H</button><button class="cBtn" id="mdLink" title="Link">Link</button><button class="cBtn" id="mdCode" title="Code">Code</button><button class="cBtn" id="mdQuote" title="Zitat">"</button><button class="cBtn" id="mdList" title="Liste">•</button><button class="cBtn" id="mdSave" title="Speichern">💾</button><button class="cBtn" id="mdExport" title="Export .md">📤</button><button class="cBtn" id="mdPreview" title="Preview">👁</button></div><div class="mdBody" id="mdBody" contenteditable="true" spellcheck="false"></div><div class="mdPreview" id="mdPrev"></div>';
       break;
     case 'settings':
       body =
-          '<div class="stGrid" id="stGrid"><div class="stNav"><button data-tab="general" class="active" data-de="Allgemein" data-en="General">Allgemein</button><button data-tab="appearance" data-de="Aussehen" data-en="Appearance">Aussehen</button><button data-tab="shortcuts" data-de="Tastenkürzel" data-en="Shortcuts">Tastenkürzel</button><button data-tab="privacy" data-de="Datenschutz" data-en="Privacy">Datenschutz</button></div><div class="stPane active" data-pane="general"><label><input type="checkbox" id="stDark"> Dunkles Design</label><label><input type="checkbox" id="stScan"> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div><div class="stPane" data-pane="appearance" id="stAppearance"></div><div class="stPane" data-pane="shortcuts" id="stShortcuts"></div><div class="stPane" data-pane="privacy" id="stPrivacy"></div></div>';
+          '<div class="stGrid" id="stGridPane"><div class="stNav"><button data-tab="general" class="active" data-de="Allgemein" data-en="General">Allgemein</button><button data-tab="appearance" data-de="Aussehen" data-en="Appearance">Aussehen</button><button data-tab="shortcuts" data-de="Tastenkürzel" data-en="Shortcuts">Tastenkürzel</button><button data-tab="privacy" data-de="Datenschutz" data-en="Privacy">Datenschutz</button></div><div class="stPane active" data-pane="general"><label><input type="checkbox" id="stDark"> Dunkles Design</label><label><input type="checkbox" id="stScan"> Scanlines</label><label>Sprache: <select id="stLang"><option value="de">Deutsch</option><option value="en">English</option></select></label><label style="margin-top:8px"><button class="btn-ghost" id="stRegisterSW">PWA Service Worker registrieren</button></label></div><div class="stPane" data-pane="appearance" id="stAppearance"></div><div class="stPane" data-pane="shortcuts" id="stShortcuts"></div><div class="stPane" data-pane="privacy" id="stPrivacy"></div></div>';
       break;
     case 'links':
       body = '<div class="clPane" id="clPane"></div>';
@@ -4563,7 +4576,11 @@
       bpmWrap.appendChild(bpmLabel);
       const bpmInput = document.createElement('input');
       bpmInput.type = 'number';
-      bpmInput.id = 'beatpadBpm';
+      /* Own id: the header already carries a #beatpadBpm SELECT, and two
+       * controls with one id drift apart — measured in Chromium 2026-09-30,
+       * typing here set SEQ.bpm=200 while the select kept showing 120, and
+       * neither wrote back to the other. */
+      bpmInput.id = 'beatpadBpmNum';
       bpmInput.className = 'beatpad-bpm';
       bpmInput.value = SEQ.bpm;
       bpmInput.min = 40;
@@ -4572,7 +4589,16 @@
       bpmInput.style.fontSize = '10px';
       bpmInput.addEventListener('change', function () {
         const v = parseInt(this.value);
-        if (v >= 40 && v <= 300) SEQ.bpm = v;
+        if (v >= 40 && v <= 300) {
+          SEQ.bpm = v;
+          /* Keep the preset select in step — otherwise the two controls show
+           * two different tempos and the user cannot tell which is live. */
+          const sel = header.querySelector('#beatpadBpm');
+          if (sel) {
+            const matching = Array.prototype.some.call(sel.options, (o) => o.value === String(v));
+            sel.value = matching ? String(v) : sel.value;
+          }
+        }
         this.value = SEQ.bpm;
       });
       bpmWrap.appendChild(bpmInput);
@@ -4845,7 +4871,14 @@
     };
 
     function initEqualizer() {
-      const eq = document.getElementById('musEq');
+      /* #musEq is used twice in the music markup: the EQ TAB (a .musExtra
+       * container that also holds the visualizer canvas) and the slider grid
+       * inside it. getElementById returned the tab, so `eq.innerHTML = ''`
+       * deleted the canvas outright — after opening Music, #musVisualizer did
+       * not exist any more. Scoping to the tab's own child is what the builder
+       * actually means. Measured in Chromium 2026-09-30. */
+      const tab = document.getElementById('musEq');
+      const eq = tab ? tab.querySelector('.musEq') : null;
       if (!eq) return;
       eq.innerHTML = '';
 
@@ -5927,8 +5960,16 @@
     const prevBtn = document.createElement('button');
     prevBtn.className = 'cBtn op';
     prevBtn.textContent = 'Preview';
-    const preview = document.createElement('div');
-    preview.id = 'mdPrev';
+    /* The markup already ships a #mdPrev container; using it keeps ONE preview
+     * element. It used to be #mdPreview, which collided with the toolbar's
+     * Preview button, so querySelector('#mdPreview') returned the button. */
+    const preview =
+      document.getElementById('mdPrev') || (() => {
+        const el = document.createElement('div');
+        el.id = 'mdPrev';
+        return el;
+      })();
+    preview.className = 'mdPreview';
     preview.style.cssText =
       'display:none;padding:8px;border:2px solid var(--line);background:var(--paper);margin-top:4px;max-height:200px;overflow-y:auto';
     prevBtn.addEventListener('click', function () {
@@ -5948,7 +5989,22 @@
     tb.appendChild(expBtn);
     tb.appendChild(prevBtn);
     body.appendChild(tb);
-    body.appendChild(preview);
+    /* The preview box must NOT live inside #mdBody. Every toolbar command that
+     * rewrites the document (and the user typing with a stray Ctrl+A + Delete)
+     * sets or clears mdBody.innerHTML, which took the box with it — after that
+     * the Preview button had nothing to show. Measured in Chromium 2026-09-30:
+     * after one mdQuote click, `#mdPrev` was gone and the next four commands
+     * threw `TypeError: Cannot set properties of null`.
+     * It sits as a sibling of mdBody inside the window body. */
+    if (preview.parentElement !== body.parentElement || !preview.parentElement) {
+      (body.parentElement || body.closest('.wbody') || body).appendChild(preview);
+    }
+
+    /* Restore the saved document and the font size. */
+    try {
+      const saved = localStorage.getItem('md_content');
+      if (saved) body.innerHTML = saved;
+    } catch (e) {}
   }
 
   /* Settings-Import: nur definierte Präferenz-Keys dürfen geschrieben werden */
@@ -5956,7 +6012,7 @@
 
   /* Settings — S1+S2: 4 Tabs (Allgemein, Aussehen, Tastenkürzel, Datenschutz) */
   function buildSettings() {
-    const pane = document.getElementById('stGrid');
+    const pane = document.getElementById('stGridPane');
     if (!pane) return;
     /* Tab Navigation */
     const nav = pane.querySelector('.stNav');
@@ -6243,10 +6299,16 @@
       if (gridEl) gridEl.checked = !(deskIcons && !deskIcons.classList.contains('show-grid'));
       gridLabel.addEventListener('change', function () {
         const desk = document.getElementById('deskIcons');
-        if (desk) {
-          desk.classList.toggle('show-grid', document.getElementById('stGrid').checked);
+        /* Read through gridEl, NOT document.getElementById('stGrid'): the pane
+         * container carries the same id and comes first in the document, so the
+         * global lookup returns the DIV. Its `.checked` is undefined, which made
+         * `classList.toggle(klass, undefined)` flip instead of set and wrote
+         * os_grid='0' on every click — the setting died with the window.
+         * Measured in Chromium 2026-09-30. */
+        if (desk && gridEl) {
+          desk.classList.toggle('show-grid', gridEl.checked);
           try {
-            localStorage.setItem('os_grid', document.getElementById('stGrid').checked ? '1' : '0');
+            localStorage.setItem('os_grid', gridEl.checked ? '1' : '0');
           } catch (e) {}
         }
       });
@@ -6280,11 +6342,10 @@
       try {
         const gd = localStorage.getItem('os_grid');
         if (gd === '0') {
-          /* This block runs after grid.appendChild(gridLabel), so the global
-           * lookup works here — but the same control is reached through
-           * gridEl above, so keep both paths on the one element. */
-          const gdEl = gridEl || document.getElementById('stGrid');
-          if (gdEl) gdEl.checked = false;
+          /* The same control is reached through gridEl on both paths. The
+           * global fallback is gone on purpose: #stGrid resolves to the pane
+           * container, never to this checkbox. */
+          if (gridEl) gridEl.checked = false;
           const desk = document.getElementById('deskIcons');
           if (desk) desk.classList.remove('show-grid');
         }
@@ -7513,9 +7574,14 @@
     const ieRotateWrap = document.createElement('label');
     ieRotateWrap.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:10px';
     ieRotateWrap.innerHTML =
-      'Drehen: <input type="range" id="ieRotate" min="0" max="360" value="0" style="width:60px"><span id="ieRotateVal">0°</span>';
+      'Drehen: <input type="range" id="ieRotateSlider" min="0" max="360" value="0" style="width:60px"><span id="ieRotateVal">0°</span>';
     toolbar.appendChild(ieRotateWrap);
-    document.getElementById('ieRotate').addEventListener('input', function () {
+    /* Reach the slider through the wrapper that owns it. The Rotate BUTTON used
+     * to carry the same id, and it comes first in the toolbar — so this lookup
+     * returned the button, whose `input` never fires. The slider showed a value
+     * that the canvas ignored and the degree label stayed at 0°.
+     * Measured in Chromium 2026-09-30. */
+    ieRotateWrap.querySelector('#ieRotateSlider').addEventListener('input', function () {
       drawState.rotation = parseInt(this.value);
       document.getElementById('ieRotateVal').textContent = this.value + '°';
       applyFilters();
