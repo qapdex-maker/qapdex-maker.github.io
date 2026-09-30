@@ -10,7 +10,7 @@ https://docs.github.com/de/pages/quickstart
 
 ## Seiten
 - Portal-Root `index.html` = Portal
-- `macrohard/` = MakerOS — Neo-Brutalist Windows-Style Desktop OS (25 Apps, v2.11.53, Mobile-optimiert)
+- `macrohard/` = MakerOS — Neo-Brutalist Windows-Style Desktop OS (25 Apps, v2.11.54, Mobile-optimiert)
 - `idun/` = idun console
 - `msgraph/react/` = Graph Metadata Hub (5 Tabs + Skizzen-Panel)
 - `catpop/` = CatPop Meme/Announcement
