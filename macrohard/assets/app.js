@@ -6000,6 +6000,149 @@
       (body.parentElement || body.closest('.wbody') || body).appendChild(preview);
     }
 
+    /* ================= Toolbar =================
+     * The toolbar ships ten controls (mdBold … mdPreview). Until 2026-09-30
+     * none of them was wired: each id appeared exactly once in the file, in the
+     * openApp() markup. They rendered, they accepted clicks, nothing happened.
+     * Measured in Chromium with a selection over a text node: `boldWirkt:
+     * false`, innerHTML byte-identical before and after.
+     *
+     * The extra bar built just above (Export .md + Preview, id mdPrev) was the
+     * only working pair, which is why the app looked plausible. That bar stays;
+     * the toolbar now does what its labels promise.
+     */
+
+    /** Runs document.execCommand on the current selection. */
+    function inline(cmd) {
+      body.focus();
+      document.execCommand(cmd, false, null);
+    }
+
+    function wrapSelection(before, after, placeholder) {
+      body.focus();
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+        // Nothing selected: insert the markers so the user can type inside.
+        document.execCommand('insertText', false, placeholder);
+        return;
+      }
+      const range = sel.getRangeAt(0);
+      if (!body.contains(range.commonAncestorContainer)) return;
+      const text = range.toString();
+      range.deleteContents();
+      const node = document.createTextNode(before + text + after);
+      range.insertNode(node);
+      // Put the cursor between the markers.
+      range.setStart(node, before.length);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    /** Replaces the current line (or block) with a markdown heading. */
+    function makeHeading() {
+      body.focus();
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      let range = sel.getRangeAt(0);
+      // Walk out to the whole line/block.
+      const line = range.startContainer;
+      const block = line.nodeType === 3 ? line.parentElement : line;
+      if (!block) return;
+      const r = document.createRange();
+      r.selectNodeContents(block);
+      range = r;
+      const text = range.toString();
+      /* Strip an existing markdown marker first, then re-apply the new level.
+       * Otherwise the heading ends up as `<h2>## Text</h2>` — the marker twice,
+       * once semantic and once literal. Measured in Chromium 2026-09-30. */
+      const existing = text.match(/^\s*(#{1,6})\s+/);
+      const level = existing ? Math.min(existing[1].length + 1, 6) : 2;
+      const stripped = existing ? text.replace(/^\s*#{1,6}\s+/, '') : text;
+      const h = document.createElement('h' + level);
+      h.textContent = stripped;
+      block.replaceWith(h);
+    }
+
+    function quoteSelection() {
+      body.focus();
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      let block = range.startContainer;
+      if (block.nodeType === 3) block = block.parentElement;
+      if (!block || block.tagName === 'BLOCKQUOTE') return;
+      const q = document.createElement('blockquote');
+      q.innerHTML = block.innerHTML.replace(/(^|\n)(?!\n>)/g, '$1> ');
+      block.replaceWith(q);
+    }
+
+    function listSelection(ordered) {
+      body.focus();
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      let block = range.startContainer;
+      if (block.nodeType === 3) block = block.parentElement;
+      if (!block) return;
+      const list = document.createElement(ordered ? 'ol' : 'ul');
+      const items = block.innerHTML.split(/\n{2,}|\n/).filter((line) => line.trim());
+      const source = items.length ? items : [block.innerHTML];
+      source.forEach((line) => {
+        const li = document.createElement('li');
+        li.textContent = line.replace(/^\s*([-*+]|\d+\.)\s+/, '');
+        list.appendChild(li);
+      });
+      block.replaceWith(list);
+    }
+
+    /* Look the controls up inside the toolbar, not globally: the window can
+     * hold more than one Docs window, and a global id lookup would wire the
+     * buttons of whichever one happens to come first in the document. */
+    const toolbar = document.querySelector('#w-docs .mdToolbar') || body.closest('.wbody');
+    const bind = (id, fn) => {
+      const el = (toolbar && toolbar.querySelector('#' + id)) || document.getElementById(id);
+      if (el) el.addEventListener('click', fn);
+    };
+
+    bind('mdBold', () => inline('bold'));
+    bind('mdItalic', () => inline('italic'));
+    bind('mdHeading', makeHeading);
+    bind('mdQuote', quoteSelection);
+    bind('mdList', () => listSelection(false));
+    bind('mdCode', () => wrapSelection('`', '`', 'code'));
+    bind('mdLink', () => wrapSelection('[', '](https://)', 'link text'));
+    bind('mdSave', () => {
+      storeSet('md_content', body.innerHTML);
+      toast('Gespeichert');
+    });
+    bind('mdExport', () => {
+      const blob = new Blob([body.innerText], { type: 'text/markdown' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'docs.md';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast('.md exportiert');
+    });
+    bind('mdPreview', () => {
+      // Same behaviour as the working Preview button, one state.
+      if (preview.style.display === 'none') {
+        preview.innerHTML = body.innerText
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\n/g, '<br>');
+        preview.style.display = 'block';
+        prevBtn.textContent = 'Edit';
+        prevBtn.classList.add('active');
+      } else {
+        preview.style.display = 'none';
+        prevBtn.textContent = 'Preview';
+        prevBtn.classList.remove('active');
+      }
+    });
+
     /* Restore the saved document and the font size. */
     try {
       const saved = localStorage.getItem('md_content');
