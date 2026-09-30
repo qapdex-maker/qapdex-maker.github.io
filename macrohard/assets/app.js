@@ -6039,61 +6039,68 @@
       sel.addRange(range);
     }
 
-    /** Replaces the current line (or block) with a markdown heading. */
+    /** Raises the markdown heading level of the current block.
+     *
+     * Writes markdown TEXT, not an <h1>-<h6> element: Docs is a markdown
+     * editor and every other command (code, link) inserts markers rather than
+     * tags. Mixing an HTML heading into the source would show up verbatim in
+     * the .md export and be swallowed by the preview.
+     */
     function makeHeading() {
       body.focus();
       const sel = window.getSelection();
       if (!sel || sel.rangeCount === 0) return;
-      let range = sel.getRangeAt(0);
-      // Walk out to the whole line/block.
-      const line = range.startContainer;
-      const block = line.nodeType === 3 ? line.parentElement : line;
+      const start = sel.getRangeAt(0).startContainer;
+      const block = start.nodeType === 3 ? start.parentElement : start;
       if (!block) return;
-      const r = document.createRange();
-      r.selectNodeContents(block);
-      range = r;
-      const text = range.toString();
-      /* Strip an existing markdown marker first, then re-apply the new level.
-       * Otherwise the heading ends up as `<h2>## Text</h2>` — the marker twice,
-       * once semantic and once literal. Measured in Chromium 2026-09-30. */
+      /* Strip an existing marker before adding the next one, so repeated
+       * presses walk ## -> ### -> ... instead of stacking `## ## Text`.
+       * Measured in Chromium 2026-09-30, where the marker ended up twice:
+       * once semantic and once literal. */
+      const text = block.textContent || '';
       const existing = text.match(/^\s*(#{1,6})\s+/);
       const level = existing ? Math.min(existing[1].length + 1, 6) : 2;
       const stripped = existing ? text.replace(/^\s*#{1,6}\s+/, '') : text;
-      const h = document.createElement('h' + level);
-      h.textContent = stripped;
-      block.replaceWith(h);
+      block.textContent = '#'.repeat(level) + ' ' + stripped;
     }
 
     function quoteSelection() {
       body.focus();
       const sel = window.getSelection();
       if (!sel || sel.rangeCount === 0) return;
-      const range = sel.getRangeAt(0);
-      let block = range.startContainer;
+      let block = sel.getRangeAt(0).startContainer;
       if (block.nodeType === 3) block = block.parentElement;
-      if (!block || block.tagName === 'BLOCKQUOTE') return;
-      const q = document.createElement('blockquote');
-      q.innerHTML = block.innerHTML.replace(/(^|\n)(?!\n>)/g, '$1> ');
-      block.replaceWith(q);
+      if (!block) return;
+      /* Markdown text, not a <blockquote> element — same reason as
+       * makeHeading(): the .md export would otherwise contain HTML. */
+      const text = block.textContent || '';
+      const quoted = text
+        .split('\n')
+        .map((line) => (line.trim() ? '> ' + line.replace(/^\s*>\s?/, '') : line))
+        .join('\n');
+      block.textContent = quoted;
     }
 
     function listSelection(ordered) {
       body.focus();
       const sel = window.getSelection();
       if (!sel || sel.rangeCount === 0) return;
-      const range = sel.getRangeAt(0);
-      let block = range.startContainer;
+      let block = sel.getRangeAt(0).startContainer;
       if (block.nodeType === 3) block = block.parentElement;
       if (!block) return;
-      const list = document.createElement(ordered ? 'ol' : 'ul');
-      const items = block.innerHTML.split(/\n{2,}|\n/).filter((line) => line.trim());
-      const source = items.length ? items : [block.innerHTML];
-      source.forEach((line) => {
-        const li = document.createElement('li');
-        li.textContent = line.replace(/^\s*([-*+]|\d+\.)\s+/, '');
-        list.appendChild(li);
-      });
-      block.replaceWith(list);
+      /* Markdown text, not a <ul>/<ol> element. Blank lines separate items
+       * because a plain textContent has no <br> to break on. */
+      const marker = ordered ? /^\s*\d+\.\s+/ : /^\s*([-*+])\s+/;
+      const text = block.textContent || '';
+      const lines = text.split(/\n{2,}|\n/).filter((line) => line.trim());
+      const source = lines.length ? lines : [text];
+      let n = 1;
+      block.textContent = source
+        .map((line) => {
+          const clean = line.replace(marker, '');
+          return (ordered ? n++ + '. ' : '- ') + clean;
+        })
+        .join('\n\n');
     }
 
     /* Look the controls up inside the toolbar, not globally: the window can
