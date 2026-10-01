@@ -76,7 +76,7 @@ const I18N = {
     ref_ph: 'Endpoint suchen (z.B. /me, team)…', ref_open: '↗ rohe Spec öffnen',
     console: 'Semantics Console', console_hint: 'Gib natürliche Sprache oder einen Endpoint ein → curl + idun-Befehl.',
     nl: 'Natürliche Sprache', nl_btn: 'NL → Graph', endpoint: 'Endpoint', nl_ph: 'z.B. alle Teams des Users',
-    llm: 'LLM-Modus', llm_key_ph: 'API-Key (bleibt lokal, nie an unseren Server)', llm_btn: 'NL → Graph (LLM)', llm_busy: 'LLM wird gefragt…', llm_err: 'LLM fehlgeschlagen — Heuristik genutzt', llm_hint: 'Optional: eigener API-Key des gewählten Anbieters für NL→Graph. Key bleibt im Browser (sessionStorage), nie committet oder an uns gesendet. Ohne Key Fallback auf die Stichwort-Heuristik.',
+    llm: 'LLM-Modus', llm_key_ph: 'Key einfügen', llm_btn: 'NL → Graph (LLM)', llm_busy: 'LLM wird gefragt…', llm_err: 'LLM fehlgeschlagen — Heuristik genutzt', llm_hint: 'Optional: eigener API-Key des gewählten Anbieters für NL→Graph. Key bleibt im Browser (sessionStorage), nie committet oder an uns gesendet. Ohne Key Fallback auf die Stichwort-Heuristik.',
     // Provider-neutral NL→Graph (2026-10-01). Four values were hard-wired to
     // OpenRouter; now they are chosen. Every key here needs an EN twin, or
     // the raw key leaks into the UI — the F3 'llm' bug again.
@@ -141,7 +141,7 @@ const I18N = {
     ref_ph: 'Search endpoint (e.g. /me, team)…', ref_open: '↗ open raw spec',
     console: 'Semantics Console', console_hint: 'Enter natural language or an endpoint → curl + idun command.',
     nl: 'Natural Language', nl_btn: 'NL → Graph', endpoint: 'Endpoint', nl_ph: 'e.g. all teams of the user',
-    llm: 'LLM mode', llm_key_ph: 'API key (stay local, never sent to our server)', llm_btn: 'NL → Graph (LLM)', llm_busy: 'asking LLM…', llm_err: 'LLM failed — used heuristic', llm_hint: 'Optional: paste your own key for the selected provider to map NL via an LLM. Key stays in your browser (sessionStorage), never committed or sent to us. Falls back to the keyword heuristic without a key.',
+    llm: 'LLM mode', llm_key_ph: 'paste key', llm_btn: 'NL → Graph (LLM)', llm_busy: 'asking LLM…', llm_err: 'LLM failed — used heuristic', llm_hint: 'Optional: paste your own key for the selected provider to map NL via an LLM. Key stays in your browser (sessionStorage), never committed or sent to us. Falls back to the keyword heuristic without a key.',
     llm_prov: 'Provider', llm_model: 'Model', llm_model_ph: 'e.g. poolside/laguna-s-2.1:free',
     llm_key: 'API key',
     llm_key_set: 'Set key', llm_key_ok: 'Key stored (this session only)',
