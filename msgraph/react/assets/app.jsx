@@ -77,6 +77,15 @@ const I18N = {
     console: 'Semantics Console', console_hint: 'Gib natürliche Sprache oder einen Endpoint ein → curl + idun-Befehl.',
     nl: 'Natürliche Sprache', nl_btn: 'NL → Graph', endpoint: 'Endpoint', nl_ph: 'z.B. alle Teams des Users',
     llm: 'LLM-Modus (OpenRouter)', llm_key_ph: 'OpenRouter API-Key (bleibt lokal, nie an unseren Server)', llm_btn: 'NL → Graph (LLM)', llm_busy: 'LLM wird gefragt…', llm_err: 'LLM fehlgeschlagen — Heuristik genutzt', llm_hint: 'Optional: eigener OpenRouter-Key für NL→Graph via LLM. Key bleibt im Browser (sessionStorage), nie committet oder an uns gesendet. Ohne Key Fallback auf die Stichwort-Heuristik.',
+    // Provider-neutral NL→Graph (2026-10-01). Four values were hard-wired to
+    // OpenRouter; now they are chosen. Every key here needs an EN twin, or
+    // the raw key leaks into the UI — the F3 'llm' bug again.
+    llm_prov: 'Anbieter', llm_model: 'Modell', llm_model_ph: 'z.B. poolside/laguna-s-2.1:free',
+    llm_key_set: 'Key setzen', llm_key_ok: 'Key gespeichert (nur diese Sitzung)',
+    llm_probe: 'Verbindung testen', llm_probe_ok: 'Antwort erhalten', llm_probe_busy: 'teste…',
+    llm_free_hint: 'Nous Portal: 6 Modelle sind kostenlos, eines antwortet zuverlässig (Stand 2026-10-01).',
+    llm_listed: 'Katalog', llm_listed_n: 'Modelle', llm_free: 'kostenlos', llm_list_busy: 'lade Katalog…',
+    llm_busy_full: 'Modell gerade ausgelastet (nicht dein Limit) — kurz warten', llm_probe_left: 'Rest',
     perm: 'Permission Intelligence', perm_hint: 'Kuratiert (OpenAPI hier hat keine strukturierten scopes). Jede Permission mit least-privilege-Empfehlung.',
     perm_ph: 'Permission suchen…',
     radar: 'Breaking-Change Radar', radar_hint: 'Echte Deprecations aus den Metadaten (x-ms-deprecation).',
@@ -129,6 +138,12 @@ const I18N = {
     console: 'Semantics Console', console_hint: 'Enter natural language or an endpoint → curl + idun command.',
     nl: 'Natural Language', nl_btn: 'NL → Graph', endpoint: 'Endpoint', nl_ph: 'e.g. all teams of the user',
     llm: 'LLM mode (OpenRouter)', llm_key_ph: 'OpenRouter API key (stay local, never sent to our server)', llm_btn: 'NL → Graph (LLM)', llm_busy: 'asking LLM…', llm_err: 'LLM failed — used heuristic', llm_hint: 'Optional: paste your own OpenRouter key to map NL via an LLM. Key stays in your browser (sessionStorage), never committed or sent to us. Falls back to the keyword heuristic without a key.',
+    llm_prov: 'Provider', llm_model: 'Model', llm_model_ph: 'e.g. poolside/laguna-s-2.1:free',
+    llm_key_set: 'Set key', llm_key_ok: 'Key stored (this session only)',
+    llm_probe: 'Test connection', llm_probe_ok: 'got a reply', llm_probe_busy: 'testing…',
+    llm_free_hint: 'Nous Portal: six models are free, one answers reliably (as of 2026-10-01).',
+    llm_listed: 'Catalogue', llm_listed_n: 'models', llm_free: 'free', llm_list_busy: 'loading catalogue…',
+    llm_busy_full: 'model at capacity right now (not your limit) — wait a moment', llm_probe_left: 'left',
     perm: 'Permission Intelligence', perm_hint: 'Curated (the OpenAPI here has no structured scopes). Least-privilege note per permission.',
     perm_ph: 'Search permission…',
     radar: 'Breaking-Change Radar', radar_hint: 'Real deprecations from the metadata (x-ms-deprecation).',
@@ -288,9 +303,49 @@ function ConsolePanel({ t }) {
   const [epq, setEpq] = useState('');
   const [idx, setIdx] = useState(null);
   const [sug, setSug] = useState([]);
-  const [llmKey, setLlmKey] = useState(() => sessionStorage.getItem('or_key') || '');
+  // One key per provider, each under its own sessionStorage name. A single
+  // shared 'or_key' would have been wrong the moment a second provider
+  // existed: pasting a Nous key over an OpenRouter key silently swapped
+  // credentials, and both are sent to a third-party host.
+  const [llmProv, setLlmProv] = useState(() => sessionStorage.getItem('llm_prov') || 'openrouter');
+  const [llmModel, setLlmModel] = useState(() => sessionStorage.getItem('llm_model') || LLM_PROVIDERS[sessionStorage.getItem('llm_prov') || 'openrouter']?.model || '');
+  const [llmKeys, setLlmKeys] = useState(() => {
+    const o = {};
+    for (const id of LLM_PROVIDER_IDS) o[id] = sessionStorage.getItem(LLM_PROVIDERS[id].keyName) || '';
+    return o;
+  });
   const [llmBusy, setLlmBusy] = useState(false);
-  const [llmErr, setLlmErr] = useState(false);
+  const [llmErr, setLlmErr] = useState(null);
+  const [probe, setProbe] = useState(null);
+  const [cat, setCat] = useState(null);
+
+  const prov = LLM_PROVIDERS[llmProv] || LLM_PROVIDERS.openrouter;
+  const llmKey = llmKeys[llmProv] || '';
+
+  function setProv(id) {
+    setLlmProv(id);
+    sessionStorage.setItem('llm_prov', id);
+    // The model belongs to the provider. Carrying OpenRouter's model name to
+    // Nous would produce a 404 on the first call, so reset to that
+    // provider's default unless the user overrode it for this provider.
+    const p = LLM_PROVIDERS[id];
+    if (p) {
+      setLlmModel(p.model);
+      sessionStorage.setItem('llm_model', p.model);
+    }
+    setProbe(null);
+    setCat(null);
+  }
+  function setModel(m) {
+    setLlmModel(m);
+    sessionStorage.setItem('llm_model', m);
+  }
+  function setKey(id, v) {
+    setLlmKeys((prev) => ({ ...prev, [id]: v }));
+    if (v) sessionStorage.setItem(LLM_PROVIDERS[id].keyName, v);
+    else sessionStorage.removeItem(LLM_PROVIDERS[id].keyName);
+    setProbe(null);
+  }
 
   // Off-thread load (same strategy as Reference): reach the index JSON via an
   // absolute URL through the worker so the 2.5 MB parse never hits the UI thread.
@@ -320,38 +375,112 @@ function ConsolePanel({ t }) {
     const idun = `idun graph call ${method} ${path}`;
     return { curl, idun };
   }
-  async function callOpenRouter(query, key) {
-    // Direct browser call (OpenRouter allows CORS for browser clients). The key
-    // never leaves the user's browser sessionStorage; it is NOT sent to our
-    // static Pages host. Falls back to the heuristic on any failure.
-    const SYSTEM = 'You map a natural-language request to a Microsoft Graph v1.0 call. ' +
-      'Respond with ONLY strict JSON: {"method":"GET|POST|...","path":"/me/...","perm":"Scope.Read","reason":"short"} ' +
-      'Pick the closest real v1.0 endpoint. If unsure, use /me.';
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  /* Test the connection with the CURRENT provider, model and key.
+ *
+ * A bare "it failed" is not a diagnosis. Measured 2026-10-01 against Nous:
+ * a PAID model answers 404 + insufficient_credits_for_paid_model while the
+ * key is perfectly valid, and a FREE model at upstream capacity answers
+ *
+ *   429 "The requested model is temporarily at capacity upstream.
+ *        This is not your API key's rate limit — please retry shortly."
+ *   retry-after: 30
+ *   x-ratelimit-remaining-requests: 47   <- budget untouched
+ *
+ * Those two look identical in the UI ("it failed") and need opposite
+ * responses: the first means "pick another model", the second means "wait 30
+ * seconds". So the probe reports the status, the code AND the retry-after,
+ * rather than collapsing both into one "error". */
+async function probeLLM(providerId, model, key) {
+  if (!key) return { ok: false, msg: 'kein Key' };
+  const p = LLM_PROVIDERS[providerId];
+  const t0 = performance.now();
+  try {
+    const res = await fetch(p.base + p.chat, {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'openai/gpt-4o-mini',
-        messages: [{ role: 'system', content: SYSTEM }, { role: 'user', content: query }],
-        response_format: { type: 'json_object' },
-        temperature: 0,
+        model,
+        messages: [{ role: 'user', content: 'Antworte mit genau dem Wort: OK' }],
+        max_tokens: 8,
       }),
     });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    const txt = data?.choices?.[0]?.message?.content || '';
-    const j = JSON.parse(txt);
-    if (!j.path) throw new Error('no path');
-    return { method: (j.method || 'GET').toUpperCase(), path: j.path, perm: j.perm || '', reason: 'llm' };
+    const ms = Math.round(performance.now() - t0);
+    const hdr = {};
+    res.headers.forEach((v, k) => { hdr[k.toLowerCase()] = v; });
+    if (!res.ok) {
+      let code = '', msg = '';
+      try {
+        const b = await res.json();
+        code = b.code || b.error?.message || '';
+        msg = b.message || b.error?.message || '';
+      } catch { /* not JSON */ }
+      return {
+        ok: false,
+        status: res.status,
+        ms,
+        code: String(code).slice(0, 90),
+        msg: String(msg).slice(0, 160),
+        retryAfter: hdr['retry-after'] || null,
+        // Distinguish "your key is limited" from "the model is busy". Only the
+        // remaining-budget headers tell them apart, and the difference decides
+        // whether retrying is worth anything.
+        remaining: hdr['x-ratelimit-remaining-requests'] || null,
+      };
+    }
+    const j = await res.json();
+    return {
+      ok: true, ms, txt: (j?.choices?.[0]?.message?.content || '').slice(0, 40),
+      cost: j?.usage?.cost,
+      rpm: hdr['x-ratelimit-limit-requests'],
+      rph: hdr['x-ratelimit-limit-requests-1h'],
+      tph: hdr['x-ratelimit-limit-tokens-1h'],
+      free: hdr['x-nous-credits-paid-access'] === 'false',
+    };
+  } catch (e) {
+    return { ok: false, msg: String(e).slice(0, 90), ms: Math.round(performance.now() - t0) };
   }
+}
+
+/* The provider's own catalogue, so the model field is not a guess.
+ *
+ * Only Nous needs this: /models costs nothing, returns pricing per model, and
+ * `pricing.prompt == "0"` is the ONLY reliable free marker — there is no
+ * is_free field (measured 2026-10-01, 427 models, 6 with pricing 0). */
+async function loadCatalog(providerId, key) {
+  const p = LLM_PROVIDERS[providerId];
+  const res = await fetch(p.base + '/models', { headers: { 'Authorization': 'Bearer ' + key } });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const j = await res.json();
+  const data = j.data || j.models || [];
+  const free = data.filter((m) => {
+    const pr = m.pricing || {};
+    return String(pr.prompt) === '0' && String(pr.completion) === '0';
+  });
+  return {
+    total: data.length,
+    free: free.map((m) => m.id).sort(),
+    // Only free ones are useful without credits, so the picker offers those
+    // plus whatever the user typed. 421 paid names would be noise.
+    paidSample: data.filter((m) => {
+      const pr = m.pricing || {};
+      return String(pr.prompt) !== '0';
+    }).slice(0, 6).map((m) => m.id),
+  };
+}
 
   function runNl() {
-    setLlmErr(false);
+    setLlmErr(null);
     if (llmKey && nl.trim()) {
       setLlmBusy(true);
-      callOpenRouter(nl, llmKey)
+      callLLM(llmProv, nl, llmKey)
         .then(r => { setEp({ method: r.method, path: r.path, kind: 'nl', reason: 'llm', perm: r.perm }); })
-        .catch(() => { setLlmErr(true); const r = nlMap(nl); setEp({ method: r.method, path: r.path, kind: 'nl', reason: r.reason, perm: r.perm }); })
+        .catch((e) => {
+          // Keep the reason. "LLM failed" without the cause is what made the
+          // old OpenRouter-only path impossible to debug from the UI.
+          setLlmErr(String(e.message || e).slice(0, 120));
+          const r = nlMap(nl);
+          setEp({ method: r.method, path: r.path, kind: 'nl', reason: r.reason, perm: r.perm });
+        })
         .finally(() => setLlmBusy(false));
       return;
     }
@@ -384,12 +513,61 @@ function ConsolePanel({ t }) {
           <label className="lbl">{t.nl}</label>
           <textarea id="nlInput" value={nl} onChange={e => setNl(e.target.value)} placeholder={t.nl_ph} />
           <button className="primary" onClick={runNl} disabled={llmBusy}>{llmBusy ? t.llm_busy : t.nl_btn}</button>
+
+          {/* Provider-neutral NL→Graph. Provider, model and key are all
+              chosen here; nothing about OpenRouter is baked in any more. */}
           <div className="llm-row">
-            <input type="password" className="epinput" placeholder={t.llm_key_ph} value={llmKey}
-              onChange={e => { setLlmKey(e.target.value); sessionStorage.setItem('or_key', e.target.value); }} />
-            <button className="ghost" onClick={runNl} disabled={llmBusy || !llmKey}>{t.llm_btn}</button>
+            <label className="lbl">{t.llm_prov}</label>
+            <div className="radar-controls">
+              {LLM_PROVIDER_IDS.map((id) => (
+                <button key={id} className={'reftab' + (llmProv === id ? ' active' : '')}
+                  onClick={() => setProv(id)} aria-pressed={llmProv === id}>{LLM_PROVIDERS[id].label}</button>
+              ))}
+            </div>
+            <label className="lbl">{t.llm_model}</label>
+            <input className="epinput" value={llmModel} placeholder={t.llm_model_ph}
+              onChange={e => setModel(e.target.value)} />
+            {cat && (
+              <div className="suggest">
+                {cat.free.map((m) => (
+                  <div className="s" key={m} onClick={() => setModel(m)}>
+                    {m} <span className="badge">{t.llm_free}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {llmProv === 'nous' && <p className="hint">{t.llm_free_hint}</p>}
+            <label className="lbl">{prov.label} {t.llm}</label>
+            <input type="password" className="epinput" value={llmKey} placeholder={t.llm_key_ph}
+              onChange={e => setKey(llmProv, e.target.value)} />
+            <div className="llm-row">
+              <button className="ghost" onClick={runNl} disabled={llmBusy || !llmKey}>{t.llm_btn}</button>
+              <button className="ghost" disabled={llmBusy || !llmKey}
+                onClick={() => { setProbe({ busy: true }); probeLLM(llmProv, llmModel, llmKey).then(setProbe); }}>
+                {probe && probe.busy ? t.llm_probe_busy : t.llm_probe}
+              </button>
+              <button className="ghost" disabled={!llmKey || (cat && cat.busy)}
+                onClick={() => { setCat({ busy: true }); loadCatalog(llmProv, llmKey).then(setCat).catch((e) => setCat({ err: String(e.message || e) })); }}>
+                {cat && cat.busy ? t.llm_list_busy : t.llm_listed}
+              </button>
+            </div>
           </div>
-          {llmErr && <p className="hint err">{t.llm_err}</p>}
+          {llmErr && <p className="hint err">{t.llm_err}: {llmErr}</p>}
+          {probe && !probe.busy && (
+            probe.ok
+              ? <p className="hint ok">{t.llm_probe_ok} ({probe.ms} ms{probe.cost === 0 ? ', cost 0' : ''}{probe.free ? ', ' + t.llm_free : ''}{probe.rph ? ', ' + probe.rph + '/h' : ''}) → “{probe.txt}”</p>
+              /* A 429 with a full remaining-budget is UPSTREAM CAPACITY, not
+                 our limit — measured 2026-10-01, retry-after: 30, remaining 47.
+                 Saying "failed" there would be wrong: retrying works, changing
+                 the key would not, and only the headers tell them apart. */
+              : probe.status === 429
+                ? <p className="hint err">{t.llm_busy_full} {probe.retryAfter ? '(' + probe.retryAfter + 's)' : ''}{probe.remaining ? ' · ' + probe.remaining + ' ' + t.llm_probe_left : ''}</p>
+                : <p className="hint err">{t.llm_err}: {probe.code || probe.msg || ('HTTP ' + probe.status)}</p>
+          )}
+          {cat && !cat.busy && cat.err && <p className="hint err">{cat.err}</p>}
+          {cat && !cat.busy && !cat.err && (
+            <p className="hint">{cat.total} {t.llm_listed_n} · {cat.free.length} {t.llm_free}</p>
+          )}
           <p className="hint">{t.llm_hint}</p>
           <label className="lbl">{t.endpoint}</label>
           <input className="epinput" placeholder="/me" value={epq} onChange={e => onEpInput(e.target.value)} />
@@ -406,6 +584,134 @@ function ConsolePanel({ t }) {
       </div>
     </div>
   );
+}
+
+/* ---------- LLM providers for NL→Graph ----------
+ *
+ * Four things were hard-wired to OpenRouter before: the endpoint, the model,
+ * the key's storage name ('or_key'), and the response path. Changing any of
+ * them meant editing the source, so nobody could use the one provider that
+ * costs nothing.
+ *
+ * A provider is now: a base URL, a model, and where to read the answer out of
+ * the response. Everything else — the key, the failure behaviour, the
+ * heuristic fallback — is shared.
+ *
+ * MEASURED 2026-10-01 against the live APIs, not copied from docs:
+ *
+ *   Nous Portal   GET  {base}/models            -> 200, 427 models
+ *                 POST {base}/chat/completions  -> 200, choices[0].message
+ *                 no CORS preflight problem, OpenAI-shaped
+ *                 free models have pricing.prompt == "0"; there is NO
+ *                 is_free field. Six qualify, one answered cleanly:
+ *                 poolside/laguna-s-2.1:free (cost: 0 in the usage block).
+ *                 A non-free model answers 404 with
+ *                 code "insufficient_credits_for_paid_model" — 404, not 402.
+ *
+ *   OpenRouter    POST https://openrouter.ai/api/v1/chat/completions
+ *                 -> choices[0].message, CORS-open for browsers
+ *
+ * Both speak the OpenAI chat-completions shape, so one code path serves both.
+ * What genuinely differs is the ANSWER EXTRACTION and the error text, so a
+ * provider may override `extract`. */
+const LLM_PROVIDERS = {
+  openrouter: {
+    label: 'OpenRouter',
+    base: 'https://openrouter.ai/api/v1',
+    chat: '/chat/completions',
+    model: 'openai/gpt-4o-mini',
+    // OpenRouter is the incumbent, so it keeps the default model. A user
+    // without credits hits a 402 and the heuristic takes over — measured,
+    // not assumed.
+    keyName: 'or_key',
+  },
+  nous: {
+    label: 'Nous Portal',
+    base: 'https://inference-api.nousresearch.com/v1',
+    chat: '/chat/completions',
+    // The one free model that answered cleanly on 2026-10-01. Measured, not
+    // assumed: of the six models with pricing 0, one worked, one said "no
+    // longer free", three errored. This may rot — `model` is editable in the
+    // UI for exactly that reason.
+    model: 'poolside/laguna-s-2.1:free',
+    keyName: 'nous_key',
+  },
+};
+const LLM_PROVIDER_IDS = Object.keys(LLM_PROVIDERS);
+
+const LLM_SYSTEM = 'You map a natural-language request to a Microsoft Graph v1.0 call. ' +
+  'Respond with ONLY strict JSON: {"method":"GET|POST|...","path":"/me/...","perm":"Scope.Read","reason":"short"} ' +
+  'Pick the closest real v1.0 endpoint. If unsure, use /me.';
+
+/* Read the assistant text out of a chat-completions response.
+ *
+ * OpenAI-shaped, so both providers share this. It is a function rather than a
+ * property because a future provider may answer differently, and a caller
+ * that assumes the shape is exactly the bug this refactor is removing. */
+function llmText(data) {
+  return data?.choices?.[0]?.message?.content || '';
+}
+
+/* Turn provider chatter into {method, path, perm, reason}.
+ *
+ * A model may wrap JSON in prose or a code fence despite the instruction, so
+ * this tries the strict parse first and only then a fenced/embedded object.
+ *
+ * It VALIDATES rather than trusting the model: a free model is the least
+ * reliable thing in this whole feature, and a path that does not start with
+ * /me produces a curl command that is silently wrong. The callers treat a
+ * throw as "use the heuristic", so an unusable answer degrades to the
+ * keyword mapping instead of to a bad request. */
+function llmParse(txt) {
+  let j = null;
+  try {
+    j = JSON.parse(txt);
+  } catch {
+    const m = txt.match(/\{[\s\S]*\}/);
+    if (m) {
+      try { j = JSON.parse(m[0]); } catch { /* fall through */ }
+    }
+  }
+  if (!j || !j.path) throw new Error('kein path in der Antwort');
+  const path = String(j.path).trim();
+  if (!path.startsWith('/')) throw new Error('path ist kein Graph-Pfad: ' + path);
+  const method = String(j.method || 'GET').toUpperCase();
+  if (!/^[A-Z]+$/.test(method)) throw new Error('unbekannte Methode: ' + method);
+  return { method, path, perm: j.perm || '', reason: 'llm' };
+}
+
+async function callLLM(providerId, query, key) {
+  const p = LLM_PROVIDERS[providerId];
+  if (!p) throw new Error('unbekannter Provider: ' + providerId);
+  if (!key) throw new Error('kein Key');
+  const res = await fetch(p.base + p.chat, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: p.model,
+      messages: [
+        { role: 'system', content: LLM_SYSTEM },
+        { role: 'user', content: query },
+      ],
+      // Only OpenRouter honours this; Nous ignores it, and a free model may
+      // wrap the JSON in prose anyway. llmParse copes with both.
+      response_format: { type: 'json_object' },
+      temperature: 0,
+    }),
+  });
+  if (!res.ok) {
+    // The Nous "no credits" answer is a 404 with a code in the body. Surfacing
+    // the code makes "why did it fall back" answerable instead of a shrug.
+    let detail = '';
+    try {
+      const b = await res.json();
+      detail = b.code || b.error?.message || b.message || '';
+      if (detail) detail = ' (' + String(detail).slice(0, 80) + ')';
+    } catch { /* body not JSON — the status is all we have */ }
+    throw new Error('HTTP ' + res.status + detail);
+  }
+  const extract = p.extract || llmText;
+  return llmParse(extract(await res.json()));
 }
 
 // ---------- Permissions (curated, localized) ----------
