@@ -76,11 +76,15 @@ const I18N = {
     ref_ph: 'Endpoint suchen (z.B. /me, team)…', ref_open: '↗ rohe Spec öffnen',
     console: 'Semantics Console', console_hint: 'Gib natürliche Sprache oder einen Endpoint ein → curl + idun-Befehl.',
     nl: 'Natürliche Sprache', nl_btn: 'NL → Graph', endpoint: 'Endpoint', nl_ph: 'z.B. alle Teams des Users',
-    llm: 'LLM-Modus (OpenRouter)', llm_key_ph: 'OpenRouter API-Key (bleibt lokal, nie an unseren Server)', llm_btn: 'NL → Graph (LLM)', llm_busy: 'LLM wird gefragt…', llm_err: 'LLM fehlgeschlagen — Heuristik genutzt', llm_hint: 'Optional: eigener OpenRouter-Key für NL→Graph via LLM. Key bleibt im Browser (sessionStorage), nie committet oder an uns gesendet. Ohne Key Fallback auf die Stichwort-Heuristik.',
+    llm: 'LLM-Modus', llm_key_ph: 'API-Key (bleibt lokal, nie an unseren Server)', llm_btn: 'NL → Graph (LLM)', llm_busy: 'LLM wird gefragt…', llm_err: 'LLM fehlgeschlagen — Heuristik genutzt', llm_hint: 'Optional: eigener API-Key des gewählten Anbieters für NL→Graph. Key bleibt im Browser (sessionStorage), nie committet oder an uns gesendet. Ohne Key Fallback auf die Stichwort-Heuristik.',
     // Provider-neutral NL→Graph (2026-10-01). Four values were hard-wired to
     // OpenRouter; now they are chosen. Every key here needs an EN twin, or
     // the raw key leaks into the UI — the F3 'llm' bug again.
     llm_prov: 'Anbieter', llm_model: 'Modell', llm_model_ph: 'z.B. poolside/laguna-s-2.1:free',
+    // Eigener Key statt `t.llm`, denn das war noch der alte, fest verdrahtete
+    // Text "LLM-Modus (OpenRouter)" — als Key-Label ergab das
+    // "NOUS PORTAL LLM-MODUS (OPENROUTER)": zwei Provider in einem Label.
+    llm_key: 'API-Key',
     llm_key_set: 'Key setzen', llm_key_ok: 'Key gespeichert (nur diese Sitzung)',
     llm_probe: 'Verbindung testen', llm_probe_ok: 'Antwort erhalten', llm_probe_busy: 'teste…',
     llm_free_hint: 'Nous Portal: 6 Modelle sind kostenlos, eines antwortet zuverlässig (Stand 2026-10-01).',
@@ -137,8 +141,9 @@ const I18N = {
     ref_ph: 'Search endpoint (e.g. /me, team)…', ref_open: '↗ open raw spec',
     console: 'Semantics Console', console_hint: 'Enter natural language or an endpoint → curl + idun command.',
     nl: 'Natural Language', nl_btn: 'NL → Graph', endpoint: 'Endpoint', nl_ph: 'e.g. all teams of the user',
-    llm: 'LLM mode (OpenRouter)', llm_key_ph: 'OpenRouter API key (stay local, never sent to our server)', llm_btn: 'NL → Graph (LLM)', llm_busy: 'asking LLM…', llm_err: 'LLM failed — used heuristic', llm_hint: 'Optional: paste your own OpenRouter key to map NL via an LLM. Key stays in your browser (sessionStorage), never committed or sent to us. Falls back to the keyword heuristic without a key.',
+    llm: 'LLM mode', llm_key_ph: 'API key (stay local, never sent to our server)', llm_btn: 'NL → Graph (LLM)', llm_busy: 'asking LLM…', llm_err: 'LLM failed — used heuristic', llm_hint: 'Optional: paste your own key for the selected provider to map NL via an LLM. Key stays in your browser (sessionStorage), never committed or sent to us. Falls back to the keyword heuristic without a key.',
     llm_prov: 'Provider', llm_model: 'Model', llm_model_ph: 'e.g. poolside/laguna-s-2.1:free',
+    llm_key: 'API key',
     llm_key_set: 'Set key', llm_key_ok: 'Key stored (this session only)',
     llm_probe: 'Test connection', llm_probe_ok: 'got a reply', llm_probe_busy: 'testing…',
     llm_free_hint: 'Nous Portal: six models are free, one answers reliably (as of 2026-10-01).',
@@ -537,10 +542,10 @@ async function loadCatalog(providerId, key) {
               </div>
             )}
             {llmProv === 'nous' && <p className="hint">{t.llm_free_hint}</p>}
-            <label className="lbl">{prov.label} {t.llm}</label>
+            <label className="lbl">{prov.label} {t.llm_key}</label>
             <input type="password" className="epinput" value={llmKey} placeholder={t.llm_key_ph}
               onChange={e => setKey(llmProv, e.target.value)} />
-            <div className="llm-row">
+            <div className="llm-actions">
               <button className="ghost" onClick={runNl} disabled={llmBusy || !llmKey}>{t.llm_btn}</button>
               <button className="ghost" disabled={llmBusy || !llmKey}
                 onClick={() => { setProbe({ busy: true }); probeLLM(llmProv, llmModel, llmKey).then(setProbe); }}>

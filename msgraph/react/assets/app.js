@@ -111,18 +111,22 @@ const I18N = {
     nl_btn: 'NL → Graph',
     endpoint: 'Endpoint',
     nl_ph: 'z.B. alle Teams des Users',
-    llm: 'LLM-Modus (OpenRouter)',
-    llm_key_ph: 'OpenRouter API-Key (bleibt lokal, nie an unseren Server)',
+    llm: 'LLM-Modus',
+    llm_key_ph: 'API-Key (bleibt lokal, nie an unseren Server)',
     llm_btn: 'NL → Graph (LLM)',
     llm_busy: 'LLM wird gefragt…',
     llm_err: 'LLM fehlgeschlagen — Heuristik genutzt',
-    llm_hint: 'Optional: eigener OpenRouter-Key für NL→Graph via LLM. Key bleibt im Browser (sessionStorage), nie committet oder an uns gesendet. Ohne Key Fallback auf die Stichwort-Heuristik.',
+    llm_hint: 'Optional: eigener API-Key des gewählten Anbieters für NL→Graph. Key bleibt im Browser (sessionStorage), nie committet oder an uns gesendet. Ohne Key Fallback auf die Stichwort-Heuristik.',
     // Provider-neutral NL→Graph (2026-10-01). Four values were hard-wired to
     // OpenRouter; now they are chosen. Every key here needs an EN twin, or
     // the raw key leaks into the UI — the F3 'llm' bug again.
     llm_prov: 'Anbieter',
     llm_model: 'Modell',
     llm_model_ph: 'z.B. poolside/laguna-s-2.1:free',
+    // Eigener Key statt `t.llm`, denn das war noch der alte, fest verdrahtete
+    // Text "LLM-Modus (OpenRouter)" — als Key-Label ergab das
+    // "NOUS PORTAL LLM-MODUS (OPENROUTER)": zwei Provider in einem Label.
+    llm_key: 'API-Key',
     llm_key_set: 'Key setzen',
     llm_key_ok: 'Key gespeichert (nur diese Sitzung)',
     llm_probe: 'Verbindung testen',
@@ -249,15 +253,16 @@ const I18N = {
     nl_btn: 'NL → Graph',
     endpoint: 'Endpoint',
     nl_ph: 'e.g. all teams of the user',
-    llm: 'LLM mode (OpenRouter)',
-    llm_key_ph: 'OpenRouter API key (stay local, never sent to our server)',
+    llm: 'LLM mode',
+    llm_key_ph: 'API key (stay local, never sent to our server)',
     llm_btn: 'NL → Graph (LLM)',
     llm_busy: 'asking LLM…',
     llm_err: 'LLM failed — used heuristic',
-    llm_hint: 'Optional: paste your own OpenRouter key to map NL via an LLM. Key stays in your browser (sessionStorage), never committed or sent to us. Falls back to the keyword heuristic without a key.',
+    llm_hint: 'Optional: paste your own key for the selected provider to map NL via an LLM. Key stays in your browser (sessionStorage), never committed or sent to us. Falls back to the keyword heuristic without a key.',
     llm_prov: 'Provider',
     llm_model: 'Model',
     llm_model_ph: 'e.g. poolside/laguna-s-2.1:free',
+    llm_key: 'API key',
     llm_key_set: 'Set key',
     llm_key_ok: 'Key stored (this session only)',
     llm_probe: 'Test connection',
@@ -869,14 +874,14 @@ function ConsolePanel({
     className: "hint"
   }, t.llm_free_hint), /*#__PURE__*/React.createElement("label", {
     className: "lbl"
-  }, prov.label, " ", t.llm), /*#__PURE__*/React.createElement("input", {
+  }, prov.label, " ", t.llm_key), /*#__PURE__*/React.createElement("input", {
     type: "password",
     className: "epinput",
     value: llmKey,
     placeholder: t.llm_key_ph,
     onChange: e => setKey(llmProv, e.target.value)
   }), /*#__PURE__*/React.createElement("div", {
-    className: "llm-row"
+    className: "llm-actions"
   }, /*#__PURE__*/React.createElement("button", {
     className: "ghost",
     onClick: runNl,

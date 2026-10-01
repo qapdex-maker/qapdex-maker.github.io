@@ -248,7 +248,45 @@ html.ignite .card:hover, html.ignite .neo:hover{box-shadow:var(--shadow-hover), 
   .trail{display:none}
 }
 
-/* F3: LLM mode row + error hint */
-.llm-row { display:flex; gap:6px; margin:6px 0; }
-.llm-row .epinput { flex:1; }
+/* F3: LLM mode row + error hint
+ *
+ * `.llm-row` started as "two things side by side" — a password field and a
+ * button. The provider work put nine elements into it: two labels, a provider
+ * button group, a model input, a hint, a key field and three more buttons.
+ * `display:flex` with NO wrap and `.epinput{width:100%}` then crammed all of
+ * that onto one 412 px line.
+ *
+ * Measured on the deployed page (screenshot 2026-10-02, 412 px viewport):
+ * the hint broke to one word per line and split "2026-10-01" across two
+ * lines, the model input collapsed to a ~20 px sliver next to it, and the key
+ * field looked empty. Nothing overlapped — flexbox simply refused to wrap.
+ *
+ * So: wrap, and give the block a vertical rhythm instead of squeezing. The
+ * provider buttons keep their own row (they are a set), and the action
+ * buttons stack on a phone where three side by side is unreadable. */
+.llm-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+.llm-row > .lbl { flex: 1 0 100%; margin: 4px 0 0; }
+.llm-row > .epinput { flex: 1 1 220px; min-width: 0; width: auto; }
+.llm-row > .hint { flex: 1 0 100%; margin: 2px 0 0; }
+.llm-row > .radar-controls { flex: 1 0 100%; display: flex; flex-direction: row; gap: 8px; }
+/* The provider toggle is a choice between few options — keep them side by
+ * side even on a phone, or selecting one costs three taps instead of one. */
+.llm-row .radar-controls .reftab { flex: 1 1 auto; text-align: center; }
+.llm-row .llm-actions { flex: 1 0 100%; display: flex; flex-wrap: wrap; gap: 8px; }
+/* Three actions. Measured at 412 px: with flex-basis 140px two fitted on one
+ * line (180 px each) and the third wrapped below at full width, so the row
+ * looked accidental rather than designed. `flex-basis: 100%` up to 520 px puts
+ * all three on one line on a phone and keeps them stacked on a narrow one. */
+.llm-row .llm-actions .ghost { flex: 1 1 100%; }
+@media (min-width: 521px) {
+  .llm-row .llm-actions .ghost { flex: 1 1 150px; }
+}
+
 .hint.err { color:#ff7b7b; }
+.hint.ok  { color:#3f7d3f; }
