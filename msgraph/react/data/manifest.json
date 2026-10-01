@@ -1,24 +1,65 @@
 {
   "site": "qapdex-maker.github.io (proto)",
   "title": "Graph Metadata Hub + Semantics Console",
-  "schemaVersion": "1.4.711.0",
-  "syncDate": "2026-08-26",
+  "schemaVersion": "1.4.759.0",
+  "syncDate": "2026-09-18",
   "siteVersion": "2026.08.29-1",
   "buildDate": "2026-08-29",
   "projects": [
-    { "name": "metadata-msgraph", "role": "Datenquelle (CSDL/OpenAPI/Typ-Mappings)", "repo": "qapdex-maker/metadata-msgraph" },
-    { "name": "idun-sdk", "role": "Azure AI Foundry Client", "repo": "qapdex-maker/idun-sdk" },
-    { "name": "idun-playground", "role": "Multi-LLM-Console (17 Provider)", "repo": "qapdex-maker/idun-playground" }
+    {
+      "name": "metadata-msgraph",
+      "role": "Datenquelle (CSDL/OpenAPI/Typ-Mappings)",
+      "repo": "qapdex-maker/metadata-msgraph"
+    },
+    {
+      "name": "idun-sdk",
+      "role": "Azure AI Foundry Client",
+      "repo": "qapdex-maker/idun-sdk"
+    },
+    {
+      "name": "idun-playground",
+      "role": "Multi-LLM-Console (17 Provider)",
+      "repo": "qapdex-maker/idun-playground"
+    }
   ],
   "tabs": [
-    { "id": "hub", "label": "Hub", "type": "hub" },
-    { "id": "reference", "label": "Reference", "type": "reference", "spec": "https://raw.githubusercontent.com/qapdex-maker/metadata-msgraph/master/openapi/v1.0/openapi.yaml" },
-    { "id": "console", "label": "Console", "type": "console" },
-    { "id": "permissions", "label": "Permissions", "type": "permissions" },
-    { "id": "radar", "label": "Breaking Radar", "type": "radar" }
+    {
+      "id": "hub",
+      "label": "Hub",
+      "type": "hub"
+    },
+    {
+      "id": "reference",
+      "label": "Reference",
+      "type": "reference",
+      "spec": "https://github.com/qapdex-maker/metadata-msgraph/releases/download/spec-2026-10-01/openapi-v1.0.yaml",
+      "specBeta": "https://github.com/qapdex-maker/metadata-msgraph/releases/download/spec-2026-10-01/openapi-beta.yaml",
+      "specNote": "Release-Asset, nicht raw.githubusercontent: raw liefert text/plain und der Renderer friert bei 42 MB ein. content-disposition: attachment erzwingt Download. Gemessen 2026-10-01."
+    },
+    {
+      "id": "console",
+      "label": "Console",
+      "type": "console"
+    },
+    {
+      "id": "permissions",
+      "label": "Permissions",
+      "type": "permissions"
+    },
+    {
+      "id": "radar",
+      "label": "Breaking Radar",
+      "type": "radar"
+    }
   ],
   "specRaw": {
-    "v1.0": "https://raw.githubusercontent.com/qapdex-maker/metadata-msgraph/master/openapi/v1.0/openapi.yaml",
-    "beta": "https://raw.githubusercontent.com/qapdex-maker/metadata-msgraph/master/openapi/beta/openapi.yaml"
+    "v1.0": "https://github.com/qapdex-maker/metadata-msgraph/releases/download/spec-2026-10-01/openapi-v1.0.yaml",
+    "beta": "https://github.com/qapdex-maker/metadata-msgraph/releases/download/spec-2026-10-01/openapi-beta.yaml"
+  },
+  "schemaVersionNote": "Aus den Schema-Sync-Commits des Forks abgeleitet, nicht aus dem OpenAPI-Header: der Spec nennt nur 'v1.0' bzw. 'beta'. Stand 2026-10-01, Commit b8cbef92.",
+  "specRelease": {
+    "tag": "spec-2026-10-01",
+    "commit": "b8cbef92",
+    "url": "https://github.com/qapdex-maker/metadata-msgraph/releases/tag/spec-2026-10-01"
   }
 }

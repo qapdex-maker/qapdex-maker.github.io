@@ -2,6 +2,34 @@ const { useState, useEffect, useRef, useMemo } = React;
 
 const RAW = 'https://raw.githubusercontent.com/qapdex-maker/metadata-msgraph/master/';
 
+/* The two OpenAPI specs come from the RELEASE, not from raw.githubusercontent.
+ *
+ * Measured 2026-10-01 in Chromium 149 headless, 412x915 @2.625, CPU x4:
+ *   raw .../openapi/v1.0/openapi.yaml (42.3 MB)
+ *     -> readyState "loading" after 212 s, never finished
+ *     -> a single Runtime.evaluate took 27.3 s (slow4g) / 49.3 s (fast4g)
+ *     -> document.body.innerText sat at 14.8 - 17.0 MB
+ *   the same file as a release asset
+ *     -> content-disposition: attachment, application/octet-stream
+ *
+ * The difference is one response header. raw.githubusercontent serves
+ * text/plain, so the browser RENDERS a 42 MB body instead of downloading it.
+ * A release asset carries `attachment`, so the browser downloads and never
+ * builds a document out of it. There is no other lever: GitHub sets no
+ * content-disposition on raw, GitHub Pages sets no headers at all, and the
+ * CSDL files are served from the worker, which measured fine (5.6 MB loads in
+ * 40 s, evaluate 153 ms) -- so RAW stays for those.
+ *
+ * The tag moves with the content, so one edit here re-points every spec link
+ * after a metadata sync. It is stale once the fork syncs again; rebuild with
+ * the command in the release notes. */
+const RELEASE = 'https://github.com/qapdex-maker/metadata-msgraph/releases/download/spec-2026-10-01/';
+const SPEC = { 'v1.0': 'openapi-v1.0.yaml', beta: 'openapi-beta.yaml' };
+/* Type mappings are 335 KB -- an order of magnitude below the threshold, and
+ * the JSON is nicer to read in the browser than a 42 MB download dialog. It
+ * stays on raw. */
+const TYPEMAP = 'schemas/type-mappings/v1.0-entity-types.json';
+
 /* Absolute URL for a data file next to the page.
  *
  * window.location.href may carry a query string or a hash, and both break the
@@ -12,7 +40,6 @@ const RAW = 'https://raw.githubusercontent.com/qapdex-maker/metadata-msgraph/mas
  * shows up when someone adds one for cache-busting — which is exactly when it
  * matters. */
 const dataUrl = (rel) => window.location.href.split(/[?#]/)[0].replace(/index\.html?$/, '') + rel;
-const SITE = { 'v1.0': 'openapi/v1.0/openapi.yaml', beta: 'openapi/beta/openapi.yaml' };
 
 // ---------- Virtualized list (only renders visible rows) ----------
 function VirtList({ items, rowHeight = 58, height = 480, renderRow }) {
@@ -142,9 +169,9 @@ const I18N = {
 function Hub({ t, m, lang }) {
   const projects = m?.projects || [];
   const dls = [
-    ['OpenAPI v1.0', SITE['v1.0']],
-    ['OpenAPI beta', SITE.beta],
-    ['Type-Mappings v1.0', 'schemas/type-mappings/v1.0-entity-types.json']
+    ['OpenAPI v1.0', RELEASE + SPEC['v1.0']],
+    ['OpenAPI beta', RELEASE + SPEC.beta],
+    ['Type-Mappings v1.0', RAW + TYPEMAP]
   ];
   return (
     <div className="panel-inner">
@@ -169,10 +196,10 @@ function Hub({ t, m, lang }) {
       </div>
       <h2 className="sect">{t.downloads}</h2>
       <div className="cards">
-        {dls.map(([n, path]) => (
+        {dls.map(([n, href]) => (
           <div className="card" key={n}>
             <h3>{n}</h3>
-            <a className="dl" href={RAW + path} target="_blank" rel="noopener">{t.raw}</a>
+            <a className="dl" href={href} target="_blank" rel="noopener">{t.raw}</a>
           </div>
         ))}
       </div>
@@ -235,7 +262,7 @@ function Reference({ t }) {
       </div>
       <div className="ref-controls">
         <input className="epinput" placeholder={t.ref_ph} value={q} onChange={e => setQ(e.target.value)} />
-        <a className="btn" target="_blank" rel="noopener" href={RAW + SITE[variant]}>{t.ref_open}</a>
+        <a className="btn" target="_blank" rel="noopener" href={RELEASE + SPEC[variant]}>{t.ref_open}</a>
       </div>
       <div className="badges"><span className="badge">{status}</span>{q && <span className="badge">{t.hits} {filtered.length}</span>}</div>
       {filtered.length > 0 ? (
