@@ -190,15 +190,6 @@ const I18N = {
     sketch_err: 'Fehler beim Laden',
     sketch_v10: 'v1.0',
     sketch_beta: 'beta',
-    // Type -> endpoint join (2026-09-27) — see the DE table.
-    sketch_join: '{a} of {b} types with endpoints',
-    sketch_join_none: 'none',
-    sketch_ep: 'endpoints',
-    sketch_noep: 'no direct endpoints',
-    sketch_navonly: 'navigation only',
-    sketch_types: 'linked types',
-    sketch_more: '+ {n} more',
-    sketch_less: 'show less',
     // Type -> endpoint join (2026-09-27). Measured on beta-Mooncake: 54 types
     // have an EntitySet, 53 of them reach endpoints. `message` has none — it is
     // only a NavigationProperty of `user`, so saying so is the honest text.
@@ -314,6 +305,18 @@ const I18N = {
     sketch_err: 'load failed',
     sketch_v10: 'v1.0',
     sketch_beta: 'beta',
+    // Type -> endpoint join. These seven were DE-ONLY until 2026-10-01, so the
+    // sketch panel showed the raw keys in EN mode — the same leak as the F3
+    // 'llm' reason, four years of habit older and nobody had clicked through
+    // the panel in English. Found by tests/i18n_check.py.
+    sketch_join: '{a} of {b} types with endpoints',
+    sketch_join_none: 'none',
+    sketch_ep: 'endpoints',
+    sketch_noep: 'no direct endpoints',
+    sketch_navonly: 'navigation only',
+    sketch_types: 'linked types',
+    sketch_more: '+ {n} more',
+    sketch_less: 'show less',
     nl_reasons: {
       teams: 'Teams',
       mails: 'Mails',
