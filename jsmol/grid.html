@@ -71,6 +71,11 @@
   .cell.pending .stage{background:
     repeating-linear-gradient(45deg,#f4f2ec,#f4f2ec 8px,#eae7de 8px,#eae7de 16px)}
   .cell.failed .meta{color:var(--err);font-weight:700}
+  /* "laedt noch" ist ein eigener Zustand: nicht .failed, aber auch nicht
+     fertig. Der Unterschied ist der ganze Punkt des Nachmess-Fensters. */
+  .cell.loading .meta{color:#8a6d00}
+  .cell.loading .stage{animation:cellpulse 1.1s ease-in-out infinite}
+  @keyframes cellpulse{0%,100%{opacity:1}50%{opacity:.55}}
 
   footer{
     border-top:3px solid var(--line); padding:8px 14px;
@@ -169,6 +174,7 @@
     limit:    { de:'Obergrenze',               en:'limit' },
     failed:   { de:'fehlgeschlagen',           en:'failed' },
     pending:  { de:'wartet',                   en:'pending' },
+    loading:  { de:'lädt nach',               en:'still loading' },
     ready:    { de:'bereit',                   en:'ready' },
     drawn:    { de:'gezeichnet',               en:'drawn' },
     empty:    { de:'leer',                     en:'empty' }
@@ -209,7 +215,8 @@
         '<div class="meta"><span class="st">' + t('pending') + '</span>' +
         '<span class="pc">—</span></div>';
       grid.appendChild(cell);
-      cells.push({ el: cell, ap: null, item: item, drawn: 0, done: false });
+      cells.push({ el: cell, ap: null, item: item, drawn: 0, done: false,
+                   tries: 0, stable: 0, lastPct: undefined });
     });
 
     setTimeout(function(){ startOne(0, list); }, 120);
@@ -266,10 +273,27 @@
   // Jede Zelle wird nach dem Laden selbst geprueft: eine Zelle, die
   // ready meldet und leer bleibt, ist im Raster ein Loch. Genau das ist
   // der Fall, an dem die WebGL-Obergrenze sichtbar wuerde.
+  // Nachmessen statt nur zwei Mal messen.
+  //
+  // BEFUND (2026-10-02, live): ein Lauf meldete 11 von 12 Zellen, der
+  // naechste 12 von 12 — bei identischem Code. Die Ursache war nicht die
+  // Zelle, sondern der Zeitpunkt: der Tunnel-Crambin laedt sichtbar nach,
+  // und die Zelle wurde als .failed markiert, bevor sie fertig war. Ein
+  // Fehler, der verschwindet, wenn man drei Sekunden laenger wartet, ist
+  // kein Fehler, sondern eine zu fruehe Messung.
+  //
+  // Deshalb: eine Zelle unter der Schwelle bekommt bis zu RETRIES weitere
+  // Messungen im Takt von RETRY_MS. Erst danach heisst es "leer".
+  var MEASURE_MIN = 1;      // Prozent Farbe, darunter ist die Zelle leer
+  var RETRIES = 5;      // Versuche, bevor eine Zelle als leer gilt
+  var RETRY_MS = 2000;  // Abstand zwischen den Versuchen
+  var STABLE_MAX = 8;   // Nachmessungen, solange sich der Wert bewegt
+
   function measureCell(i){
     var c = cells[i];
     var cv = c.el.querySelector('canvas');
     if (!cv) { markFailed(i); return; }
+    var cpct;
     try {
       var d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
       var painted = 0;          // nicht-weiss = irgendetwas gezeichnet
@@ -277,20 +301,51 @@
       for (var p = 0; p < d.length; p += 4) {
         var R = d[p], G = d[p+1], B = d[p+2];
         if (R !== 255 || G !== 255 || B !== 255) painted++;
-        // Abstand zum Weiss misst "getönt" unabhaengig von der Helligkeit:
+        // Abstand zum Weiss misst "getoent" unabhaengig von der Helligkeit:
         // ein gelber Ball (255,255,0) ist farbig, weisses Licht nicht.
         if (255 - Math.min(R, G, B) > 40) colored++;
       }
       var total = d.length / 4;
-      var pct = +(painted / total * 100).toFixed(2);
-      var cpct = +(colored / total * 100).toFixed(2);
-      c.drawn = cpct;
-      // "100% gemalt" bei 0% Farbe heisst: der Hohlraum ist gefuellt, es
-      // gibt kein Molekuel zu sehen. Genau das sieht man beim Tunnel-Crambin.
-      // Deshalb wird die Farbquote gezeigt, nicht die Paint-Quote.
-      c.el.querySelector('.pc').textContent = cpct + '%';
-      if (cpct <= 1) markFailed(i);
-    } catch (e) { markFailed(i); }
+      painted = +(painted / total * 100).toFixed(2);
+      cpct = +(colored / total * 100).toFixed(2);
+    } catch (e) { markFailed(i); return; }
+
+    c.drawn = cpct;
+    c.el.querySelector('.pc').textContent = cpct + '%';
+
+    if (cpct > MEASURE_MIN) {
+      // Fertig fuer die Schwelle — aber die Anzeige soll nicht veralten.
+      // Die Tunnel-Zelle laedt ueber ~20 s nach: 8,54 % -> 31,84 % ->
+      // 48,33 %. Ein einmal gesetzter Wert bleibt sonst 20 Sekunden zu
+      // niedrig (gemessen am 2026-10-02). Solange sich der Wert noch
+      // bewegt, wird weiter gemessen — gedeckelt, damit es endet.
+      c.tries = 0;
+      updateInstLine();
+      if (c.lastPct !== undefined && Math.abs(cpct - c.lastPct) > 0.05 && c.stable < STABLE_MAX) {
+        c.stable = (c.stable || 0) + 1;
+        c.lastPct = cpct;
+        setTimeout(function () { measureCell(i); }, RETRY_MS);
+      } else {
+        c.stable = 0;
+        c.lastPct = cpct;
+      }
+      return;
+    }
+
+    // Noch nicht fertig: retry statt sofort aufgeben. .pending bedeutet
+    // "laedt noch" und wird als eigener Zustand angezeigt, damit der
+    // Betrachter den Unterschied sieht.
+    c.tries = (c.tries || 0) + 1;
+    if (c.tries <= RETRIES) {
+      c.el.classList.remove('failed');
+      c.el.classList.add('loading');
+      c.el.querySelector('.st').textContent = t('loading');
+      updateInstLine();
+      setTimeout(function () { measureCell(i); }, RETRY_MS);
+      return;
+    }
+    markFailed(i);
+    updateInstLine();
   }
 
   // Der Status darf "bereit" melden, bevor alle Zellen stehen — er meint
@@ -311,23 +366,22 @@
     setStatus(t('readyN') + cells.length + ' ' + t('ofCells'), 'ok');
     updateInstLine();
 
-    // Zwei Messdurchlaeufe nach der Nachzeichnung. Einer reicht nicht: die
-    // Tunnel-Struktur laedt sichtbar nach, ihre Anzeige bleibt sonst bei
-    // 32,6 % stehen, waehrend der Canvas auf 65,7 % gezeichnet hat
-    // (gemessen am 2026-10-02, Desktop wie 412 px).
+    // Ein Durchlauf nach der Nachzeichnung. Mehr ist nicht noetig: eine
+    // Zelle, die dann noch unter der Schwelle liegt, misst sich selbst
+    // bis zu RETRIES Mal nach (siehe measureCell). Das ersetzt die zwei
+    // festen Timer, die vorher 3,6 s und 7,6 s nachliefen — und die genau
+    // die 11-von-12-Anzeige erzeugt haben, weil sie die letzte Zelle
+    // prueften, bevor sie fertig war.
     clearTimeout(progress._final);
-    clearTimeout(progress._final2);
-    var measureAll = function () {
+    progress._final = setTimeout(function () {
       cells.forEach(function (c, i){ if (c.done) measureCell(i); });
       updateInstLine();
-    };
-    progress._final  = setTimeout(measureAll, 3600);
-    progress._final2 = setTimeout(measureAll, 7600);
+    }, 3600);
   }
 
   function markFailed(i){
     var c = cells[i];
-    c.el.classList.remove('pending','ok');
+    c.el.classList.remove('pending','ok','loading');
     c.el.classList.add('failed');
     c.el.querySelector('.st').textContent = t('empty');
   }
@@ -337,10 +391,15 @@
     // "ok". Ein earlierer Stand zaehlte die Klasse und meldete "11 / 12",
     // obwohl alle 12 gezeichnet hatten — die Klassen werden nach dem
     // Aufbau gesetzt, der Zaehler lief dazwischen.
-    var drawn = 0;
-    cells.forEach(function (c) { if (c.drawn > 0.5) drawn++; });
+    var drawn = 0, loading = 0;
+    cells.forEach(function (c) {
+      if (c.drawn > MEASURE_MIN) drawn++;
+      else if (c.el.classList.contains('loading')) loading++;
+    });
     document.getElementById('instLine').textContent =
-      'Instanzen: ' + drawn + ' / ' + cells.length + ' (max ' + MAX_INSTANCES + ')';
+      'Instanzen: ' + drawn + ' / ' + cells.length +
+      (loading ? ' (+' + loading + ' lädt)' : '') +
+      ' (max ' + MAX_INSTANCES + ')';
   }
 
   // ---- Befehle ------------------------------------------------------------
