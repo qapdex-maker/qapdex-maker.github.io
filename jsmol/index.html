@@ -28,22 +28,86 @@
     border:2px solid #fff; padding:3px 9px; border-radius:2px;
   }
   main{
-    display:grid; grid-template-columns:260px 1fr; gap:0;
-    align-items:start; min-height:calc(100vh - 58px);
+    display:grid; grid-template-columns:minmax(220px, 280px) 1fr; gap:0;
+    align-items:stretch;
+    /* Feste Hoehe statt min-height: nur so bekommt die Aside einen echten
+       Scrollbereich. Mit min-height wächst das Grid mit dem Inhalt und
+       overflow:auto haette nichts zum Scrollen. */
+    height:calc(100vh - 58px - 44px);   /* -header -footer */
   }
-  @media (max-width:820px){ main{grid-template-columns:1fr} }
+  @media (max-width:820px){
+    main{grid-template-columns:1fr; height:auto}
+  }
 
   aside{
     border-right:3px solid var(--line); padding:14px;
     background:#e8e2d5;
+    /* min-width:0 erlaubt dem Grid-Item zu schrumpfen. Ohne das wird die
+       Aside 2640 px breit (gemessen am 2026-10-02 bei 412 px Viewport),
+       weil das Flex-Kind die Breite der Inhalte erzwingt.
+       width:100% waere hier falsch: zusammen mit padding ergibt das mehr
+       als 100% (514 statt 412 gemessen) und die Seite bekommt einen
+       horizontalen Scrollbalken. */
+    min-width:0;
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+    max-height:100%;
   }
-  @media (max-width:820px){ aside{border-right:none; border-bottom:3px solid var(--line)} }
+  @media (max-width:820px){
+    aside{
+      border-right:none; border-bottom:3px solid var(--line);
+      max-height:none; overflow:visible;
+      padding:10px 12px;
+    }
+    /* Eine Zeile, horizontal scrollbar. 19 Knöpfe sind keine Seite.
+       Zwei Details, ohne die es 2640 px breit wird (gemessen am
+       2026-10-02 statt der erwarteten 412):
+         - width:100% der Basisregel muss hier weg. In einer Flex-Zeile
+           bedeutet 100% "so breit wie der Container", nicht "so breit wie
+           der Inhalt" — der Container waechst mit jedem Knopf mit.
+         - width:100% auf dem aside selbst begrenzt die Breite auf das
+           Grid-Feld, damit die Flex-Zeile nicht aus dem Bild laeuft.
+    */
+    #structureList{
+      display:flex; gap:6px; overflow-x:auto; padding-bottom:6px;
+      scroll-snap-type:x proximity;
+      /* min-width:0 wie bei aside: sonst erzwingen die 19 li die Breite. */
+      min-width:0; max-width:100%;
+    }
+    #structureList li{flex:0 0 auto; scroll-snap-align:start; margin-bottom:0}
+    #structureList button{
+      width:auto; min-width:132px; max-width:190px;
+    }
+  }
+
   aside h2{
     font-size:12px; text-transform:uppercase; letter-spacing:.08em;
     margin:0 0 10px; font-family:"IBM Plex Mono",monospace;
+    position:sticky; top:-14px; background:#e8e2d5; padding:2px 0;
+    z-index:2;
   }
+  @media (max-width:820px){ aside h2{position:static; top:auto} }
   #structureList{list-style:none;margin:0;padding:0}
   #structureList li{margin-bottom:6px}
+  #structureList li.empty{
+    font-size:12px; font-style:italic; opacity:.7; padding:6px 2px;
+  }
+
+  /* Filter-Chips: die Liste hat 19 Eintraege in vier Gruppen, das ist eine
+     Auswahlfrage und keine reine Blätterfrage. */
+  .chips{display:flex; flex-wrap:wrap; gap:5px; margin:0 0 8px}
+  .chips button{
+    cursor:pointer; font:inherit; font-size:11px; line-height:1.4;
+    background:#fff; border:2px solid var(--line); border-radius:999px;
+    padding:2px 9px; color:var(--ink);
+    font-family:"IBM Plex Mono",monospace;
+  }
+  .chips button:hover{background:var(--gelb)}
+  .chips button.on{background:var(--kobalt); color:#fff; border-color:var(--kobalt)}
+  .count{
+    margin:0 0 8px; font-size:11px; opacity:.7;
+    font-family:"IBM Plex Mono",monospace;
+  }
   #structureList button{
     width:100%; text-align:left; cursor:pointer;
     background:#fff; border:2px solid var(--line); border-radius:2px;
@@ -102,6 +166,8 @@
 <main>
   <aside>
     <h2 data-de="Strukturen" data-en="Structures">Strukturen</h2>
+    <div id="chips" class="chips" role="group" aria-label="Strukturgruppen"></div>
+    <p class="count" id="count"></p>
     <ul id="structureList"></ul>
   </aside>
 
@@ -141,15 +207,40 @@
   'use strict';
 
   // ---------------------------------------------------------------- Daten
+  // 19 Strukturen in vier Gruppen. Die Liste waechst mit dem Datenbestand,
+  // darum Filter-Chips statt eines weiteren Scroll-Kragens.
+  // Jede Datei ist lokal vorhanden — deploy-hygiene.js prueft das im Gate.
+  var GROUPS = {
+    protein: { de: 'Protein',    en: 'Protein' },
+    organic: { de: 'Organisch',  en: 'Organic' },
+    mineral: { de: 'Mineral',    en: 'Mineral' },
+    novelty: { de: 'Exotic',     en: 'Exotic' }
+  };
+
   var STRUCTURES = [
-    { file: 'data/1crn.pdb',   name: { de: 'Crambin (1CRN)',        en: 'Crambin (1CRN)' },        kind: { de: 'Protein', en: 'Protein' } },
-    { file: 'data/1cbs.cif',   name: { de: 'Calmodulin-Fragment',   en: 'Calmodulin fragment' },   kind: { de: 'CIF', en: 'CIF' } },
-    { file: 'data/dna.pse',    name: { de: 'DNA-Doppelhelix',       en: 'DNA double helix' },      kind: { de: 'Pseudo', en: 'Pseudo' } },
-    { file: 'data/taxol.mol',  name: { de: 'Taxol',                 en: 'Taxol' },                kind: { de: 'MOL', en: 'MOL' } },
-    { file: 'data/c60af.mol',  name: { de: 'Fulleren C60',          en: 'Fullerene C60' },         kind: { de: 'MOL', en: 'MOL' } },
-    { file: 'data/caffeine.mol', name: { de: 'Koffein',             en: 'Caffeine' },             kind: { de: 'MOL', en: 'MOL' } },
-    { file: 'data/diamond.cif', name: { de: 'Diamant',              en: 'Diamond' },              kind: { de: 'Kristall', en: 'Crystal' } },
-    { file: 'data/quartz.cif',  name: { de: 'Quarz',                en: 'Quartz' },               kind: { de: 'Kristall', en: 'Crystal' } }
+    // --- Protein
+    { f:'data/1crn.pdb',       g:'protein', de:'Crambin (1CRN)',      en:'Crambin (1CRN)',      x:'1crn.pdb' },
+    { f:'data/1cbs.cif',       g:'protein', de:'Calmodulin-Fragment', en:'Calmodulin fragment', x:'156 KB' },
+    { f:'data/1crntour.pdb',   g:'protein', de:'Crambin (Tunnelansicht)', en:'Crambin (tunnel view)', x:'1crntour.pdb' },
+    { f:'data/dna.pse',        g:'protein', de:'DNA-Doppelhelix',     en:'DNA double helix',    x:'dna.pse' },
+    { f:'data/1bna_surface.pse', g:'protein', de:'DNA-Oberfläche',   en:'DNA surface',         x:'1bna_surface.pse' },
+    // --- Organisch
+    { f:'data/taxol.mol',      g:'organic', de:'Taxol',               en:'Taxol',               x:'taxol.mol' },
+    { f:'data/caffeine.mol',   g:'organic', de:'Koffein',             en:'Caffeine',            x:'caffeine.mol' },
+    { f:'data/estron.cml',     g:'organic', de:'Estron',              en:'Estrone',             x:'estron.cml' },
+    { f:'data/c6h6.smol',      g:'organic', de:'Benzol (ZSM-5)',     en:'Benzene (ZSM-5)',     x:'165 KB' },
+    { f:'data/co2.smol',       g:'organic', de:'CO₂-Molekül',        en:'CO₂ molecule',        x:'co2.smol' },
+    // --- Mineral
+    { f:'data/diamond.cif',    g:'mineral', de:'Diamant',             en:'Diamond',             x:'diamond.cif' },
+    { f:'data/quartz.cif',     g:'mineral', de:'Quarz',               en:'Quartz',              x:'quartz.cif' },
+    { f:'data/calcite.cif',    g:'mineral', de:'Calcit',              en:'Calcite',             x:'calcite.cif' },
+    { f:'data/chromium.cif',   g:'mineral', de:'Chrom (kubisch)',    en:'Chromium (cubic)',    x:'chromium.cif' },
+    { f:'data/nacl.cif',       g:'mineral', de:'Kochsalz',            en:'Sodium chloride',     x:'nacl.cif' },
+    { f:'data/04369a.cif',     g:'mineral', de:'Carnallit (K-Dual)',  en:'Carnallite',          x:'04369a.cif' },
+    { f:'data/maleic.cif',     g:'mineral', de:'Maleinsäure',         en:'Maleic acid',         x:'maleic.cif' },
+    // --- Exotic
+    { f:'data/c60af.mol',      g:'novelty', de:'Fulleren C60',        en:'Fullerene C60',        x:'c60af.mol' },
+    { f:'data/buckyball.mol',  g:'novelty', de:'Buckyball (2D)',      en:'Buckyball (2D)',      x:'buckyball.mol' }
   ];
 
   // ---------------------------------------------------------------- i18n
@@ -166,6 +257,7 @@
   var applet = null;
   var ready = false;
   var current = STRUCTURES[0];
+  var filter = null;
 
   // ---------------------------------------------------------------- Status
   function status(msg, cls) {
@@ -177,21 +269,61 @@
   function t(key) { return I18N[key][lang]; }
 
   // ---------------------------------------------------------------- Aufbau
+  // Filter: null = alle Gruppen. Die Chips stehen ueber der Liste, damit die
+  // 19 Eintraege nicht als eine ungebrochene Naehe durchlaufen.
+  function buildChips() {
+    var bar = document.getElementById('chips');
+    bar.innerHTML = '';
+    var keys = Object.keys(GROUPS);
+    var make = function (key, label) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.textContent = label;
+      b.setAttribute('aria-pressed', filter === key ? 'true' : 'false');
+      if (filter === key) b.classList.add('on');
+      b.addEventListener('click', function () {
+        filter = key;
+        buildChips();
+        buildList();
+      });
+      bar.appendChild(b);
+    };
+    make(null, lang === 'de' ? 'Alle' : 'All');
+    keys.forEach(function (k) { make(k, GROUPS[k][lang]); });
+  }
+
   function buildList() {
     var ul = document.getElementById('structureList');
     ul.innerHTML = '';
+    var shown = 0;
+
     STRUCTURES.forEach(function (s, i) {
+      if (filter && s.g !== filter) return;
+      shown++;
       var li = document.createElement('li');
       var b = document.createElement('button');
       b.type = 'button';
       b.setAttribute('aria-current', s === current ? 'true' : 'false');
-      b.innerHTML = '<span>' + s.name[lang] + '</span>' +
-                    '<span class="meta">' + s.kind[lang] + ' · ' +
-                    s.file.replace('data/', '') + '</span>';
+      b.innerHTML = '<span>' + s[lang] + '</span>' +
+                    '<span class="meta">' + GROUPS[s.g][lang] + ' · ' + s.x + '</span>';
       b.addEventListener('click', function () { loadStructure(i); });
       li.appendChild(b);
       ul.appendChild(li);
     });
+
+    if (!shown) {
+      var empty = document.createElement('li');
+      empty.className = 'empty';
+      empty.textContent = lang === 'de' ? 'Keine Struktur in dieser Gruppe'
+                                      : 'No structure in this group';
+      ul.appendChild(empty);
+    }
+    // Zaehler am Kopf: macht die Scrollbarkeit der Liste sichtbar und
+    // beantwortet die Frage "wie viele gibt es" ohne Zaehlen.
+    document.getElementById('count').textContent =
+      lang === 'de' ? shown + ' von ' + STRUCTURES.length
+                    : shown + ' of ' + STRUCTURES.length;
   }
 
   function applyI18n() {
@@ -201,6 +333,7 @@
       el.textContent = el.getAttribute('data-' + lang);
     }
     document.documentElement.lang = lang;
+    buildChips();
     buildList();
   }
 
@@ -215,12 +348,12 @@
       disableJ2SLoadMonitor: true,
       disableInitialConsole: true,
       addSelectionOptions: true,
-      script: 'load ' + STRUCTURES[0].file
+      script: 'load ' + STRUCTURES[0].f
     };
 
     info.readyFunction = function () {
       ready = true;
-      status(t('ready') + ' — ' + current.name[lang], 'ok');
+      status(t('ready') + ' — ' + current[lang], 'ok');
       document.getElementById('viewerWrap').classList.add('j2d');
     };
 
@@ -239,7 +372,7 @@
   function loadStructure(i) {
     current = STRUCTURES[i];
     buildList();
-    status(t('loadingS') + current.name[lang], 'busy');
+    status(t('loadingS') + current[lang], 'busy');
 
     // VOR dem Befehl pruefen, ob die Datei ueberhaupt liegt: sonst gibt der
     // J2S-Kern eine leere Flaeche statt einer Meldung zurueck.
@@ -254,14 +387,14 @@
     //     statische Server findet "caffeine.mol?probe=1" nicht.
     // Der ehrliche Test ist ein HEAD auf den exakten Pfad: 200 = vorhanden,
     // 404 = wirklich weg. Und er kostet keine Bytes Nutzlast.
-    fetch(current.file, { method: 'HEAD' })
+    fetch(current.f, { method: 'HEAD' })
       .then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
-        Jmol.script(applet, 'load ' + current.file + '; zoom reset');
-        status(t('ready') + ' — ' + current.name[lang], 'ok');
+        Jmol.script(applet, 'load ' + current.f + '; zoom reset');
+        status(t('ready') + ' — ' + current[lang], 'ok');
       })
       .catch(function (e) {
-        status(current.file + ' — ' + t('notFound') + ' (' + e.message + ')', 'err');
+        status(current.f + ' — ' + t('notFound') + ' (' + e.message + ')', 'err');
       });
   }
 
@@ -279,7 +412,7 @@
       lang = lang === 'de' ? 'en' : 'de';
       applyI18n();
       // Status neu setzen, sonst nennt er weiter den Strukturnamen in der
-      // alten Sprache. loadStructure() liest current.name[lang] — der
+      // alten Sprache. loadStructure() liest current[lang] — der
       // Aufruf ist die einzige Stelle, die den Text korrekt neu baut.
       if (ready) loadStructure(STRUCTURES.indexOf(current));
       else status(t('loading'), 'busy');
