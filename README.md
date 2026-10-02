@@ -19,13 +19,19 @@ https://docs.github.com/de/pages/quickstart
 
 ## msgraph/react — Tabs
 Hub · Reference (17.531 Endpoints, im Worker geparst) · Console (NL→Graph,
-optional eigener OpenRouter-Key) · Permissions · Breaking Radar ·
+optional eigener API-Key des **gewählten Anbieters** — OpenRouter oder Nous
+Portal, je ein eigener Key-Slot) · Permissions · Breaking Radar ·
 **Skizzen** (17 Cloud-CSDL-Dokumente aus metadata-msgraph; pro Klick genau
 eine Datei im Worker zählen, zusammen ~90 MB).
 
 Gehört zur [API-Proxy-Notiz](msgraph/react/NOTES-API-PROXY.md): ein Graph-Token
 darf **nie** in einer Datei landen, die GitHub Pages ausliefert — jede
 Pages-Datei ist öffentlich abrufbar (HTTP 200, keine Authentifizierung).
+
+`data/index.*.json` trägt `schemaVersion` = Version des Forks, aber
+`syncDate`/`extractedFrom` = Tag der **Extraktion** (26.08.2026). Die Dateien
+sind seither nicht neu erzeugt worden. Der aktuelle Sync-Stand steht in
+`data/manifest.json` und ist der, den der Live-Dot anzeigt.
 
 ## Tests
 Die CI (`.github/workflows/site-ci.yml`, Job `lint-and-test`) läuft bei jedem Push auf
@@ -35,7 +41,7 @@ Die CI (`.github/workflows/site-ci.yml`, Job `lint-and-test`) läuft bei jedem P
 node deploy-hygiene.js                            # Gate
 node --test tests/deploy-hygiene-gate.test.mjs     # 6
 cd macrohard && npm test                           # 332
-cd msgraph/react && node --test tests/*.test.mjs   # 52
+cd msgraph/react && node --test tests/*.test.mjs   # 61
 ```
 
 Vor einem Push: `node deploy-hygiene.js`. Das Gate blockiert bei Exit 1.
