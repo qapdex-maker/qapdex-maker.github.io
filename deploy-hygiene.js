@@ -19,6 +19,11 @@ const path = require('path');
 const ROOT = process.cwd();
 const MACROHARD = path.join(ROOT, 'macrohard');
 const REACT = path.join(ROOT, 'msgraph', 'react');
+const JSMOL = path.join(ROOT, 'jsmol');
+// jsmol/ ist ein Vendor-Deploy mit hunderten Dateien. Ohne Budget wandert der
+// naechste data-Dump (39 MB im Original) unbemerkt mit. 60 MB ist grosszuegig
+// ueber dem aktuellen Stand (49 MB), eng genug um einen Unfall zu stoppen.
+const JSMOL_BUDGET_MB = 60;
 let fail = 0;
 const failm = (m) => { console.log('  FAIL: ' + m); fail++; };
 const ok = (m) => console.log('  ok:   ' + m);
@@ -201,6 +206,50 @@ try {
   if (head === remote) ok('git local == remote (sauberer Stand)');
   else { console.log('  WARN: lokaler HEAD != remote (unpushte Commits) — Push zuerst.'); }
 } catch (e) { console.log('  WARN: git-Remote-Check fehlgeschlagen: ' + e.message); }
+
+// 5b. jsmol/ — Vendor-Deploy. Die Pflichtdateien sind der Unterschied
+// zwischen "Viewer laeuft" und "weisse Flaeche mit Lade-Ewigkeit".
+if (fs.existsSync(JSMOL)) {
+  const REQUIRED = [
+    'index.html', 'JSmol.min.js',
+    'j2s/Jmol.properties', 'j2s/core/corejmol.z.js', 'j2s/core/corescript.z.js',
+  ];
+  for (const rel of REQUIRED) {
+    if (fs.existsSync(path.join(JSMOL, rel))) ok('jsmol/' + rel + ' vorhanden');
+    else failm('jsmol/' + rel + ' FEHLT — der Viewer kann sich nicht aufbauen');
+  }
+  // Das Kernverzeichnis muss neben JSmol.min.js liegen: Jmol laedt es ueber
+  // j2sPath relativ zur Seite, ein Verschieben in einen Unterordner stillt
+  // den Viewer lautlos (gemessen am 2026-10-02: Canvas bleibt leer, keine
+  // Fehlermeldung).
+  if (fs.existsSync(path.join(JSMOL, 'j2s', 'core'))) ok('jsmol/j2s/core liegt neben JSmol.min.js');
+  else failm('jsmol/j2s/core fehlt oder liegt verschoben — j2sPath ist relativ zur Seite');
+
+  // Relative Pfade: eine Subpage mit absolutem /j2s laeuft unter
+  // qapdex-maker.github.io/jsmol/ nicht.
+  const jIdx = fs.readFileSync(path.join(JSMOL, 'index.html'), 'utf8');
+  if (/src="\/jsmol|href="\/jsmol/.test(jIdx)) failm('jsmol/index.html: absoluter /jsmol-Pfad (relativ nötig)');
+  else ok('jsmol/index.html: relative Pfade');
+
+  // Jeder Eintrag in der STRUCTURES-Liste muss real im Repo liegen.
+  const files = [...jIdx.matchAll(/'(data\/[^']+)'/g)].map((m) => m[1]);
+  let missing = 0;
+  for (const f of new Set(files)) {
+    if (!fs.existsSync(path.join(JSMOL, f))) { failm('jsmol/' + f + ' in index.html gelistet, aber nicht vorhanden'); missing++; }
+  }
+  if (!missing) ok('jsmol: alle ' + new Set(files).size + ' gelisteten Strukturdateien vorhanden');
+
+  // Budget
+  const { execSync: ex } = require('child_process');
+  let mb = 0;
+  try {
+    mb = parseFloat(ex(`du -sm "${JSMOL}" | cut -f1`).toString().trim());
+    if (mb > JSMOL_BUDGET_MB) failm('jsmol/ ist ' + mb + ' MB — Budget ' + JSMOL_BUDGET_MB + ' MB überschritten');
+    else ok('jsmol/ Budget: ' + mb + ' MB / ' + JSMOL_BUDGET_MB + ' MB');
+  } catch (e) { warnm('jsmol/ Budget nicht messbar: ' + e.message); }
+} else {
+  ok('jsmol/ nicht vorhanden (skip)');
+}
 
 function finish() {
   if (warnCount) {
