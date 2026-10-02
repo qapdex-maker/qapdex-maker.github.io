@@ -230,7 +230,7 @@ if (fs.existsSync(JSMOL)) {
   // Die Liste der zu pruefenden Seiten ist bewusst ausgeschrieben und
   // nicht aus dem Verzeichnis gescannt: ein Scan wuerde auch die
   // __probe-Dateien mitnehmen, die absichtlich nicht deployt werden.
-  for (const page of ['index.html', 'grid.html', 'sandbox.html']) {
+  for (const page of ['index.html', 'grid.html', 'sandbox.html', 'reaction.html']) {
     const p = path.join(JSMOL, page);
     if (!fs.existsSync(p)) { ok('jsmol/' + page + ' nicht vorhanden (skip)'); continue; }
     const src = fs.readFileSync(p, 'utf8');

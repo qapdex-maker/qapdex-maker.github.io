@@ -17,8 +17,11 @@ https://docs.github.com/de/pages/quickstart
 - `pepemem/` = MEMEPEPE Linktree-Backup
 - `pepememe/` = PEPEMEME Linktree-Backup
 - `jsmol/` = JSmol Workbench — 3D-Molekül-Viewer (Jmol 16.3.53 j2s-Kern,
-  49 MB, 8 kuratierte Strukturdateien). Vendor-Code mit eigener Lizenz:
-  siehe `jsmol/LICENSE-JSmol.txt` — die `LICENSE` im Root gilt dafür **nicht**.
+  49 MB, 19 kuratierte Strukturdateien). Vier Seiten:
+  `index.html` (Workbench) · `grid.html` (12 Instanzen im Raster) ·
+  `sandbox.html` (Befehlskonsole) · `reaction.html` (3 Instanzen, Vergleich).
+  Vendor-Code mit eigener Lizenz: siehe `jsmol/LICENSE-JSmol.txt` — die
+  `LICENSE` im Root gilt dafür **nicht**.
 
 ## msgraph/react — Tabs
 Hub · Reference (17.531 Endpoints, im Worker geparst) · Console (NL→Graph,

@@ -20,7 +20,7 @@ import { execSync } from 'node:child_process';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const JSMOL = path.join(ROOT, 'jsmol');
-const PAGES = ['index.html', 'grid.html', 'sandbox.html'];
+const PAGES = ['index.html', 'grid.html', 'sandbox.html', 'reaction.html'];
 
 const read = (p) => fs.readFileSync(path.join(JSMOL, p), 'utf8');
 
@@ -144,6 +144,54 @@ test('sandbox.html und grid.html nutzen dieselbe Struktur-Liste wie index.html',
   const all = new Set();
   for (const s of sets) for (const f of s) all.add(f);
   assert.ok(all.size >= 19, `nur ${all.size} Strukturen gesamt, erwartet mindestens 19`);
+});
+
+test('reaction.html laedt ueber den gemessenen Weg, nicht ueber SMILES', () => {
+  // Acht SMILES-Wege am 2026-10-02 gemessen, alle gescheitert mit
+  // "unrecognized file format for file .../CCO": load "CCO", load inline,
+  // load smiles, load "CCO.smi", load file type smiles, loadScript
+  // coresmiles, Jmol.loadFile, <script src="JS/SmilesExt.js">. Die Module
+  // liegen im Repo (HTTP 200), werden aber nie geladen — getExt("Smiles")
+  // laeuft ueber das J2S-Klassensystem. window.SmilesParser bleibt undefined.
+  const js = inlineScript('reaction.html');
+  const code = js.replace(/\/\/[^\n]*/g, '');
+  assert.ok(!/load "?[A-Za-z0-9@()\[\]#%+\-]{1,30}"?(;|\s)/.test(code.replace(/load '\s*\+/g,'load ')),
+    'reaction.html: ein SMILES-String wird geladen — am 2026-10-02 ' +
+    'gemessen als "unrecognized file format"');
+  assert.ok(!/createObjectURL/.test(code), 'reaction.html: Blob-Weg');
+  // Der Weg, der nachweislich rendert.
+  assert.ok(/load ['"]? \+ String\(file\)/.test(js) || /load \+ String\(file\)/.test(js),
+    'reaction.html: kein "load data/<datei>" — der Weg, der nachweislich rendert');
+  assert.ok(/method: 'HEAD'/.test(js),
+    'reaction.html: keine HEAD-Pruefung — sonst laedt der Kern eine 404-Seite');
+  // Messung am Kern-Canvas, nicht an einer vermuteten Id.
+  // Der Kern ersetzt jedes <canvas id="cvX"> durch seinen eigenen mit
+  // Instanz-Nummer im Namen ("rxAppletA_1_canvas2d"). Jede Messung, die
+  // cvA/cvB/cvC sucht, findet null und meldet "nicht gezeichnet" fuer eine
+  // vollstaendig gerenderte Seite — das ist am 2026-10-02 zweimal passiert,
+  // einmal davon fast als Produktfehler verkauft worden.
+  //
+  // Also: KEIN getElementById('cvA') und KEIN querySelector('#cvA') in der
+  // Messfunktion. querySelector('canvas') ueber den Host-Div ist der Weg.
+  const canvasLookup = js.match(/function canvasOf[\s\S]{0,220}/);
+  assert.ok(canvasLookup && /querySelector\('canvas'\)/.test(canvasLookup[0]),
+    'reaction.html: canvasOf() sucht den Canvas nicht ueber den Host-Div');
+  assert.ok(!/getElementById\('cv[ABC]'\)|getElementById\(st\.canvas\)/.test(code),
+    'reaction.html: die Messung sucht cvA/cvB/cvC — diese Elemente ' +
+    'existieren nicht, der Kern erzeugt eigene Canvas mit Instanz-Nummer');
+  // Und im HTML-Markup steht kein canvas mit Id. Geprueft wird nur der
+  // Teil VOR dem ersten <script> — die Erklaerung im Script-Kommentar
+  // nennt cvA natuerlich auch, und ein Test, der Kommentare mitprueft,
+  // schlaegt an der eigenen Dokumentation an.
+  const markup = read('reaction.html').split('<script')[0];
+  assert.ok(!/<canvas/.test(markup),
+    'reaction.html: ein <canvas> im Markup — der Kern erzeugt beim ' +
+    'Applet-Bau seinen eigenen ("rxAppletA_1_canvas2d") und ersetzt ' +
+    'jedes vorhandene. Jede Id-Annahme darauf ist falsch (2026-10-02: ' +
+    '0 Pixel gemessen bei vollstaendig gerenderter Seite)');
+  assert.ok(!/st\.canvas/.test(code),
+    'reaction.html: st.canvas wird noch benutzt — es gibt kein solches Feld');
+  assert.ok(!/smilesUrlFormat/.test(code), '');
 });
 
 test('jeder Toolbar-Knopf sendet einen geprueften Befehl', () => {
