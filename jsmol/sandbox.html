@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-de="MolSandbox" data-en="MolSandbox">MolSandbox</title>
+<style>
+  :root{
+    --kobalt:#2547ff; --gelb:#ffd400; --paper:#f1ede3; --ink:#141414;
+    --line:#141414; --ok:#1a7f37; --err:#c1121f; --mute:#6b6b6b;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,sans-serif;
+    height:100vh; display:flex; flex-direction:column; overflow:hidden;
+  }
+  header{
+    border-bottom:3px solid var(--line); padding:10px 14px;
+    background:var(--kobalt); color:#fff;
+    display:flex; gap:12px; align-items:center; flex-wrap:wrap; flex:0 0 auto;
+  }
+  header h1{font-size:16px;margin:0;font-weight:800}
+  header .sub{font-size:11px;opacity:.85;font-family:"IBM Plex Mono",monospace}
+  header a.back{color:#fff;text-decoration:none;font-size:12px;
+    border:2px solid #fff;padding:3px 9px;border-radius:2px}
+  header .sp{flex:1}
+  header a.small{color:#fff;font-size:12px;border-bottom:1px solid rgba(255,255,255,.5)}
+
+  main{flex:1; display:grid; grid-template-columns:1fr 340px; min-height:0}
+  @media (max-width:900px){
+    main{grid-template-columns:1fr; grid-template-rows:1fr auto}
+  }
+
+  /* ---- Viewer ---- */
+  #stage{position:relative; display:flex; align-items:center;
+    justify-content:center; background:#fff; min-height:0; overflow:hidden}
+  #stage canvas{max-width:100%;max-height:100%;display:block}
+  #hud{
+    position:absolute; left:8px; top:8px; z-index:20;
+    font-family:"IBM Plex Mono",monospace; font-size:11px;
+    background:rgba(255,255,255,.92); border:2px solid var(--line);
+    padding:4px 8px; pointer-events:none; line-height:1.5;
+  }
+
+  /* ---- Konsole ---- */
+  aside{
+    border-left:3px solid var(--line); background:#e8e2d5;
+    display:flex; flex-direction:column; min-height:0;
+  }
+  @media (max-width:900px){
+    aside{border-left:none; border-top:3px solid var(--line); max-height:46vh}
+  }
+  aside h2{
+    font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+    margin:0; padding:9px 12px; background:var(--ink); color:#fff;
+    font-family:"IBM Plex Mono",monospace;
+  }
+  .quick{
+    display:flex; flex-wrap:wrap; gap:4px; padding:8px;
+    border-bottom:2px solid var(--line); background:#fff;
+  }
+  .quick button{
+    cursor:pointer; font:inherit; font-size:11px; font-family:"IBM Plex Mono",monospace;
+    background:var(--paper); border:1px solid var(--line); border-radius:2px;
+    padding:2px 6px;
+  }
+  .quick button:hover{background:var(--gelb)}
+
+  #log{
+    flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    background:#fff; border-bottom:2px solid var(--line);
+    font-family:"IBM Plex Mono",monospace; font-size:12px; padding:6px 8px;
+    min-height:0;
+  }
+  #log div{padding:1px 0; border-bottom:1px dotted #ddd; word-break:break-word}
+  #log .cmd{color:var(--kobalt); font-weight:700}
+  #log .ok{color:var(--ok)}
+  #log .err{color:var(--err); font-weight:700}
+  #log .info{color:var(--mute)}
+
+  form{
+    display:flex; gap:5px; padding:8px; background:var(--paper); flex:0 0 auto;
+  }
+  form input{
+    flex:1; min-width:0; font:inherit; font-size:13px;
+    font-family:"IBM Plex Mono",monospace;
+    border:2px solid var(--line); border-radius:2px; padding:6px 8px;
+  }
+  form button{
+    cursor:pointer; background:var(--kobalt); color:#fff; border:2px solid var(--line);
+    border-radius:2px; padding:6px 12px; font:inherit; font-size:13px; font-weight:700;
+  }
+  .bar{
+    display:flex; gap:5px; flex-wrap:wrap; padding:0 8px 8px; background:var(--paper);
+    flex:0 0 auto;
+  }
+  .bar button{
+    cursor:pointer; background:#fff; border:2px solid var(--line);
+    border-radius:2px; padding:4px 9px; font:inherit; font-size:12px;
+  }
+  .bar select{
+    cursor:pointer; background:#fff; border:2px solid var(--line);
+    border-radius:2px; padding:3px 6px; font:inherit; font-size:12px;
+    font-family:"IBM Plex Mono",monospace; max-width:190px;
+  }
+  .bar button:hover{background:var(--gelb)}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../index.html">&larr; <span data-de="Portal" data-en="Portal">Portal</span></a>
+  <h1>MolSandbox</h1>
+  <span class="sub" data-de="JSmol-Befehle direkt ausprobieren" data-en="Try JSmol commands directly">JSmol-Befehle direkt ausprobieren</span>
+  <span class="sp"></span>
+  <a class="small" href="index.html" data-de="Workbench" data-en="Workbench">Workbench</a>
+  <a class="small" href="grid.html" data-de="MolGrid" data-en="MolGrid">MolGrid</a>
+</header>
+
+<main>
+  <div id="stage">
+    <div id="hud">…</div>
+    <span id="mydiv"></span>
+  </div>
+
+  <aside>
+    <h2 data-de="Konsole" data-en="Console">Konsole</h2>
+    <div class="quick" id="quick"></div>
+    <div id="log" role="log" aria-live="polite"></div>
+    <div class="bar">
+      <select id="structSel" data-de-title="Struktur" data-en-title="Structure"></select>
+      <button id="snapBtn" data-de="Screenshot" data-en="Screenshot">Screenshot</button>
+      <button id="resetBtn" data-de="Zurücksetzen" data-en="Reset">Zurücksetzen</button>
+      <button id="clearBtn" data-de="Log leeren" data-en="Clear log">Log leeren</button>
+      <button id="langBtn">DE / EN</button>
+    </div>
+    <form id="cmdForm">
+      <input id="cmdInput" type="text" autocomplete="off" spellcheck="false"
+             data-de="JSmol-Befehl" data-en="JSmol command">
+      <button type="submit" data-de="Ausführen" data-en="Run">Ausführen</button>
+    </form>
+  </aside>
+</main>
+
+<script src="JSmol.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var START_FILE = 'data/1crn.pdb';
+
+  // Die 19 kuratierten Strukturen. Der Weg "load data/<datei>" ist der,
+  // den auch index.html und grid.html nehmen, und er ist der einzige
+  // gemessene, der zuverlaessig rendert (taxol.mol: 2,56 % -> 8,16 %).
+  var FILES = [
+    'data/1crn.pdb', 'data/1cbs.cif', 'data/1crntour.pdb', 'data/dna.pse',
+    'data/1bna_surface.pse', 'data/taxol.mol', 'data/caffeine.mol',
+    'data/estron.cml', 'data/c6h6.smol', 'data/co2.smol', 'data/diamond.cif',
+    'data/quartz.cif', 'data/calcite.cif', 'data/chromium.cif',
+    'data/nacl.cif', 'data/04369a.cif', 'data/maleic.cif', 'data/c60af.mol',
+    'data/buckyball.mol'
+  ];
+
+  // Befehlsvorschlaege. Aus Jmol-Skript-Kommandos, nicht geraten —
+  // jeder davon aendert sichtbar etwas.
+  var QUICK = [
+    'zoom reset', 'zoom in', 'zoom out',
+    'spin on', 'spin off',
+    'cartoon on', 'spacefill on', 'stick', 'wireframe',
+    'select all', 'select none',
+    'background white', 'background black',
+    'show hydrogens', 'hide hydrogens',
+    'color carbon grey', 'color carbon orange',
+    'screenshot image PNG'
+  ];
+
+  var I18N = {
+    ready:     { de:'Kern bereit',              en:'core ready' },
+    start:     { de:'Kern wird geladen …',      en:'loading core …' },
+    coreError: { de:'Kern nicht gestartet',     en:'core did not start' },
+    emptyCmds: { de:'Leere Eingabe',            en:'empty input' },
+    cmdPrefix: { de:'',                        en:'' },
+    ok:        { de:'ok',                      en:'ok' },
+    sent:      { de:'gesendet (Bild unverändert messbar)', en:'sent (image change not measurable)' },
+    noVisible: { de:'kein sichtbarer Unterschied', en:'no visible change' },
+    noWorker:  { de:'Drop nicht möglich',         en:'drop unavailable' },
+    resetNeeded:{ de:'Applet neu starten (Zurücksetzen), dann nächster Drop',
+                  en:'restart the applet (Reset) before the next drop' },
+    kernel:    { de:'Kern meldet',              en:'kernel reports' },
+    loadFailed:{ de:'nicht lesbar — Bild leer',  en:'unreadable — image empty' },
+    file:      { de:'Datei',                    en:'file' },
+    loaded:    { de:'geladen',                  en:'loaded' },
+    snapshot:  { de:'Screenshot gespeichert',   en:'screenshot saved' },
+    snapshotErr:{ de:'Screenshot fehlgeschlagen',en:'screenshot failed' },
+    reset:     { de:'zurückgesetzt',            en:'reset' },
+    lines:     { de:'Zeilen',                   en:'lines' },
+    bytes:     { de:'Bytes',                    en:'bytes' }
+  };
+
+
+  var lang = 'de';
+  var applet = null;
+  var ready = false;
+  var current = '1crn.pdb';   // geladene Strukturdatei
+
+  function t(k){ return I18N[k][lang]; }
+
+  // ---- Log ---------------------------------------------------------------
+  function log(cls, text){
+    var el = document.getElementById('log');
+    var d = document.createElement('div');
+    d.className = cls;
+    d.textContent = text;
+    el.appendChild(d);
+    el.scrollTop = el.scrollHeight;
+    // Log begrenzen: eine Sandbox, die 5000 Zeilen ohne Ende sammelt,
+    // ist bei 3 MB RAM auch kein Komfort.
+    while (el.children.length > 400) el.removeChild(el.firstChild);
+  }
+
+  // ---- HUD ---------------------------------------------------------------
+  function hud(){
+    var cv = document.querySelector('#stage canvas');
+    var el = document.getElementById('hud');
+    if (!cv) { el.textContent = t('start'); return; }
+    var pct = colorPct();
+    el.textContent = (current || '1crn.pdb') + '  ·  ' + cv.width + '×' + cv.height +
+                     '  ·  ' + (pct === null ? '—' : pct + '%') +
+                     (ready ? '' : '  ·  …');
+  }
+
+  // ---- Befehl ------------------------------------------------------------
+  // JSmol gibt zu einem Befehl KEINE Rueckgabe. Jmol.script(applet, cmd)
+  // geht auch bei einem Kommando durch, das es nicht gibt — "gibtsnicht"
+  // lieferte "ok" (gemessen am 2026-10-02). Ein "ok" hier waere also eine
+  // Behauptung, keine Messung.
+  //
+  // Deshalb wird der Befehl ausgefuehrt und danach das Bild geprueft:
+  // veraendert sich die Farbquote, hat der Befehl gewirkt. Veraendert sie
+  // sich nicht, ist das kein Beweis fuer "wirkungslos" — "zoom 0.5" auf
+  // ein bereits kleines Molekuel aendert die Quote kaum. Es heisst dann
+  // nur: sichtbar passiert ist nichts. Genau das steht auch in der Zeile.
+  function run(cmd, echo){
+    cmd = (cmd || '').trim();
+    if (!cmd) { log('err', t('emptyCmds')); return; }
+    log('cmd', '› ' + cmd);
+    if (!ready) { log('err', t('coreError')); return; }
+
+    if (/^\s*screenshot\s+(\w+)/i.test(cmd)) { doSnapshot(); return; }
+
+    var before = colorPct();
+    try {
+      Jmol.script(applet, cmd);
+    } catch (e) {
+      log('err', 'ERR: ' + e.message);
+      return;
+    }
+
+    setTimeout(function () {
+      var after = colorPct();
+      if (before === null || after === null) {
+        log('info', t('sent'));
+      } else if (Math.abs(after - before) < 0.05) {
+        // Kein Unterschied. Zwei Lesarten: unwirksamer Befehl, oder einer
+        // der sich nicht auf die Farbquote auswirkt (zoom, rotate, center).
+        log('info', t('noVisible') + ' (' + before + '% → ' + after + '%)');
+      } else {
+        log('ok', t('ok') + ' (' + before + '% → ' + after + '%)');
+      }
+      hud();
+    }, 1400);
+  }
+
+  // Farbquote des Canvas. -1 wenn der Kontext nicht lesbar ist.
+  function colorPct(){
+    var cv = document.querySelector('#stage canvas');
+    if (!cv) return null;
+    try {
+      var d = cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;
+      var colored = 0;
+      for (var p = 0; p < d.length; p += 4)
+        if (255 - Math.min(d[p], d[p+1], d[p+2]) > 40) colored++;
+      return +(colored / (d.length/4) * 100).toFixed(2);
+    } catch (e) { return null; }
+  }
+
+  function doSnapshot(){
+    var cv = document.querySelector('#stage canvas');
+    if (!cv) { log('err', t('snapshotErr')); return; }
+    try {
+      var url = cv.toDataURL('image/png');
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'jsmol-' + Date.now() + '.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      log('ok', t('snapshot') + ' (' + Math.round(url.length/1024) + ' KB)');
+    } catch (e) {
+      // toDataURL wirft, wenn der Canvas als "fremd" markiert ist.
+      log('err', t('snapshotErr') + ': ' + e.message);
+    }
+  }
+
+  // ---- Datei-Upload aus dem Browser: ENTFERNT ----
+  //
+  // Vier Verfahren am 2026-10-02 wirklich im Browser gemessen, alle vier
+  // verworfen. Die Zahlen stehen hier, damit das nicht neu erfunden wird:
+  //
+  //  1. "load inline @..."      Der Kern meldet "1 model in this
+  //     collection", rendert aber ein anderes Molekuel. Koffein:
+  //     14,43 % -> 2,56 %, jede weitere Datei blieb bei ~2,56 %.
+  //  2. URL.createObjectURL     Blockiert den Renderer. Zwei Laeufe endeten
+  //     in "timeout Runtime.evaluate" — die Art Haenger, die auf dem
+  //     Telefon eine laufende Session killt.
+  //  3. Data-URL                Laedt nichts; 14,43 % blieb 14,43 %.
+  //  4. Service-Worker-Cache    Der Worker selbst war korrekt (8
+  //     Eintraege, Taxol 8350 Byte und Koffein 2341 Byte byte-genau
+  //     zurueck). Der erste Drop lud (14,43 % -> 3,61 %). Jeder weitere
+  //     Drop liess das Bild unveraendert (3,61 / 3,64 / 3,64 %),
+  //     mit frischem Browserprofil reproduziert. Der Kern haengt die
+  //     Szene an, statt sie zu ersetzen.
+  //
+  // Ausserdem meldete die Farbquoten-Pruefung einen 404-HTML-Fehlertext
+  // als "geladen" (3,64 % bei einer voellig roten Flaeche). Eine Messung,
+  // die falsch muend, ist schlimmer als keine.
+  //
+  // Was stattdessen da ist: der Strukturlader unten. Der Weg
+  // "load data/<datei>" ist der, den alle anderen Seiten benutzen und
+  // nachweislich rendert (gemessen: 2,56 % -> 8,16 % bei taxol.mol).
+
+  // ---- Aufbau ------------------------------------------------------------
+  function buildStructurePicker(){
+    var sel = document.getElementById('structSel');
+    if (!sel) return;
+    sel.innerHTML = '';
+    FILES.forEach(function (f){
+      var name = f.replace(/^data\//, '');
+      var o = document.createElement('option');
+      o.value = f;
+      o.textContent = name;
+      if (f === START_FILE) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.addEventListener('change', function () {
+      loadFile(sel.value);
+    });
+  }
+
+  // Strukturwechsel. Wartet auf die HTTP-Antwort, bevor der Kern den
+  // Befehl bekommt — sonst laedt er eine 404-Seite und meldet
+  // "unrecognized file format", sichtbar als roter Text im Canvas.
+  function loadFile(path){
+    if (!ready) { log('err', t('coreError')); return; }
+    fetch(path, { method: 'HEAD' }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      current = path;
+      var before = colorPct();
+      Jmol.script(applet, 'load ' + path + '; zoom reset');
+      setTimeout(function () {
+        var after = colorPct();
+        var same = before !== null && after !== null &&
+                   Math.abs(after - before) < 0.05;
+        if (after === null || same) {
+          log('err', t('loadFailed') + ': ' + path + ' (' + after + '%)');
+        } else {
+          log('ok', t('file') + ' ' + path.replace(/^data\//, '') +
+                   ' · ' + before + '% → ' + after + '%');
+        }
+        hud();
+      }, 2600);
+    }).catch(function (e) {
+      log('err', t('loadFailed') + ': ' + path + ' — ' + e.message);
+    });
+  }
+
+  // ---- Quick-Buttons ------------------------------------------------------
+  function buildQuick(){
+    var bar = document.getElementById('quick');
+    bar.innerHTML = '';
+    QUICK.forEach(function (c){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = c;
+      b.title = c;
+      b.addEventListener('click', function () {
+        document.getElementById('cmdInput').value = c;
+        run(c);
+      });
+      bar.appendChild(b);
+    });
+  }
+
+  function wire(){
+    document.getElementById('cmdForm').addEventListener('submit', function (e){
+      e.preventDefault();
+      var inp = document.getElementById('cmdInput');
+      run(inp.value);
+      inp.value = '';
+      inp.focus();
+    });
+    document.getElementById('snapBtn').addEventListener('click', doSnapshot);
+    document.getElementById('resetBtn').addEventListener('click', function () {
+      // Kein "zoom reset" — der Kern haengt nach einem Drop die alte Szene
+      // an und ein Blickbefehl aendert daran nichts. Erst das Applet neu
+      // bauen, dann ist der naechste Drop wieder der erste.
+      current = START_FILE;
+      ready = false;
+      document.getElementById('log').innerHTML = '';
+      document.getElementById('mydiv').innerHTML = '';
+      if (window.sandboxApplet && window.sandboxApplet.destroy) {
+        try { window.sandboxApplet.destroy(); } catch (e) {}
+      }
+      log('info', t('reset'));
+      start();
+    });
+    document.getElementById('clearBtn').addEventListener('click', function () {
+      document.getElementById('log').innerHTML = '';
+    });
+    document.getElementById('langBtn').addEventListener('click', function () {
+      lang = lang === 'de' ? 'en' : 'de';
+      applyI18n();
+      log('info', lang === 'de' ? 'Sprache: Deutsch' : 'language: English');
+    });
+  }
+
+  function applyI18n(){
+    var nodes = document.querySelectorAll('[data-de]');
+    for (var i=0; i<nodes.length; i++){
+      nodes[i].textContent = nodes[i].getAttribute('data-' + lang);
+    }
+    document.documentElement.lang = lang;
+  }
+
+  function start(){
+    var info = {
+      width: 460, height: 420,
+      j2sPath: 'j2s', use: 'HTML5',
+      disableJ2SLoadMonitor: true,
+      disableInitialConsole: true,
+      addSelectionOptions: false,
+      script: 'load ' + START_FILE
+    };
+    info.readyFunction = function () {
+      ready = true;
+      log('ok', t('ready'));
+      log('info', 'load ' + START_FILE);
+      hud();
+    };
+    document.getElementById('mydiv').innerHTML = Jmol.getAppletHtml('sandboxApplet', info);
+    applet = window.sandboxApplet;
+    log('info', t('start'));
+
+    setTimeout(function () {
+      if (!ready) { log('err', t('coreError')); }
+      else hud();
+    }, 20000);
+
+    setInterval(hud, 4000);
+  }
+
+  function boot(){
+    applyI18n();
+    buildStructurePicker();
+    buildQuick();
+    wire();
+    start();
+    document.getElementById('cmdInput').focus();
+  }
+
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+</body>
+</html>
