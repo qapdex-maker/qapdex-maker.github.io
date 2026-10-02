@@ -227,17 +227,30 @@ if (fs.existsSync(JSMOL)) {
 
   // Relative Pfade: eine Subpage mit absolutem /j2s laeuft unter
   // qapdex-maker.github.io/jsmol/ nicht.
-  const jIdx = fs.readFileSync(path.join(JSMOL, 'index.html'), 'utf8');
-  if (/src="\/jsmol|href="\/jsmol/.test(jIdx)) failm('jsmol/index.html: absoluter /jsmol-Pfad (relativ nötig)');
-  else ok('jsmol/index.html: relative Pfade');
+  // Die Liste der zu pruefenden Seiten ist bewusst ausgeschrieben und
+  // nicht aus dem Verzeichnis gescannt: ein Scan wuerde auch die
+  // __probe-Dateien mitnehmen, die absichtlich nicht deployt werden.
+  for (const page of ['index.html', 'grid.html', 'sandbox.html']) {
+    const p = path.join(JSMOL, page);
+    if (!fs.existsSync(p)) { ok('jsmol/' + page + ' nicht vorhanden (skip)'); continue; }
+    const src = fs.readFileSync(p, 'utf8');
+    if (/src="\/jsmol|href="\/jsmol/.test(src)) failm('jsmol/' + page + ': absoluter /jsmol-Pfad (relativ nötig)');
+    else ok('jsmol/' + page + ': relative Pfade');
 
-  // Jeder Eintrag in der STRUCTURES-Liste muss real im Repo liegen.
-  const files = [...jIdx.matchAll(/'(data\/[^']+)'/g)].map((m) => m[1]);
-  let missing = 0;
-  for (const f of new Set(files)) {
-    if (!fs.existsSync(path.join(JSMOL, f))) { failm('jsmol/' + f + ' in index.html gelistet, aber nicht vorhanden'); missing++; }
+    // Jeder in der Seite gelistete Datenpfad muss real im Repo liegen.
+    const files = [...src.matchAll(/'(data\/[^']+)'/g)].map((m) => m[1]);
+    const uniq = [...new Set(files)];
+    let missing = 0;
+    for (const f of uniq) {
+      if (!fs.existsSync(path.join(JSMOL, f))) {
+        failm('jsmol/' + page + ': ' + f + ' gelistet, aber nicht vorhanden');
+        missing++;
+      }
+    }
+    if (uniq.length && !missing) {
+      ok('jsmol/' + page + ': alle ' + uniq.length + ' gelisteten Strukturdateien vorhanden');
+    }
   }
-  if (!missing) ok('jsmol: alle ' + new Set(files).size + ' gelisteten Strukturdateien vorhanden');
 
   // Budget
   const { execSync: ex } = require('child_process');
