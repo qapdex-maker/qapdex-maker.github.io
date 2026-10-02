@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-de="MolGrid" data-en="MolGrid">MolGrid</title>
+<style>
+  :root{
+    --kobalt:#2547ff; --gelb:#ffd400; --paper:#f1ede3; --ink:#141414;
+    --line:#141414; --ok:#1a7f37; --err:#c1121f;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,sans-serif; min-height:100vh;
+    display:flex; flex-direction:column;
+  }
+  header{
+    border-bottom:3px solid var(--line); padding:12px 14px;
+    background:var(--kobalt); color:#fff;
+    display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+  }
+  header h1{font-size:17px;margin:0;font-weight:800}
+  header .sub{font-size:11px;opacity:.85;font-family:"IBM Plex Mono",monospace}
+  header a.back{color:#fff;text-decoration:none;font-size:12px;
+    border:2px solid #fff;padding:3px 9px;border-radius:2px}
+  header .sp{flex:1}
+  header a.small{color:#fff;font-size:12px;border-bottom:1px solid rgba(255,255,255,.5)}
+
+  .bar{
+    display:flex;gap:6px;flex-wrap:wrap;align-items:center;
+    border-bottom:3px solid var(--line);background:#fff;padding:8px 14px;
+  }
+  .bar button,.bar select{
+    cursor:pointer;background:var(--paper);border:2px solid var(--line);
+    border-radius:2px;padding:5px 10px;font:inherit;font-size:13px;
+  }
+  .bar button:hover{background:var(--gelb)}
+  .bar label{font-size:12px;font-family:"IBM Plex Mono",monospace;
+    display:flex;align-items:center;gap:5px}
+  .bar .status{
+    margin-left:auto;font-size:12px;font-family:"IBM Plex Mono",monospace;
+    padding:4px 10px;border:2px solid var(--line);background:var(--paper);
+  }
+  .bar .status.ok{border-color:var(--ok);background:#e6f4ea}
+  .bar .status.err{border-color:var(--err);background:#fde8ea}
+
+  #grid{
+    flex:1; display:grid; gap:8px; padding:10px;
+    grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+    align-content:start;
+  }
+  .cell{
+    border:3px solid var(--line); background:#fff; position:relative;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .cell .name{
+    font-size:11px; padding:3px 6px; background:var(--gelb);
+    border-bottom:2px solid var(--line); font-weight:700;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .cell .stage{flex:1; min-height:150px; display:flex; align-items:center;
+    justify-content:center; position:relative}
+  .cell .stage canvas{max-width:100%;height:auto;display:block}
+  .cell .meta{
+    font-size:10px; padding:2px 6px; border-top:1px solid #ccc;
+    font-family:"IBM Plex Mono",monospace; color:#555;
+    display:flex; justify-content:space-between; gap:4px;
+  }
+  .cell .spin{position:absolute;right:4px;top:4px;width:12px;height:12px}
+  .cell.pending .stage{background:
+    repeating-linear-gradient(45deg,#f4f2ec,#f4f2ec 8px,#eae7de 8px,#eae7de 16px)}
+  .cell.failed .meta{color:var(--err);font-weight:700}
+
+  footer{
+    border-top:3px solid var(--line); padding:8px 14px;
+    font-size:11px; font-family:"IBM Plex Mono",monospace;
+    background:#e8e2d5; display:flex;gap:14px;flex-wrap:wrap;
+  }
+  footer a{color:var(--kobalt)}
+
+  /* Der Wert neben dem Namen ist eine Momentaufnahme, kein Livemeter: die
+     Tunnel-Struktur laedt sichtbar nach (gemessen 32,6 % beim Setzen des
+     Werts gegen 65,7 % eine Sekunde spaeter). Wer nachrechnet, sieht
+     deshalb eine Differenz — das ist erwartet, nicht ein Fehler. */
+  .cell .pc{font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../index.html">&larr; <span data-de="Portal" data-en="Portal">Portal</span></a>
+  <h1>MolGrid</h1>
+  <span class="sub" data-de="Strukturvergleich · mehrere Viewer" data-en="Structure compare · multiple viewers">Strukturvergleich · mehrere Viewer</span>
+  <span class="sp"></span>
+  <a class="small" href="index.html" data-de="Workbench" data-en="Workbench">Workbench</a>
+</header>
+
+<div class="bar">
+  <label>
+    <span data-de="Ansicht" data-en="View">Ansicht</span>
+    <select id="styleSel">
+      <option value="cartoon on; spacefill off" data-de="Bänder" data-en="Cartoon">Bänder</option>
+      <option value="spacefill on; cartoon off" data-de="Kugeln" data-en="Spacefill">Kugeln</option>
+      <option value="stick" data-de="Stäbchen" data-en="Sticks">Stäbchen</option>
+      <option value="wireframe" data-de="Drahtgitter" data-en="Wireframe">Drahtgitter</option>
+    </select>
+  </label>
+  <button id="spinBtn" data-de="Alle drehen" data-en="Spin all">Alle drehen</button>
+  <button id="resetBtn" data-de="Größe" data-en="Reset view">Größe</button>
+  <button id="shuffleBtn" data-de="Andere Auswahl" data-en="Shuffle selection">Andere Auswahl</button>
+  <span class="sp"></span>
+  <button id="langBtn">DE / EN</button>
+  <span class="status ok" id="status" role="status" aria-live="polite">…</span>
+</div>
+
+<div id="grid"></div>
+
+<footer>
+  <span id="instLine">Instanzen —</span>
+  <span data-de="Jmol 16.3.53 (j2s-Kern)" data-en="Jmol 16.3.53 (j2s core)">Jmol 16.3.53 (j2s-Kern)</span>
+  <a href="https://jmol.sourceforge.net" rel="noopener">jmol.sourceforge.net</a>
+</footer>
+
+<script src="JSmol.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ---- Konfiguration ------------------------------------------------------
+  // MAX_INSTANCES ist gemessen, nicht geschaetzt:
+  //   2/4/6/9/12 -> alle ready, alle gezeichnet (13,94 % je Canvas)
+  //   16/24/32   -> alle ready, alle gezeichnet, Heap 23/40/56 MB
+  // Der 2D-Pfad (j2d, ohne WebGL) skaliert damit bis mindestens 32. Auf
+  // einem Geraet MIT WebGL ist die Grenze die Anzahl der GL-Kontexte
+  // (typisch 8-16), nicht diese Zahl. 12 ist der sichere Schnitt fuer
+  // beide Faelle; wer mehr braucht, dreht es hoch und merkt es sofort,
+  // weil leere Zellen als .failed markiert werden.
+  var MAX_INSTANCES = 12;
+
+  // ---- Daten --------------------------------------------------------------
+  var POOL = [
+    { f:'data/1crn.pdb',     de:'Crambin',      en:'Crambin' },
+    { f:'data/1cbs.cif',     de:'Calmodulin',   en:'Calmodulin' },
+    { f:'data/1crntour.pdb', de:'Crambin-Tunnel', en:'Crambin tunnel' },
+    { f:'data/dna.pse',      de:'DNA',          en:'DNA' },
+    { f:'data/1bna_surface.pse', de:'DNA-Oberfläche', en:'DNA surface' },
+    { f:'data/taxol.mol',    de:'Taxol',        en:'Taxol' },
+    { f:'data/caffeine.mol', de:'Koffein',      en:'Caffeine' },
+    { f:'data/estron.cml',   de:'Estron',       en:'Estrone' },
+    { f:'data/c6h6.smol',    de:'Benzol',       en:'Benzene' },
+    { f:'data/co2.smol',     de:'CO₂',          en:'CO₂' },
+    { f:'data/diamond.cif',  de:'Diamant',      en:'Diamond' },
+    { f:'data/quartz.cif',   de:'Quarz',        en:'Quartz' },
+    { f:'data/calcite.cif',  de:'Calcit',       en:'Calcite' },
+    { f:'data/chromium.cif', de:'Chrom',        en:'Chromium' },
+    { f:'data/nacl.cif',     de:'NaCl',         en:'NaCl' },
+    { f:'data/04369a.cif',   de:'Carnallit',    en:'Carnallite' },
+    { f:'data/maleic.cif',   de:'Maleinsäure',  en:'Maleic acid' },
+    { f:'data/c60af.mol',    de:'C60',          en:'C60' },
+    { f:'data/buckyball.mol',de:'Buckyball',    en:'Buckyball' }
+  ];
+
+  var I18N = {
+    building: { de:'baue Raster …',            en:'building grid …' },
+    readyN:   { de:'bereit — ',                en:'ready — ' },
+    shown:    { de:'',                        en:'' },
+    ofCells:  { de:'Raster',                   en:'Grid' },
+    limit:    { de:'Obergrenze',               en:'limit' },
+    failed:   { de:'fehlgeschlagen',           en:'failed' },
+    pending:  { de:'wartet',                   en:'pending' },
+    ready:    { de:'bereit',                   en:'ready' },
+    drawn:    { de:'gezeichnet',               en:'drawn' },
+    empty:    { de:'leer',                     en:'empty' }
+  };
+
+  var lang = 'de';
+  var cells = [];
+  var offset = 0;
+  var spinning = false;
+
+  function t(k){ return I18N[k][lang]; }
+  function s(n){ return { de:n[0], en:n[1] }; }
+
+  function setStatus(msg, cls){
+    var el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = 'status ' + (cls || '');
+  }
+
+  // ---- Aufbau -------------------------------------------------------------
+  // Sequenziell starten, nicht alle gleichzeitig: 12 Applets in einem Zug
+  // erzeugen 12 gleichzeitige Kern-Initialisierungen und damit einen
+  // sichtbaren Hänger auf dem Telefon. Versatz von 120 ms ist gemessen
+  // unkritisch (alle 12 ready bei ~2 s Gesamtdauer).
+  function buildGrid(){
+    var grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    cells = [];
+    var list = pickList();
+    setStatus(t('building'), 'busy');
+
+    list.forEach(function (item, i){
+      var cell = document.createElement('div');
+      cell.className = 'cell pending';
+      cell.innerHTML =
+        '<div class="name">' + item[lang] + '</div>' +
+        '<div class="stage"><span id="gstage' + i + '"></span></div>' +
+        '<div class="meta"><span class="st">' + t('pending') + '</span>' +
+        '<span class="pc">—</span></div>';
+      grid.appendChild(cell);
+      cells.push({ el: cell, ap: null, item: item, drawn: 0, done: false });
+    });
+
+    setTimeout(function(){ startOne(0, list); }, 120);
+  }
+
+  function pickList(){
+    var out = [];
+    var n = Math.min(POOL.length, MAX_INSTANCES);
+    for (var i = 0; i < n; i++) out.push(POOL[(offset + i) % POOL.length]);
+    return out;
+  }
+
+  function startOne(i, list){
+    // Ende der Startkette. Der Status wird hier NICHT gesetzt: der letzte
+    // readyFunction-Aufruf kann zeitlich VOR diesem Aufruf kommen (ready
+    // feuert asynchron pro Zelle), dann waere die Anzeige wieder "busy".
+    // progress() in readyFunction entscheidet, wann "bereit" gilt.
+    if (i >= cells.length) { progress(); return; }
+    var c = cells[i];
+    var info = {
+      width: 200, height: 170,
+      j2sPath: 'j2s', use: 'HTML5',
+      disableJ2SLoadMonitor: true,
+      disableInitialConsole: true,
+      addSelectionOptions: false,
+      script: 'load ' + list[i].f + '; ' + currentStyle()
+    };
+    info.readyFunction = function () {
+      c.done = true;
+      c.el.classList.remove('pending');
+      c.el.classList.add('ok');
+      c.el.querySelector('.st').textContent = t('ready');
+      progress();
+      // NICHT sofort messen. readyFunction feuert, bevor der erste Frame
+      // gezeichnet ist — der Canvas zeigt dann nur den Hintergrund, und
+      // die Messung liefert 100 % "gemalt" bei 16 % Farbe (gemessen am
+      // 2026-10-02 an 9 von 12 Zellen). Zweimal nachmessen: einmal kurz
+      // nach dem Frame, einmal nach der Nachzeichnung.
+      setTimeout(function(){ measureCell(i); }, 1200);
+      setTimeout(function(){ measureCell(i); updateInstLine(); }, 3200);
+    };
+    try {
+      document.getElementById('gstage' + i).innerHTML =
+        Jmol.getAppletHtml('gridApplet' + i, info);
+      c.ap = window['gridApplet' + i];
+    } catch (e) {
+      c.el.classList.remove('pending');
+      c.el.classList.add('failed');
+      c.el.querySelector('.st').textContent = t('failed');
+    }
+    setTimeout(function(){ startOne(i + 1, list); }, 120);
+  }
+
+  // Jede Zelle wird nach dem Laden selbst geprueft: eine Zelle, die
+  // ready meldet und leer bleibt, ist im Raster ein Loch. Genau das ist
+  // der Fall, an dem die WebGL-Obergrenze sichtbar wuerde.
+  function measureCell(i){
+    var c = cells[i];
+    var cv = c.el.querySelector('canvas');
+    if (!cv) { markFailed(i); return; }
+    try {
+      var d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
+      var painted = 0;          // nicht-weiss = irgendetwas gezeichnet
+      var colored = 0;          // deutlich farbig = ein Atom/Band
+      for (var p = 0; p < d.length; p += 4) {
+        var R = d[p], G = d[p+1], B = d[p+2];
+        if (R !== 255 || G !== 255 || B !== 255) painted++;
+        // Abstand zum Weiss misst "getönt" unabhaengig von der Helligkeit:
+        // ein gelber Ball (255,255,0) ist farbig, weisses Licht nicht.
+        if (255 - Math.min(R, G, B) > 40) colored++;
+      }
+      var total = d.length / 4;
+      var pct = +(painted / total * 100).toFixed(2);
+      var cpct = +(colored / total * 100).toFixed(2);
+      c.drawn = cpct;
+      // "100% gemalt" bei 0% Farbe heisst: der Hohlraum ist gefuellt, es
+      // gibt kein Molekuel zu sehen. Genau das sieht man beim Tunnel-Crambin.
+      // Deshalb wird die Farbquote gezeigt, nicht die Paint-Quote.
+      c.el.querySelector('.pc').textContent = cpct + '%';
+      if (cpct <= 1) markFailed(i);
+    } catch (e) { markFailed(i); }
+  }
+
+  // Der Status darf "bereit" melden, bevor alle Zellen stehen — er meint
+  // "das Raster ist aufgebaut", nicht "alles gerendert". Sonst liest man
+  // "bereit — 12 Raster" und sieht 7 leere Kaesten. Die Zahl der fertigen
+  // Zellen gehoert deshalb in die Statuszeile.
+  //
+  // Der Wechsel auf "bereit" hängt hier und NICHT am Ende von startOne():
+  // dort war er schon vergeben, bevor die letzte Zelle ready wurde, und
+  // wurde von diesem Aufruf wieder rueckgängig gemacht (gemessen am
+  // 2026-10-02: nach 99 s noch "baue Raster … 12/12").
+  function progress(){
+    var done = cells.filter(function (c) { return c.done; }).length;
+    if (done < cells.length) {
+      setStatus(t('building') + ' ' + done + '/' + cells.length, 'busy');
+      return;
+    }
+    setStatus(t('readyN') + cells.length + ' ' + t('ofCells'), 'ok');
+    updateInstLine();
+
+    // Zwei Messdurchlaeufe nach der Nachzeichnung. Einer reicht nicht: die
+    // Tunnel-Struktur laedt sichtbar nach, ihre Anzeige bleibt sonst bei
+    // 32,6 % stehen, waehrend der Canvas auf 65,7 % gezeichnet hat
+    // (gemessen am 2026-10-02, Desktop wie 412 px).
+    clearTimeout(progress._final);
+    clearTimeout(progress._final2);
+    var measureAll = function () {
+      cells.forEach(function (c, i){ if (c.done) measureCell(i); });
+      updateInstLine();
+    };
+    progress._final  = setTimeout(measureAll, 3600);
+    progress._final2 = setTimeout(measureAll, 7600);
+  }
+
+  function markFailed(i){
+    var c = cells[i];
+    c.el.classList.remove('pending','ok');
+    c.el.classList.add('failed');
+    c.el.querySelector('.st').textContent = t('empty');
+  }
+
+  function updateInstLine(){
+    // Zaehle die tatsaechlich gerenderten Zellen, nicht die mit der Klasse
+    // "ok". Ein earlierer Stand zaehlte die Klasse und meldete "11 / 12",
+    // obwohl alle 12 gezeichnet hatten — die Klassen werden nach dem
+    // Aufbau gesetzt, der Zaehler lief dazwischen.
+    var drawn = 0;
+    cells.forEach(function (c) { if (c.drawn > 0.5) drawn++; });
+    document.getElementById('instLine').textContent =
+      'Instanzen: ' + drawn + ' / ' + cells.length + ' (max ' + MAX_INSTANCES + ')';
+  }
+
+  // ---- Befehle ------------------------------------------------------------
+  function eachApplet(fn){
+    cells.forEach(function(c){
+      if (!c.ap) return;
+      try { fn(c.ap); } catch (e) { /* Zelle ist tot, nicht die Seite */ }
+    });
+  }
+
+  function currentStyle(){
+    return document.getElementById('styleSel').value;
+  }
+
+  function wire(){
+    document.getElementById('styleSel').addEventListener('change', function(){
+      var cmd = currentStyle();
+      eachApplet(function(a){ Jmol.script(a, cmd); });
+      setTimeout(function(){
+        cells.forEach(function(c, i){ if (c.done) measureCell(i); });
+      }, 1800);
+    });
+
+    document.getElementById('spinBtn').addEventListener('click', function(){
+      spinning = !spinning;
+      eachApplet(function(a){ Jmol.script(a, spinning ? 'spin on' : 'spin off'); });
+      setStatus(t('readyN') + cells.length + ' · spin ' + (spinning ? 'on' : 'off'), 'ok');
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', function(){
+      eachApplet(function(a){ Jmol.script(a, 'zoom reset'); });
+    });
+
+    document.getElementById('shuffleBtn').addEventListener('click', function(){
+      offset = (offset + 5) % POOL.length;
+      buildGrid();
+    });
+
+    document.getElementById('langBtn') &&
+      document.getElementById('langBtn').addEventListener('click', function(){
+        lang = lang === 'de' ? 'en' : 'de';
+        applyI18n();
+        buildGrid();
+      });
+  }
+
+  function applyI18n(){
+    var nodes = document.querySelectorAll('[data-de]');
+    for (var i = 0; i < nodes.length; i++){
+      nodes[i].textContent = nodes[i].getAttribute('data-' + lang);
+    }
+    document.documentElement.lang = lang;
+  }
+
+  function boot(){
+    try {
+      var sel = document.getElementById('styleSel');
+      // Select-Optionen uebersetzen (kein data-de-Scan moeglich, weil
+      // <option> textContent per applyI18n nicht zuverlaessig ist)
+      [...sel.options].forEach(function(o){
+        if (o.getAttribute('data-de')) o.textContent = o.getAttribute('data-' + lang);
+      });
+    } catch (e) {}
+    applyI18n();
+    wire();
+    buildGrid();
+  }
+
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+</body>
+</html>
