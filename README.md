@@ -16,6 +16,9 @@ https://docs.github.com/de/pages/quickstart
 - `catpop/` = CatPop Meme/Announcement
 - `pepemem/` = MEMEPEPE Linktree-Backup
 - `pepememe/` = PEPEMEME Linktree-Backup
+- `jsmol/` = JSmol Workbench — 3D-Molekül-Viewer (Jmol 16.3.53 j2s-Kern,
+  49 MB, 8 kuratierte Strukturdateien). Vendor-Code mit eigener Lizenz:
+  siehe `jsmol/LICENSE-JSmol.txt` — die `LICENSE` im Root gilt dafür **nicht**.
 
 ## msgraph/react — Tabs
 Hub · Reference (17.531 Endpoints, im Worker geparst) · Console (NL→Graph,
