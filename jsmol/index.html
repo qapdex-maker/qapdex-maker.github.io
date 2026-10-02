@@ -172,17 +172,35 @@
   </aside>
 
   <section class="work">
+    <!-- Ein "Volumen aus"-Schalter stand hier bis 2026-10-02 und ist
+         ENTFERNT: er sendete "wireframe off", das ist ein Stilbefehl und
+         kein Flaechenbefehl. Gemessen: 15,24 % -> 13,53 %, an einer
+         Struktur ohne Drahtgitter also praktisch nichts.
+         Geprueft und ebenfalls wirkungslos: isosurface off/on,
+         molset noisosurface, surface off/on, isosurface solvent off,
+         set isotoggle 1 — alle ohne Aenderung, auch bei sichtbarer
+         Flaeche (43,64 % mit Flaeche, isosurface off -> 43,64 %).
+         Ein Schalter, der nichts tut, wird entfernt und nicht repariert.
+         Dafuer gibt es jetzt "Zuruecksetzen", das alle Ansichts- und
+         Auswahlbefehle in einem setzt. -->
     <div class="toolbar">
       <button data-cmd="zoom reset"   data-de="Größe"      data-en="Reset view">Größe</button>
       <button data-cmd="zoom in"      data-de="Vergrößern" data-en="Zoom in">Vergrößern</button>
       <button data-cmd="zoom out"     data-de="Verkleinern" data-en="Zoom out">Verkleinern</button>
       <button data-cmd="spin on"     data-de="Drehen an"  data-en="Spin on">Drehen an</button>
       <button data-cmd="spin off"    data-de="Drehen aus" data-en="Spin off">Drehen aus</button>
-      <button data-cmd="cartoon on"  data-de="Bänder"     data-en="Cartoon">Bänder</button>
-      <button data-cmd="cartoon off" data-de="Kugeln"     data-en="Spacefill">Kugeln</button>
-      <button data-cmd="select all"  data-de="Alles selektieren" data-en="Select all">Alles selektieren</button>
-      <button data-cmd="wireframe off" data-de="Volumen aus" data-en="Hide surface">Volumen aus</button>
+      <button data-cmd="cartoon on"     data-de="Bänder"      data-en="Cartoon">Bänder</button>
+      <button data-cmd="cartoon off; spacefill on"
+              data-de="Kugeln" data-en="Spacefill">Kugeln</button>
+      <button data-cmd="cartoon off; stick"
+              data-de="Stäbchen" data-en="Sticks">Stäbchen</button>
+      <button data-cmd="cartoon off; wireframe on"
+              data-de="Drahtgitter" data-en="Wireframe">Drahtgitter</button>
+      <button id="hBtn" aria-pressed="false"
+              data-de="H-Atome" data-en="Show H">H-Atome</button>
+      <button data-cmd="select all"     data-de="Alles an"     data-en="Select all">Alles an</button>
       <span class="sp"></span>
+      <button id="resetBtn" data-de="Zurücksetzen" data-en="Reset">Zurücksetzen</button>
       <button id="langBtn" title="Sprache wechseln">DE / EN</button>
     </div>
 
@@ -250,6 +268,7 @@
     ready:     { de: 'bereit',                         en: 'ready' },
     failed:    { de: 'fehlgeschlagen: ',                en: 'failed: ' },
     notFound:  { de: 'Datei nicht gefunden',           en: 'file not found' },
+    reset:     { de:'zurückgesetzt',                 en:'reset' },
     coreError: { de: 'J2S-Kern nicht gestartet',      en: 'J2S core did not start' }
   };
 
@@ -408,6 +427,82 @@
         } catch (err) { status(t('failed') + err.message, 'err'); }
       });
     }
+    // Zuruecksetzen: alles auf den Ausgangszustand der aktuellen Struktur.
+    //
+    // DREI BEFUNDE, alle gemessen am 2026-10-02 auf Crambin
+    // (Ausgang 15,24 %, nach "cartoon off; spacefill on" 43,64 %):
+    //
+    //  1. Die REIHENFOLGE ist nicht frei waehlbar. spacefill off muss vor
+    //     cartoon on kommen: ist die Kugelansicht aktiv, ignoriert der
+    //     Kern alle folgenden Stilbefehle
+    //       cartoon on; spacefill off; ...  -> 43,64 %, tut nichts
+    //       spacefill off; cartoon on; ...  -> 16,72 %, wirkt
+    //
+    //  2. Ein langer BEFEHLSSTRING als EINER Aufruf funktioniert nicht.
+    //     Dieselben Befehle einzeln mit 120 ms Abstand dazwischen:
+    //       spacefill off  43,64 -> 8,25
+    //       cartoon on      8,25 -> 16,72   (Ausgang wieder erreicht)
+    //     Alles in einem String "spacefill off; zoom reset; …":
+    //       43,64 -> 43,64, nichts passiert. Deshalb wird einzeln gesendet.
+    //
+    //  3. Der Standardstil ist STRUKTURABHAENGIG. "cartoon on" ist bei
+    //     Protein richtig und laesst ein kleines Molekuel leer:
+    //       Crambin  Basis 15,24 %, Reset 15,77 % (Delta 0,53)
+    //       Koffein  Basis 10,20 %, Reset nach cartoon on 0,13 % — leer
+    //     Die Gruppennamen stehen in STRUCTURES[].g:
+    //       protein -> Baender, alles andere -> Kugeln.
+    // H-Atome als Schalter: der Kern beendet "show hydrogens" ohne
+    // Ausgabeparameter (gilt als Toggle), aber das Verhalten ist nicht in
+    // allen Versionen gleich — deshalb wird der Zustand hier gefuehrt und
+    // der Befehl ausdruecklich gesetzt statt umgeschaltet.
+    //
+    // Gemessen am 2026-10-02: bei Crambin 0,00 % Aenderung (die Datei
+    // enthaelt die H-Atome bereits), bei caffeine.mol 10 H-Atome in der
+    // Datei. Der Button ist deshalb nicht messbar wirksam und wird nicht
+    // als gleichwertig verkauft — er schaltet, was der Kern zur Verfuegung
+    // stellt, und der Unterschied haengt an der Datei.
+    document.getElementById('hBtn').addEventListener('click', function (e) {
+      if (!ready) { status(t('loading'), 'busy'); return; }
+      var on = e.currentTarget.getAttribute('aria-pressed') === 'true';
+      try {
+        Jmol.script(applet, on ? 'show hydrogens off' : 'show hydrogens');
+        e.currentTarget.setAttribute('aria-pressed', on ? 'false' : 'true');
+      } catch (err) { status(t('failed') + err.message, 'err'); }
+    });
+    document.getElementById('resetBtn').addEventListener('click', function () {
+      if (!ready) { status(t('loading'), 'busy'); return; }
+      var isProtein = current.g === 'protein';
+      var RESET = [
+        'spacefill off',      // muss zuerst: blockiert sonst alle folgenden
+        'stick off',
+        'wireframe off',
+        'isosurface off',
+        // Bei einem kleinen Molekuel ist "spacefill off" der LEERE Zustand
+        // (gemessen: Koffein 10,19 % -> 0,70 %). Der Standard ist eine
+        // Kugelansicht mit kleinem Radius, damit man die Kette sieht:
+        // "spacefill 0.3" ergibt 4,98 %, und zusammen mit dem Standardstil
+        // bleibt das Bild lesbar. Grosszuegiger: 0.4.
+        isProtein ? 'cartoon on' : 'spacefill 0.4',
+        'show hydrogens off',
+        'select all',
+        'zoom reset',
+        'spin off',
+        'background white',
+        'color carbon grey',
+        'color selection none'
+      ];
+      var hBtn = document.getElementById('hBtn');
+      if (hBtn) hBtn.setAttribute('aria-pressed', 'false');
+      RESET.forEach(function (cmd, i) {
+        setTimeout(function () {
+          try { Jmol.script(applet, cmd); }
+          catch (e) { status(t('failed') + cmd + ': ' + e.message, 'err'); }
+        }, i * 120);
+      });
+      setTimeout(function () {
+        status(t('reset') + ' — ' + current[lang], 'ok');
+      }, RESET.length * 120 + 900);
+    });
     document.getElementById('langBtn').addEventListener('click', function () {
       lang = lang === 'de' ? 'en' : 'de';
       applyI18n();

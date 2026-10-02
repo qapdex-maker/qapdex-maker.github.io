@@ -146,6 +146,75 @@ test('sandbox.html und grid.html nutzen dieselbe Struktur-Liste wie index.html',
   assert.ok(all.size >= 19, `nur ${all.size} Strukturen gesamt, erwartet mindestens 19`);
 });
 
+test('jeder Toolbar-Knopf sendet einen geprueften Befehl', () => {
+  // Ein Knopf, der nichts tut, ist schlimmer als kein Knopf: er verspricht
+  // eine Wirkung und liefert keine. "Volumen aus" stand bis 2026-10-02 in
+  // der Toolbar und sendete "wireframe off" — ein Stilbefehl, kein
+  // Flaechenbefehl (gemessen 15,24 % -> 13,53 %, an einer Struktur ohne
+  // Drahtgitter also nichts).
+  //
+  // Gemessen wirksam auf Crambin, Farbquote vorher -> nachher:
+  //   cartoon off; spacefill on   13,53 -> 43,64
+  //   cartoon off; stick          19,95 -> 13,53
+  //   cartoon off; wireframe on   15,24 -> 13,96
+  //   cartoon on                  13,96 -> 19,95
+  const VERIFIED = [
+    'zoom reset', 'zoom in', 'zoom out',          // Blick
+    'spin on', 'spin off',                        // Drehung
+    'cartoon on',                                 // Baender
+    'cartoon off; spacefill on',                  // Kugeln
+    'cartoon off; stick',                         // Staebchen
+    'cartoon off; wireframe on',                  // Drahtgitter
+    'select all',                                 // Auswahl
+  ];
+  const src = read('index.html');
+  const cmds = [...src.matchAll(/data-cmd="([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(cmds.length >= 8, `nur ${cmds.length} data-cmd-Knoepfe gefunden`);
+  for (const c of cmds) {
+    assert.ok(VERIFIED.includes(c),
+      `index.html: data-cmd="${c}" ist nicht als wirksam gemessen. ` +
+      `Bekannt: ${VERIFIED.join(' | ')}`);
+  }
+  // Der wirkungslose Befehl darf nicht zurueckkommen.
+  assert.ok(!/data-cmd="wireframe off"/.test(src),
+    'index.html: der wirkungslose "wireframe off"-Knopf ist wieder da');
+  // isosurface darf im RESET stehen (dort raeumt es auf) aber nicht als
+  // Knopf — am 2026-10-02 gemessen: isosurface off/on aendert die
+  // Farbquote nicht, auch bei sichtbarer Flaeche (43,64 % -> 43,64 %).
+  const inButtons = [...src.matchAll(/<button[^>]*>[\s\S]*?<\/button>/g)]
+    .map((m) => m[0]).join('');
+  assert.ok(!/isosurface/.test(inButtons),
+    'index.html: ein isosurface-Knopf ist da — am 2026-10-02 gemessen ohne Wirkung');
+});
+
+test('der Reset setzt den Ausgangszustand wirklich zurueck', () => {
+  // Drei Befunde, alle am 2026-10-02 gemessen, stehen als Kommentar im
+  // Code. Diese Tests halten fest, dass die Reihenfolge und der
+  // Einzelversand erhalten bleiben:
+  //
+  //  1. spacefill off muss VOR cartoon on. Sonst ignoriert der Kern alle
+  //     folgenden Stilbefehle (43,64 % statt 16,72 %).
+  //  2. Ein langer Befehlsstring als EINER Aufruf tut nichts. Dieselben
+  //     Befehle einzeln mit 120 ms Abstand: 43,64 % -> 8,25 % -> 16,72 %.
+  //  3. Der Standardstil ist strukturabhaengig: cartoon on laesst ein
+  //     kleines Molekuel leer (Koffein 10,20 % -> 0,13 %).
+  const js = inlineScript('index.html');
+  const resetStart = js.indexOf("var RESET = [");
+  assert.ok(resetStart > -1, 'index.html: kein RESET-Array — der Zuruecksetzen-Knopf tut nichts');
+  const block = js.slice(resetStart, js.indexOf('];', resetStart) + 2);
+  assert.ok(!/;\s*['"]/.test(block.replace(/'spacefill off',[^\n]*/,'')),
+    'index.html: RESET enthaelt einen langen Befehlsstring — Jmol fuehrt ' +
+    'die Befehle als EINER Aufruf nicht aus (gemessen: 43,64 % statt 16,72 %)');
+  const sf = block.indexOf("'spacefill off'");
+  const cg = block.indexOf("cartoon");
+  assert.ok(sf > -1 && cg > -1 && sf < cg,
+    'index.html: spacefill off muss vor cartoon on stehen');
+  assert.ok(/i \* 120/.test(js), 'index.html: kein Abstand zwischen den RESET-Befehlen');
+  assert.ok(/isProtein \? 'cartoon on' : 'spacefill/.test(js),
+    'index.html: der Standardstil ist nicht strukturabhaengig — ' +
+    'cartoon on laesst ein kleines Molekuel leer (gemessen 10,20 % -> 0,13 %)');
+});
+
 test('DE/EN: jede data-de hat ein data-en und umgekehrt', () => {
   for (const p of PAGES) {
     const src = read(p);
