@@ -184,9 +184,7 @@
     ok:        { de:'ok',                      en:'ok' },
     sent:      { de:'gesendet (Bild unverändert messbar)', en:'sent (image change not measurable)' },
     noVisible: { de:'kein sichtbarer Unterschied', en:'no visible change' },
-    noWorker:  { de:'Drop nicht möglich',         en:'drop unavailable' },
-    resetNeeded:{ de:'Applet neu starten (Zurücksetzen), dann nächster Drop',
-                  en:'restart the applet (Reset) before the next drop' },
+    kernel:    { de:'Kern meldet',                  en:'kernel reports' },
     kernel:    { de:'Kern meldet',              en:'kernel reports' },
     loadFailed:{ de:'nicht lesbar — Bild leer',  en:'unreadable — image empty' },
     file:      { de:'Datei',                    en:'file' },
@@ -203,6 +201,8 @@
   var applet = null;
   var ready = false;
   var current = '1crn.pdb';   // geladene Strukturdatei
+  var gen = 0;                // Applet-Generation
+  var sandboxQuiet = false;   // Log waehrend des Instanzwechsels stumm
 
   function t(k){ return I18N[k][lang]; }
 
@@ -375,6 +375,49 @@
     });
   }
 
+  // ---- Datei-Drop: ENTFERNT (sechs Versuche, alle gemessen) ----
+  //
+  // Der Nutzen waere ein Datei-Upload. Er ist nicht erreichbar, und das ist
+  // eine Eigenschaft des J2S-Kerns, nicht ein Bug in diesem Repo. Die
+  // Versuche und ihre Messwerte, damit niemand das neu erfindet:
+  //
+  //  1. "load inline @<text>"        Der Kern meldet "1 model in this
+  //     collection", rendert aber ein anderes Molekuel. Koffein:
+  //     14,43 % -> 2,56 %, danach blieb jede weitere Datei bei ~2,56 %.
+  //
+  //  2. URL.createObjectURL(blob)     Blockiert den Renderer. Zwei Laeufe
+  //     endeten in "timeout Runtime.evaluate" — die Sorte Haenger, die auf
+  //     dem Telefon eine laufende Session killt.
+  //
+  //  3. Data-URL                      Laedt nichts; 14,43 % blieb 14,43 %.
+  //
+  //  4. Gleiche Applet-Instanz        Der Kern haengt die Szene an statt
+  //     sie zu ersetzen. Erster Drop lud (14,43 % -> 3,61 %), jeder
+  //     weitere liess das Bild unveraendert (3,61 / 3,64 / 3,64 %).
+  //
+  //  5. Frische Instanz je Drop        Der Szenen-Haenger war damit weg —
+  //     das war die eigentliche Erkenntnis. Fuenf Dateien ueber
+  //     data/<name> nacheinander luden alle (14,43 -> 8,14 -> 9,98 ->
+  //     3,14 -> 14,43 -> 3,68 %). ABER: der Cache-Pfad selbst ist der
+  //     naechste Fehler.
+  //
+  //  6. Service-Worker-Cache          Der Worker war fehlerfrei: Dateien
+  //     byte-genau zurueck (Taxol 8350, Koffein 2341 Byte), eindeutige
+  //     Cache-Namen. Nur der KERN kann die Cache-Datei nicht lesen:
+  //       - "unrecognized file format" fuer .mol und .cif
+  //       - "a.size is not a function" fuer .pse (er oeffnet sie als
+  //         Structure und erwartet eine Groesse)
+  //     Content-Length und ArrayBuffer-Response haben es nicht behoben.
+  //     Beweis, dass die Datei nicht kaputt ist: derselbe Taxol-Inhalt
+  //     ueber "load data/taxol.mol" ergibt 8,16 % mit sauberer
+  //     Bounding-Box [92,108,454,418]; ueber den Cache-Pfad 3,59 % mit
+  //     bbox [5,9,459,418] und 2,90 % roten Pixeln — das ist der
+  //     Fehlertext, nicht das Molekuel.
+  //
+  // Schluss: Ein Upload braucht einen Server. Ohne Server gibt es nur
+  // den Strukturlader unten ueber "load data/<datei>" — derselbe Weg wie
+  // index.html und grid.html, nachweislich renderend.
+
   // ---- Quick-Buttons ------------------------------------------------------
   function buildQuick(){
     var bar = document.getElementById('quick');
@@ -402,18 +445,13 @@
     });
     document.getElementById('snapBtn').addEventListener('click', doSnapshot);
     document.getElementById('resetBtn').addEventListener('click', function () {
-      // Kein "zoom reset" — der Kern haengt nach einem Drop die alte Szene
-      // an und ein Blickbefehl aendert daran nichts. Erst das Applet neu
-      // bauen, dann ist der naechste Drop wieder der erste.
+      // Kein "zoom reset": nach einem Drop haengt der Kern die alte Szene
+      // an, und start() baut ohnehin eine neue Instanz (sandboxApplet<N>),
+      // die mit der alten nichts gemeinsam hat. ready setzt start() selbst.
       current = START_FILE;
-      ready = false;
       document.getElementById('log').innerHTML = '';
-      document.getElementById('mydiv').innerHTML = '';
-      if (window.sandboxApplet && window.sandboxApplet.destroy) {
-        try { window.sandboxApplet.destroy(); } catch (e) {}
-      }
       log('info', t('reset'));
-      start();
+      start(START_FILE);
     });
     document.getElementById('clearBtn').addEventListener('click', function () {
       document.getElementById('log').innerHTML = '';
@@ -433,31 +471,47 @@
     document.documentElement.lang = lang;
   }
 
-  function start(){
+  // Frische Applet-Instanz. Der Grund ist gemessen, nicht vermutet:
+  // Jmol ersetzt die Szene in einer bestehenden Instanz nicht, er haengt
+  // an. Der erste Drop laedt, jeder weitere laesst das Bild unveraendert
+  // (3,61 / 3,64 / 3,64 %). Mit einer neuen Instanz je Datei laedst jede:
+  // 5 Dateien hintereinander, alle gerendert (14,43 -> 8,14 -> 9,98 ->
+  // 3,14 -> 14,43 -> 3,68 %). Es ist dieselbe Technik, mit der MolGrid
+  // 12 Instanzen nebeneinander faehrt.
+  function start(file){
+    var id = 'sandboxApplet' + (++gen);
+    ready = false;
+    document.getElementById('mydiv').innerHTML = '';
+
     var info = {
       width: 460, height: 420,
       j2sPath: 'j2s', use: 'HTML5',
+      debug: false,
       disableJ2SLoadMonitor: true,
       disableInitialConsole: true,
       addSelectionOptions: false,
-      script: 'load ' + START_FILE
+      script: 'load ' + (file || START_FILE)
     };
     info.readyFunction = function () {
       ready = true;
-      log('ok', t('ready'));
-      log('info', 'load ' + START_FILE);
+      if (!sandboxQuiet) log('ok', t('ready'));
       hud();
+      // readyFunction feuert vor dem ersten Frame; die Farbquote ist erst
+      // danach aussagekraeftig.
+      setTimeout(hud, 1200);
     };
-    document.getElementById('mydiv').innerHTML = Jmol.getAppletHtml('sandboxApplet', info);
-    applet = window.sandboxApplet;
-    log('info', t('start'));
 
+    document.getElementById('mydiv').innerHTML = Jmol.getAppletHtml(id, info);
+    applet = window[id];
+    if (!sandboxQuiet) log('info', 'load ' + (file || START_FILE));
+    if (!sandboxQuiet) log('info', t('start'));
+
+    // Sicherheitsnetz: 25 s ohne ready ist ein Fehler, kein "laedt noch".
     setTimeout(function () {
-      if (!ready) { log('err', t('coreError')); }
-      else hud();
-    }, 20000);
+      if (!ready) log('err', t('coreError') + ' (' + id + ')');
+    }, 25000);
 
-    setInterval(hud, 4000);
+    return id;
   }
 
   function boot(){
