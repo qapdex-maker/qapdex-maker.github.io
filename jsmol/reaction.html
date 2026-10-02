@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-de="Vergleichs-Sandbox" data-en="Comparison sandbox">Vergleichs-Sandbox</title>
+<style>
+  :root{
+    --kobalt:#2547ff; --gelb:#ffd400; --paper:#f1ede3; --ink:#141414;
+    --line:#141414; --ok:#1a7f37; --err:#c1121f; --mute:#6b6b6b;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,sans-serif; min-height:100vh;
+    display:flex; flex-direction:column;
+  }
+  header{
+    border-bottom:3px solid var(--line); padding:10px 14px;
+    background:var(--kobalt); color:#fff;
+    display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+  }
+  header h1{font-size:16px;margin:0;font-weight:800}
+  header .sub{font-size:11px;opacity:.85;font-family:"IBM Plex Mono",monospace}
+  header a{color:#fff;text-decoration:none;font-size:12px;
+    border:2px solid #fff;padding:3px 9px;border-radius:2px}
+  header .sp{flex:1}
+
+  .steps{
+    display:grid; grid-template-columns:1fr auto 1fr auto 1fr;
+    gap:6px; padding:12px; align-items:start;
+    border-bottom:3px solid var(--line); background:#fff;
+  }
+  @media (max-width:820px){ .steps{grid-template-columns:1fr} }
+  .arrow{display:flex;align-items:center;justify-content:center;
+    font-size:22px;font-weight:800;padding-top:26px}
+  @media (max-width:820px){ .arrow{padding-top:0;transform:rotate(90deg)} }
+  .box{border:3px solid var(--line); border-radius:2px; background:var(--paper)}
+  .box .lab{
+    font-size:10px; text-transform:uppercase; letter-spacing:.06em;
+    background:var(--ink); color:#fff; padding:3px 7px;
+    font-family:"IBM Plex Mono",monospace;
+  }
+  .box .stage{height:132px; background:#fff; position:relative;
+    display:flex; align-items:center; justify-content:center}
+  .box .stage canvas{max-width:100%;max-height:100%;display:block}
+  .box .in{display:flex;gap:4px;padding:5px;border-top:2px solid var(--line)}
+  .box input, .box select{
+    flex:1; min-width:0; font:inherit; font-size:12px;
+    font-family:"IBM Plex Mono",monospace; cursor:pointer;
+    border:2px solid var(--line); border-radius:2px; padding:4px 6px;
+    background:#fff;
+  }
+  .box button{
+    cursor:pointer; background:var(--kobalt); color:#fff; border:2px solid var(--line);
+    border-radius:2px; font:inherit; font-size:12px; padding:4px 8px;
+  }
+  .box .state{
+    font-size:10px; padding:2px 7px; border-top:1px solid #ccc;
+    font-family:"IBM Plex Mono",monospace; color:var(--mute);
+    display:flex; justify-content:space-between; gap:4px;
+  }
+  .box.err .state{color:var(--err);font-weight:700}
+
+  .bar{
+    display:flex;gap:6px;flex-wrap:wrap;align-items:center;
+    padding:9px 12px; border-bottom:3px solid var(--line); background:#e8e2d5;
+  }
+  .bar button,.bar select{
+    cursor:pointer;background:#fff;border:2px solid var(--line);
+    border-radius:2px;padding:5px 10px;font:inherit;font-size:13px;
+  }
+  .bar button:hover{background:var(--gelb)}
+  .bar .status{
+    margin-left:auto;font-size:12px;font-family:"IBM Plex Mono",monospace;
+    padding:4px 10px;border:2px solid var(--line);background:#fff;
+  }
+  .bar .status.ok{border-color:var(--ok);background:#e6f4ea}
+  .bar .status.err{border-color:var(--err);background:#fde8ea}
+  .bar .status.busy{border-color:var(--gelb)}
+
+  #log{
+    padding:8px 12px; background:#fff; flex:1; min-height:80px;
+    font-family:"IBM Plex Mono",monospace; font-size:12px;
+  }
+  #log div{padding:1px 0;border-bottom:1px dotted #ddd;word-break:break-word}
+  #log .ok{color:var(--ok)} #log .err{color:var(--err);font-weight:700}
+  #log .info{color:var(--mute)}
+
+  footer{
+    border-top:3px solid var(--line); padding:8px 12px;
+    font-size:11px; font-family:"IBM Plex Mono",monospace;
+    background:#e8e2d5; display:flex;gap:14px;flex-wrap:wrap;
+  }
+  footer a{color:var(--kobalt)}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="../index.html">&larr; <span data-de="Portal" data-en="Portal">Portal</span></a>
+  <h1 data-de="Vergleichs-Sandbox" data-en="Comparison sandbox">Vergleichs-Sandbox</h1>
+  <span class="sub" data-de="SMILES → Molekül · Jmol 16.3.53"
+        data-en="SMILES → molecule · Jmol 16.3.53">SMILES → Molekül · Jmol 16.3.53</span>
+  <span class="sp"></span>
+  <a href="index.html" data-de="Workbench" data-en="Workbench">Workbench</a>
+  <a href="sandbox.html" data-de="Konsole" data-en="Console">Konsole</a>
+  <a href="grid.html" data-de="MolGrid" data-en="MolGrid">MolGrid</a>
+</header>
+
+<div class="steps">
+  <div class="box" id="boxA">
+    <div class="lab" data-de="Struktur A" data-en="Structure A">Struktur A</div>
+    <div class="stage"></div>
+    <div class="in">
+      <select id="selA" aria-label="Struktur"></select>
+      <button id="goA" data-de="Laden" data-en="Load">Laden</button>
+    </div>
+    <div class="state"><span class="st">—</span><span class="pc">—</span></div>
+  </div>
+
+  <div class="arrow">&rarr;</div>
+
+  <div class="box" id="boxB">
+    <div class="lab" data-de="Struktur B" data-en="Structure B">Struktur B</div>
+    <div class="stage"></div>
+    <div class="in">
+      <select id="selB" aria-label="Struktur"></select>
+      <button id="goB" data-de="Laden" data-en="Load">Laden</button>
+    </div>
+    <div class="state"><span class="st">—</span><span class="pc">—</span></div>
+  </div>
+
+  <div class="arrow">&rarr;</div>
+
+  <div class="box" id="boxC">
+    <div class="lab" data-de="Struktur C" data-en="Structure C">Struktur C</div>
+    <div class="stage"></div>
+    <div class="in">
+      <select id="selC" aria-label="Struktur"></select>
+      <button id="goC" data-de="Laden" data-en="Load">Laden</button>
+    </div>
+    <div class="state"><span class="st">—</span><span class="pc">—</span></div>
+  </div>
+</div>
+
+<div class="bar">
+  <label style="font-size:12px">
+    <input type="checkbox" id="animate" checked>
+    <span data-de="Hervorhebung" data-en="Highlight">Hervorhebung</span>
+  </label>
+  <button id="playBtn" data-de="Abspielen" data-en="Play">Abspielen</button>
+  <button id="clearBtn" data-de="Zurücksetzen" data-en="Reset">Zurücksetzen</button>
+  <button id="langBtn">DE / EN</button>
+  <span class="status busy" id="status" role="status" aria-live="polite">…</span>
+</div>
+
+<div id="log" role="log" aria-live="polite"></div>
+
+<footer>
+  <span data-de="Drei JSmol-Instanzen, eine pro Stufe"
+        data-en="Three JSmol instances, one per stage">Drei JSmol-Instanzen, eine pro Stufe</span>
+  <a href="https://jmol.sourceforge.net" rel="noopener">jmol.sourceforge.net</a>
+</footer>
+
+<script src="JSmol.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // Drei Stufen, je eine eigene Applet-Instanz. Das ist dieselbe Technik
+  // wie in MolGrid und in der Konsole: der J2S-Kern haengt die Szene in
+  // einer bestehenden Instanz an (gemessen am 2026-10-02), also braucht
+  // jede Stufe eine eigene.
+  // Die 19 Strukturen aus data/ — dieselben wie in index.html.
+  var FILES = [
+    ['data/1crn.pdb','Crambin'],       ['data/1cbs.cif','Calmodulin'],
+    ['data/1crntour.pdb','Crambin-Tunnel'], ['data/dna.pse','DNA'],
+    ['data/1bna_surface.pse','DNA-Oberflaeche'],
+    ['data/taxol.mol','Taxol'],        ['data/caffeine.mol','Koffein'],
+    ['data/estron.cml','Estron'],      ['data/c6h6.smol','Benzol'],
+    ['data/co2.smol','CO2'],           ['data/diamond.cif','Diamant'],
+    ['data/quartz.cif','Quarz'],       ['data/calcite.cif','Calcit'],
+    ['data/chromium.cif','Chrom'],     ['data/nacl.cif','NaCl'],
+    ['data/04369a.cif','Carnallit'],   ['data/maleic.cif','Maleinsaeure'],
+    ['data/c60af.mol','C60'],          ['data/buckyball.mol','Buckyball']
+  ];
+
+  var STAGES = [
+    { key: 'A', sel: 'selA', go: 'goA', box: 'boxA',
+      host: 'hostA', applet: 'rxAppletA', label: { de:'Struktur A', en:'Structure A' } },
+    { key: 'B', sel: 'selB', go: 'goB', box: 'boxB',
+      host: 'hostB', applet: 'rxAppletB', label: { de:'Struktur B', en:'Structure B' } },
+    { key: 'C', sel: 'selC', go: 'goC', box: 'boxC',
+      host: 'hostC', applet: 'rxAppletC', label: { de:'Struktur C', en:'Structure C' } }
+  ];
+
+  // KEIN SMILES. Acht Wege am 2026-10-02 gemessen, alle mit
+  // "unrecognized file format for file .../CCO" gescheitert:
+  //   load "CCO"                      load inline @"CCO"
+  //   load smiles "CCO"               load "CCO.smi"
+  //   load file "CCO" type smiles     loadScript coresmiles.z.js
+  //   Jmol.loadFile(ap, coresmiles)   <script src="JS/SmilesExt.js">
+  // Die SMILES-Module liegen im Repo (j2s/JS/SmilesParser.js,
+  // SmilesExt.js, j2s/core/coresmiles.z.js, alle HTTP 200), werden aber
+  // nie geladen: getExt("Smiles") laeuft ueber das J2S-Klassensystem,
+  // nicht ueber ein <script>. window.SmilesParser bleibt undefined.
+  //
+  // Statt einer Eingabe, die der Kern nicht liest, kommen hier die 19
+  // kuratierten Strukturen aus data/ — derselbe Weg, den index.html,
+  // grid.html und sandbox.html nehmen und der nachweislich rendert.
+  var PRESETS = {
+    organic:   { a:'data/taxol.mol', b:'data/caffeine.mol', c:'data/estron.cml',
+                 de:'Taxol · Koffein · Estron',
+                 en:'taxol · caffeine · estrone' },
+    minerals:  { a:'data/quartz.cif',  b:'data/diamond.cif',  c:'data/calcite.cif',
+                 de:'Quarz · Diamant · Calcit',
+                 en:'quartz · diamond · calcite' },
+    bio:       { a:'data/1crn.pdb',    b:'data/dna.pse',      c:'data/1bna_surface.pse',
+                 de:'Crambin · DNA-Helix · DNA-Oberfläche',
+                 en:'crambin · DNA helix · DNA surface' }
+  };
+
+  var I18N = {
+    building:  { de:'baue Viewer …',            en:'building viewer …' },
+    ready:     { de:'bereit',                    en:'ready' },
+    loading:   { de:'lade …',                     en:'loading …' },
+    empty:     { de:'leeres Feld',               en:'empty field' },
+    notDrawn:  { de:'nicht gezeichnet',          en:'not drawn' },
+    notFound:  { de:'Datei nicht gefunden',      en:'file not found' },
+    preset:    { de:'Vorlage geladen',           en:'preset loaded' },
+    cleared:   { de:'Felder geleert',            en:'fields cleared' },
+    playing:   { de:'Animation läuft',           en:'animation running' },
+    stopped:   { de:'Animation gestoppt',        en:'animation stopped' },
+    coreError: { de:'Kern nicht gestartet',      en:'core did not start' },
+    fromFile:  { de:'aus Datei',                 en:'from file' }
+  };
+
+  var lang = 'de';
+  var applet = {};
+  var playing = false;
+  var timer = null;
+
+  function t(k){ return I18N[k][lang]; }
+
+  function log(cls, text){
+    var el = document.getElementById('log');
+    var d = document.createElement('div');
+    d.className = cls;
+    d.textContent = text;
+    el.appendChild(d);
+    el.scrollTop = el.scrollHeight;
+    while (el.children.length > 120) el.removeChild(el.firstChild);
+  }
+
+  function setStatus(msg, cls){
+    var el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = 'status ' + (cls || '');
+  }
+
+  // Farbquote der Stufe.
+  //
+  // Der Canvas traegt NICHT die Id cvA/cvB/cvC aus dem HTML — der Kern
+  // erzeugt seinen eigenen: "rxAppletA_1_canvas2d", mit der Instanz-Nummer
+  // im Namen (gemessen am 2026-10-02). Ein leeres <canvas id="cvA"> im
+  // Markup wird beim Applet-Bau ersetzt, und jede Messung, die cvA sucht,
+  // findet null und meldet "nicht gezeichnet" fuer eine vollstaendig
+  // gerenderte Seite (9,49 % / 12,23 % / 4,73 % waren die echten Werte).
+  function canvasOf(st){
+    var host = document.getElementById(st.host);
+    return host ? host.querySelector('canvas') : null;
+  }
+
+  function pctOf(key){
+    var cv = key ? canvasOf(key) : null;
+    if (!cv) return null;
+    try {
+      var d = cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;
+      var c = 0;
+      for (var p = 0; p < d.length; p += 4)
+        if (255 - Math.min(d[p], d[p+1], d[p+2]) > 40) c++;
+      return +(c / (d.length/4) * 100).toFixed(2);
+    } catch (e) { return null; }
+  }
+
+  // Kern-Fehlertext. Jmol schreibt Lesefehler als roten Text in den
+  // Applet-div — das ist die rote Schrift, die auf dem Screenshot vom
+  // 2026-10-03 unter dem Molekuel stand (10.149 rote Pixel in einem
+  // 490x35-Pixel-Band, gemessen).
+  function kernelError(key){
+    var host = document.getElementById(key.host);
+    if (!host) return null;
+    var txt = host.textContent || '';
+    var m = txt.match(/(unrecognized[^"]{0,80}|a\.size is not a function|Error reading file[^"]{0,60}|SMILES[^"]{0,60})/i);
+    return m ? m[1].trim() : null;
+  }
+
+  // ---- Aufbau -----------------------------------------------------------
+  // Jede Stufe bekommt bei JEDEM Laden eine EIGENE Applet-Instanz mit
+  // eigener Id. Grund gemessen am 2026-10-02: der J2S-Kern haengt die
+  // Szene in einer bestehenden Instanz an — "load CCO" und danach
+  // "load c1ccccc1" liess die erste Struktur stehen. Eine frische Instanz
+  // hat nichts, an das es haengen koennte. Dieselbe Technik wie in
+  // MolGrid (12 Instanzen) und in der Konsole.
+  var gen = 0;
+
+  function buildStage(st, file){
+    var id = st.applet + '_' + (++gen);
+    var stage = document.querySelector('#' + st.box + ' .stage');
+    var host = document.createElement('div');
+    host.id = st.host;
+    stage.innerHTML = '';
+    stage.appendChild(host);
+
+    var info = {
+      width: 200, height: 150,
+      j2sPath: 'j2s', use: 'HTML5',
+      disableJ2SLoadMonitor: true,
+      disableInitialConsole: true,
+      addSelectionOptions: false,
+      // Pfad ohne Anfuehrungszeichen. data/1crn.pdb funktioniert nachweislich,
+      // "data/1crn.pdb" als String waere eine Datei NAMENS data/1crn.pdb.
+      script: 'load ' + String(file).replace(/\s/g, '') +
+              '; zoom reset; spacefill 0.4'
+    };
+    info.readyFunction = function () { /* Messen passiert in loadStage */ };
+
+    host.innerHTML = Jmol.getAppletHtml(id, info);
+    applet[st.key] = window[id];
+    return applet[st.key];
+  }
+
+  // ---- Laden ------------------------------------------------------------
+  // Der Weg ist "load data/<datei>" mit HEAD-Pruefung, derselbe wie in
+  // index.html und sandbox.html. Ein SMILES-Text geht nicht, siehe den
+  // Kommentar bei PRESETS.
+  function loadStage(st){
+    var file = document.getElementById(st.sel).value;
+    var box = document.getElementById(st.box);
+    var stEl = box.querySelector('.st');
+    var pcEl = box.querySelector('.pc');
+
+    if (!file) {
+      box.classList.remove('err');
+      stEl.textContent = t('empty');
+      pcEl.textContent = '—';
+      return;
+    }
+
+    var before = pctOf(st);
+    stEl.textContent = t('loading');
+    box.classList.remove('err');
+
+    // HTTP zuerst: sonst laedt der Kern eine 404-Seite und meldet
+    // "unrecognized file format" (gemessen am 2026-10-02 bei jedem Drop).
+    fetch(file, { method: 'HEAD' }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      buildStage(st, file);
+      setTimeout(function () {
+        var kerr = kernelError(st);
+        var p = pctOf(st);
+        if (kerr) {
+          box.classList.add('err');
+          stEl.textContent = 'ERR';
+          pcEl.textContent = '—';
+          log('err', st.label[lang] + ': ' + kerr.slice(0, 70));
+        } else if (p === null || p <= 0.2) {
+          box.classList.add('err');
+          stEl.textContent = t('notDrawn');
+          pcEl.textContent = p === null ? '—' : p + '%';
+          log('err', st.label[lang] + ' ' + file + ': ' + t('notDrawn'));
+        } else {
+          stEl.textContent = t('ready');
+          pcEl.textContent = p + '%';
+          log('ok', st.label[lang] + ' ' + file.replace('data/', '') + ' — ' +
+                       (before === null ? p + '%' : before + '% → ' + p + '%'));
+        }
+        updateStatus();
+      }, 2800);
+    }).catch(function (e) {
+      box.classList.add('err');
+      stEl.textContent = t('notFound');
+      pcEl.textContent = '—';
+      log('err', st.label[lang] + ' ' + file + ' — ' + e.message);
+      updateStatus();
+    });
+  }
+
+  // ---- Hervorhebung -----------------------------------------------------
+  // KEINE Reaktionsberechnung. Der J2S-Kern hat keinen Reaktionsmotor:
+  //   "load reaction CCO>>CC=O" aendert die Farbquote von 5,25 % auf
+  //   5,51 % (gemessen am 2026-10-02) — das ist eine Struktur, keine
+  //   Reaktion. Und SMILES-Eingabe geht ueberhaupt nicht (acht Wege
+  //   gemessen, alle "unrecognized file format", siehe PRESETS).
+  //
+  // Was hier laeuft, ist ein Durchlauf der drei Stufen als Blickfuehrung.
+  // Es sieht nach einer Animation aus und behauptet keine Chemie.
+  function play(){
+    if (playing) { stop(); return; }
+    playing = true;
+    document.getElementById('playBtn').textContent = t('stopped');
+    log('info', t('playing'));
+    var step = 0;
+    timer = setInterval(function () {
+      step++;
+      var order = [0, 1, 2, 1, 0];
+      var s = STAGES[order[step % order.length]];
+      var box = document.getElementById(s.box);
+      box.style.outline = '4px solid var(--gelb)';
+      setTimeout(function () { box.style.outline = ''; }, 500);
+      if (step % order.length === 0) updateStatus();
+    }, 700);
+  }
+
+  function stop(){
+    playing = false;
+    if (timer) { clearInterval(timer); timer = null; }
+    document.getElementById('playBtn').textContent = t('playing');
+  }
+
+  function updateStatus(){
+    var ok = 0, err = 0;
+    STAGES.forEach(function (st){
+      var box = document.getElementById(st.box);
+      if (box.classList.contains('err')) err++;
+      else ok++;
+    });
+    if (err) setStatus(err + ' × ' + t('notDrawn'), 'err');
+    else setStatus(ok + '/3 ' + t('ready'), 'ok');
+  }
+
+  // ---- Vorlagen ---------------------------------------------------------
+  function loadPreset(name){
+    var p = PRESETS[name];
+    if (!p) return;
+    document.getElementById('selA').value = p.a;
+    document.getElementById('selB').value = p.b;
+    document.getElementById('selC').value = p.c;
+    STAGES.forEach(function (st){ loadStage(st); });
+    log('info', name + ' — ' + p[lang]);
+  }
+
+  // ---- Verdrahtung ------------------------------------------------------
+  function wire(){
+    STAGES.forEach(function (st){
+      document.getElementById(st.go).addEventListener('click', function () {
+        loadStage(st);
+      });
+      document.getElementById(st.sel).addEventListener('change', function () {
+        loadStage(st);
+      });
+    });
+    document.getElementById('playBtn').addEventListener('click', play);
+    document.getElementById('clearBtn').addEventListener('click', function () {
+      STAGES.forEach(function (st){
+        document.getElementById(st.sel).value = '';
+        var box = document.getElementById(st.box);
+        box.classList.remove('err');
+        box.querySelector('.st').textContent = '—';
+        box.querySelector('.pc').textContent = '—';
+        // Kein <canvas> erzeugen: der Kern baut seinen own beim
+        // getAppletHtml. Ein Platzhalter-Canvas hier wurde beim Applet-Bau
+        // ersetzt und liess jede Id-Messung ins Leere laufen (2026-10-02).
+        document.querySelector('#' + st.box + ' .stage').innerHTML = '';
+      });
+      applet = {};
+      stop();
+      log('info', t('cleared'));
+      setStatus('—', 'busy');
+    });
+    document.getElementById('langBtn').addEventListener('click', function () {
+      lang = lang === 'de' ? 'en' : 'de';
+      applyI18n();
+      updateStatus();
+      if (playing) stop();
+    });
+    // Vorlagen ueber die Tastatur: 1 / 2 / 3
+    document.addEventListener('keydown', function (e) {
+      if (e.target.tagName === 'INPUT') return;
+      var map = { '1': 'organic', '2': 'minerals', '3': 'bio' };
+      if (map[e.key]) loadPreset(map[e.key]);
+    });
+  }
+
+  function applyI18n(){
+    var nodes = document.querySelectorAll('[data-de]');
+    for (var i = 0; i < nodes.length; i++)
+      nodes[i].textContent = nodes[i].getAttribute('data-' + lang);
+    document.documentElement.lang = lang;
+  }
+
+  function buildSelectors(){
+    STAGES.forEach(function (st){
+      var sel = document.getElementById(st.sel);
+      if (!sel) return;
+      sel.innerHTML = '';
+      var empty = document.createElement('option');
+      empty.value = '';
+      empty.textContent = '—';
+      sel.appendChild(empty);
+      FILES.forEach(function (f) {
+        var o = document.createElement('option');
+        o.value = f[0];
+        o.textContent = f[1];
+        sel.appendChild(o);
+      });
+    });
+  }
+
+  function boot(){
+    applyI18n();
+    buildSelectors();
+    wire();
+    var p = PRESETS.organic;
+    document.getElementById('selA').value = p.a;
+    document.getElementById('selB').value = p.b;
+    document.getElementById('selC').value = p.c;
+    STAGES.forEach(function (st){ loadStage(st); });
+    setStatus(t('building'), 'busy');
+    setTimeout(function () {
+      if (!applet.A) log('err', t('coreError'));
+    }, 20000);
+  }
+
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+</body>
+</html>
