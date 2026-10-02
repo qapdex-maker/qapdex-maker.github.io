@@ -1,0 +1,61 @@
+JSmol / Jmol — Lizenzhinweis
+===========================
+
+Dieses Verzeichnis (`jsmol/`) enthaelt den J2S-Kern und die Datei
+`JSmol.min.js` aus der Jmol-Distribution (Version 16.3.53, Build
+2026-03-20, Herkunft: `qapdex-maker/jsmol-local`).
+
+JSmol ist eine JavaScript-Neuschreibung von Jmol und steht unter einer
+zweifelhaften Lizenz:
+
+  * Jmol (der Java-Teil)   — LGPL 2.1
+  * JSmol (der JS-Teil)    — MIT
+  * JmolApplet             — LGPL 2.1
+
+Diese Seiten-Lizenz (`LICENSE` im Repo-Root, MIT) gilt fuer den von
+qapdex-maker geschriebenen Portal-Code und **nicht** fuer `jsmol/`.
+Siehe: https://jmol.sourceforge.net/ , https://github.com/jsmol3/jsmol
+
+Wichtig fuer den Betrieb
+------------------------
+
+`jsmol/` wird von GitHub Pages statisch ausgeliefert. Es enthaelt keine
+Secrets und keine Konfiguration — nur Programmcode und offene
+Strukturdaten (PDB/CIF/MOL aus dem Jmol-Testbestand). Es gibt in diesem
+Verzeichnis weder einen API-Schluessel noch eine `.env`-Datei.
+
+Struktur
+--------
+
+    jsmol/
+      index.html          eigene Seite (Portal-Konvention: DE/EN-i18n)
+      JSmol.min.js        JSmol-Build (MIT)
+      j2s/                Java-nach-JS-Kern (LGPL 2.1)
+        core/*.z.js       Kernmodule, geladen zur Laufzeit — Pflicht
+        JS/               SMILES/CIP/CLEG-Module
+      data/               9 kuratierte Strukturdateien (offener Bestand)
+      LICENSE-JSmol.txt   diese Datei
+
+Aus dem Original-Dump bewusst NICHT uebernommen:
+
+  * `JSmol.min.js.0`, `j.js`  — Editor-Backup bzw. identische Kopie
+  * `j2s/JS/sg/createmap.xlsx` (5,9 MB) — nicht fuer den Betrieb noetig
+  * `j2s/_ES6/inchi-web.wasm` (1,1 MB) — InChI, in keiner Demo benutzt
+  * `data/` (39 MB), `iucrdemo/`, `jcse/`, `spt/`, `klotho/`, `jsme/`,
+    `flot/`, `php/` — Demomaterial ohne Bezug zur einen Seite
+  * ~90 `*.htm`-Testseiten des Jmol-Projekts
+
+`.z.js`-Dateien sind KEIN Muell: im minifizierten Build werden sie
+unbedingt geladen, nur im Debug-Build werden sie durch die
+unkomprimierten Varianten ersetzt (`_debugCore`). Ein Ausschluss macht
+den Viewer lautlos tot.
+
+Server-Ru ckgaenge
+------------------
+
+`JSmol.min.js` enthaelt eine Default-URL zu einem PHP-Bridge-Server
+(`chemapps.stolaf.edu`, fuer Datei-Uploads). `index.html` setzt
+**kein** `serverURL`, und im Browser-Mitschnitt vom 2026-10-02 ging
+kein einziger Request dorthin — alle Anfragen gingen an die eigene
+Domain. Wer spaeter einen Upload hinzufuegt, sollte `serverURL`
+ausdruecklich auf etwas Eigenes setzen statt den Default zu erben.

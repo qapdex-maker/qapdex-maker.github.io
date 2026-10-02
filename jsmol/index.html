@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-de="JSmol Workbench" data-en="JSmol Workbench">JSmol Workbench</title>
+<style>
+  :root{
+    --kobalt:#2547ff; --gelb:#ffd400; --paper:#f1ede3; --ink:#141414;
+    --line:#141414; --ok:#1a7f37; --err:#c1121f;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+    min-height:100vh;
+  }
+  header{
+    border-bottom:3px solid var(--line); padding:14px 16px;
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    background:var(--kobalt); color:#fff;
+  }
+  header h1{font-size:18px;margin:0;font-weight:800;letter-spacing:.02em}
+  header .sub{font-size:12px;opacity:.85;font-family:"IBM Plex Mono",monospace}
+  header a.back{
+    color:#fff; text-decoration:none; font-size:12px;
+    border:2px solid #fff; padding:3px 9px; border-radius:2px;
+  }
+  main{
+    display:grid; grid-template-columns:260px 1fr; gap:0;
+    align-items:start; min-height:calc(100vh - 58px);
+  }
+  @media (max-width:820px){ main{grid-template-columns:1fr} }
+
+  aside{
+    border-right:3px solid var(--line); padding:14px;
+    background:#e8e2d5;
+  }
+  @media (max-width:820px){ aside{border-right:none; border-bottom:3px solid var(--line)} }
+  aside h2{
+    font-size:12px; text-transform:uppercase; letter-spacing:.08em;
+    margin:0 0 10px; font-family:"IBM Plex Mono",monospace;
+  }
+  #structureList{list-style:none;margin:0;padding:0}
+  #structureList li{margin-bottom:6px}
+  #structureList button{
+    width:100%; text-align:left; cursor:pointer;
+    background:#fff; border:2px solid var(--line); border-radius:2px;
+    padding:8px 10px; font:inherit; font-size:13px; color:var(--ink);
+  }
+  #structureList button:hover{background:var(--gelb)}
+  #structureList button[aria-current="true"]{
+    background:var(--kobalt); color:#fff; border-color:var(--kobalt);
+  }
+  #structureList button .meta{
+    display:block; font-size:11px; opacity:.75;
+    font-family:"IBM Plex Mono",monospace;
+  }
+
+  section.work{padding:14px; display:flex; flex-direction:column; gap:12px}
+  .toolbar{
+    display:flex; gap:6px; flex-wrap:wrap; align-items:center;
+    border:3px solid var(--line); background:#fff; padding:8px;
+    border-radius:2px;
+  }
+  .toolbar button{
+    cursor:pointer; background:var(--paper); border:2px solid var(--line);
+    border-radius:2px; padding:5px 10px; font:inherit; font-size:13px;
+  }
+  .toolbar button:hover{background:var(--gelb)}
+  .toolbar .sp{flex:1}
+  .status{
+    border:3px solid var(--line); border-left-width:10px;
+    background:#fff; padding:8px 12px; font-size:13px;
+    font-family:"IBM Plex Mono",monospace; min-height:38px;
+  }
+  .status.ok{border-left-color:var(--ok)}
+  .status.err{border-left-color:var(--err)}
+  .status.busy{border-left-color:var(--gelb)}
+  #viewerWrap{
+    border:3px solid var(--line); background:#fff; position:relative;
+    min-height:320px; display:flex; align-items:center; justify-content:center;
+  }
+  #viewerWrap.j2d canvas{max-width:100%;height:auto;display:block}
+  footer{
+    border-top:3px solid var(--line); padding:10px 16px;
+    font-size:11px; font-family:"IBM Plex Mono",monospace;
+    display:flex; gap:14px; flex-wrap:wrap; background:#e8e2d5;
+  }
+  footer a{color:var(--kobalt)}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../index.html">&larr; <span data-de="Portal" data-en="Portal">Portal</span></a>
+  <h1>JSmol Workbench</h1>
+  <span class="sub" data-de="Molekül-Viewer · Jmol 16.3.53 (j2s-Kern)" data-en="Molecule viewer · Jmol 16.3.53 (j2s core)">Molekül-Viewer · Jmol 16.3.53 (j2s-Kern)</span>
+</header>
+
+<main>
+  <aside>
+    <h2 data-de="Strukturen" data-en="Structures">Strukturen</h2>
+    <ul id="structureList"></ul>
+  </aside>
+
+  <section class="work">
+    <div class="toolbar">
+      <button data-cmd="zoom reset"   data-de="Größe"      data-en="Reset view">Größe</button>
+      <button data-cmd="zoom in"      data-de="Vergrößern" data-en="Zoom in">Vergrößern</button>
+      <button data-cmd="zoom out"     data-de="Verkleinern" data-en="Zoom out">Verkleinern</button>
+      <button data-cmd="spin on"     data-de="Drehen an"  data-en="Spin on">Drehen an</button>
+      <button data-cmd="spin off"    data-de="Drehen aus" data-en="Spin off">Drehen aus</button>
+      <button data-cmd="cartoon on"  data-de="Bänder"     data-en="Cartoon">Bänder</button>
+      <button data-cmd="cartoon off" data-de="Kugeln"     data-en="Spacefill">Kugeln</button>
+      <button data-cmd="select all"  data-de="Alles selektieren" data-en="Select all">Alles selektieren</button>
+      <button data-cmd="wireframe off" data-de="Volumen aus" data-en="Hide surface">Volumen aus</button>
+      <span class="sp"></span>
+      <button id="langBtn" title="Sprache wechseln">DE / EN</button>
+    </div>
+
+    <div class="status busy" id="status" role="status" aria-live="polite">…</div>
+
+    <div id="viewerWrap">
+      <span id="mydiv"></span>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span id="verLine">Jmol —</span>
+  <span data-de="Renderung ohne WebGL (2D-Fallback)" data-en="Rendering without WebGL (2D fallback)">Renderung ohne WebGL (2D-Fallback)</span>
+  <a href="https://jmol.sourceforge.net" rel="noopener">jmol.sourceforge.net</a>
+  <span data-de="Lizenz: JSmol/Jmol (LGPL 2.1 / MIT)" data-en="License: JSmol/Jmol (LGPL 2.1 / MIT)">Lizenz: JSmol/Jmol (LGPL 2.1 / MIT)</span>
+</footer>
+
+<script src="JSmol.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ---------------------------------------------------------------- Daten
+  var STRUCTURES = [
+    { file: 'data/1crn.pdb',   name: { de: 'Crambin (1CRN)',        en: 'Crambin (1CRN)' },        kind: { de: 'Protein', en: 'Protein' } },
+    { file: 'data/1cbs.cif',   name: { de: 'Calmodulin-Fragment',   en: 'Calmodulin fragment' },   kind: { de: 'CIF', en: 'CIF' } },
+    { file: 'data/dna.pse',    name: { de: 'DNA-Doppelhelix',       en: 'DNA double helix' },      kind: { de: 'Pseudo', en: 'Pseudo' } },
+    { file: 'data/taxol.mol',  name: { de: 'Taxol',                 en: 'Taxol' },                kind: { de: 'MOL', en: 'MOL' } },
+    { file: 'data/c60af.mol',  name: { de: 'Fulleren C60',          en: 'Fullerene C60' },         kind: { de: 'MOL', en: 'MOL' } },
+    { file: 'data/caffeine.mol', name: { de: 'Koffein',             en: 'Caffeine' },             kind: { de: 'MOL', en: 'MOL' } },
+    { file: 'data/diamond.cif', name: { de: 'Diamant',              en: 'Diamond' },              kind: { de: 'Kristall', en: 'Crystal' } },
+    { file: 'data/quartz.cif',  name: { de: 'Quarz',                en: 'Quartz' },               kind: { de: 'Kristall', en: 'Crystal' } }
+  ];
+
+  // ---------------------------------------------------------------- i18n
+  var I18N = {
+    loading:   { de: 'lade Kernel …',                 en: 'loading core …' },
+    loadingS:  { de: 'lade ',                          en: 'loading ' },
+    ready:     { de: 'bereit',                         en: 'ready' },
+    failed:    { de: 'fehlgeschlagen: ',                en: 'failed: ' },
+    notFound:  { de: 'Datei nicht gefunden',           en: 'file not found' },
+    coreError: { de: 'J2S-Kern nicht gestartet',      en: 'J2S core did not start' }
+  };
+
+  var lang = 'de';
+  var applet = null;
+  var ready = false;
+  var current = STRUCTURES[0];
+
+  // ---------------------------------------------------------------- Status
+  function status(msg, cls) {
+    var el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = 'status ' + (cls || '');
+  }
+
+  function t(key) { return I18N[key][lang]; }
+
+  // ---------------------------------------------------------------- Aufbau
+  function buildList() {
+    var ul = document.getElementById('structureList');
+    ul.innerHTML = '';
+    STRUCTURES.forEach(function (s, i) {
+      var li = document.createElement('li');
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('aria-current', s === current ? 'true' : 'false');
+      b.innerHTML = '<span>' + s.name[lang] + '</span>' +
+                    '<span class="meta">' + s.kind[lang] + ' · ' +
+                    s.file.replace('data/', '') + '</span>';
+      b.addEventListener('click', function () { loadStructure(i); });
+      li.appendChild(b);
+      ul.appendChild(li);
+    });
+  }
+
+  function applyI18n() {
+    var nodes = document.querySelectorAll('[data-de]');
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      el.textContent = el.getAttribute('data-' + lang);
+    }
+    document.documentElement.lang = lang;
+    buildList();
+  }
+
+  // ---------------------------------------------------------------- JSmol
+  function startApplet() {
+    var info = {
+      width: 480,
+      height: 420,
+      j2sPath: 'j2s',
+      use: 'HTML5',
+      debug: false,
+      disableJ2SLoadMonitor: true,
+      disableInitialConsole: true,
+      addSelectionOptions: true,
+      script: 'load ' + STRUCTURES[0].file
+    };
+
+    info.readyFunction = function () {
+      ready = true;
+      status(t('ready') + ' — ' + current.name[lang], 'ok');
+      document.getElementById('viewerWrap').classList.add('j2d');
+    };
+
+    document.getElementById('mydiv').innerHTML =
+      Jmol.getAppletHtml('jmolApplet0', info);
+    applet = window.jmolApplet0;
+    status(t('loading'), 'busy');
+
+    // Sicherheitsnetz: wenn der Kern nach 20 s nicht steht, ist das ein
+    // Fehler und kein "lädt noch". Sonst bleibt die Seite endlos bei "lade".
+    setTimeout(function () {
+      if (!ready) status(t('coreError'), 'err');
+    }, 20000);
+  }
+
+  function loadStructure(i) {
+    current = STRUCTURES[i];
+    buildList();
+    status(t('loadingS') + current.name[lang], 'busy');
+
+    // VOR dem Befehl pruefen, ob die Datei ueberhaupt liegt: sonst gibt der
+    // J2S-Kern eine leere Flaeche statt einer Meldung zurueck.
+    //
+    // Zwei Fehler, die dieser Vorcheck schon produziert hat und die beide
+    // scheiterten, nicht der Kern:
+    //  1. Ein <img>-Element ist der falsche Test. Ein Browser kann eine
+    //     .pdb-Datei nicht dekodieren, also feuert onerror bei JEDER
+    //     vorhandenen Strukturdatei. Gemessen: "data/caffeine.mol — Datei
+    //     nicht gefunden" bei einer Datei, die im Repo liegt.
+    //  2. Ein Query-String als Cache-Buster landet im Dateinamen. Der
+    //     statische Server findet "caffeine.mol?probe=1" nicht.
+    // Der ehrliche Test ist ein HEAD auf den exakten Pfad: 200 = vorhanden,
+    // 404 = wirklich weg. Und er kostet keine Bytes Nutzlast.
+    fetch(current.file, { method: 'HEAD' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        Jmol.script(applet, 'load ' + current.file + '; zoom reset');
+        status(t('ready') + ' — ' + current.name[lang], 'ok');
+      })
+      .catch(function (e) {
+        status(current.file + ' — ' + t('notFound') + ' (' + e.message + ')', 'err');
+      });
+  }
+
+  function wireToolbar() {
+    var btns = document.querySelectorAll('.toolbar button[data-cmd]');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].addEventListener('click', function (e) {
+        if (!ready) { status(t('loading'), 'busy'); return; }
+        try {
+          Jmol.script(applet, e.currentTarget.getAttribute('data-cmd'));
+        } catch (err) { status(t('failed') + err.message, 'err'); }
+      });
+    }
+    document.getElementById('langBtn').addEventListener('click', function () {
+      lang = lang === 'de' ? 'en' : 'de';
+      applyI18n();
+      // Status neu setzen, sonst nennt er weiter den Strukturnamen in der
+      // alten Sprache. loadStructure() liest current.name[lang] — der
+      // Aufruf ist die einzige Stelle, die den Text korrekt neu baut.
+      if (ready) loadStructure(STRUCTURES.indexOf(current));
+      else status(t('loading'), 'busy');
+    });
+  }
+
+  // ---------------------------------------------------------------- Start
+  function boot() {
+    try {
+      document.getElementById('verLine').textContent =
+        'Jmol ' + (Jmol.getVersion ? Jmol.getVersion() : '16.3.53');
+    } catch (e) { /* Versionsanzeige ist optional */ }
+    applyI18n();
+    wireToolbar();
+    startApplet();
+  }
+
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', boot);
+  else
+    boot();
+})();
+</script>
+</body>
+</html>
