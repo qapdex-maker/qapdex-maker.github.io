@@ -76,7 +76,7 @@ const I18N = {
     ref_ph: 'Endpoint suchen (z.B. /me, team)…', ref_open: '↗ rohe Spec öffnen',
     console: 'Semantics Console', console_hint: 'Gib natürliche Sprache oder einen Endpoint ein → curl + idun-Befehl.',
     nl: 'Natürliche Sprache', nl_btn: 'NL → Graph', endpoint: 'Endpoint', nl_ph: 'z.B. alle Teams des Users',
-    llm: 'LLM-Modus', llm_key_ph: 'Key einfügen', llm_btn: 'NL → Graph (LLM)', llm_busy: 'LLM wird gefragt…', llm_err: 'LLM fehlgeschlagen — Heuristik genutzt', llm_hint: 'Optional: eigener API-Key des gewählten Anbieters für NL→Graph. Key bleibt im Browser (sessionStorage), nie committet oder an uns gesendet. Ohne Key Fallback auf die Stichwort-Heuristik.',
+    llm_key_ph: 'Key einfügen', llm_btn: 'NL → Graph (LLM)', llm_busy: 'LLM wird gefragt…', llm_err: 'LLM fehlgeschlagen — Heuristik genutzt', llm_hint: 'Optional: eigener API-Key des gewählten Anbieters für NL→Graph. Key bleibt im Browser (sessionStorage), nie committet oder an uns gesendet. Ohne Key Fallback auf die Stichwort-Heuristik.',
     // Provider-neutral NL→Graph (2026-10-01). Four values were hard-wired to
     // OpenRouter; now they are chosen. Every key here needs an EN twin, or
     // the raw key leaks into the UI — the F3 'llm' bug again.
@@ -141,7 +141,7 @@ const I18N = {
     ref_ph: 'Search endpoint (e.g. /me, team)…', ref_open: '↗ open raw spec',
     console: 'Semantics Console', console_hint: 'Enter natural language or an endpoint → curl + idun command.',
     nl: 'Natural Language', nl_btn: 'NL → Graph', endpoint: 'Endpoint', nl_ph: 'e.g. all teams of the user',
-    llm: 'LLM mode', llm_key_ph: 'paste key', llm_btn: 'NL → Graph (LLM)', llm_busy: 'asking LLM…', llm_err: 'LLM failed — used heuristic', llm_hint: 'Optional: paste your own key for the selected provider to map NL via an LLM. Key stays in your browser (sessionStorage), never committed or sent to us. Falls back to the keyword heuristic without a key.',
+    llm_key_ph: 'paste key', llm_btn: 'NL → Graph (LLM)', llm_busy: 'asking LLM…', llm_err: 'LLM failed — used heuristic', llm_hint: 'Optional: paste your own key for the selected provider to map NL via an LLM. Key stays in your browser (sessionStorage), never committed or sent to us. Falls back to the keyword heuristic without a key.',
     llm_prov: 'Provider', llm_model: 'Model', llm_model_ph: 'e.g. poolside/laguna-s-2.1:free',
     llm_key: 'API key',
     llm_key_set: 'Set key', llm_key_ok: 'Key stored (this session only)',
@@ -323,6 +323,10 @@ function ConsolePanel({ t }) {
   const [llmErr, setLlmErr] = useState(null);
   const [probe, setProbe] = useState(null);
   const [cat, setCat] = useState(null);
+  // '' = nothing said yet, 'ok' = a key is stored for the current provider.
+  // Reset on provider switch, because the answer would otherwise describe the
+  // provider the user just left.
+  const [keyOk, setKeyOk] = useState('');
 
   const prov = LLM_PROVIDERS[llmProv] || LLM_PROVIDERS.openrouter;
   const llmKey = llmKeys[llmProv] || '';
@@ -330,6 +334,8 @@ function ConsolePanel({ t }) {
   function setProv(id) {
     setLlmProv(id);
     sessionStorage.setItem('llm_prov', id);
+    // The key confirmation describes the provider we are leaving, so clear it.
+    setKeyOk('');
     // The model belongs to the provider. Carrying OpenRouter's model name to
     // Nous would produce a 404 on the first call, so reset to that
     // provider's default unless the user overrode it for this provider.
@@ -350,6 +356,10 @@ function ConsolePanel({ t }) {
     if (v) sessionStorage.setItem(LLM_PROVIDERS[id].keyName, v);
     else sessionStorage.removeItem(LLM_PROVIDERS[id].keyName);
     setProbe(null);
+    // Say what happened. The German string for llm_key_ok has been in the
+    // table since the provider block was built and was never shown, so a user
+    // who pasted a key could not tell whether it was stored or ignored.
+    setKeyOk(v ? 'ok' : '');
   }
 
   // Off-thread load (same strategy as Reference): reach the index JSON via an
@@ -545,6 +555,14 @@ async function loadCatalog(providerId, key) {
             <label className="lbl">{prov.label} {t.llm_key}</label>
             <input type="password" className="epinput" value={llmKey} placeholder={t.llm_key_ph}
               onChange={e => setKey(llmProv, e.target.value)} />
+            {/* llm_key_ok was defined in both tables from the day the provider
+                block was built and never rendered: a user who pasted a key had
+                no way to tell whether it was stored or dropped. */}
+            {keyOk === 'ok' && (
+              <p className="hint ok">
+                {t.llm_key_set}: {t.llm_key_ok}
+              </p>
+            )}
             <div className="llm-actions">
               <button className="ghost" onClick={runNl} disabled={llmBusy || !llmKey}>{t.llm_btn}</button>
               <button className="ghost" disabled={llmBusy || !llmKey}
@@ -941,7 +959,12 @@ function Sketch({ t }) {
           (acc, set) => acc + (segments && segments[set] ? segments[set] : 0),
           0,
         );
-        return { type, n };
+        // hasSet travels with the row so the render can tell the two dead-end
+        // states apart: a type that HAS EntitySets but whose set name ends no
+        // path is reachable through navigation, a type with none is not.
+        // Without it every zero row would say "ohne direkte Endpoints" even
+        // when navigation would have worked.
+        return { type, n, hasSet: c.entitySets[type].length > 0 };
       })
       .sort((a, b) => b.n - a.n || a.type.localeCompare(b.type));
   };
@@ -979,15 +1002,18 @@ function Sketch({ t }) {
                     <div><b>{c.enumTypes}</b> {t.sketch_enum}</div>
                     <div className="sketch-total"><b>{c.totalTypes}</b> {t.sketch_total}</div>
                   </div>
-                  {linked(c).length > 0 && (
+                  {linked(c).length > 0 ? (
                     <div className="sketch-join">
                       {/* Both numbers, because they are not the same: the
                           first is the number of linked types, the second the
                           number the join can speak about at all. Showing only
                           the linked ones made a file with a dead type look
                           complete. */}
+                      {/* sketch_types gives the two numbers a subject. Without
+                          it the block read "53 von 54" with nothing saying what
+                          the 54 were. */}
                       <div className="sketch-join-head">
-                        {t.sketch_join
+                        {t.sketch_types}: {t.sketch_join
                           .replace('{a}', String(linked(c).length))
                           .replace('{b}', String(c.entitySetCount))}
                       </div>
@@ -1007,7 +1033,19 @@ function Sketch({ t }) {
                                 <span className="sk-type-name">{r.type}</span>
                                 {r.n > 0
                                   ? <span className="sk-ep">{r.n} {t.sketch_ep}</span>
-                                  : <span className="sk-noep">{t.sketch_navonly}</span>}
+                                  /* Two different dead-end states, one label
+                                     each. A type WITH EntitySets whose set name
+                                     is the last segment of no path is still
+                                     reachable through navigation — that is
+                                     sketch_navonly. A type with NO EntitySet at
+                                     all has nothing to navigate from, and
+                                     saying "nur über Navigation" there is
+                                     simply false. That second case is
+                                     sketch_noep, which existed in both tables
+                                     and was never rendered. */
+                                  : <span className="sk-noep">
+                                      {r.hasSet ? t.sketch_navonly : t.sketch_noep}
+                                    </span>}
                               </div>
                             ))}
                             {rest.length > 0 && (
@@ -1024,6 +1062,17 @@ function Sketch({ t }) {
                           </>
                         );
                       })()}
+                    </div>
+                  ) : (
+                    /* Zero linked types is a RESULT, not a missing section.
+                       Gating the whole join block on linked(c).length > 0 made
+                       a CSDL whose EntitySets reach no endpoint path render a
+                       counts card with no join line at all — indistinguishable
+                       from "not computed yet". Say it. */
+                    <div className="sketch-join">
+                      <div className="sketch-join-head">
+                        {t.sketch_types}: {t.sketch_join_none}
+                      </div>
                     </div>
                   )}
                 </>

@@ -111,7 +111,6 @@ const I18N = {
     nl_btn: 'NL → Graph',
     endpoint: 'Endpoint',
     nl_ph: 'z.B. alle Teams des Users',
-    llm: 'LLM-Modus',
     llm_key_ph: 'Key einfügen',
     llm_btn: 'NL → Graph (LLM)',
     llm_busy: 'LLM wird gefragt…',
@@ -253,7 +252,6 @@ const I18N = {
     nl_btn: 'NL → Graph',
     endpoint: 'Endpoint',
     nl_ph: 'e.g. all teams of the user',
-    llm: 'LLM mode',
     llm_key_ph: 'paste key',
     llm_btn: 'NL → Graph (LLM)',
     llm_busy: 'asking LLM…',
@@ -557,11 +555,17 @@ function ConsolePanel({
   const [llmErr, setLlmErr] = useState(null);
   const [probe, setProbe] = useState(null);
   const [cat, setCat] = useState(null);
+  // '' = nothing said yet, 'ok' = a key is stored for the current provider.
+  // Reset on provider switch, because the answer would otherwise describe the
+  // provider the user just left.
+  const [keyOk, setKeyOk] = useState('');
   const prov = LLM_PROVIDERS[llmProv] || LLM_PROVIDERS.openrouter;
   const llmKey = llmKeys[llmProv] || '';
   function setProv(id) {
     setLlmProv(id);
     sessionStorage.setItem('llm_prov', id);
+    // The key confirmation describes the provider we are leaving, so clear it.
+    setKeyOk('');
     // The model belongs to the provider. Carrying OpenRouter's model name to
     // Nous would produce a 404 on the first call, so reset to that
     // provider's default unless the user overrode it for this provider.
@@ -584,6 +588,10 @@ function ConsolePanel({
     }));
     if (v) sessionStorage.setItem(LLM_PROVIDERS[id].keyName, v);else sessionStorage.removeItem(LLM_PROVIDERS[id].keyName);
     setProbe(null);
+    // Say what happened. The German string for llm_key_ok has been in the
+    // table since the provider block was built and was never shown, so a user
+    // who pasted a key could not tell whether it was stored or ignored.
+    setKeyOk(v ? 'ok' : '');
   }
 
   // Off-thread load (same strategy as Reference): reach the index JSON via an
@@ -880,7 +888,9 @@ function ConsolePanel({
     value: llmKey,
     placeholder: t.llm_key_ph,
     onChange: e => setKey(llmProv, e.target.value)
-  }), /*#__PURE__*/React.createElement("div", {
+  }), keyOk === 'ok' && /*#__PURE__*/React.createElement("p", {
+    className: "hint ok"
+  }, t.llm_key_set, ": ", t.llm_key_ok), /*#__PURE__*/React.createElement("div", {
     className: "llm-actions"
   }, /*#__PURE__*/React.createElement("button", {
     className: "ghost",
@@ -1526,9 +1536,15 @@ function Sketch({
       // made the column meaningless. Measured: administrativeUnit showed 1
       // while the index holds 2 paths ending in /administrativeUnits.
       const n = c.entitySets[type].reduce((acc, set) => acc + (segments && segments[set] ? segments[set] : 0), 0);
+      // hasSet travels with the row so the render can tell the two dead-end
+      // states apart: a type that HAS EntitySets but whose set name ends no
+      // path is reachable through navigation, a type with none is not.
+      // Without it every zero row would say "ohne direkte Endpoints" even
+      // when navigation would have worked.
       return {
         type,
-        n
+        n,
+        hasSet: c.entitySets[type].length > 0
       };
     }).sort((a, b) => b.n - a.n || a.type.localeCompare(b.type));
   };
@@ -1572,11 +1588,11 @@ function Sketch({
       className: "sketch-counts"
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, c.entityTypes), " ", t.sketch_entity), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, c.complexTypes), " ", t.sketch_complex), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, c.enumTypes), " ", t.sketch_enum), /*#__PURE__*/React.createElement("div", {
       className: "sketch-total"
-    }, /*#__PURE__*/React.createElement("b", null, c.totalTypes), " ", t.sketch_total)), linked(c).length > 0 && /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("b", null, c.totalTypes), " ", t.sketch_total)), linked(c).length > 0 ? /*#__PURE__*/React.createElement("div", {
       className: "sketch-join"
     }, /*#__PURE__*/React.createElement("div", {
       className: "sketch-join-head"
-    }, t.sketch_join.replace('{a}', String(linked(c).length)).replace('{b}', String(c.entitySetCount))), (() => {
+    }, t.sketch_types, ": ", t.sketch_join.replace('{a}', String(linked(c).length)).replace('{b}', String(c.entitySetCount))), (() => {
       // Top 5 by endpoint count, then the rest. The
       // no-endpoint types sort last (n === 0), so they are
       // only visible after expanding — which is fine,
@@ -1592,9 +1608,19 @@ function Sketch({
         className: "sk-type-name"
       }, r.type), r.n > 0 ? /*#__PURE__*/React.createElement("span", {
         className: "sk-ep"
-      }, r.n, " ", t.sketch_ep) : /*#__PURE__*/React.createElement("span", {
+      }, r.n, " ", t.sketch_ep)
+      /* Two different dead-end states, one label
+         each. A type WITH EntitySets whose set name
+         is the last segment of no path is still
+         reachable through navigation — that is
+         sketch_navonly. A type with NO EntitySet at
+         all has nothing to navigate from, and
+         saying "nur über Navigation" there is
+         simply false. That second case is
+         sketch_noep, which existed in both tables
+         and was never rendered. */ : /*#__PURE__*/React.createElement("span", {
         className: "sk-noep"
-      }, t.sketch_navonly))), rest.length > 0 && /*#__PURE__*/React.createElement("button", {
+      }, r.hasSet ? t.sketch_navonly : t.sketch_noep))), rest.length > 0 && /*#__PURE__*/React.createElement("button", {
         className: "sk-more",
         onClick: () => setOpen(prev => ({
           ...prev,
@@ -1602,7 +1628,18 @@ function Sketch({
         })),
         "aria-expanded": !!open[s.name]
       }, open[s.name] ? t.sketch_less : t.sketch_more.replace('{n}', String(rest.length))));
-    })())) : e ? /*#__PURE__*/React.createElement("p", {
+    })()) :
+    /*#__PURE__*/
+    /* Zero linked types is a RESULT, not a missing section.
+       Gating the whole join block on linked(c).length > 0 made
+       a CSDL whose EntitySets reach no endpoint path render a
+       counts card with no join line at all — indistinguishable
+       from "not computed yet". Say it. */
+    React.createElement("div", {
+      className: "sketch-join"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "sketch-join-head"
+    }, t.sketch_types, ": ", t.sketch_join_none))) : e ? /*#__PURE__*/React.createElement("p", {
       className: "err"
     }, t.sketch_err, ": ", e) : /*#__PURE__*/React.createElement("div", {
       className: "sketch-actions"
