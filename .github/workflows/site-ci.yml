@@ -57,6 +57,11 @@ jobs:
           cd macrohard
           npm test
 
+      - name: jsmol — Syntax, Referenzen, i18n, Budget
+        run: |
+          node --test tests/jsmol-pages.test.mjs
+          echo "✅ jsmol-Seiten geprüft"
+
       - name: macrohard — sw.js und manifest.json
         run: |
           cd macrohard
