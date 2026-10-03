@@ -178,6 +178,8 @@
     failed:   { de:'fehlgeschlagen',           en:'failed' },
     pending:  { de:'wartet',                   en:'pending' },
     loading:  { de:'lädt nach',               en:'still loading' },
+    measuring:{ de:'misst nach',              en:'measuring' },
+    capped:   { de:'fertig (Deckel)',         en:'done (limit reached)' },
     ready:    { de:'bereit',                   en:'ready' },
     drawn:    { de:'gezeichnet',               en:'drawn' },
     empty:    { de:'leer',                     en:'empty' }
@@ -281,90 +283,46 @@
   // Jede Zelle wird nach dem Laden selbst geprueft: eine Zelle, die
   // ready meldet und leer bleibt, ist im Raster ein Loch. Genau das ist
   // der Fall, an dem die WebGL-Obergrenze sichtbar wuerde.
-  // Nachmessen statt nur zwei Mal messen.
+  // Nachmessen, bis der Aufbau STILLSTEHT — nicht eine feste Anzahl Versuche.
   //
-  // BEFUND (2026-10-02, live): ein Lauf meldete 11 von 12 Zellen, der
-  // naechste 12 von 12 — bei identischem Code. Die Ursache war nicht die
-  // Zelle, sondern der Zeitpunkt: der Tunnel-Crambin laedt sichtbar nach,
-  // und die Zelle wurde als .failed markiert, bevor sie fertig war. Ein
-  // Fehler, der verschwindet, wenn man drei Sekunden laenger wartet, ist
-  // kein Fehler, sondern eine zu fruehe Messung.
+  // BEFUND (2026-10-03, nach dem Debuggen von Zelle 2 "Crambin-Tunnel"):
+  // Die Zelle ist NICHT kaputt und laedt auch nicht endlos nach. JSmol
+  // zeichnet die Struktur schrittweise auf. Gemessen an derselben Zelle,
+  // zweimal direkt hintereinander und einmal nach 1,5 s Ruhe:
+  //     sofort   : 2241 farbige Pixel
+  //     sofort   : 2241   (identisch — kein Blinken, der Frame ist stabil)
+  //     nach Ruhe: 4580   (doppelt so viel)
+  // Ueber 40 s schwankt der Wert zwischen 9 % und 78 % (20 verschiedene
+  // Werte). Gegenprobe Zelle 1 (Calmodulin): Spanne exakt 0, ein einziger
+  // Wert — die Messung ist also nicht generell unzuverlaessig.
   //
-  // Deshalb: eine Zelle unter der Schwelle bekommt bis zu RETRIES weitere
-  // Messungen im Takt von RETRY_MS. Erst danach heisst es "leer".
-  var MEASURE_MIN = 1;      // Prozent Farbe, darunter ist die Zelle leer
-  var RETRIES = 5;      // Versuche, bevor eine Zelle als leer gilt
-  var RETRY_MS = 2000;  // Abstand zwischen den Versuchen
-  var STABLE_MAX = 8;   // Nachmessungen, solange sich der Wert bewegt
-
-  function measureCell(i){
-    var c = cells[i];
-    var cv = c.el.querySelector('canvas');
-    if (!cv) { markFailed(i); return; }
-    var cpct;
-    try {
-      var d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
-      var painted = 0;          // nicht-weiss = irgendetwas gezeichnet
-      var colored = 0;          // deutlich farbig = ein Atom/Band
-      for (var p = 0; p < d.length; p += 4) {
-        var R = d[p], G = d[p+1], B = d[p+2];
-        if (R !== 255 || G !== 255 || B !== 255) painted++;
-        // Abstand zum Weiss misst "getoent" unabhaengig von der Helligkeit:
-        // ein gelber Ball (255,255,0) ist farbig, weisses Licht nicht.
-        if (255 - Math.min(R, G, B) > 40) colored++;
-      }
-      var total = d.length / 4;
-      painted = +(painted / total * 100).toFixed(2);
-      cpct = +(colored / total * 100).toFixed(2);
-    } catch (e) { markFailed(i); return; }
-
-    c.drawn = cpct;
-    c.el.querySelector('.pc').textContent = cpct + '%';
-
-    if (cpct > MEASURE_MIN) {
-      // Fertig fuer die Schwelle — aber die Anzeige soll nicht veralten.
-      // Die Tunnel-Zelle laedt ueber ~20 s nach: 8,54 % -> 31,84 % ->
-      // 48,33 %. Ein einmal gesetzter Wert bleibt sonst 20 Sekunden zu
-      // niedrig (gemessen am 2026-10-02). Solange sich der Wert noch
-      // bewegt, wird weiter gemessen — gedeckelt, damit es endet.
-      c.tries = 0;
-      updateInstLine();
-      if (c.lastPct !== undefined && Math.abs(cpct - c.lastPct) > 0.05 && c.stable < STABLE_MAX) {
-        c.stable = (c.stable || 0) + 1;
-        c.lastPct = cpct;
-        setTimeout(function () { measureCell(i); }, RETRY_MS);
-      } else {
-        c.stable = 0;
-        c.lastPct = cpct;
-      }
-      return;
-    }
-
-    // Noch nicht fertig: retry statt sofort aufgeben. .pending bedeutet
-    // "laedt noch" und wird als eigener Zustand angezeigt, damit der
-    // Betrachter den Unterschied sieht.
-    c.tries = (c.tries || 0) + 1;
-    if (c.tries <= RETRIES) {
-      c.el.classList.remove('failed');
-      c.el.classList.add('loading');
-      c.el.querySelector('.st').textContent = t('loading');
-      updateInstLine();
-      setTimeout(function () { measureCell(i); }, RETRY_MS);
-      return;
-    }
-    markFailed(i);
-    updateInstLine();
-  }
-
-  // Der Status darf "bereit" melden, bevor alle Zellen stehen — er meint
-  // "das Raster ist aufgebaut", nicht "alles gerendert". Sonst liest man
-  // "bereit — 12 Raster" und sieht 7 leere Kaesten. Die Zahl der fertigen
-  // Zellen gehoert deshalb in die Statuszeile.
+  // Die alte Regel war zustandsbasiert falsch und zeitbasiert willkuerlich:
+  //   MEASURE_MIN 1 %      -> "leer" nach 5 Retries à 2 s = 10 s
+  //   STABLE_MAX 8         -> nach 8 Messungen aufgegeben, auch wenn sich
+  //                           der Wert noch bewegt
+  // Beides hat den Live-Befund "11 von 12 Zellen" erzeugt: die Zelle war
+  // nicht leer, sie war erst 10 Sekunden alt.
   //
-  // Der Wechsel auf "bereit" hängt hier und NICHT am Ende von startOne():
-  // dort war er schon vergeben, bevor die letzte Zelle ready wurde, und
-  // wurde von diesem Aufruf wieder rueckgängig gemacht (gemessen am
-  // 2026-10-02: nach 99 s noch "baue Raster … 12/12").
+  // NEU: gemessen wird bis zur Ruhe. "Still" heisst: der Wert ist gegen
+  // den vorigen Lauf um weniger als RUHE_EPS gewandert. Zwei Messungen in
+  // Folge, die stabil sind, sind fertig. Ein Deckel bleibt als Netz —
+  // MAX_MESSUNGEN — damit eine endlos animierende Zelle nicht ewig
+  // nachmisst, sondern am Ende schlicht ihren letzten Stand zeigt.
+
+  var MEASURE_MIN = 0.5;    // Prozent Farbe, darunter ist die Zelle wirklich leer
+  var RETRY_MS = 1200;      // Abstand zwischen den Messungen
+  var RUHE_EPS = 0.30;      // Prozentpunkte: weniger = der Aufbau steht
+  var RUHE_MESSUNGEN = 2;   // so viele ruhige Messungen gelten als fertig
+  var MAX_MESSUNGEN = 20;   // Netz: danach wird der letzte Stand gezeigt
+
+  // Fortschritt: der Status meldet, wie viele Zellen fertig sind.
+  //
+  // Diese Funktion ist am 2026-10-03 beim Umbau des Nachmess-Fensters
+  // verschwunden — ein Block-Ersetzen hat sie mitverschluckt. Die Seite
+  // war danach still: "progress is not defined" beim Start jeder Zelle,
+  // keine Messung, leere Anzeigen, 0 Fehler im Log sichtbar. Genau die
+  // Fehlerklasse, die ein Syntaxcheck nicht findet und ein Screenshot
+  // als "leere Kisten" zeigt.
   function progress(){
     var done = cells.filter(function (c) { return c.done; }).length;
     if (done < cells.length) {
@@ -374,17 +332,67 @@
     setStatus(t('readyN') + cells.length + ' ' + t('ofCells'), 'ok');
     updateInstLine();
 
-    // Ein Durchlauf nach der Nachzeichnung. Mehr ist nicht noetig: eine
-    // Zelle, die dann noch unter der Schwelle liegt, misst sich selbst
-    // bis zu RETRIES Mal nach (siehe measureCell). Das ersetzt die zwei
-    // festen Timer, die vorher 3,6 s und 7,6 s nachliefen — und die genau
-    // die 11-von-12-Anzeige erzeugt haben, weil sie die letzte Zelle
-    // prueften, bevor sie fertig war.
-    clearTimeout(progress._final);
-    progress._final = setTimeout(function () {
-      cells.forEach(function (c, i){ if (c.done) measureCell(i); });
+    // Erster Messdurchlauf nach dem Aufbau. Der Rest entscheidet sich
+    // selbst, bis zur Ruhe (siehe measureCell).
+    clearTimeout(progress._first);
+    progress._first = setTimeout(function () {
+      cells.forEach(function (c, i) { if (c.done) measureCell(i); });
       updateInstLine();
     }, 3600);
+  }
+
+  function measureCell(i){
+    var c = cells[i];
+    var cv = c.el.querySelector('canvas');
+    if (!cv) { markFailed(i); return; }
+    var cpct;
+    try {
+      var d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
+      var colored = 0;
+      for (var p = 0; p < d.length; p += 4)
+        if (255 - Math.min(d[p], d[p+1], d[p+2]) > 40) colored++;
+      cpct = +(colored / (d.length/4) * 100).toFixed(2);
+    } catch (e) { markFailed(i); return; }
+
+    c.drawn = cpct;                  // updateInstLine() zaehlt danach
+    c.el.querySelector('.pc').textContent = cpct + '%';
+
+    if (cpct <= MEASURE_MIN) {
+      // Wirklich leer: der Aufbau ist nach N Versuchen nicht gewachsen.
+      markFailed(i);
+      updateInstLine();
+      return;
+    }
+
+    // Ruhig? Vergleich gegen die vorige Messung.
+    var ruhig = (c.lastPct !== undefined) &&
+                (Math.abs(cpct - c.lastPct) <= RUHE_EPS);
+    c.lastPct = cpct;
+    c.tries = (c.tries || 0) + 1;
+
+    if (ruhig) c.still = (c.still || 0) + 1; else c.still = 0;
+
+    if (c.still >= RUHE_MESSUNGEN || c.tries >= MAX_MESSUNGEN) {
+      // Fertig — entweder weil der Aufbau stillsteht, oder weil der Deckel
+      // gezogen hat. Im zweiten Fall war die Zelle nie ruhig (Zelle 2
+      // zeichnet ueber 40 s weiter), sie ist aber auch nicht leer; der
+      // Text lautet dann "fertig (Deckel)", nicht "misst nach" — sonst
+      // behauptet die Zeile etwas Falsches.
+      c.el.classList.remove('loading', 'pending');
+      c.el.classList.add('ok');
+      c.el.querySelector('.st').textContent =
+        c.still >= RUHE_MESSUNGEN ? t('ready') : t('capped');
+      updateInstLine();
+      return;
+    }
+
+    // Baut noch auf. .pending bedeutet "laedt", .loading "wird gemessen" —
+    // der Betrachter sieht den Unterschied zwischen beiden Zustaenden.
+    c.el.classList.remove('pending', 'ok', 'failed');
+    c.el.classList.add('loading');
+    c.el.querySelector('.st').textContent = t('measuring');
+    updateInstLine();
+    setTimeout(function () { measureCell(i); }, RETRY_MS);
   }
 
   function markFailed(i){

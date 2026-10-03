@@ -189,6 +189,96 @@ test('reaction.html: der Durchlauf bewegt Strukturen, er blinkt nicht', () => {
   //  entfernt -> bleibt gruen. Zwei Tests, eine Sache.)
 });
 
+test('jede aufgerufene Funktion ist auch definiert', () => {
+  // Am 2026-10-03 hat ein Block-Ersetzen beim Umbau des Nachmess-Fensters
+  // in grid.html die Funktion progress() mitverschluckt. node --check war
+  // gruen (die Syntax war gueltig), die Seite startete jede Zelle, rief
+  // progress() und bekam "progress is not defined" — ohne Exception-Text
+  // im Log, ohne roten Text, einfach eine leere Seite mit 12 leeren
+  // Kisten. Ein Syntaxcheck kann das nicht finden.
+  //
+  // Der Test liest die Skript-Quelle und vergleicht die aufgerufenen
+  // eigenen Funktionsnamen mit den definierten. HTML-Kommentare
+  // entfernen: "Crambin (1CRN)" darin sah sonst wie ein Aufruf aus.
+  const KEYWORDS = /^(if|for|while|switch|catch|return|typeof|function|new|do|else|await|async|of|in|delete|void|throw|case|try|finally|yield)$/;
+  const BUILTIN = /^(String|Number|Boolean|Array|Object|Math|Date|JSON|RegExp|Error|Promise|parseInt|parseFloat|isNaN|isFinite|setTimeout|clearTimeout|setInterval|clearInterval|requestAnimationFrame|fetch|eval|decodeURIComponent|encodeURIComponent|btoa|atob|unescape|escape|console|document|window|Jmol|CLEG)$/;
+
+  for (const page of PAGES) {
+    // Strings ZUERST entfernen. In 'Crambin (1CRN)' steckt ein "(" und der
+    // Name sieht fuer den Aufruf-Regex wie eine Funktion aus. Wer erst nach
+    // Aufrufen sucht und dann Strings entfernt, hat 8 falsche Treffer.
+    const js = inlineScript(page)
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\/\/[^\n]*/g, '')
+      .replace(/'(?:[^'\\\n]|\\.)*'/g, "''")
+      .replace(/"(?:[^"\\\n]|\\.)*"/g, '""')
+      .replace(/`(?:[^`\\]|\\.)*`/g, '``');
+
+    // Beide Formen zaehlen: function name() und var name = function.
+    // Ohne die zweite Form meldet der Test "make ist nicht definiert" fuer
+    // eine Seite, in der make sehr wohl definiert ist — als
+    // "var make = function (...)".
+    const defined = new Set([
+      ...[...js.matchAll(/function\s+([A-Za-z_$][\w$]*)\s*\(/g)].map((m) => m[1]),
+      ...[...js.matchAll(/\b(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*function/g)].map((m) => m[1]),
+      ...[...js.matchAll(/\b(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?\(?[^=]*?\)?\s*=>/g)].map((m) => m[1]),
+    ]);
+
+    // Parameter einer Pfeilfunktion sind keine Aufrufe:
+    //   cells.map(fn => fn(i))   — "fn" wird hier zweimal genannt, ist aber
+    //   ein Parameter. Ohne diese Regel meldet der Test jede Seite, die
+    //   .map(x => ...) schreibt.
+    const params = new Set();
+    for (const m of js.matchAll(/\(([^()]*)\)\s*=>/g))
+      m[1].split(',').forEach((n) => params.add(n.trim()));
+    for (const m of js.matchAll(/([A-Za-z_$][\w$]*)\s*=>\s*\{/g))
+      params.add(m[1]);
+    for (const m of js.matchAll(/\b(?:function|async)\s+[A-Za-z_$][\w$]*\s*\(([^()]*)\)/g))
+      m[1].split(',').forEach((n) => params.add(n.trim()));
+
+    const missing = new Set();
+    for (const m of js.matchAll(/([A-Za-z_$][\w$]*)\s*\(/g)) {
+      const name = m[1];
+      const before = js[Math.max(0, m.index - 1)];
+      if (before === '.' || before === '_' || before === '$') continue;
+      if (KEYWORDS.test(name) || BUILTIN.test(name)) continue;
+      if (defined.has(name) || params.has(name)) continue;
+      missing.add(name);
+    }
+    assert.deepEqual([...missing], [],
+      `${page}: aufgerufen, aber nicht definiert: ${[...missing].join(', ')} — ` +
+      'node --check meldet das NICHT, die Seite bleibt still');
+  }
+});
+
+test('die Seiten bleiben auf HTML5, und warum', () => {
+  // use:'WEBGL' verzweigt in Jmol._Canvas3D, das Jmol.GLmol.extendApplet
+  // aufruft. Das Modul liegt im Repo (JSmol.GLmol.min.js, 210 KB), wird
+  // aber von keiner Seite geladen — ohne es wirft getAppletHtml
+  // "Cannot read properties of undefined (reading 'extendApplet')",
+  // ein harter Fehler statt einer leeren Flaeche.
+  //
+  // Mit Modul baut der 3D-Renderer sich auf (gemessen 2026-10-03:
+  // _jmolType "Jmol._Canvas3D (Jmol/GLmol)", is2D false). Die Ausgabe
+  // ist auf dem Testgeraet trotzdem nicht pruefbar: WebGL 2.0 meldet
+  // sich, Shader linken, getError() ist 0 — und readPixels liefert bei
+  // einem einfachen Dreieck 0 von 40.000 Pixeln. Der 2D-Kontext
+  // derselben Seite rendert korrekt (2.500 Pixel bei 50x50).
+  //
+  // Also: HTML5 ist der einzige Pfad, der hier VERIFIZIERBAR ist.
+  assert.ok(fs.existsSync(path.join(JSMOL, 'JSmol.GLmol.min.js')),
+    'jsmol/JSmol.GLmol.min.js fehlt — wer den 3D-Pfad will, kann ihn nicht nachladen');
+  for (const p of PAGES) {
+    const js = inlineScript(p);
+    assert.ok(/use:\s*'HTML5'/.test(js),
+      `${p}: use ist nicht 'HTML5' — der 3D-Pfad ist auf diesem Geraet ` +
+      'nicht pruefbar (WebGL meldet sich, rendert aber nichts)');
+    assert.ok(!/<script[^>]*JSmol\.GLmol/.test(read(p)),
+      `${p}: laedt JSmol.GLmol.min.js — der 3D-Pfad ist hier nicht verifiziert`);
+  }
+});
+
 test('reaction.html: SMILES ueber das Praefix :smiles:', () => {
   // Die Syntax steht in der Jmol-Distribution, in jsmol.htm:
   //   Jmol.loadFile(jmolApplet0, ':smiles:CC/C=C/CC')
@@ -504,12 +594,32 @@ test('grid.html begrenzt die Instanzen und misst jede Zelle selbst', () => {
     `MAX_INSTANCES ist ${max} — gemessen tragen 32 (2D-Pfad), 12 ist der sichere Wert`);
   assert.ok(/measureCell/.test(js),
     'grid.html: keine Selbstmessung der Zellen — eine ready-meldung ohne Bild ist ein Loch');
-  assert.ok(/RETRIES/.test(js) && /MEASURE_MIN/.test(js),
-    'grid.html: kein Nachmess-Fenster — die Tunnel-Zelle wurde als failed markiert, bevor sie fertig war');
-  // Und es muss wirklich ein Fenster sein: RETRIES = 0 heisst "einmal
-  // messen und bei Bedarf aufgeben", also genau der Zustand, der die
-  // 11-von-12-Anzeige erzeugt hat. Bei der Gegenprobe am 2026-10-02 blieb
-  // ein Test mit RETRIES > 0 als blosse Anwesenheitspruefung gruen.
+  // Das Fenster misst bis zur RUHE, nicht eine feste Anzahl Versuche.
+  //
+  // BEFUND 2026-10-03: Zelle 2 "Crambin-Tunnel" war nie kaputt. JSmol
+  // zeichnet die Struktur schrittweise auf — zweimal direkt hintereinander
+  // 2241 Pixel, nach 1,5 s Ruhe 4580, ueber 40 s zwischen 9 und 78 Prozent.
+  // Die alte Regel (5 Retries à 2 s = "leer" nach 10 s) machte daraus
+  // "11 von 12 Zellen". Die Zelle war 10 Sekunden alt.
+  assert.ok(/RUHE_EPS/.test(js) && /RUHE_MESSUNGEN/.test(js) && /MAX_MESSUNGEN/.test(js),
+    'grid.html: kein Fenster "bis zur Ruhe" — die Zelle wird nach einer ' +
+    'festen Zeit als leer markiert, obwohl sie noch aufbaut');
+  const ruhe = /var RUHE_MESSUNGEN = (\d+)/.exec(js);
+  assert.ok(ruhe && Number(ruhe[1]) >= 2,
+    `grid.html: RUHE_MESSUNGEN ist ${ruhe ? ruhe[1] : 'unbekannt'} — ` +
+    'eine einzige ruhige Messung ist kein Fenster, das rendert noch');
+  const deckel = /var MAX_MESSUNGEN = (\d+)/.exec(js);
+  assert.ok(deckel && Number(deckel[1]) >= 10,
+    `grid.html: MAX_MESSUNGEN ist ${deckel ? deckel[1] : 'unbekannt'} — ` +
+    'das Netz muss eine endlos animierende Zelle irgendwann freigeben');
+  assert.ok(/c\.drawn = cpct/.test(js),
+    'grid.html: c.drawn wird nicht gesetzt — der Instanzzaehler bleibt leer');
+  // Bei Deckel darf die Zeile nicht "misst nach" behaupten.
+  assert.ok(/t\('capped'\)/.test(js) && /capped:/.test(js),
+    'grid.html: nach dem Deckel steht die Zelle weiter auf "misst nach" — ' +
+    'das behauptet eine laufende Messung, die es nicht gibt');
+  assert.ok(/function progress\(/.test(js),
+    'grid.html: progress() fehlt — der Aufbau bricht bei jeder Zelle ab');
   // Spin muss ein Schalter mit sichtbarem Zustand sein. Vorher stand im
   // Knopf immer "Alle drehen", auch wenn die Strukturen liefen — der
   // Zustand war nur im Statustext, den man nach 12 Zellen nicht findet
@@ -527,11 +637,6 @@ test('grid.html begrenzt die Instanzen und misst jede Zelle selbst', () => {
   assert.ok(/sb\.classList\.remove\('on'\)/.test(bg) ||
             /spinBtn'\)|spinBtn'\);/.test(bg) || /classList\.remove\('on'\)/.test(bg),
     'grid.html: buildGrid() setzt den Spin-Zustand nicht zurueck');
-
-  const retries = /var RETRIES = (\d+)/.exec(js);
-  assert.ok(retries && Number(retries[1]) >= 3,
-    `grid.html: RETRIES ist ${retries ? retries[1] : 'unbekannt'} — ` +
-    'mit 0 oder 1 faellt die nachladende Zelle wieder durch');
   const retryCall = (js.match(/setTimeout\(\s*function\s*\(\)\s*\{\s*measureCell/g) || []).length;
   assert.ok(retryCall >= 2,
     `grid.html: measureCell wird ${retryCall}-mal per setTimeout nachgerufen — ` +
