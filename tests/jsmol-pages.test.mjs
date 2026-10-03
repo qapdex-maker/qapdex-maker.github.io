@@ -236,6 +236,72 @@ test('reaction.html: die Panels passen in jede Viewport-Breite', () => {
     'Kind scrollt die ganze Seite seitlich');
 });
 
+test('reaction.html: keine Vorzeichen-Zeichen in Messwerten', () => {
+  // Screenshot vom 2026-10-03: das Log zeigte
+  //   "Struktur A :smiles:CCO - 7.02%"
+  // und las sich wie ein NEGATIVES Ergebnis. In der Zeile stand
+  //   "7.02 % -> 7.02 %" — ein Pfeil, kein Minus. In 12-px-Monospace
+  // auf dem Handy liest sich der Pfeil wie ein Bindestrich, und die
+  // Sichtpruefung hat daraus eine negative Prozentzahl gemacht.
+  //
+  // Ein Vorzeichen vor einer Zahl ist eine Aussage. Sie muss eindeutig
+  // sein, sonst liest der Betrachter das Gegenteil.
+  const js = inlineScript('reaction.html')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\/\/[^\n]*/g, '');
+
+  // Blockweise: von "log('ok'" bis zum naechsten ");", per Klammerzaehlung
+  // statt per Zeilenende. Ein Zeilenpuffer laeuft in den naechsten Aufruf
+  // hinein und meldet dessen Platzhalter-Zeichen als Messwert (gemessen
+  // beim Bauen dieses Tests).
+  const starts = [];
+  const re = /\blog\('(?:ok|err|info)'/g;
+  let m;
+  while ((m = re.exec(js)) !== null) starts.push(m.index);
+  assert.ok(starts.length >= 5,
+    `reaction.html: nur ${starts.length} log-Aufrufe gefunden — der Test ` +
+    'sieht die Seite nicht');
+
+  for (const at of starts) {
+    // Klammerzaehlung bis zum schliessenden ");" auf Klammer-Tiefe 0
+    let depth = 0, end = at;
+    for (let i = at; i < js.length && i < at + 600; i++) {
+      const c = js[i];
+      if (c === '(') depth++;
+      else if (c === ')') {
+        depth--;
+        if (depth === 0 && js[i + 1] === ';') { end = i + 2; break; }
+      }
+    }
+    const block = js.slice(at, end);
+    // Presets nennen die Gleichung: "Ethanol -> Ethanal". dort ist der
+    // Pfeil richtig und gehoert nicht in diese Pruefung.
+    if (/log\('info',\s*name/.test(block)) continue;
+    assert.ok(!/[\u2192\u2014]/.test(block),
+      `reaction.html: Log-Meldung mit Pfeil oder Em-Dash: ` +
+      `${block.replace(/\s+/g, ' ').slice(0, 90)} — in kleiner Monospace ` +
+      'liest sich das wie ein Minuszeichen vor der Zahl');
+  }
+
+  // Und die Statuszeile darf es auch nicht.
+  const statusCalls = [...js.matchAll(/setStatus\(([^;]{0,160})\)/g)].map((m) => m[1]);
+  for (const c of statusCalls) {
+    assert.ok(!/[\u2192]/.test(c),
+      `reaction.html: Pfeil in der Statuszeile: ${c.slice(0, 70)}`);
+  }
+  // Ein Minus vor einer Prozentzahl ist verboten — es gibt hier keinen
+  // negativen Anteilswert, es gibt nur "wie viel Farbe ist gezeichnet".
+  assert.ok(!/-\s*\d+(\.\d+)?\s*%/.test(js.replace(/\/\*[^\*]*\*\//g, '')),
+    'reaction.html: eine Prozentzahl beginnt mit einem Minuszeichen — ' +
+    'die Farbquote kann nicht negativ sein, das ist ein Darstellungsfehler');
+  // Reaktionspfeile in den Vorlagen sind ERLAUBT: "Ethanol -> Ethanal"
+  // ist eine Gleichung, keine Messung.
+  const presets = [...js.matchAll(/de:\s*'([^']*\u2192[^']*)'/g)].map((m) => m[1]);
+  assert.ok(presets.length >= 3,
+    'reaction.html: die Reaktionsvorlagen benutzen kein "->" — das waere ' +
+    'keine Gleichung mehr, und die Seite heisst Reaktions-Sandbox');
+});
+
 test('jede aufgerufene Funktion ist auch definiert', () => {
   // Am 2026-10-03 hat ein Block-Ersetzen beim Umbau des Nachmess-Fensters
   // in grid.html die Funktion progress() mitverschluckt. node --check war

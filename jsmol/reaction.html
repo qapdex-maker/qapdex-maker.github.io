@@ -524,8 +524,15 @@
         } else {
           stEl.textContent = t('ready');
           pcEl.textContent = p + '%';
-          log('ok', st.label[lang] + ' ' + file.replace('data/', '') + ' — ' +
-                       (before === null ? p + '%' : before + '% → ' + p + '%'));
+          // Kein Pfeil und kein Em-Dash in dieser Zeile. Beides liest
+          // sich auf dem Handy in 12 px Monospace wie ein MINUS vor der
+          // Zahl: die Sichtpruefung las "Struktur A :smiles:CCO -
+          // 7.02 %" und schloss auf ein negatives Ergebnis (2026-10-03).
+          // Zwei Werte, die es sind, mit dem Wort "jetzt":
+          log('ok', st.label[lang] + '  ' + file.replace('data/', '') +
+                       (before === null || before === p
+                          ? '  (' + p + ' % Farbe)'
+                          : '  (' + before + ' % jetzt ' + p + ' %)'));
         }
         updateStatus();
       }, 2800);
@@ -533,7 +540,7 @@
       box.classList.add('err');
       stEl.textContent = t('notFound');
       pcEl.textContent = '—';
-      log('err', st.label[lang] + ' ' + file + ' — ' + e.message);
+      log('err', st.label[lang] + '  ' + file + '  ' + e.message);
       updateStatus();
     });
   }
@@ -669,7 +676,7 @@
     if (known[p.b]) document.getElementById('selB').value = p.b;
     if (known[p.c]) document.getElementById('selC').value = p.c;
     STAGES.forEach(function (st){ loadStage(st); });
-    log('info', name + ' — ' + p[lang]);
+    log('info', name + ': ' + p[lang]);
   }
 
   // ---- Verdrahtung ------------------------------------------------------
