@@ -19,7 +19,7 @@ https://docs.github.com/de/pages/quickstart
 - `jsmol/` = JSmol Workbench — 3D-Molekül-Viewer (Jmol 16.3.53 j2s-Kern,
   49 MB, 19 kuratierte Strukturdateien). Vier Seiten:
   `index.html` (Workbench) · `grid.html` (12 Instanzen im Raster) ·
-  `sandbox.html` (Befehlskonsole) · `reaction.html` (3 Instanzen, Vergleich).
+  `sandbox.html` (Befehlskonsole) · `reaction.html` (SMILES, 3 Instanzen).
   Vendor-Code mit eigener Lizenz: siehe `jsmol/LICENSE-JSmol.txt` — die
   `LICENSE` im Root gilt dafür **nicht**.
 

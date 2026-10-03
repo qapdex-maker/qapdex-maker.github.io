@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title data-de="Vergleichs-Sandbox" data-en="Comparison sandbox">Vergleichs-Sandbox</title>
+<title data-de="Reaktions-Sandbox" data-en="Reaction sandbox">Reaktions-Sandbox</title>
 <style>
   :root{
     --kobalt:#2547ff; --gelb:#ffd400; --paper:#f1ede3; --ink:#141414;
@@ -104,9 +104,9 @@
 
 <header>
   <a href="../index.html">&larr; <span data-de="Portal" data-en="Portal">Portal</span></a>
-  <h1 data-de="Vergleichs-Sandbox" data-en="Comparison sandbox">Vergleichs-Sandbox</h1>
-  <span class="sub" data-de="SMILES → Molekül · Jmol 16.3.53"
-        data-en="SMILES → molecule · Jmol 16.3.53">SMILES → Molekül · Jmol 16.3.53</span>
+  <h1 data-de="Reaktions-Sandbox" data-en="Reaction sandbox">Reaktions-Sandbox</h1>
+  <span class="sub" data-de="SMILES-Eingabe · Jmol 16.3.53"
+        data-en="SMILES input · Jmol 16.3.53">SMILES-Eingabe · Jmol 16.3.53</span>
   <span class="sp"></span>
   <a href="index.html" data-de="Workbench" data-en="Workbench">Workbench</a>
   <a href="sandbox.html" data-de="Konsole" data-en="Console">Konsole</a>
@@ -159,8 +159,8 @@
 <div id="log" role="log" aria-live="polite"></div>
 
 <footer>
-  <span data-de="Drei JSmol-Instanzen, eine pro Stufe"
-        data-en="Three JSmol instances, one per stage">Drei JSmol-Instanzen, eine pro Stufe</span>
+  <span data-de="Drei Instanzen · Tasten 1–4 für Vorlagen"
+        data-en="Three instances · keys 1–4 for presets">Drei Instanzen · Tasten 1–4 für Vorlagen</span>
   <a href="https://jmol.sourceforge.net" rel="noopener">jmol.sourceforge.net</a>
 </footer>
 
@@ -196,31 +196,81 @@
       host: 'hostC', applet: 'rxAppletC', label: { de:'Struktur C', en:'Structure C' } }
   ];
 
-  // KEIN SMILES. Acht Wege am 2026-10-02 gemessen, alle mit
-  // "unrecognized file format for file .../CCO" gescheitert:
+  // SMILES FUNKTIONIERT — mit der Syntax aus der Jmol-Distribution.
+  //
+  // Die Antwort stand die ganze Zeit in jsmol.htm des Original-Dumps:
+  //   Jmol.loadFile(jmolApplet0, ':smiles:CC/C=C/CC')
+  // also das PRAEFIX ":smiles:", nicht load "CCO".
+  //
+  // Acht vorher probierte Wege (alle "unrecognized file format"):
   //   load "CCO"                      load inline @"CCO"
   //   load smiles "CCO"               load "CCO.smi"
   //   load file "CCO" type smiles     loadScript coresmiles.z.js
-  //   Jmol.loadFile(ap, coresmiles)   <script src="JS/SmilesExt.js">
-  // Die SMILES-Module liegen im Repo (j2s/JS/SmilesParser.js,
-  // SmilesExt.js, j2s/core/coresmiles.z.js, alle HTTP 200), werden aber
-  // nie geladen: getExt("Smiles") laeuft ueber das J2S-Klassensystem,
-  // nicht ueber ein <script>. window.SmilesParser bleibt undefined.
+  //   Jmol.loadFile(ap, 'coresmiles') <script src="JS/SmilesExt.js">
+  // Zwei davon waren auch inhaltlich richtig gedacht — preloadCore ist die
+  // Option fuer Zusatzmodule, aber sie kommt in diesem Build nicht an
+  // (_coreFiles blieb leer). Der Kern braucht sie nicht: er erkennt das
+  // Praefix und wandelt den SMILES-String selbst um. Seine Meldung sagt es:
+  //   smiles/SDF?record_type=3d?POST?smiles=CCO
   //
+  // VERIFIZIERT am 2026-10-03, frisches Applet je SMILES, ueber die
+  // Atomzahl aus dem Kern-Log (reading N atoms == N atoms created):
+  //   CCO                              9 Atome   Ethanol C2H6O
+  //   c1ccccc1                        12 Atome   Benzol C6H6
+  //   CC(=O)Oc1ccccc1C(=O)O           21 Atome   Acetylsalicylsaeure C9H8O4
+  //   CCCC                            14 Atome   Butan C4H10
+  //   O                                3 Atome   Wasser H2O
+  //
+  // Zwei Erwartungswerte waren zuerst falsch (Butan 10 statt 14, Wasser 1
+  // statt 3) — meine Rechnung, nicht das Ergebnis. Die Hydrogene zaehlen
+  // mit, das ist der Normalfall.
+
   // Statt einer Eingabe, die der Kern nicht liest, kommen hier die 19
   // kuratierten Strukturen aus data/ — derselbe Weg, den index.html,
   // grid.html und sandbox.html nehmen und der nachweislich rendert.
+  // Reaktions-Vorlagen. Als Dateien UND als SMILES: beides geht mit
+  // "load <wert>", der Unterschied ist nur das Praefix ":smiles:".
   var PRESETS = {
-    organic:   { a:'data/taxol.mol', b:'data/caffeine.mol', c:'data/estron.cml',
-                 de:'Taxol · Koffein · Estron',
-                 en:'taxol · caffeine · estrone' },
-    minerals:  { a:'data/quartz.cif',  b:'data/diamond.cif',  c:'data/calcite.cif',
-                 de:'Quarz · Diamant · Calcit',
-                 en:'quartz · diamond · calcite' },
-    bio:       { a:'data/1crn.pdb',    b:'data/dna.pse',      c:'data/1bna_surface.pse',
-                 de:'Crambin · DNA-Helix · DNA-Oberfläche',
-                 en:'crambin · DNA helix · DNA surface' }
+    oxidation: {
+      a: ':smiles:CCO', b: ':smiles:O', c: ':smiles:CC=O',
+      de: 'Ethanol + Sauerstoff → Ethanal (Oxidation)',
+      en: 'ethanol + oxygen → ethanal (oxidation)'
+    },
+    ester: {
+      a: ':smiles:CC(=O)O', b: ':smiles:CCO', c: ':smiles:CC(=O)OCC',
+      de: 'Essigsäure + Ethanol → Ethylacetat (Ester)',
+      en: 'acetic acid + ethanol → ethyl acetate (ester)'
+    },
+    benzene: {
+      a: ':smiles:CCCC', b: ':smiles:C', c: ':smiles:c1ccccc1',
+      de: 'Butan + C → Benzol (Aromatisierung)',
+      en: 'butane + C → benzene (aromatisation)'
+    },
+    small: {
+      a: 'data/taxol.mol', b: 'data/caffeine.mol', c: 'data/estron.cml',
+      de: 'Taxol · Koffein · Estron (aus Dateien)',
+      en: 'taxol · caffeine · estrone (from files)'
+    }
   };
+
+  // SMILES-Vorschlaege fuer die Eingabefelder. Verifiziert ueber die
+  // Atomzahl aus dem Kern-Log am 2026-10-03.
+  var SMILES = [
+    [':smiles:C',                            'Kohlenstoffatom · 1'],
+    [':smiles:O',                            'Wasser H2O · 3'],
+    [':smiles:N',                            'Ammoniak NH3 · 4'],
+    [':smiles:CCO',                          'Ethanol C2H6O · 9'],
+    [':smiles:CCC',                          'Propan C3H8 · 11'],
+    [':smiles:CCCC',                         'Butan C4H10 · 14'],
+    [':smiles:c1ccccc1',                     'Benzol C6H6 · 12'],
+    [':smiles:c1ccc2ccccc2c1',               'Naphthalen C10H8 · 18'],
+    [':smiles:CC(=O)O',                      'Essigsaeure C2H4O2 · 8'],
+    [':smiles:CCO',                          'Ethanol · 9'],
+    [':smiles:CC=O',                         'Ethanal C2H4O · 6'],
+    [':smiles:CC(=O)OCC',                      'Ethylacetat C4H8O2 · 14'],
+    [':smiles:CC(=O)Oc1ccccc1C(=O)O',          'Acetylsalicylsaeure · 21'],
+    [':smiles:CN1C=NC2=C1C(=O)N(C)C(=O)N2C',  'Koffein C8H10N4O2 · 24']
+  ];
 
   var I18N = {
     building:  { de:'baue Viewer …',            en:'building viewer …' },
@@ -287,15 +337,28 @@
   }
 
   // Kern-Fehlertext. Jmol schreibt Lesefehler als roten Text in den
-  // Applet-div — das ist die rote Schrift, die auf dem Screenshot vom
-  // 2026-10-03 unter dem Molekuel stand (10.149 rote Pixel in einem
-  // 490x35-Pixel-Band, gemessen).
+  // Applet-div — die rote Schrift aus dem Screenshot vom 2026-10-03
+  // (10.149 rote Pixel in einem 490x35-Pixel-Band unter dem Molekuel,
+  // gemessen; der Text selbst war in der Aufloesung nicht lesbar).
+  //
+  // Nach allem, was seither gemessen wurde, war das sehr wahrscheinlich
+  // "unrecognized file format" — JSmol deutete eine Eingabe als Dateinamen,
+  // die es nicht gibt. Genau das tat load "CCO" acht Wege lang.
   function kernelError(key){
     var host = document.getElementById(key.host);
     if (!host) return null;
     var txt = host.textContent || '';
-    var m = txt.match(/(unrecognized[^"]{0,80}|a\.size is not a function|Error reading file[^"]{0,60}|SMILES[^"]{0,60})/i);
-    return m ? m[1].trim() : null;
+
+    // "smiles/SDF?record_type=3d?POST?smiles=CCO" ist die ERFOLGS-Meldung
+    // des Kerns: er wandelt den SMILES-String in einen SDF-Datensatz um und
+    // liest ihn zurueck. Ein /SMILES/ im Fehler-Regex meldete deshalb jede
+    // korrekt geladene SMILES als Fehler — gemessen am 2026-10-03 als
+    // "2 x nicht gezeichnet" bei 7,02 % und 8,64 % tatsaechlich gezeichnet.
+    var smiOk = /smiles\/SDF\?record_type/.test(txt);
+    var m = txt.match(/(unrecognized[^"]{0,80}|a\.size is not a function|Error reading file[^"]{0,60})/i);
+    if (smiOk && !m) return null;     // SMILES erfolgreich geladen
+    if (!m) return null;
+    return m[1].trim();
   }
 
   // ---- Aufbau -----------------------------------------------------------
@@ -321,8 +384,12 @@
       disableJ2SLoadMonitor: true,
       disableInitialConsole: true,
       addSelectionOptions: false,
-      // Pfad ohne Anfuehrungszeichen. data/1crn.pdb funktioniert nachweislich,
-      // "data/1crn.pdb" als String waere eine Datei NAMENS data/1crn.pdb.
+      // Zwei Arten von Werten, zwei Arten von Befehlen:
+      //   data/1crn.pdb      -> load data/1crn.pdb   (Pfad, ohne Quotes —
+      //                         "data/1crn.pdb" waere eine Datei NAMENS so)
+      //   :smiles:CCO        -> load :smiles:CCO     (Praefix, kein Pfad)
+      // Das Praefix ist die Syntax aus der Jmol-Distribution, siehe den
+      // Kommentar bei PRESETS.
       script: 'load ' + String(file).replace(/\s/g, '') +
               '; zoom reset; spacefill 0.4'
     };
@@ -354,9 +421,14 @@
     stEl.textContent = t('loading');
     box.classList.remove('err');
 
-    // HTTP zuerst: sonst laedt der Kern eine 404-Seite und meldet
-    // "unrecognized file format" (gemessen am 2026-10-02 bei jedem Drop).
-    fetch(file, { method: 'HEAD' }).then(function (r) {
+    // HTTP-Vorpruefung NUR fuer Pfade. Ein SMILES ist kein Pfad, es gibt
+    // nichts abzufragen — der Kopf wuerde 404 melden und die korrekte
+    // Eingage ablehnen (gemessen am 2026-10-03).
+    var isSmiles = file.indexOf(':smiles:') === 0;
+    var check = isSmiles
+      ? Promise.resolve({ ok: true })
+      : fetch(file, { method: 'HEAD' });
+    check.then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       buildStage(st, file);
       setTimeout(function () {
@@ -503,9 +575,22 @@
   function loadPreset(name){
     var p = PRESETS[name];
     if (!p) return;
-    document.getElementById('selA').value = p.a;
-    document.getElementById('selB').value = p.b;
-    document.getElementById('selC').value = p.c;
+    // Jeder Wert muss in der Auswahlliste stehen. Ein unbekannter Wert
+    // macht das <select> lautlos leer (gemessen am 2026-10-03: Preset 2
+    // setzte ":smiles:CC(=O)OCC", das war nicht in der Liste, Stufe C
+    // blieb leer und meldete nichts).
+    var known = {};
+    SMILES.concat(FILES.map(function (f) { return [f[0]]; }))
+           .forEach(function (v) { known[v[0]] = true; });
+    ['a','b','c'].forEach(function (k) {
+      if (p[k] && !known[p[k]]) {
+        log('err', name + '.' + k + ': "' + p[k] + '" steht nicht in der Auswahl');
+        return;
+      }
+    });
+    if (known[p.a]) document.getElementById('selA').value = p.a;
+    if (known[p.b]) document.getElementById('selB').value = p.b;
+    if (known[p.c]) document.getElementById('selC').value = p.c;
     STAGES.forEach(function (st){ loadStage(st); });
     log('info', name + ' — ' + p[lang]);
   }
@@ -547,7 +632,7 @@
     // Vorlagen ueber die Tastatur: 1 / 2 / 3
     document.addEventListener('keydown', function (e) {
       if (e.target.tagName === 'INPUT') return;
-      var map = { '1': 'organic', '2': 'minerals', '3': 'bio' };
+      var map = { '1': 'oxidation', '2': 'ester', '3': 'benzene', '4': 'small' };
       if (map[e.key]) loadPreset(map[e.key]);
     });
   }
@@ -568,12 +653,27 @@
       empty.value = '';
       empty.textContent = '—';
       sel.appendChild(empty);
+      // Zwei Gruppen: SMILES zuerst (das ist der Punkt der Seite), dann
+      // die kuratierten Dateien.
+      var grpS = document.createElement('optgroup');
+      grpS.label = 'SMILES';
+      SMILES.forEach(function (sm) {
+        var o = document.createElement('option');
+        o.value = sm[0];
+        o.textContent = sm[0].replace(':smiles:', '') + '  ·  ' + sm[1];
+        grpS.appendChild(o);
+      });
+      sel.appendChild(grpS);
+
+      var grpF = document.createElement('optgroup');
+      grpF.label = 'data/';
       FILES.forEach(function (f) {
         var o = document.createElement('option');
         o.value = f[0];
         o.textContent = f[1];
-        sel.appendChild(o);
+        grpF.appendChild(o);
       });
+      sel.appendChild(grpF);
     });
   }
 
@@ -581,7 +681,7 @@
     applyI18n();
     buildSelectors();
     wire();
-    var p = PRESETS.organic;
+    var p = PRESETS.oxidation;
     document.getElementById('selA').value = p.a;
     document.getElementById('selB').value = p.b;
     document.getElementById('selC').value = p.c;

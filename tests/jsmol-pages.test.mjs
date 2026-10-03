@@ -189,13 +189,63 @@ test('reaction.html: der Durchlauf bewegt Strukturen, er blinkt nicht', () => {
   //  entfernt -> bleibt gruen. Zwei Tests, eine Sache.)
 });
 
-test('reaction.html laedt ueber den gemessenen Weg, nicht ueber SMILES', () => {
-  // Acht SMILES-Wege am 2026-10-02 gemessen, alle gescheitert mit
-  // "unrecognized file format for file .../CCO": load "CCO", load inline,
-  // load smiles, load "CCO.smi", load file type smiles, loadScript
-  // coresmiles, Jmol.loadFile, <script src="JS/SmilesExt.js">. Die Module
-  // liegen im Repo (HTTP 200), werden aber nie geladen — getExt("Smiles")
-  // laeuft ueber das J2S-Klassensystem. window.SmilesParser bleibt undefined.
+test('reaction.html: SMILES ueber das Praefix :smiles:', () => {
+  // Die Syntax steht in der Jmol-Distribution, in jsmol.htm:
+  //   Jmol.loadFile(jmolApplet0, ':smiles:CC/C=C/CC')
+  // Acht andere Wege (load "CCO", load inline, load smiles, load "CCO.smi",
+  // load file type smiles, loadScript, Jmol.loadFile, <script src>) scheiterten
+  // alle mit "unrecognized file format" — am 2026-10-03 gemessen.
+  //
+  // Verifiziert ueber die Atomzahl aus dem Kern-Log (frisches Applet je
+  // SMILES, weil der Konsolentext kumulativ ist):
+  //   CCO 9 · c1ccccc1 12 · CC(=O)Oc1ccccc1C(=O)O 21 · CCCC 14 · O 3
+  const js = inlineScript('reaction.html');
+  const code = js.replace(/\/\/[^\n]*/g, '');
+  assert.ok(/load :smiles:/.test(js) || /':smiles:/.test(js),
+    'reaction.html: kein ":smiles:" — die funktionierende Syntax fehlt');
+  // Und: KEIN load "SMILES" mehr. Das war acht Wege lang der Fehler.
+  assert.ok(!/load "?[A-Za-z0-9@()\[\]#%+\-]{1,30}"?(;|\s)/.test(code.replace(/load '\s*\+/g,'load ')),
+    'reaction.html: ein SMILES-String wird per load "..." geladen — ' +
+    'am 2026-10-03 gemessen als "unrecognized file format"');
+  // Die Erfolgsmeldung des Kerns darf nicht als Fehler gelten.
+  assert.ok(/smiles\\\/SDF/.test(js) || /record_type/.test(js),
+    'reaction.html: der Erfolgstext "smiles/SDF?record_type" wird nicht ' +
+    'als Fehler erkannt — jede geladene SMILES meldete "nicht gezeichnet"');
+});
+
+test('reaction.html: jeder Preset-Wert steht in der Auswahlliste', () => {
+  // Ein unbekannter Wert im <select> macht das Feld lautlos leer.
+  // Gemessen am 2026-10-03: Preset 2 setzte ":smiles:CC(=O)OCC", der Wert
+  // war nicht in der Liste, Stufe C blieb leer und meldete nichts.
+  const js = inlineScript('reaction.html');
+  const list = (name) => {
+    const i = js.indexOf('var ' + name + ' = [');
+    const blk = js.slice(i, js.indexOf('];', i));
+    return [...blk.matchAll(/\['([^']+)'/g)].map((m) => m[1]);
+  };
+  const known = new Set(list('SMILES').concat(list('FILES')));
+  assert.ok(known.size >= 30, `nur ${known.size} Auswahlwerte gefunden`);
+
+  const pi = js.indexOf('var PRESETS = {');
+  const pblk = js.slice(pi, js.indexOf('};', pi));
+  const vals = [...pblk.matchAll(/\b([abc]):\s*'([^']+)'/g)].map((m) => m[2]);
+  assert.ok(vals.length >= 8, `nur ${vals.length} Preset-Werte gefunden`);
+  for (const v of vals) {
+    assert.ok(known.has(v),
+      `reaction.html: Preset-Wert "${v}" steht nicht in der Auswahlliste — ` +
+      'das <select> wird lautlos leer');
+  }
+  // Und der Code muss es pruefen, nicht nur der Test.
+  assert.ok(/steht nicht in der Auswahl/.test(js),
+    'reaction.html: loadPreset() prueft nicht, ob der Wert existiert');
+});
+
+test('reaction.html: Datei-Weg und SMILES-Weg werden unterschieden', () => {
+  // Zwei Wege, die beide funktionieren und sich nur im Praefix unterscheiden:
+  //   data/1crn.pdb   -> load data/1crn.pdb   (Pfad, ohne Quotes)
+  //   :smiles:CCO     -> load :smiles:CCO     (SMILES, kein Pfad)
+  // Vermischt man sie, gibt es entweder einen 404 (HEAD auf einen SMILES)
+  // oder "unrecognized file format" (load eines Pfads mit Quotes).
   const js = inlineScript('reaction.html');
   const code = js.replace(/\/\/[^\n]*/g, '');
   assert.ok(!/load "?[A-Za-z0-9@()\[\]#%+\-]{1,30}"?(;|\s)/.test(code.replace(/load '\s*\+/g,'load ')),
@@ -205,6 +255,9 @@ test('reaction.html laedt ueber den gemessenen Weg, nicht ueber SMILES', () => {
   // Der Weg, der nachweislich rendert.
   assert.ok(/load ['"]? \+ String\(file\)/.test(js) || /load \+ String\(file\)/.test(js),
     'reaction.html: kein "load data/<datei>" — der Weg, der nachweislich rendert');
+  assert.ok(/isSmiles/.test(js),
+    'reaction.html: der HEAD-Vorcheck laeuft auch fuer :smiles:-Werte — ' +
+    'es gibt keinen Pfad abzufragen, der Kopf meldet 404');
   assert.ok(/method: 'HEAD'/.test(js),
     'reaction.html: keine HEAD-Pruefung — sonst laedt der Kern eine 404-Seite');
   // Messung am Kern-Canvas, nicht an einer vermuteten Id.
