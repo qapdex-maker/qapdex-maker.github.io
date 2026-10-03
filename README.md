@@ -16,10 +16,11 @@ https://docs.github.com/de/pages/quickstart
 - `catpop/` = CatPop Meme/Announcement
 - `pepemem/` = MEMEPEPE Linktree-Backup
 - `pepememe/` = PEPEMEME Linktree-Backup
-- `jsmol/` = JSmol Workbench — 3D-Molekül-Viewer (Jmol 16.3.53 j2s-Kern,
-  49 MB, 19 kuratierte Strukturdateien). Vier Seiten:
-  `index.html` (Workbench) · `grid.html` (12 Instanzen im Raster) ·
-  `sandbox.html` (Befehlskonsole) · `reaction.html` (SMILES, 3 Instanzen).
+- `jsmol/` = 3D-Molekül-Viewer (Jmol 16.3.53 j2s-Kern, 50 MB,
+  19 kuratierte Strukturdateien). Vier Seiten:
+  `index.html` Workbench (19 Strukturen) · `grid.html` MolGrid (12
+  Instanzen) · `sandbox.html` Befehlskonsole · `reaction.html`
+  Reaktions-Sandbox (SMILES-Eingabe).
   Vendor-Code mit eigener Lizenz: siehe `jsmol/LICENSE-JSmol.txt` — die
   `LICENSE` im Root gilt dafür **nicht**.
 
@@ -44,8 +45,9 @@ Die CI (`.github/workflows/site-ci.yml`, Job `lint-and-test`) läuft bei jedem P
 `main` und deckt alle Seiten ab. Lokal dasselbe:
 
 ```
-node deploy-hygiene.js                            # Gate
+node deploy-hygiene.js                              # Gate
 node --test tests/deploy-hygiene-gate.test.mjs     # 6
+node --test tests/jsmol-pages.test.mjs             # 23
 cd macrohard && npm test                           # 332
 cd msgraph/react && node --test tests/*.test.mjs   # 61
 ```

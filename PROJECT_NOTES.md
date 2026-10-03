@@ -583,3 +583,114 @@ prüft Rechte nicht.
 Details zu Marke, Auftritt und Ausbauplan stehen in `~/EXiL-126-NOTES.md`
 (bewusst außerhalb des Repos — die Seite wird als GitHub Pages ausgeliefert,
 jede Datei darin ist öffentlich).
+
+## Session 2026-10-02/03 — JSmol: vier Seiten, und drei Fehler, die wie Produktfehler aussahen
+
+Vier Seiten unter `jsmol/`, live, mit Gate und CI. Vollständige
+Messhistorie in `jsmol-local/INTEGRATION-PLAN.md` Abschnitt 8.
+
+### Was entstanden ist
+
+- `index.html` Workbench — 19 Strukturen in 4 Gruppen, Sidebar scrollbar
+- `grid.html` MolGrid — 12 Instanzen nebeneinander
+- `sandbox.html` Konsole — Befehle mit vorher/nachher-Messung
+- `reaction.html` Reaktions-Sandbox — SMILES-Eingabe, 4 Vorlagen
+- `tests/jsmol-pages.test.mjs` — 23 Tests, in CI und Gate verdrahtet
+
+### Kernbefund 1 — ein Schalter, der nichts tut, wird entfernt
+
+"Volumen aus" stand in der Toolbar und sendete `wireframe off`, einen
+Stilbefehl ohne Flächenwirkung (gemessen 15,24 % → 13,53 %). Sechs
+Flächenbefehle gegengeprüft, alle wirkungslos — auch bei sichtbarer
+Fläche (43,64 % → 43,64 %).
+
+Der Ersatz, "Zurücksetzen", brauchte drei Jmol-Eigenheiten, die
+nirgends dokumentiert sind:
+
+1. **Reihenfolge ist bindend.** `cartoon on; spacefill off` → nichts.
+   `spacefill off; cartoon on` → wirkt. Ist die Kugelansicht aktiv,
+   ignoriert der Kern alle folgenden Stilbefehle.
+2. **Ein langer Befehlsstring als *ein* Aufruf tut nichts.**
+   `spacefill off; cartoon on; zoom reset; …` → 43,64 % → 43,64 %.
+   Dieselben Befehle einzeln mit 120 ms Abstand → 43,64 → 8,25 → 16,72 %.
+3. **Der Standardstil ist strukturabhängig.** `cartoon on` ist bei
+   Protein richtig und lässt ein kleines Molekül leer:
+   Koffein 10,20 % → 0,13 %. Und `spacefill off` ist bei einem kleinen
+   Molekül überhaupt der leere Zustand.
+
+Dazu: Jmol ersetzt die Szene in einer bestehenden Applet-Instanz
+**nicht**, er hängt an. Erster Drop lädt, jeder weitere lässt das Bild
+unverändert. Deshalb baut jede Seite pro Ladevorgang eine frische
+Instanz mit eigener Id.
+
+### Kernbefund 2 — drei Messfehler, die wie Produktfehler aussahen
+
+1. **`Jmol.script()` mit ID statt Objekt.** Signatur ist
+   `function(a,d){a._checkDeferred(d)||a._script(d)}` — genau zwei
+   Parameter. Mit der ID wirft es `a._checkDeferred is not a function`.
+   Ich meldete daraufhin "der Viewer rendert nicht, der Kern lädt nie",
+   obwohl er die ganze Zeit lief. Gefunden nach 20 Tool-Calls, mit
+   `zoom 3`: 13,34 % → 0,26 %.
+2. **Messskript auf `cvA` statt auf `rxAppletA_1_canvas2d`.** Der Kern
+   *ersetzt* jedes `<canvas id="cvA">` durch seinen eigenen mit
+   Instanz-Nummer im Namen. Die Messung fand null und meldete
+   "nicht gezeichnet" bei sauber gerenderten 9,49 %.
+3. **Fehlersuche auf "smiles".** traf den Dateinamen der Probeseite
+   und meldete für jede SMILES einen Fehler, den es nicht gab.
+
+Die richtige Reaktion war jedes Mal: **gegen die Seite messen, nicht die
+Messung fixen.** Ein Test, der die Seite nicht prüft, repariert sie.
+
+### Kernbefund 3 — `node --check` ist keine Existenzprüfung
+
+Ein Block-Ersetzen hat `progress()` mitverschluckt. Ergebnis:
+
+    node --check                grün
+    Browser                     "progress is not defined" pro Zelle
+    Konsole                     keine Exception, kein roter Text
+    Seite                       12 leere Kästen, Anzeigen auf "—"
+
+Dafür gibt es jetzt `tests/jsmol-pages.test.mjs` → "jede aufgerufene
+Funktion ist auch definiert". Fünf Gegenproben, alle gefangen.
+Wichtig: Kommentare und Strings müssen *vor* dem Aufruf-Suchmuster
+entfernt werden — sonst sieht `"Crambin (1CRN)"` wie ein Aufruf aus.
+
+### Zwei falsche Behauptungen, die ich korrigiert habe
+
+1. **"SMILES funktioniert nicht."** Die Syntax stand in `jsmol.htm`
+   derselben Distribution: `Jmol.loadFile(ap, ':smiles:CC/C=C/CC')`.
+   Das Präfix `:smiles:`. Verifiziert über die Atomzahl, 5 von 5 exakt.
+   Ich hatte acht Wege probiert und die Demoseite nicht gelesen.
+2. **"Dieses Gerät hat kein WebGL."** Mesa war installiert, ich hatte
+   den Testbrowser falsch gestartet. Mit `--use-angle=swiftshader`
+   meldet sich WebGL 2.0. Nur: SwiftShader *rendert* hier nichts —
+   Shader linken, `getError()` ist 0, `readPixels` liefert 0 von
+   40.000 Pixeln bei einem einfachen Dreieck. Der 2D-Kontext derselben
+   Seite rendert korrekt.
+
+### Vier Wege für Datei-Upload, keiner funktioniert
+
+`load inline` (rendert ein anderes Molekül), `createObjectURL`
+(blockiert den Renderer, 2× reproduziert), Data-URL (lädt nichts),
+Service-Worker-Cache (Worker fehlerfrei, Dateien byte-genau zurück —
+aber der J2S-Kern kann sie nicht lesen: "unrecognized file format",
+bei `.pse` "a.size is not a function").
+
+Beweis, dass die Datei nicht kaputt ist: derselbe Taxol-Inhalt über
+`load data/taxol.mol` ergibt 8,16 % mit sauberer Bounding-Box; über den
+Cache-Pfad 3,59 % mit 2,90 % roten Pixeln — das ist der Fehlertext.
+
+Upload braucht einen Server. Ohne Server gibt es nur die kuratierten
+Dateien.
+
+### Testzahlen (2026-10-03)
+
+    29 Tests in tests/*.test.mjs      (6 Gate + 23 jsmol)
+    macrohard                          332 Tests
+    msgraph/react                       61 Tests
+    jsmol/                             50 MB von 60 MB Budget
+
+Gegenproben sind bei den jsmol-Tests wichtiger als die Testzahl: ein
+Test, der nichts prüft, behauptet eine Sicherung, die nicht da ist.
+Von 13 angelegten Prüfungen fangen 10 den eingebauten Fehler; die drei
+Ausnahmen stehen als LÜCKEN im Dateikopf.
