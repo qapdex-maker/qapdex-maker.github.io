@@ -189,6 +189,53 @@ test('reaction.html: der Durchlauf bewegt Strukturen, er blinkt nicht', () => {
   //  entfernt -> bleibt gruen. Zwei Tests, eine Sache.)
 });
 
+test('reaction.html: die Panels passen in jede Viewport-Breite', () => {
+  // Screenshot vom 2026-10-03, 1080 px: drei Panels nebeneinander, je
+  // 525 px, Auswahlfelder abgeschnitten, Dokument 1647 px breit.
+  //
+  // Zwei unabhaengige Ursachen, beide gefunden durch Messen statt Raten:
+  //
+  //  1. grid-template-columns:1fr gibt jeder Spur ein Drittel ohne
+  //     Ruecksicht auf den Inhalt. Der Auswahlfeld-Inhalt ist 448 px
+  //     (gemessen), also sprengt er die Spur. gridTemplateColumns war
+  //     "524.656px 18.4375px 524.656px 18.4375px 524.656px" — 1647 px
+  //     bei 1280 px Viewport.
+  //     minmax(300px, 1fr) erzwingt eine Mindestbreite und passt den Rest an.
+  //
+  //  2. Die Media-Query-Schwelle lag bei 999 px, der Screenshot kam mit
+  //     1080 px. matchMedia sagte matches=false. Drei Panels passten
+  //     nebeneinander, wo sie nicht passen.
+  const css = read('reaction.html').replace(/<script>[\s\S]*?<\/script>/g, '');
+  // Auf die DEKLARATION pruefen, nicht auf das Wort. Der Kommentar
+  // neben der Regel nennt minmax() dreimal, ein Wort-Suchtest kann
+  // beides nicht unterscheiden und blieb bei der Gegenprobe gruen.
+  const gridDecl = /grid-template-columns:\s*([^;]+);/g;
+  const decls = [...css.matchAll(gridDecl)].map((m) => m[1]);
+  const stepsDecl = decls.find((d) => d.includes('1fr') || d.includes('minmax'));
+  assert.ok(stepsDecl && /minmax\(\s*300px\s*,\s*1fr\s*\)/.test(stepsDecl),
+    'reaction.html: grid-template-columns ohne minmax — 1fr ignoriert die ' +
+    'Inhaltsbreite und das Dokument wird breiter als der Viewport ' +
+    `(gemessen 1647 px bei 1280 px). Deklaration: ${stepsDecl}`);
+  // Die Schwelle muss ueber 1080 liegen, sonst greift sie dort nicht.
+  const mw = [...css.matchAll(/max-width:\s*(\d+)px/g)].map((m) => Number(m[1]));
+  assert.ok(mw.length >= 2, 'reaction.html: zu wenige Media-Queries');
+  const tablet = Math.max(...mw.filter((v) => v > 700));
+  assert.ok(tablet >= 1080,
+    `reaction.html: die Tablet-Schwelle liegt bei ${tablet} px — bei 1080 px ` +
+    'greift sie nicht und drei Panels stehen nebeneinander (Screenshot-Fall)');
+  // Nicht "irgendeine Schwelle unter 700", sondern eine, die auf einem
+  // schmalen Geraet tatsaechlich greift. Ein max-width:0px ist
+  // vorhanden und nutzlos — das blieb bei der Gegenprobe gruen.
+  const schmal = mw.filter((v) => v >= 320 && v <= 700);
+  assert.ok(schmal.length > 0,
+    'reaction.html: keine brauchbare Schwelle fuer schmale Geraete (320-700 px) — ' +
+    'auf einem 360-px-Handy bleiben die Panels in einer Dreierreihe');
+  // Und: die Seite darf nie breiter werden als der Viewport.
+  assert.ok(/overflow-x:\s*hidden/.test(css) && /max-width:\s*100vw/.test(css),
+    'reaction.html: kein max-width/overflow-x am body — ein zu breites ' +
+    'Kind scrollt die ganze Seite seitlich');
+});
+
 test('jede aufgerufene Funktion ist auch definiert', () => {
   // Am 2026-10-03 hat ein Block-Ersetzen beim Umbau des Nachmess-Fensters
   // in grid.html die Funktion progress() mitverschluckt. node --check war

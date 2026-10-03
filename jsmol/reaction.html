@@ -14,6 +14,11 @@
     margin:0; background:var(--paper); color:var(--ink);
     font-family:"IBM Plex Sans",system-ui,sans-serif; min-height:100vh;
     display:flex; flex-direction:column;
+    /* Kein horizontales Scrollen der Seite. Wenn ein Kind zu breit wird,
+       ist es ein Fehler im Kind — die Seite selbst bleibt beim
+       Viewport (gemessen am 2026-10-03: docW 1647 bei 1280 px
+       Viewport, weil ein flex-basis min() nicht ausgewertet wurde). */
+    max-width:100vw; overflow-x:hidden;
   }
   header{
     border-bottom:3px solid var(--line); padding:10px 14px;
@@ -26,15 +31,87 @@
     border:2px solid #fff;padding:3px 9px;border-radius:2px}
   header .sp{flex:1}
 
+  /* Drei Panels nebeneinander: gerechnet 1fr auto 1fr auto 1fr, also
+     Breite minus zwei Pfeile (~22 px), vier Luecken (6 px) und 24 px
+     Padding, geteilt durch drei.
+
+       1440 px -> 449 px je Panel   brauchbar
+       1280 px -> 396 px            brauchbar
+       1024 px -> 311 px            gerade noch
+       1080 px (Screenshot vom 2026-10-03) -> 336 px, Panel zu schmal:
+              Auswahlfeld und Atomzahl im Text abgeschnitten
+       820 px  -> 243 px            unbrauchbar
+
+     Die alte Schwelle lag bei 820 px. Alles zwischen 820 und 1024 laeuft
+     damit falsch — genau dort liegt der Screenshot. Zwei Schwellen:
+
+  Die Schwellen sind GEMESSEN, nicht geschaetzt. Der Screenshot vom
+  2026-10-03 kam mit 1080 px Breite, und bei 1080 px war die alte
+  999er-Regel nicht aktiv (matchMedia sagt matches=false) — drei Panels
+  nebeneinander, je 525 px, Auswahlfelder abgeschnitten.
+
+  Die Grenze liegt nicht beim Viewport, sondern beim Panel: unter 1200 px
+  wird ein Panel schmaler als 300 px, und da passt der Text
+  "CC(=O)Oc1ccccc1C(=O)O · Acetylsalicylsaeure · 21" nicht mehr hinein.
+
+       >= 1200 px  drei Panels nebeneinander
+       620-1200 px eine Zeile horizontal scrollbar. Ein Molekuel sieht
+                    neben seinem Nachbarn besser aus als untereinander,
+                    aber drei passen nicht auf einen Filter.
+       <  620 px   gestapelt, Pfeile gedreht
+  */
+  /* Drei Panels, zwei Pfeile.
+     Die Spalten sind minmax() und nicht 1fr: 1fr gibt jeder Spalte ein
+     Drittel, ohne Rücksicht auf den Inhalt, und der Inhalt (Auswahlfeld
+     448 px, gemessen am 2026-10-03) sprengt die Spur. Ergebnis war
+     gridTemplateColumns "524.656px 18.4375px 524.656px 18.4375px
+     524.656px" bei 1280 px Viewport — 1647 px Dokumentbreite, obwohl
+     3 x 524 + 2 x 18 + 4 x 6 + 24 = 1630 > 1280.
+
+     minmax(300px, 1fr) erzwingt: keine Spur unter 300 px, und die
+     Verteilung passt sich an. Panels schrumpfen nie unter die Breite,
+     die der Auswahltext braucht.
+  */
   .steps{
-    display:grid; grid-template-columns:1fr auto 1fr auto 1fr;
+    display:grid;
+    grid-template-columns:minmax(300px,1fr) auto minmax(300px,1fr) auto minmax(300px,1fr);
     gap:6px; padding:12px; align-items:start;
     border-bottom:3px solid var(--line); background:#fff;
   }
-  @media (max-width:820px){ .steps{grid-template-columns:1fr} }
   .arrow{display:flex;align-items:center;justify-content:center;
     font-size:22px;font-weight:800;padding-top:26px}
-  @media (max-width:820px){ .arrow{padding-top:0;transform:rotate(90deg)} }
+
+  @media (max-width:1199px){
+    /* Eine scrollbare Zeile. grid-template-columns:none loest die
+       impliziten Reihen auf, die Pfeile bekommen width:100 % und einen
+       eigenen Platz unter den Panels. */
+    .steps{
+      grid-template-columns:none;
+      grid-auto-flow:row;
+      grid-template-rows:none;
+    }
+    /* Panels in eine Zeile, Pfeile dazwischen als schmale Elemente */
+    .steps{
+      display:flex; flex-wrap:nowrap; overflow-x:auto;
+      -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory;
+      padding:12px 12px 16px; align-items:start;
+    }
+    /* min(78%, 340px) in flex-basis wird NICHT ausgewertet — gemessen
+       am 2026-10-03: 78 % von 1647 px ergab 1285 px je Panel, die Seite
+       wurde 1647 px breit und scrollte horizontal. Stattdessen eine
+       reine px-Angabe mit clamp().
+    */
+    .box{flex:0 0 clamp(240px, 44vw, 340px); scroll-snap-align:center}
+    .arrow{flex:0 0 auto; width:auto; padding:0 2px; transform:none;
+      align-self:center; font-size:18px; opacity:.55}
+  }
+  @media (max-width:619px){
+    /* Gestapelt: ein Panel pro Zeile, Pfeile gedreht. */
+    .steps{display:grid; grid-template-columns:1fr;
+      overflow-x:visible; gap:4px}
+    .box{flex:initial; width:100%}
+    .arrow{padding:0; transform:rotate(90deg); height:18px; opacity:.4}
+  }
   .box{border:3px solid var(--line); border-radius:2px; background:var(--paper)}
   .box .lab{
     font-size:10px; text-transform:uppercase; letter-spacing:.06em;
