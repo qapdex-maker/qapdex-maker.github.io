@@ -41,6 +41,7 @@ Aus dem Original-Dump bewusst NICHT uebernommen:
   * `JSmol.min.js.0`, `j.js`  — Editor-Backup bzw. identische Kopie
   * `j2s/JS/sg/createmap.xlsx` (5,9 MB) — nicht fuer den Betrieb noetig
   * `j2s/_ES6/inchi-web.wasm` (1,1 MB) — InChI, in keiner Demo benutzt
+  * `JSmol.lite.js`, `JSmol.lite.nojq.js`, `JSmol.min.nojq.js` — Varianten
   * `data/` (39 MB), `iucrdemo/`, `jcse/`, `spt/`, `klotho/`, `jsme/`,
     `flot/`, `php/` — Demomaterial ohne Bezug zur einen Seite
   * ~90 `*.htm`-Testseiten des Jmol-Projekts
@@ -59,3 +60,33 @@ Server-Ru ckgaenge
 kein einziger Request dorthin — alle Anfragen gingen an die eigene
 Domain. Wer spaeter einen Upload hinzufuegt, sollte `serverURL`
 ausdruecklich auf etwas Eigenes setzen statt den Default zu erben.
+
+Der 3D-Pfad (WebGL)
+-------------------
+
+`JSmol.GLmol.min.js` (210 KB) liegt hier, wird aber von KEINER Seite
+geladen. Grund, am 2026-10-03 gemessen:
+
+  JSmol.min.js verzweigt in
+      case "WEBGL": _getCanvas(b, d, k, true)   -> Jmol._Canvas3D
+      case "HTML5": _getCanvas(b, d, k, false)  -> Jmol._Canvas2D
+  und _getCanvas ruft fuer den 3D-Pfad Jmol.GLmol.extendApplet auf.
+  Ohne das Modul ist Jmol.GLmol undefined und getAppletHtml wirft
+  "Cannot read properties of undefined (reading 'extendApplet')" —
+  ein harter Fehler, keine leere Flaeche.
+
+Mit dem Modul und `use: 'WEBGL'` baut der Viewer tatsaechlich den
+3D-Renderer auf (gemessen: _jmolType = "Jmol._Canvas3D (Jmol/GLmol)",
+Canvas-Id "glApplet_canvas", is2D false).
+
+Die Seiten bleiben dennoch bei `use: 'HTML5'`, weil die 3D-Ausgabe auf
+dem Testgeraet nicht pruefbar ist: WebGL 2.0 meldet sich (ANGLE/Vulkan/
+SwiftShader), Shader kompilieren und linken, getError() ist 0 — und
+readPixels liefert bei EINEM einfachen Dreieck 0 von 40.000 Pixeln,
+Durchschnitt 0. Der 2D-Kontext derselben Seite rendert korrekt
+(2.500 rote Pixel bei einem 50x50-Quadrat).
+
+Wer den 3D-Pfad will, laegt JSmol.GLmol.min.js zusaetzlich als
+<script> und setzt use:'WEBGL'. Auf einem Geraet mit echtem
+WebGL-Treiber ist das ein Einzeiler — verifizieren kann ich es hier
+nicht, und das steht so hier, statt es zu behaupten.
