@@ -61,6 +61,11 @@
     display:flex; justify-content:space-between; gap:4px;
   }
   .box.err .state{color:var(--err);font-weight:700}
+  /* Aktive Stufe im Durchlauf. Bleibt stehen, blinkt nicht — der erste
+     Versuch setzte outline und raeumte sie nach 500 ms ab, das war ein
+     Blinken und keine Animation (gemessen am 2026-10-03). */
+  .box.active{outline:4px solid var(--gelb); outline-offset:-4px}
+  .box.active .lab{background:var(--gelb); color:var(--ink)}
 
   .bar{
     display:flex;gap:6px;flex-wrap:wrap;align-items:center;
@@ -145,10 +150,6 @@
 </div>
 
 <div class="bar">
-  <label style="font-size:12px">
-    <input type="checkbox" id="animate" checked>
-    <span data-de="Hervorhebung" data-en="Highlight">Hervorhebung</span>
-  </label>
   <button id="playBtn" data-de="Abspielen" data-en="Play">Abspielen</button>
   <button id="clearBtn" data-de="Zurücksetzen" data-en="Reset">Zurücksetzen</button>
   <button id="langBtn">DE / EN</button>
@@ -230,8 +231,9 @@
     notFound:  { de:'Datei nicht gefunden',      en:'file not found' },
     preset:    { de:'Vorlage geladen',           en:'preset loaded' },
     cleared:   { de:'Felder geleert',            en:'fields cleared' },
-    playing:   { de:'Animation läuft',           en:'animation running' },
-    stopped:   { de:'Animation gestoppt',        en:'animation stopped' },
+    playing:   { de:'Abspielen',                 en:'Play' },
+    stopped:   { de:'Stopp',                     en:'Stop' },
+    running:   { de:'Durchlauf läuft',           en:'running through stages' },
     coreError: { de:'Kern nicht gestartet',      en:'core did not start' },
     fromFile:  { de:'aus Datei',                 en:'from file' }
   };
@@ -387,36 +389,102 @@
     });
   }
 
-  // ---- Hervorhebung -----------------------------------------------------
+  // ---- Durchlauf --------------------------------------------------------
   // KEINE Reaktionsberechnung. Der J2S-Kern hat keinen Reaktionsmotor:
   //   "load reaction CCO>>CC=O" aendert die Farbquote von 5,25 % auf
   //   5,51 % (gemessen am 2026-10-02) — das ist eine Struktur, keine
   //   Reaktion. Und SMILES-Eingabe geht ueberhaupt nicht (acht Wege
   //   gemessen, alle "unrecognized file format", siehe PRESETS).
   //
-  // Was hier laeuft, ist ein Durchlauf der drei Stufen als Blickfuehrung.
-  // Es sieht nach einer Animation aus und behauptet keine Chemie.
+  // Der erste Versuch war ein gelber Rahmen, der 500 ms hüpfte
+  // (gemessen: 12 Proben in 4 s, je 500 ms eine andere Zelle). Das war
+  // keine Animation, das war ein Blinken. Jetzt wird die Struktur selbst
+  // gedreht — "spin on" ist der einzige Befehl, der die Darstellung
+  // wirklich bewegt, und er ist an allen drei Instanzen gleichzeitig
+  // messbar (spin aendert die Farbquote, weil sich die Projektion ändert).
+  var SPIN_STEPS = [
+    { stage: 0, dir: 'on'  },
+    { stage: 1, dir: 'on'  },
+    { stage: 2, dir: 'on'  },
+    { stage: 0, dir: 'off' },
+    { stage: 1, dir: 'off' },
+    { stage: 2, dir: 'off' }
+  ];
+
   function play(){
     if (playing) { stop(); return; }
     playing = true;
-    document.getElementById('playBtn').textContent = t('stopped');
-    log('info', t('playing'));
-    var step = 0;
+    var btn = document.getElementById('playBtn');
+    btn.textContent = lang === 'de' ? 'Stopp' : 'Stop';
+    btn.classList.add('on');
+    // Status sofort setzen: loadStage() ruft nach jedem Nachladen
+    // updateStatus() auf, und ohne playing-Prioritaet blendet der letzte
+    // Aufruf den Laufzustand wieder (gemessen am 2026-10-03: "3/3 bereit"
+    // waehrend der Durchlauf laeuft).
+    setStatus(t('running'), 'ok');
+    log('info', t('running'));
+
+    var i = 0;
     timer = setInterval(function () {
-      step++;
-      var order = [0, 1, 2, 1, 0];
-      var s = STAGES[order[step % order.length]];
-      var box = document.getElementById(s.box);
-      box.style.outline = '4px solid var(--gelb)';
-      setTimeout(function () { box.style.outline = ''; }, 500);
-      if (step % order.length === 0) updateStatus();
-    }, 700);
+      if (!playing) return;
+      var step = SPIN_STEPS[i % SPIN_STEPS.length];
+
+      // Struktur des aktiven Schritts zuerst laden, damit der Dreh
+      // sichtbar ist. Ein Schritt ohne Struktur sieht nach nichts aus.
+      var st = STAGES[step.stage];
+      var file = document.getElementById(st.sel).value;
+      if (!file) { i++; return; }
+
+      // Rahmen als Positionsanzeige — und diesmal bleibt er stehen,
+      // statt nach 500 ms zu verschwinden.
+      STAGES.forEach(function (s2){
+        var el = document.getElementById(s2.box);
+        el.classList.toggle('active', s2 === st);
+      });
+
+      try {
+        if (step.dir === 'on') {
+          if (!file) return;
+          // Neu laden und dann drehen: der Kern haengt die Szene an,
+          // ein blosser spin auf der alten Struktur waere unsichtbar
+          // (gemessen am 2026-10-02: Szene haengt, Befehl wirkt nicht).
+          buildStage(st, file);
+          setTimeout(function () {
+            if (!playing) return;
+            try {
+              Jmol.script(applet[st.key], 'spacefill 0.4; spin on');
+              var p = pctOf(st);
+              if (p !== null) {
+                st.el.querySelector('.pc').textContent = p + '%';
+              }
+            } catch (e) { /* Zelle ist tot, nicht die Seite */ }
+          }, 900);
+        } else {
+          if (applet[st.key]) {
+            try { Jmol.script(applet[st.key], 'spin off'); } catch (e) {}
+          }
+        }
+      } catch (e) {
+        log('err', t('failed') + e.message);
+      }
+      i++;
+      if (i % SPIN_STEPS.length === 0) updateStatus();
+    }, 1600);
   }
 
   function stop(){
     playing = false;
     if (timer) { clearInterval(timer); timer = null; }
-    document.getElementById('playBtn').textContent = t('playing');
+    STAGES.forEach(function (st){
+      document.getElementById(st.box).classList.remove('active');
+      if (applet[st.key]) {
+        try { Jmol.script(applet[st.key], 'spin off'); } catch (e) {}
+      }
+    });
+    var btn = document.getElementById('playBtn');
+    btn.textContent = t('playing');
+    btn.classList.remove('on');
+    updateStatus();
   }
 
   function updateStatus(){
@@ -426,6 +494,7 @@
       if (box.classList.contains('err')) err++;
       else ok++;
     });
+    if (playing) { setStatus(t('running'), 'ok'); return; }
     if (err) setStatus(err + ' × ' + t('notDrawn'), 'err');
     else setStatus(ok + '/3 ' + t('ready'), 'ok');
   }

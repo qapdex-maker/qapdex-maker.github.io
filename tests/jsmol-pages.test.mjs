@@ -146,6 +146,49 @@ test('sandbox.html und grid.html nutzen dieselbe Struktur-Liste wie index.html',
   assert.ok(all.size >= 19, `nur ${all.size} Strukturen gesamt, erwartet mindestens 19`);
 });
 
+test('reaction.html: der Durchlauf bewegt Strukturen, er blinkt nicht', () => {
+  // Der erste Versuch (2026-10-03) setzte einen gelben outline und raeumte
+  // ihn nach 500 ms ab. Gemessen: 12 Proben in 4 s, je 500 ms eine andere
+  // Zelle, zwei verschiedene Zustaende — ein Blinken, keine Animation. Die
+  // Molekuel selbst standen still.
+  //
+  // Jetzt: "spin on" ist der einzige Befehl, der die Darstellung wirklich
+  // bewegt. Gemessen ueber eine Bildsignatur (Hash ueber die Pixel):
+  // 6 verschiedene Signaturen je Stufe ueber 8 s, die Struktur bewegt sich.
+  const js = inlineScript('reaction.html');
+  assert.ok(/spin on/.test(js), 'reaction.html: kein "spin on" — die Struktur bewegt sich nicht');
+  // Kein RAEUMEN eines outlines per setTimeout. Genau das war der
+  // Blinkeffekt (outline 500 ms setzen, 500 ms wieder loeschen). Eine
+  // Gegenprobe mit einer Variante "el.style.outline = ''" im setTimeout
+  // blieb bei einer blassen Anwesenheitspruefung gruen — deshalb wird
+  // hier auf die Zaehlung der clearTimeout/setTimeout-Umgebungen
+  // geschaut, die an outline gebunden sind.
+  const outlineClears = (js.match(/style\.outline\s*=\s*''/g) || []).length;
+  assert.equal(outlineClears, 0,
+    'reaction.html: ' + outlineClears + 'x style.outline = \'\' — der ' +
+    'Rahmen wird abgeraeumt, das ist ein Blinken und keine Animation');
+  assert.ok(!/classList\.remove\('active'\)[\s\S]{0,120}setTimeout/.test(js),
+    'reaction.html: die aktive Stufe wird per Timer wieder abgeraeumt');
+  assert.ok(/\.box\.active\{outline:/.test(read('reaction.html')),
+    'reaction.html: keine .box.active-Regel — die aktive Stufe ist nicht sichtbar');
+  assert.ok(!/id="animate"/.test(read('reaction.html')),
+    'reaction.html: die Checkbox "Hervorhebung" ist wieder da — sie war ' +
+    'nie verdrahtet und versprach eine Option, die es nicht gab');
+  // Der Laufzustand muss VOR der Fehler-/Ok-Pruefung kommen. Sonst
+  // ueberschreibt das Nachladen im Durchlauf den Hinweis (gemessen am
+  // 2026-10-03: "3/3 bereit" waehrend der Durchlauf lief).
+  const us = js.slice(js.indexOf('function updateStatus()'));
+  const playingAt = us.indexOf('if (playing)');
+  const errAt = us.indexOf("t('notDrawn')");
+  assert.ok(playingAt > -1, 'reaction.html: updateStatus() kennt keinen playing-Zustand');
+  assert.ok(errAt > -1 && playingAt > -1 && playingAt < errAt,
+    'reaction.html: der playing-Zustand wird VOR der Fehlerpruefung ' +
+    'ausgewertet — sonst blendet das Nachladen ihn wieder aus');
+  // (Der direkte setStatus(t('running'))-Aufruf beim Start ist redundant:
+  //  auch ohne ihn greift die Prioritaet in updateStatus(). Gegenprobe:
+  //  entfernt -> bleibt gruen. Zwei Tests, eine Sache.)
+});
+
 test('reaction.html laedt ueber den gemessenen Weg, nicht ueber SMILES', () => {
   // Acht SMILES-Wege am 2026-10-02 gemessen, alle gescheitert mit
   // "unrecognized file format for file .../CCO": load "CCO", load inline,
