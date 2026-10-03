@@ -457,6 +457,24 @@ test('grid.html begrenzt die Instanzen und misst jede Zelle selbst', () => {
   // messen und bei Bedarf aufgeben", also genau der Zustand, der die
   // 11-von-12-Anzeige erzeugt hat. Bei der Gegenprobe am 2026-10-02 blieb
   // ein Test mit RETRIES > 0 als blosse Anwesenheitspruefung gruen.
+  // Spin muss ein Schalter mit sichtbarem Zustand sein. Vorher stand im
+  // Knopf immer "Alle drehen", auch wenn die Strukturen liefen — der
+  // Zustand war nur im Statustext, den man nach 12 Zellen nicht findet
+  // (gemessen am 2026-10-03 live).
+  assert.ok(/spinning = !spinning/.test(js), 'grid.html: Spin ist kein Umschalter');
+  assert.ok(/b\.textContent = spinning \? t\('spinOff'\) : t\('spinOn'\)/.test(js),
+    'grid.html: der Spin-Knopf aendert seine Beschriftung nicht');
+  assert.ok(/classList\.toggle\('on', spinning\)/.test(js),
+    'grid.html: der Spin-Knopf wird nicht markiert');
+  assert.ok(/\.bar button\.on\{/.test(read('grid.html')),
+    'grid.html: keine .bar button.on-Regel — der aktive Zustand ist unsichtbar');
+  // Und jeder Rasterneubau muss den Zustand zuruecksetzen, sonst drehen
+  // die neuen Zellen weiter, waehrend der Knopf "Drehen an" sagt.
+  const bg = js.slice(js.indexOf('function buildGrid()'), js.indexOf('function pickList'));
+  assert.ok(/sb\.classList\.remove\('on'\)/.test(bg) ||
+            /spinBtn'\)|spinBtn'\);/.test(bg) || /classList\.remove\('on'\)/.test(bg),
+    'grid.html: buildGrid() setzt den Spin-Zustand nicht zurueck');
+
   const retries = /var RETRIES = (\d+)/.exec(js);
   assert.ok(retries && Number(retries[1]) >= 3,
     `grid.html: RETRIES ist ${retries ? retries[1] : 'unbekannt'} — ` +

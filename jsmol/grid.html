@@ -36,6 +36,7 @@
     border-radius:2px;padding:5px 10px;font:inherit;font-size:13px;
   }
   .bar button:hover{background:var(--gelb)}
+  .bar button.on{background:var(--gelb); border-width:3px; font-weight:700}
   .bar label{font-size:12px;font-family:"IBM Plex Mono",monospace;
     display:flex;align-items:center;gap:5px}
   .bar .status{
@@ -169,6 +170,8 @@
   var I18N = {
     building: { de:'baue Raster …',            en:'building grid …' },
     readyN:   { de:'bereit — ',                en:'ready — ' },
+    spinOn:   { de:'Drehen an',                 en:'Spin on' },
+    spinOff:  { de:'Drehen aus',                en:'Spin off' },
     shown:    { de:'',                        en:'' },
     ofCells:  { de:'Raster',                   en:'Grid' },
     limit:    { de:'Obergrenze',               en:'limit' },
@@ -203,6 +206,11 @@
     var grid = document.getElementById('grid');
     grid.innerHTML = '';
     cells = [];
+    // Jeder Neubau startet ohne Drehung — auch wenn buildGrid() aus einem
+    // anderen Weg als dem Shuffle-Knopf kommt.
+    spinning = false;
+    var sb = document.getElementById('spinBtn');
+    if (sb) { sb.textContent = t('spinOn'); sb.classList.remove('on'); }
     var list = pickList();
     setStatus(t('building'), 'busy');
 
@@ -423,18 +431,36 @@
       }, 1800);
     });
 
+    // Spin als Schalter mit sichtbarem Zustand. Vorher behielt der Knopf
+    // immer die Aufschrift "Alle drehen", auch wenn die Strukturen liefen —
+    // der Zustand stand nur im Statustext, den man nach 12 Zellen nicht
+    // mehr findet (gemessen am 2026-10-03 live). Die Sandbox macht es
+    // seit demselben Tag richtig: "Abspielen" / "Stopp".
     document.getElementById('spinBtn').addEventListener('click', function(){
       spinning = !spinning;
-      eachApplet(function(a){ Jmol.script(a, spinning ? 'spin on' : 'spin off'); });
-      setStatus(t('readyN') + cells.length + ' · spin ' + (spinning ? 'on' : 'off'), 'ok');
+      eachApplet(function(a){
+        try { Jmol.script(a, spinning ? 'spin on' : 'spin off'); } catch (e) {}
+      });
+      var b = document.getElementById('spinBtn');
+      b.textContent = spinning ? t('spinOff') : t('spinOn');
+      b.classList.toggle('on', spinning);
+      setStatus(t('readyN') + cells.length + ' · ' +
+                (spinning ? t('spinOn') : t('spinOff')), 'ok');
     });
 
     document.getElementById('resetBtn').addEventListener('click', function(){
-      eachApplet(function(a){ Jmol.script(a, 'zoom reset'); });
+      eachApplet(function(a){ try { Jmol.script(a, 'zoom reset'); } catch (e) {} });
     });
 
+    // Shuffle baut das Raster neu. Spin muss dabei aus, sonst drehen die
+    // neuen Zellen weiter, waehrend der Knopf wieder "Drehen an" sagt —
+    // genau die Inkonsistenz, die der Spin-Knopf vorher selbst hatte.
     document.getElementById('shuffleBtn').addEventListener('click', function(){
       offset = (offset + 5) % POOL.length;
+      spinning = false;
+      var b = document.getElementById('spinBtn');
+      b.textContent = t('spinOn');
+      b.classList.remove('on');
       buildGrid();
     });
 
