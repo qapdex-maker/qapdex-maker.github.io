@@ -189,6 +189,87 @@ test('reaction.html: der Durchlauf bewegt Strukturen, er blinkt nicht', () => {
   //  entfernt -> bleibt gruen. Zwei Tests, eine Sache.)
 });
 
+test('reaction.html: die Panelbreite passt in die tatsaechliche Zeile', () => {
+  // Die Deklaration ist richtig und die Seite trotzdem 14 px zu breit.
+  // Gemessen am 2026-10-04 bei 1080 px: 3 x 340 + 2 Pfeile + 4 Gaps
+  // + 24 px Padding = 1094 px, Panel C bei x = 754 mit right = 1094.
+  // Ursache: clamp(240px, 44vw, 340px) hat bei 1080 px das Dach gegriffen
+  // (44vw = 475), die Breite war also konstant und passte nicht mit.
+  //
+  // Die Regel ist: Panelbreite aus dem VERBLEIBENDEN Raum, nicht aus vw.
+  // Der Test rechnet nach, statt nach dem Wort "calc" zu suchen.
+  const css = read('reaction.html').replace(/<script>[\s\S]*?<\/script>/g, '');
+  const nc = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const box = /\.box\s*\{([^}]*)\}/g;
+  const bodies = [...nc.matchAll(box)].map((m) => m[1]);
+  const flex = bodies.find((b) => /flex:\s*0\s+0\s+/.test(b) && /clamp/.test(b));
+  assert.ok(flex, 'reaction.html: keine .box-Flexbreite mit clamp gefunden');
+
+  // Die Breite muss aus calc() mit 100vw kommen — eine reine px-Angabe
+  // klemmt am Dach und laesst die Spur wachsen.
+  assert.ok(/clamp\(\s*\d+px\s*,\s*calc\(/.test(flex),
+    'reaction.html: die Panelbreite ist kein calc aus 100vw — ' +
+    `gefunden: ${flex.trim().slice(0, 90)}`);
+  // Und der Abzug muss die Pfeile und das Padding beruecksichtigen.
+  const calc = /clamp\(\s*(\d+)px\s*,\s*calc\(\(100vw\s*-\s*(\d+)px\)\s*\/\s*(\d+)\)/.exec(flex);
+  assert.ok(calc,
+    'reaction.html: die Panelbreite rechnet nicht (100vw - N px) / 3 — ' +
+    `gefunden: ${flex.trim().slice(0, 90)}`);
+  const [, minPx, abzug, teiler] = calc.map(Number);
+  assert.equal(teiler, 3, 'reaction.html: nicht durch 3 geteilt — es sind drei Panels');
+
+  // Nachrechnen: 3 Panels + 2 Pfeile (18 px) + 4 Gaps (6 px) + 24 px Padding
+  // <= Viewport.
+  //
+  // NUR fuer Viewports, auf denen die Zeile nebeneinander stehen soll.
+  // Der min-Wert ist eine Untergrenze, kein Ziel: unterhalb von
+  // 3 x 300 + 84 = 984 px passen drei Panels NIE nebeneinander, und das
+  // ist dann gewollt — .steps ist unter 1200 px eine scrollbare Zeile.
+  // Der Test prueft darum beides: passen sie, wenn sie passen sollen, und
+  // der min-Wert nennt die Grenze, an der das Umschalten beginnt.
+  const PFEIL = 18, GAP = 6, PADDING = 12 * 2;
+  const NEBENKOSTEN = PFEIL * 2 + GAP * 4 + PADDING;          // 84 px
+  const GRENZE = minPx * 3 + NEBENKOSTEN;                     // 984 px
+  // Die Breiten, die geprueft werden. 1080 ist das Geraet aus dem
+  // Screenshot, 1024 und 1200 sind gaengige Tabletbreiten.
+  const VIEWPORTS = [1080, 1024, 1200];
+
+  const passt = VIEWPORTS.filter((vw) => vw >= GRENZE);
+  assert.ok(passt.length >= 2,
+    `reaction.html: ${VIEWPORTS.join(', ')} — nur ${passt.length} liegen ` +
+    `ueber der Grenze ${GRENZE} px, die Rechnung prueft nichts`);
+  for (const vw of passt) {
+    const pane = Math.min(340, Math.max(minPx, (vw - abzug) / teiler));
+    const gesamt = pane * 3 + NEBENKOSTEN;
+    assert.ok(gesamt <= vw,
+      `bei ${vw} px Viewport: 3 x ${pane.toFixed(1)} + Pfeile + Gaps + ` +
+      `Padding = ${gesamt.toFixed(0)} px, ${(gesamt - vw).toFixed(0)} px zu breit`);
+    assert.ok(pane >= minPx,
+      `bei ${vw} px Viewport: Panel nur ${pane.toFixed(1)} px — unter min-width ${minPx} px ` +
+      'schneidet der Auswahltext ab');
+    // Und die Breite soll den Platz auch nutzen: ein Panel, das deutlich
+    // unter dem liegt, waerse verschwendeter Raum.
+    assert.ok(pane >= 300,
+      `bei ${vw} px Viewport: Panel nur ${pane.toFixed(1)} px — das ist ` +
+      'unter der Grenze, auf der die Panels ueberhaupt nebeneinander stehen');
+  }
+  // Unterhalb der Grenze ist Querscrollen die Absicht, nicht ein Fehler.
+  // Das muss dokumentiert sein, sonst "repariert" es die naechste Session
+  // mit einem min-width, das es unmöglich macht.
+  assert.ok(/overflow-x:\s*auto/.test(nc),
+    'reaction.html: .steps kann nicht horizontal scrollen — unterhalb von ' +
+    `${GRENZE} px gibt es dann keinen Weg, drei Panels zu zeigen`);
+  // Die Grenze darf nicht so tief liegen, dass ein Panel bei 1080 px
+  // unter 280 px fällt — das waere eine neue Form desselben Fehlers.
+  assert.ok(minPx >= 280,
+    `reaction.html: min-width ${minPx} px ist zu niedrig — bei 1080 px ` +
+    'kollabiert der Auswahltext im Panel');
+  // Und sie darf nicht so hoch liegen, dass selbst 1080 px darunter fallen.
+  assert.ok(GRENZE <= 1080,
+    `reaction.html: die Grenze liegt bei ${GRENZE} px — damit waeren die ` +
+    'Panels schon auf einem 1080-px-Geraet nebeneinander zu schmal');
+});
+
 test('reaction.html: die Panels passen in jede Viewport-Breite', () => {
   // Screenshot vom 2026-10-03, 1080 px: drei Panels nebeneinander, je
   // 525 px, Auswahlfelder abgeschnitten, Dokument 1647 px breit.
@@ -234,6 +315,62 @@ test('reaction.html: die Panels passen in jede Viewport-Breite', () => {
   assert.ok(/overflow-x:\s*hidden/.test(css) && /max-width:\s*100vw/.test(css),
     'reaction.html: kein max-width/overflow-x am body — ein zu breites ' +
     'Kind scrollt die ganze Seite seitlich');
+
+  // 3. min-width:0 auf dem Panel. Das war die dritte, und die stille
+  //    Ursache — gemessen am 2026-10-04 bei 1080 px.
+  //
+  //    Auch minmax(300px, 1fr) reicht nicht. Eine minmax-Spur ist eine
+  //    Spur, aber das ITEM darin hat weiter min-width:auto, also seine
+  //    min-content-Breite. Als Flex-Item (unter 1200 px) ignorierte der
+  //    Browser sogar clamp() komplett: Panel C stand bei x = 1124 auf
+  //    1080 px Viewport, nur per Querscrollen erreichbar.
+  //
+  //    Gemessen wurde die Kette: .steps-Spur 524,66 px, getrieben vom
+  //    <select> mit 448 px min-content. Gleiche Zahl wie im Kommentar
+  //    oben von 2026-10-03 bei 1280 px — dieselbe Ursache, nur blieb sie
+  //    nach dem minmax-Fix als Rest stehen.
+  //
+  //    index.html hat diese Zeile seit Anfang an an beiden Stellen
+  //    (aside und Liste), reaction.html nicht.
+  //
+  //    Auf die Basis-Regel am .box-Block pruefen, nicht auf das Wort:
+  //    "min-width: 0" steht inzwischen im Kommentar dieser Regel, und
+  //    .box erscheint zusaetzlich in drei Media-Queries — eine davon
+  //    mit min-width:0 zu pruefen waere ein Treffer an der falschen Stelle.
+  //
+  //    KOMMENTARE ZUERST ENTFERNEN. Das ist keine Formalie: die
+  //    Erklaerung zu min-width:0 enthaelt selbst ein "}" (in
+  //    "width:100% waere der Irrtum und ergaebe 514 px" steht keine,
+  //    aber der Kommentar endet mit min-width:0; max-width:100%;}), und
+  //    eine [^}]*-Regex laeuft dadurch in den Kommentar hinein. Gemessen
+  //    am 2026-10-04: mit Kommentaren fand der Test 2 .box-Regeln und
+  //    las die Basis nicht — er blieb bei allen drei Mutationen gruen.
+  const cssOhneKommentare = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const boxDecl = /(?:^|[};])\s*\.box\s*\{([^}]*)\}/g;
+  const boxBodies = [...cssOhneKommentare.matchAll(boxDecl)].map((m) => m[1]);
+  assert.ok(boxBodies.length >= 3,
+    `reaction.html: nur ${boxBodies.length} .box-Regeln gefunden — der ` +
+    'Test liest die Seite nicht richtig und waere gruen ohne zu pruefen ' +
+    '(mit Kommentaren sind es 2, ohne 3)');
+  const basis = boxBodies.find((b) => /border:3px/.test(b));
+  assert.ok(basis, 'reaction.html: keine .box-Grundregel mit border gefunden');
+  assert.ok(/min-width:\s*0\s*[;\s]/.test(basis),
+    'reaction.html: kein min-width:0 an der .box-Grundregel — als Grid- ' +
+    'UND Flex-Item gilt min-width:auto, also die min-content-Breite des ' +
+    'Inhalts. Gemessen am 2026-10-04: die Spur misst 524,66 px statt sich ' +
+    'anzupassen, Panel C steht bei x = 1124 auf einem 1080-px-Handy. ' +
+    'width:100% waere der Irrtum und ergaebe 514 px bei 412 px. ' +
+    `Gefundene .box-Regeln: ${boxBodies.length}`);
+  // Und die Panel-Kette darunter: .in und .state duerfen nicht zurueck auf
+  // min-content zwingen, sonst wandert das Problem eine Ebene tiefer.
+  for (const kind of ['in', 'state']) {
+    const d = new RegExp('\\.box \\.' + kind + '\\s*\\{([^}]*)\\}', 'g');
+    const b = [...cssOhneKommentare.matchAll(d)].map((m) => m[1]).join(' ');
+    assert.ok(b, `reaction.html: keine .box .${kind}-Regel gefunden`);
+    assert.ok(/min-width:\s*0/.test(b),
+      `reaction.html: .box .${kind} hat kein min-width:0 — das Panel ` +
+      'schrumpft, der Inhalt nicht, und die Spur misst wieder zu viel');
+  }
 });
 
 test('reaction.html: keine Vorzeichen-Zeichen in Messwerten', () => {
