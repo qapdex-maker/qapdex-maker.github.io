@@ -138,6 +138,15 @@
     display:flex; justify-content:space-between; gap:4px;
   }
   .box.err .state{color:var(--err);font-weight:700}
+  /* Freitext-Zeile: nur das Eingabefeld, kein Auswahlfeld daneben.
+     Sonst konkurrieren zwei Felder um dieselbe Zeile und auf 1080 px
+     wird das Textfeld so schmal, dass "CC(=O)O" nicht mehr lesbar ist. */
+  .box .in.free{padding:0 5px 5px; border-top:0}
+  .box .in.free input{
+    width:100%; font-size:12px; padding:4px 6px; cursor:text;
+    border:2px dashed var(--line); background:#fffdf5;
+  }
+  .box.err .in.free input{border-color:var(--err); background:#fde8ea}
   /* Aktive Stufe im Durchlauf. Bleibt stehen, blinkt nicht — der erste
      Versuch setzte outline und raeumte sie nach 500 ms ab, das war ein
      Blinken und keine Animation (gemessen am 2026-10-03). */
@@ -198,6 +207,12 @@
       <select id="selA" aria-label="Struktur"></select>
       <button id="goA" data-de="Laden" data-en="Load">Laden</button>
     </div>
+    <div class="in free">
+      <input id="smiA" type="text" inputmode="text" autocapitalize="off"
+             autocorrect="off" spellcheck="false"
+             placeholder="eigene SMILES, z.&nbsp;B. CCO"
+             aria-label="Eigene SMILES">
+    </div>
     <div class="state"><span class="st">—</span><span class="pc">—</span></div>
   </div>
 
@@ -210,6 +225,12 @@
       <select id="selB" aria-label="Struktur"></select>
       <button id="goB" data-de="Laden" data-en="Load">Laden</button>
     </div>
+    <div class="in free">
+      <input id="smiB" type="text" inputmode="text" autocapitalize="off"
+             autocorrect="off" spellcheck="false"
+             placeholder="eigene SMILES, z.&nbsp;B. O"
+             aria-label="Eigene SMILES">
+    </div>
     <div class="state"><span class="st">—</span><span class="pc">—</span></div>
   </div>
 
@@ -221,6 +242,12 @@
     <div class="in">
       <select id="selC" aria-label="Struktur"></select>
       <button id="goC" data-de="Laden" data-en="Load">Laden</button>
+    </div>
+    <div class="in free">
+      <input id="smiC" type="text" inputmode="text" autocapitalize="off"
+             autocorrect="off" spellcheck="false"
+             placeholder="eigene SMILES, z.&nbsp;B. CC=O"
+             aria-label="Eigene SMILES">
     </div>
     <div class="state"><span class="st">—</span><span class="pc">—</span></div>
   </div>
@@ -265,11 +292,11 @@
   ];
 
   var STAGES = [
-    { key: 'A', sel: 'selA', go: 'goA', box: 'boxA',
+    { key: 'A', sel: 'selA', go: 'goA', box: 'boxA', smi: 'smiA',
       host: 'hostA', applet: 'rxAppletA', label: { de:'Struktur A', en:'Structure A' } },
-    { key: 'B', sel: 'selB', go: 'goB', box: 'boxB',
+    { key: 'B', sel: 'selB', go: 'goB', box: 'boxB', smi: 'smiB',
       host: 'hostB', applet: 'rxAppletB', label: { de:'Struktur B', en:'Structure B' } },
-    { key: 'C', sel: 'selC', go: 'goC', box: 'boxC',
+    { key: 'C', sel: 'selC', go: 'goC', box: 'boxC', smi: 'smiC',
       host: 'hostC', applet: 'rxAppletC', label: { de:'Struktur C', en:'Structure C' } }
   ];
 
@@ -362,7 +389,29 @@
     stopped:   { de:'Stopp',                     en:'Stop' },
     running:   { de:'Durchlauf läuft',           en:'running through stages' },
     coreError: { de:'Kern nicht gestartet',      en:'core did not start' },
-    fromFile:  { de:'aus Datei',                 en:'from file' }
+    fromFile:  { de:'aus Datei',                 en:'from file' },
+    // Fehlgeschlagener Befehl im Durchlauf. Der Schluessel fehlte vorher
+    // (2026-10-04): t('failed') warf TypeError im Catch-Block, der
+    // ausgerechnet die Fehlermeldung ausgeben sollte.
+    failed:    { de:'Befehl fehlgeschlagen: ',    en:'command failed: ' },
+    // Freitext-Eingabe (Vorbau, siehe validateSmiles)
+    smiBad:    { de:'SMILES ungültig',           en:'invalid SMILES' },
+    smiEmpty:  { de:'leeres Feld',               en:'empty field' },
+    smiSpace:  { de:'Leerzeichen im SMILES',     en:'whitespace in SMILES' },
+    smiLong:   { de:'zu lang, höchstens 300 Zeichen',
+                  en:'too long, 300 characters max' },
+    smiCloseFirst: { de:'schließende Klammer zuerst',
+                     en:'closing bracket first' },
+    smiOpen:   { de:'offene Klammer',            en:'unclosed bracket' },
+    smiEmptyBranch: { de:'leerer Zweig "()"',     en:'empty branch "()"' },
+    smiRing:   { de:'Ringzahl ungerade',         en:'odd ring number' },
+    smiChar:   { de:'unerlaubtes Zeichen',       en:'illegal character' },
+    smiBranchStart: { de:'Klammer öffnet kein Atom',
+                      en:'bracket does not open an atom' },
+    smiBracketOpen: { de:'eckige Klammer offen',   en:'unclosed square bracket' },
+    smiBracketEmpty: { de:'leere eckige Klammer',  en:'empty square bracket' },
+    smiBracketCloseFirst: { de:'schließende eckige Klammer zuerst',
+                            en:'closing square bracket first' }
   };
 
   var lang = 'de';
@@ -477,15 +526,125 @@
     return applet[st.key];
   }
 
-  // ---- Laden ------------------------------------------------------------
-  // Der Weg ist "load data/<datei>" mit HEAD-Pruefung, derselbe wie in
-  // index.html und sandbox.html. Ein SMILES-Text geht nicht, siehe den
-  // Kommentar bei PRESETS.
+  // ---- SMILES-Vorbau ----------------------------------------------------
+  // Der Kern meldet einen Tippfehler nicht. Ein "load :smiles:CCC(" endet
+  // mit einem roten "unrecognized file format"-Text im Applet und der
+  // Nutzer weiss nicht, ob seine Eingabe oder die Seite falsch ist. Also
+  // VOR dem Laden pruefen — das ist der in der Roadmap genannte "Vorbau
+  // (SMILES validieren, dann uebergeben)".
+  //
+  // Geprueft wird die Syntax, NICHT die Chemie. Ein syntaktisch gueltiges
+  // "Xq" mit unbekanntem Element meldet der Kern, kein Validator.
+  //
+  // Die erste Fassung pruefte ZEICHEN statt TOKEN und lehnte sieben
+  // gueltige Strukturen ab (gemessen am 2026-10-04, 24 Faelle, 7 falsch):
+  //   CC(=O)O            "(=" wurde als leerer Zweig gelesen
+  //   N[C@@H](C)C(=O)O   eckige Klammern duerfen Isotop, @ und H
+  //   [Na+].[Cl-]        Ladungsangaben in eckigen Klammern
+  //   O=S(=O)(O)O        Schwefelsaeure, Zweige mit Bindung davor
+  // Also Token fuer Token; eine eckige Klammer wird als Ganzes
+  // uebersprungen.
+  function validateSmiles(raw){
+    var s = String(raw || '').trim();
+    if (!s) return { ok: false, why: t('smiEmpty') };
+    if (/\s/.test(s)) return { ok: false, why: t('smiSpace') + ' "' + s + '"' };
+    if (s.length > 300) return { ok: false, why: t('smiLong') + ' (' + s.length + ')' };
+
+    var i = 0, n = s.length, open = 0;
+    while (i < n) {
+      var ch = s[i];
+
+      // Eckige Klammer: ein Atom in [ ]. Inhalt beliebig (Isotop, @, H,
+      // Ladung). Nur geschlossen werden muss es.
+      if (ch === '[') {
+        var close = s.indexOf(']', i + 1);
+        if (close === -1) return { ok: false, why: t('smiBracketOpen') };
+        if (close === i + 1) return { ok: false, why: t('smiBracketEmpty') };
+        i = close + 1;
+        continue;
+      }
+      if (ch === ']') return { ok: false, why: t('smiBracketCloseFirst') };
+
+      if (ch === '(') {
+        var rest = s.slice(i + 1);
+        if (rest === '') return { ok: false, why: t('smiOpen') + ' (1)' };
+        // "(" muss ein Atom eroeffnen. "C(=O)" ist gueltig — nach "(" darf
+        // eine Bindung stehen. "C(=)O" nicht.
+        if (rest[0] !== '[' &&
+            !/^(?:\d|-|=|#|\$|@|\/|\?|\\|:|~)*[A-Za-z*]/.test(rest))
+          return { ok: false, why: t('smiBranchStart') };
+        open++;
+        i++;
+        continue;
+      }
+      if (ch === ')') {
+        open--;
+        if (open < 0) return { ok: false, why: t('smiCloseFirst') };
+        i++;
+        continue;
+      }
+
+      if (/[A-Za-z*]/.test(ch)) {
+        if (s.substr(i, 2) === 'Cl' || s.substr(i, 2) === 'Br') { i += 2; continue; }
+        i++;
+        while (i < n && /[@\d]/.test(s[i])) i++;   // Ringzahl, Stereochemie
+        continue;
+      }
+      if (/[0-9]/.test(ch)) { i++; continue; }                     // Ringzahl
+      if ('=#$-/\\+.@:~%*'.indexOf(ch) >= 0) { i++; continue; }    // Bindung, Punkt
+      return { ok: false, why: t('smiChar') + ' "' + ch + '"' };
+    }
+    if (open > 0) return { ok: false, why: t('smiOpen') + ' (' + open + ')' };
+
+    // Ringzahlen paarweise: "c1ccccc" laesst den Kern haengen, "C1CC1" nicht.
+    // Eckige Klammern sind ausgenommen ([13C] traegt eine Zahl, kein Ring).
+    var ring = {};
+    var bare = s.replace(/\[[^\]]*\]/g, '');
+    for (i = 0; i < bare.length; i++)
+      if (/[0-9]/.test(bare[i])) ring[bare[i]] = (ring[bare[i]] || 0) + 1;
+    for (var r in ring)
+      if (ring[r] % 2 !== 0)
+        return { ok: false, why: t('smiRing') + ' ' + r };
+
+    return { ok: true, value: s };
+  }
+
+  // Der Wert, den die Stufe wirklich zeigt. Nicht nur das <select>:
+  // ein getippter Freitext hat Vorrang, und play() laedt mit diesem
+  // Wert — sonst dreht der Durchlauf eine andere Struktur als die im
+  // Panel.
+  function valueOf(st){
+        var free = st.smi ? (document.getElementById(st.smi).value || '').trim() : '';
+        if (free) {
+          var v = validateSmiles(free);
+          if (v.ok) return ':smiles:' + v.value;
+        }
+        return document.getElementById(st.sel).value;
+      }
+
   function loadStage(st){
+    // Freitext hat Vorrang vor der Auswahlliste: leert der Nutzer das
+    // Eingabefeld nicht, ist es die Quelle. Sonst wuerde die Auswahl still
+    // gewinnen und der getippte Wert waere eine tote Eingabe.
+    var free = st.smi ? (document.getElementById(st.smi).value || '').trim() : '';
     var file = document.getElementById(st.sel).value;
     var box = document.getElementById(st.box);
     var stEl = box.querySelector('.st');
     var pcEl = box.querySelector('.pc');
+
+    if (free) {
+      var v = validateSmiles(free);
+      if (!v.ok) {
+        box.classList.add('err');
+        box.classList.remove('active');
+        stEl.textContent = t('smiBad');
+        pcEl.textContent = '—';
+        log('err', st.label[lang] + '  ' + free + '  ' + v.why);
+        updateStatus();
+        return;
+      }
+      file = ':smiles:' + v.value;
+    }
 
     if (!file) {
       box.classList.remove('err');
@@ -588,7 +747,7 @@
       // Struktur des aktiven Schritts zuerst laden, damit der Dreh
       // sichtbar ist. Ein Schritt ohne Struktur sieht nach nichts aus.
       var st = STAGES[step.stage];
-      var file = document.getElementById(st.sel).value;
+      var file = valueOf(st);
       if (!file) { i++; return; }
 
       // Rahmen als Positionsanzeige — und diesmal bleibt er stehen,
@@ -688,11 +847,24 @@
       document.getElementById(st.sel).addEventListener('change', function () {
         loadStage(st);
       });
+      // Enter im Freitextfeld laedt sofort. Ohne das muss der Nutzer nach
+      // dem Tippen noch den Laden-Knopf treffen — auf dem Handy ein
+      // zweiter Bildschirm, weil die Tastatur den Knopf verdeckt.
+      var f = document.getElementById(st.smi);
+      if (f) {
+        f.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.keyCode === 13) { e.preventDefault(); loadStage(st); }
+        });
+      }
     });
     document.getElementById('playBtn').addEventListener('click', play);
     document.getElementById('clearBtn').addEventListener('click', function () {
       STAGES.forEach(function (st){
         document.getElementById(st.sel).value = '';
+        // Auch das Freitextfeld. Sonst bleibt nach "Zurücksetzen" eine
+        // getippte SMILES stehen und der nächste Klick auf eine Auswahl
+        // lädt trotzdem wieder die alte — der Reset wäre nicht zurück.
+        if (st.smi) document.getElementById(st.smi).value = '';
         var box = document.getElementById(st.box);
         box.classList.remove('err');
         box.querySelector('.st').textContent = '—';
