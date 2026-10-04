@@ -15,7 +15,7 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 ### Weitere Bereiche — siehe eigene Abschnitte
 - macrohard/ (MakerOS v2.11.54, 26 Apps, 332 Tests)
 - msgraph/react (Graph Metadata Hub, 61 Tests)
-- jsmol/ (vier Seiten, 50 MB, 23 Tests) → eigener Abschnitt am Ende
+- jsmol/ (vier Seiten, 50 MB, 28 Tests) → eigener Abschnitt am Ende
 
 ### macrohard/ (v2.11.29, aktiv entwickelt)
 - 22 Apps (11 Foundation + 11 Extension Pack), ES6-Module, PWA
@@ -61,7 +61,7 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 - `reaction.html` Reaktions-Sandbox — SMILES-Eingabe, 3 Instanzen, 4 Vorlagen
 - Vendor-Code, eigene Lizenz (LGPL 2.1 / MIT) — `jsmol/LICENSE-JSmol.txt`
 - Gate-Budget 60 MB, aktuell 50 MB
-- 23 Tests in `tests/jsmol-pages.test.mjs`, laufen in der CI
+- 28 Tests in `tests/jsmol-pages.test.mjs`, laufen in der CI
 
 ## 2. Fahrplan
 
@@ -173,7 +173,7 @@ curl -s -o /dev/null -w "%{http_code}" https://qapdex-maker.github.io/macrohard/
 
 ## JSmol — Stand 2026-10-03
 
-Vier Seiten sind live, 23 Tests in CI, Gate-Budget 50 von 60 MB.
+Vier Seiten sind live, 28 Tests in CI, Gate-Budget 50 von 60 MB.
 Was hier steht, ist gemessen, nicht geplant. Die vollständige
 Messhistorie steht in `jsmol-local/INTEGRATION-PLAN.md` Abschnitt 8.
 
@@ -195,6 +195,14 @@ Messhistorie steht in `jsmol-local/INTEGRATION-PLAN.md` Abschnitt 8.
 - [x] Viewport: Panels passen bei 1600/1440/1280/1200/1080/1024/900/412 px,
       `docW == Viewport` an allen Breiten
 - [x] `JSmol.GLmol.min.js` liegt im Repo, Seiten bleiben auf HTML5
+- [x] **SMILES-Freitext** (Roadmap-Punkt 2, 2026-10-04): drei
+      Eingabefelder, Enter lädt, Freitext hat Vorrang vor der
+      Auswahlliste, Reset leert mit. Vorbau `validateSmiles()` prüft die
+      Syntax vor dem Kern — der Kern meldet keinen Tippfehler.
+      14 gültige + 14 ungültige Fälle im Test, 8/8 Gegenproben gefangen.
+      Browserbelegt bei 1080 px: Salicylsäure `O=C(O)c1ccccc1O` rendert
+      (8,64 % → 10,94 %), `c1ccccc` wird abgewiesen und lässt die
+      Oberfläche unverändert bei 10,94 %.
 
 ### Offen — mit Aufwand
 
@@ -202,7 +210,8 @@ Messhistorie steht in `jsmol-local/INTEGRATION-PLAN.md` Abschnitt 8.
 |---|---|---|
 | **Datei-Upload** | Vier Wege gemessen, alle gescheitert. Der Worker war fehlerfrei, der J2S-Kern kann die Datei nicht lesen. Braucht einen Server. | hoch, mit Backend |
 | **WebGL-Pfad** | Modul und Renderer bauen sich auf (`_Canvas3D (Jmol/GLmol)`), aber der Testbrowser rendert nichts: Shader linken, `getError()` ist 0, `readPixels` liefert 0 von 40.000 Pixeln. Auf einem Gerät mit echtem Treiber ungetestet. | ein Einzeiler, **nicht verifizierbar hier** |
-| **SMILES-Editor** | Auswahl aus 13 Vorschlägen funktioniert. Freitext-Eingabe getestet nicht — der Kern bräuchte Fehlermeldungen für Tippfehler, die er nicht liefert. | mittel |
+| **Panel-Überlauf auf 1080 px** | Gemessen 2026-10-04: `.steps` scrollt quer (der gewollte zweistufige Zustand), aber der Track misst **524,66 px** je Spur, getrieben vom `<select>` mit 448 px min-content. Panel C steht damit bei x = 1124 — auf einem 1080-px-Handy nur nach Querscrollen erreichbar. Ursache ist nicht `1fr`, sondern der Inhalt des Auswahlfelds; eine `min-width: 0`-Kette oder ein kürzeres Label im `<select>` wäre der Weg. | mittel, Layout |
+| **SMILES im Kern meldet keinen Tippfehler** | Der Vorbau auf reaction.html fängt Syntaxfehler ab. Ein syntaktisch gültiges SMILES mit unbekanntem Element (`Xq`) meldet nur der Kern — und zwar als roter Text im Canvas. | klein, Rest |
 | **Crambin-Tunnel** | Zeichnet schrittweise über 40 s. Kein Fehler, aber die Anzeige folgt nie exakt. Messung läuft bis zur Ruhe, Deckel bei 20 Durchläufen. | erledigt, Rest Eigenheit |
 | **Lizenz-Vollständigkeit** | `jsmol/LICENSE-JSmol.txt` nennt Jmol (LGPL 2.1) und JSmol (MIT), aber nicht jede der 1731 Einzeldateien. Bei einer eigenen Distribution muss die Upstream-LICENSE-Datei mit. | klein |
 
@@ -220,9 +229,11 @@ Messhistorie steht in `jsmol-local/INTEGRATION-PLAN.md` Abschnitt 8.
 
 1. **Upload** — nur mit Server. Ohne Backend ist es nicht erreichbar,
    und acht weitere Versuche im Browser ändern daran nichts.
-2. **SMILES-Freitext** — die 13 Vorschläge sind ein Kompromiss. Ein
-   echtes Eingabefeld braucht eine Fehleranzeige, die der Kern nicht
-   liefert; ein Vorbau (SMILES validieren, dann übergeben) wäre der Weg.
+2. **Panel-Überlauf auf 1080 px** — der `<select>` mit 448 px
+   min-content zieht die Spur auf 524,66 px. Das ist die Ursache, nicht
+   `1fr` (das ist seit dem 03. gefixt). Messbar klein: die Optionen auf
+   `data/1crn.pdb` statt `Crambin (1CRN)` kürzen, oder `min-width: 0`
+   auf der Panel-Kette.
 3. **WebGL auf einem echten Gerät** — ein Einzeiler plus Screenshot.
    Von hier aus nicht entscheidbar.
 
