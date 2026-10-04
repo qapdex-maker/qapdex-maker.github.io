@@ -769,3 +769,174 @@ test('die Budget-Grenze im Gate passt zur tatsächlichen Größe', () => {
   assert.ok(budget - mb < 20,
     `Budget ${budget} MB ist ${budget - mb} MB über dem Stand — zu weit, ein Unfall fällt nicht auf`);
 });
+
+// Der SMILES-Vorbau (Roadmap-Punkt 2). Die Funktion wird AUS DER SEITE
+// gezogen und ausgefuehrt, nicht neben ihr nachgebaut: eine Kopie geht mit,
+// wenn der Original driftet, und dann prueft der Test eine Datei, die es
+// nicht mehr gibt.
+//
+// Die Fallliste ist der Grund fuer diesen Test. Die erste Fassung des
+// Validators pruefte Zeichen statt Token und lehnte sieben gueltige
+// Strukturen ab (CC(=O)O, N[C@@H](C)C(=O)O, [Na+].[Cl-], O=S(=O)(O)O ...).
+// Ein Test, der nur "CCO ist gueltig" prueft, haette das nie gefunden.
+function validateSmilesFromPage() {
+  const js = inlineScript('reaction.html');
+  const i18n = js.slice(js.indexOf('var I18N = {'), js.indexOf('var lang ='));
+  const from = js.indexOf('function validateSmiles(raw)');
+  const to = js.indexOf('function valueOf', from);
+  assert.ok(from > -1 && to > from, 'reaction.html: validateSmiles() nicht gefunden');
+  const body = js.slice(from, to);
+  return new Function(`
+    ${i18n}
+    var lang = 'de';
+    function t(k){ return I18N[k] ? I18N[k][lang] : 'FEHLT:' + k; }
+    ${body}
+    return validateSmiles;
+  `)();
+}
+
+test('der SMILES-Vorbau nimmt gueltige Strukturen und weist Tippfehler ab', () => {
+  const v = validateSmilesFromPage();
+
+  const OK = [
+    ['CCO', 9],
+    ['c1ccccc1', 12],
+    ['CC(=O)O', 8],
+    ['O', 3],
+    ['CN1C=NC2=C1C(=O)N(C)C(=O)N2C', 24],   // Koffein
+    ['c1ccc2ccccc2c1', 18],                   // Naphthalen
+    ['CC(=O)Oc1ccccc1C(=O)O', 21],            // Acetylsalicylsaeure
+    ['N[C@@H](C)C(=O)O', 10],                 // Alanin, Isotop und @ in []
+    ['C/C=C/CC', 12],                         // Stereochemie / und /
+    ['[Na+].[Cl-]', 2],                       // Ladung, Punkt, zwei Komponenten
+    ['O=S(=O)(O)O', 11],                      // Schwefelsaeure: Zweig mit "=" davor
+    ['C1CC1', 6],                             // Dreiring
+    ['CC.CC', 14],                            // zwei Komponenten
+    ['ClCCl', 9],                             // zwei Buchstaben als Element
+  ];
+  for (const [smi] of OK) {
+    const r = v(smi);
+    assert.ok(r.ok, `validateSmiles("${smi}") lehnt eine gueltige SMILES ab: ${r.why}`);
+    assert.equal(r.value, smi, `validateSmiles("${smi}") veraendert den Wert`);
+  }
+
+  // Der Kern meldet keinen Tippfehler — genau das ist der Grund fuer den
+  // Vorbau. Jeder dieser Faelle endete sonst in einem roten
+  // "unrecognized file format" im Canvas.
+  const BAD = [
+    ['', 'smiEmpty'],
+    ['CCO(', 'smiOpen'],          // Klammer am Ende
+    ['CCO(C', 'smiOpen'],         // Klammer am Ende, dahinter ein Atom
+    ['C(CC', 'smiOpen'],          // Zweig offen, Ende nach Atom
+    [')CCO', 'smiCloseFirst'],
+    ['CC(=O))O', 'smiCloseFirst'],
+    ['c1ccccc', 'smiRing'],        // haengender Ring
+    ['C1CC', 'smiRing'],
+    ['CC C', 'smiSpace'],
+    ['C()C', 'smiBranchStart'],
+    ['C(=)O', 'smiBranchStart'],
+    ['CCO?', 'smiChar'],
+    ['CCO' + 'C'.repeat(320), 'smiLong'],
+    ['CC[O', 'smiBracketOpen'],
+    ['CC[]O', 'smiBracketEmpty'],
+    ['CC]O', 'smiBracketCloseFirst'],
+  ];
+  for (const [smi, key] of BAD) {
+    const r = v(smi);
+    assert.ok(!r.ok, `validateSmiles("${smi}") akzeptiert einen Tippfehler`);
+    // Auch die Meldung muss stimmen — ein Fehler mit falschem Grund ist
+    // fast so schlimm wie keiner.
+    assert.ok(r.why && !r.why.includes('FEHLT'),
+      `validateSmiles("${smi}") meldet einen unbekannten I18N-Schluessel: ${r.why}`);
+    assert.ok(typeof r.why === 'string' && r.why.length > 0,
+      `validateSmiles("${smi}") gibt keine Meldung zurueck`);
+  }
+});
+
+test('jeder t()-Schluessel in reaction.html ist im I18N definiert', () => {
+  // t('failed') stand am 2026-10-04 im Catch-Block des Durchlaufs, ohne
+  // Schluessel in I18N: t() warf TypeError, und zwar genau dort, wo die
+  // Fehlermeldung ausgegeben werden sollte. node --check sieht das nicht,
+  // und die Seite meldet dann gar nichts.
+  const js = inlineScript('reaction.html');
+  const i18n = js.slice(js.indexOf('var I18N = {'), js.indexOf('var lang ='));
+  const defined = new Set([...i18n.matchAll(/^\s*(\w+)\s*:\s*\{/gm)].map((m) => m[1]));
+  const used = new Set([...js.matchAll(/\bt\(\s*'([^']+)'/g)].map((m) => m[1]));
+  assert.ok(defined.size >= 20, `nur ${defined.size} I18N-Schluessel gefunden`);
+  const missing = [...used].filter((k) => !defined.has(k));
+  assert.deepEqual(missing, [],
+    `reaction.html: t() wird mit nicht definierten Schluesseln aufgerufen: ` +
+    `${missing.join(', ')} — der Aufruf wirft statt zu uebersetzen`);
+});
+
+test('reaction.html: das Freitextfeld wird vor der Auswahlliste ausgewertet', () => {
+  // Drei Fehler, die zusammen eine tote Eingabe ergeben:
+  //   1. Freitext ohne Verdrahtung (Laden-Knopf/Enter) -> toter Eingang
+  //   2. Auswahl schlaegt Freitext still -> der getippte Wert wird nie
+  //      geladen, obwohl er sichtbar im Feld steht
+  //   3. play() liest nur das <select> -> der Durchlauf dreht eine andere
+  //      Struktur als die im Panel steht
+  const js = inlineScript('reaction.html');
+  const src = read('reaction.html');
+
+  for (const k of ['A', 'B', 'C']) {
+    assert.ok(new RegExp(`id="smi${k}"`).test(src),
+      `reaction.html: kein <input id="smi${k}"> — die Freitext-Eingabe fehlt fuer Stufe ${k}`);
+  }
+  assert.ok(/smi:\s*'smiA'/.test(js) && /smi:\s*'smiC'/.test(js),
+    'reaction.html: die STAGES kennen ihr Freitextfeld nicht');
+
+  // Enter laedt.
+  //
+  // Der Kontext zaehlt: die Seite holt das Element in eine Variable ("var f
+  // = document.getElementById(st.smi)") und ruft dann f.addEventListener
+  // auf. Ein Muster, das getElementById und addEventListener in einer
+  // Zeile verlangt, meldet hier "kein Listener" bei voellig intakter
+  // Verdrahtung — gemessen am 2026-10-04, der Test war rot und die Seite
+  // war richtig. Beide Formen zulaassen, aber den Listener am
+  // smi-Element festmachen, nicht an irgendeinem keydown.
+  const wire = js.slice(js.indexOf('function wire()'), js.indexOf('function applyI18n'));
+  const smiVar = /var\s+(\w+)\s*=\s*document\.getElementById\(st\.smi\)/.exec(wire);
+  assert.ok(smiVar,
+    'reaction.html: wire() holt das Freitextfeld nicht — der keydown-Listener ' +
+    'haengt an keinem Element');
+  assert.ok(new RegExp(`${smiVar[1]}\\.addEventListener\\('keydown'`).test(wire),
+    'reaction.html: kein keydown-Listener am Freitextfeld — Enter laedt ' +
+    'nicht, und auf dem Handy verdeckt die Tastatur den Laden-Knopf');
+  assert.ok(/e\.key === 'Enter' \|\| e\.keyCode === 13/.test(wire),
+    'reaction.html: der keydown-Listener prueft nicht auf Enter');
+
+  // Freitext hat Vorrang, und zwar in loadStage UND in valueOf.
+  const vs = js.slice(js.indexOf('function valueOf'), js.indexOf('function loadStage'));
+  assert.ok(/smi/.test(vs), 'reaction.html: valueOf() kennt das Freitextfeld nicht');
+  assert.ok(/':smiles:' \+ v\.value/.test(vs),
+    'reaction.html: valueOf() haengt das :smiles:-Praefix nicht an den Freitext');
+  const ls = js.slice(js.indexOf('function loadStage'));
+  assert.ok(/':smiles:' \+ v\.value/.test(ls.slice(0, ls.indexOf('function play'))),
+    'reaction.html: loadStage() laedt den Freitext nicht ueber :smiles:');
+  // Und play() benutzt valueOf, nicht das <select>.
+  const play = js.slice(js.indexOf('function play()'));
+  assert.ok(/var file = valueOf\(st\)/.test(play),
+    'reaction.html: play() liest das <select> statt valueOf() — der ' +
+    'Durchlauf dreht eine andere Struktur als die im Panel');
+  // Reset leert auch das Freitextfeld, sonst laedt der naechste Klick
+  // wieder die alte getippte Struktur.
+  const clear = js.slice(js.indexOf("getElementById('clearBtn')"),
+                         js.indexOf("getElementById('langBtn')"));
+  assert.ok(/st\.smi\)\.value = ''/.test(clear),
+    'reaction.html: "Zuruecksetzen" leert das Freitextfeld nicht — der ' +
+    'Reset ist nicht zurueck');
+});
+
+test('reaction.html: jede data-cmd-artige Taste hat eine geprüfte SMILES-Meldung', () => {
+  // Kein Platzhalter: jedes t() bekommt einen deutschen Text. Ein Schluessel
+  // mit leerem oder fehlendem de ergibt auf der deutschen Seite genau das
+  // Feature, das der Roadmap-Punkt verlangt hat — einen Fehler, den der
+  // Kern nicht liefert.
+  const js = inlineScript('reaction.html');
+  const i18n = js.slice(js.indexOf('var I18N = {'), js.indexOf('var lang ='));
+  const entries = [...i18n.matchAll(/(\w+)\s*:\s*\{\s*de:\s*'([^']*)'\s*,\s*en:\s*'([^']*)'/g)];
+  assert.ok(entries.length >= 20, `nur ${entries.length} vollstaendige I18N-Eintraege`);
+  const empty = entries.filter(([, k, de, en]) => !de.trim() || !en.trim()).map(([, k]) => k);
+  assert.deepEqual(empty, [], `I18N-Schluessel ohne Text: ${empty.join(', ')}`);
+});
