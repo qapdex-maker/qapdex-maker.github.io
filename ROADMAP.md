@@ -15,7 +15,7 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 ### Weitere Bereiche — siehe eigene Abschnitte
 - macrohard/ (MakerOS v2.11.54, 26 Apps, 332 Tests)
 - msgraph/react (Graph Metadata Hub, 61 Tests)
-- jsmol/ (vier Seiten, 50 MB, 28 Tests) → eigener Abschnitt am Ende
+- jsmol/ (vier Seiten, 50 MB, 29 Tests) → eigener Abschnitt am Ende
 
 ### macrohard/ (v2.11.29, aktiv entwickelt)
 - 22 Apps (11 Foundation + 11 Extension Pack), ES6-Module, PWA
@@ -61,7 +61,7 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 - `reaction.html` Reaktions-Sandbox — SMILES-Eingabe, 3 Instanzen, 4 Vorlagen
 - Vendor-Code, eigene Lizenz (LGPL 2.1 / MIT) — `jsmol/LICENSE-JSmol.txt`
 - Gate-Budget 60 MB, aktuell 50 MB
-- 28 Tests in `tests/jsmol-pages.test.mjs`, laufen in der CI
+- 29 Tests in `tests/jsmol-pages.test.mjs`, laufen in der CI
 
 ## 2. Fahrplan
 
@@ -173,7 +173,7 @@ curl -s -o /dev/null -w "%{http_code}" https://qapdex-maker.github.io/macrohard/
 
 ## JSmol — Stand 2026-10-03
 
-Vier Seiten sind live, 28 Tests in CI, Gate-Budget 50 von 60 MB.
+Vier Seiten sind live, 29 Tests in CI, Gate-Budget 50 von 60 MB.
 Was hier steht, ist gemessen, nicht geplant. Die vollständige
 Messhistorie steht in `jsmol-local/INTEGRATION-PLAN.md` Abschnitt 8.
 
@@ -193,7 +193,11 @@ Messhistorie steht in `jsmol-local/INTEGRATION-PLAN.md` Abschnitt 8.
 - [x] SMILES-Eingabe über das Präfix `:smiles:` — 5 von 5 Atomzahlen
       exakt (meine Falschaussage vom 2026-10-02 ist korrigiert)
 - [x] Viewport: Panels passen bei 1600/1440/1280/1200/1080/1024/900/412 px,
-      `docW == Viewport` an allen Breiten
+      `docW == ViewPort` an allen Breiten. **Achtung, irrefuehrend:**
+      `docW == ViewPort` beweist nur, dass die SEITE nicht breiter wird —
+      das Panel kann trotzdem ausserhalb des Sichtfelds liegen (Panel C
+      stand am 2026-10-04 bei x = 1124). Seit dem 2026-10-04 wird
+      `right <= clientWidth` je Panel gemessen, nicht die Dokumentbreite.
 - [x] `JSmol.GLmol.min.js` liegt im Repo, Seiten bleiben auf HTML5
 - [x] **SMILES-Freitext** (Roadmap-Punkt 2, 2026-10-04): drei
       Eingabefelder, Enter lädt, Freitext hat Vorrang vor der
@@ -210,7 +214,7 @@ Messhistorie steht in `jsmol-local/INTEGRATION-PLAN.md` Abschnitt 8.
 |---|---|---|
 | **Datei-Upload** | Vier Wege gemessen, alle gescheitert. Der Worker war fehlerfrei, der J2S-Kern kann die Datei nicht lesen. Braucht einen Server. | hoch, mit Backend |
 | **WebGL-Pfad** | Modul und Renderer bauen sich auf (`_Canvas3D (Jmol/GLmol)`), aber der Testbrowser rendert nichts: Shader linken, `getError()` ist 0, `readPixels` liefert 0 von 40.000 Pixeln. Auf einem Gerät mit echtem Treiber ungetestet. | ein Einzeiler, **nicht verifizierbar hier** |
-| **Panel-Überlauf auf 1080 px** | Gemessen 2026-10-04: `.steps` scrollt quer (der gewollte zweistufige Zustand), aber der Track misst **524,66 px** je Spur, getrieben vom `<select>` mit 448 px min-content. Panel C steht damit bei x = 1124 — auf einem 1080-px-Handy nur nach Querscrollen erreichbar. Ursache ist nicht `1fr`, sondern der Inhalt des Auswahlfelds; eine `min-width: 0`-Kette oder ein kürzeres Label im `<select>` wäre der Weg. | mittel, Layout |
+| **Panel-Überlauf auf 1080 px** | ~~offen~~ **behoben 2026-10-04.** Zwei Ursachen, beide gemessen: `min-width:auto` auf dem Panel (als Grid- UND Flex-Item) liess die min-content-Breite des `<select>` (448 px) durch, und `clamp(240px, 44vw, 340px)` klemmte bei 1080 px am 340-px-Dach. Gemessen vorher/nachher: Panel 525 → 332 px, Panel C von x = 1124 (44 px außerhalb) auf x = 738 mit right = 1070, vollständig sichtbar, kein Querscrollen (scrollW 1082 bei clientW 1080). | erledigt |
 | **SMILES im Kern meldet keinen Tippfehler** | Der Vorbau auf reaction.html fängt Syntaxfehler ab. Ein syntaktisch gültiges SMILES mit unbekanntem Element (`Xq`) meldet nur der Kern — und zwar als roter Text im Canvas. | klein, Rest |
 | **Crambin-Tunnel** | Zeichnet schrittweise über 40 s. Kein Fehler, aber die Anzeige folgt nie exakt. Messung läuft bis zur Ruhe, Deckel bei 20 Durchläufen. | erledigt, Rest Eigenheit |
 | **Lizenz-Vollständigkeit** | `jsmol/LICENSE-JSmol.txt` nennt Jmol (LGPL 2.1) und JSmol (MIT), aber nicht jede der 1731 Einzeldateien. Bei einer eigenen Distribution muss die Upstream-LICENSE-Datei mit. | klein |
@@ -229,13 +233,37 @@ Messhistorie steht in `jsmol-local/INTEGRATION-PLAN.md` Abschnitt 8.
 
 1. **Upload** — nur mit Server. Ohne Backend ist es nicht erreichbar,
    und acht weitere Versuche im Browser ändern daran nichts.
-2. **Panel-Überlauf auf 1080 px** — der `<select>` mit 448 px
-   min-content zieht die Spur auf 524,66 px. Das ist die Ursache, nicht
-   `1fr` (das ist seit dem 03. gefixt). Messbar klein: die Optionen auf
-   `data/1crn.pdb` statt `Crambin (1CRN)` kürzen, oder `min-width: 0`
-   auf der Panel-Kette.
-3. **WebGL auf einem echten Gerät** — ein Einzeiler plus Screenshot.
+2. **WebGL auf einem echten Gerät** — ein Einzeiler plus Screenshot.
    Von hier aus nicht entscheidbar.
+3. **Lizenz-Vollständigkeit** — die Upstream-LICENSE-Datei mitziehen,
+   wenn eine eigene Distribution entsteht.
+
+### Was der Panel-Überlauf gelehrt hat (2026-10-04)
+
+Der Fehler vom 2026-10-03 war nicht vollständig behoben, und beide
+Hälften davon sind eine Lektion:
+
+1. **`minmax(300px, 1fr)` behebt eine zu breite Spur nicht.** Die Spur
+   war korrigiert, das *Item darin* hatte weiter `min-width:auto`, also
+   seine min-content-Breite. Bei 1080 px gemessen: Spur 524,66 px,
+   getrieben vom `<select>` mit 448 px. `index.html` hatte `min-width:0`
+   an beiden Stellen, `reaction.html` an keiner.
+2. **`clamp(…, 44vw, 340px)` klemmt am Dach, und `vw` ist nicht der
+   verfügbare Raum.** Bei 1080 px ist 44vw = 475 px, also griff konstant
+   das 340-px-Dach. Nach dem `min-width:0` blieben Panel 340 px und 14 px
+   fehlten bis zum Ende der Zeile: 3 × 340 + 2 Pfeile + 4 Gaps + 24 px
+   Padding = 1094. Erst `calc((100vw - 84px) / 3)` löste es.
+3. **Ein Test, der nach dem Wort sucht, ist grün ohne zu prüfen.** Der
+   erste Test las die `.box`-Regel mit einer `[^}]*`-Regex **über den
+   Kommentar hinweg** und fand die Grundregel nicht — er blieb bei allen
+   drei Mutationen grün. Kommentare müssen raus, bevor eine Deklaration
+   gelesen wird. Das ist die vierte Wiederholung derselben Fehlerklasse
+   in diesem Projekt.
+
+Und die Regel fürs Rechnen: **die Zahl im Kommentar ist eine Behauptung,
+der Test ist die Rechnung.** Ein falscher Abzug (72 statt 84 px) fiel
+zuerst im Test auf, nicht im Browser — und der Test hat den Wert
+korrigiert, nicht die Erklärung.
 
 ### Was sich als Fehlerklasse herausgestellt hat
 
