@@ -100,8 +100,26 @@
        am 2026-10-03: 78 % von 1647 px ergab 1285 px je Panel, die Seite
        wurde 1647 px breit und scrollte horizontal. Stattdessen eine
        reine px-Angabe mit clamp().
-    */
-    .box{flex:0 0 clamp(240px, 44vw, 340px); scroll-snap-align:center}
+
+       Stand 2026-10-04: clamp(240px, 44vw, 340px) ist an der Obergrenze
+       klemmen geblieben. Bei 1080 px ist 44vw = 475 px, also griff
+       konstant das 340-px-Dach — und 3 x 340 + 2 Pfeile + 4 Gaps +
+       24 px Padding = 1094 px, also fehlten Panel C genau 14 px
+       (gemessen: x = 754, right = 1094 bei clientWidth 1080). Das Panel
+       war nicht mehr kaputt wie vorher (525 px, x = 1124), aber es war
+       trotzdem nicht vollständig sichtbar.
+
+       Also: nicht von vw, sondern vom verbleibenden Raum. Die Nebenkosten
+       sind 24 px Padding (12 je Seite) + 24 px Gaps (4 x 6) + 36 px fuer
+       die beiden Pfeile (2 x 18) = 84 px. Bei 1080 px bleiben damit
+       996 px fuer drei Panels, also 332 px je Panel statt 340.
+       min-width: 300px haelt die Auswahlfelder bedienbar.
+
+       Die 84 px sind NICHT geraten, sondern vom Test nachgerechnet: mit
+       72 px war die Zeile 1092 px breit und Panel C fehlten 12 px. Der
+       Test hat den Wert korrigiert, nicht die Zahl im Kommentar. */
+    .box{flex:0 0 clamp(300px, calc((100vw - 84px) / 3), 340px);
+      scroll-snap-align:center}
     .arrow{flex:0 0 auto; width:auto; padding:0 2px; transform:none;
       align-self:center; font-size:18px; opacity:.55}
   }
@@ -112,7 +130,21 @@
     .box{flex:initial; width:100%}
     .arrow{padding:0; transform:rotate(90deg); height:18px; opacity:.4}
   }
-  .box{border:3px solid var(--line); border-radius:2px; background:var(--paper)}
+  .box{border:3px solid var(--line); border-radius:2px; background:var(--paper);
+    /* min-width:0 ist Pflicht, nicht Kosmetik. Als Flex-Item gilt
+       min-width:auto, also die min-content-Breite des Inhalts — und die
+       treibt das <select> mit 448 px (gemessen am 2026-10-04). Ohne diese
+       Zeile ignorierte der Browser clamp() und panel C stand bei x = 1124
+       auf einem 1080-px-ViewPort, nur per Querscrollen erreichbar.
+
+       Dasselbe gilt fuer das Grid oberhalb von 1200 px: ein Grid-Item mit
+       min-width:auto gibt seine min-content-Breite als minimalen
+       Spaltenbeitrag ab, und die Spur misst dann wieder 524,66 px statt
+       sich anzupassen. Gemessen bei 1280 px am 2026-10-03, gleiche Zahl.
+
+       min-width:0 erlaubt dem Item zu schrumpfen. width:100% waere der
+       intuitive Irrtum und ergaebe bei 412 px ViewPort 514 px. */
+    min-width:0; max-width:100%;}
   .box .lab{
     font-size:10px; text-transform:uppercase; letter-spacing:.06em;
     background:var(--ink); color:#fff; padding:3px 7px;
@@ -121,7 +153,12 @@
   .box .stage{height:132px; background:#fff; position:relative;
     display:flex; align-items:center; justify-content:center}
   .box .stage canvas{max-width:100%;max-height:100%;display:block}
-  .box .in{display:flex;gap:4px;padding:5px;border-top:2px solid var(--line)}
+  /* min-width:0 auf der Kette: Panel, Zeile, Statuszeile. Ohne das
+     schrumpft nur das Panel, der Inhalt darin zwingt es per
+     min-content wieder auf — das Panel waere dann 340 px breit und der
+     Auswahltext laege trotzdem drueber hinaus. */
+  .box .in{display:flex;gap:4px;padding:5px;border-top:2px solid var(--line);
+    min-width:0}
   .box input, .box select{
     flex:1; min-width:0; font:inherit; font-size:12px;
     font-family:"IBM Plex Mono",monospace; cursor:pointer;
@@ -136,7 +173,13 @@
     font-size:10px; padding:2px 7px; border-top:1px solid #ccc;
     font-family:"IBM Plex Mono",monospace; color:var(--mute);
     display:flex; justify-content:space-between; gap:4px;
+    /* min-width:0 auf der Kette: Panel, Zeile, Statuszeile. Ohne das
+       schrumpft nur das Panel, der Inhalt darin zwingt es per min-content
+       wieder auf. overflow:hidden plus ellipsis, damit ein langer
+       SMILES-Wert die Zeile sprengt statt das Panel. */
+    min-width:0; overflow:hidden;
   }
+  .box .state span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
   .box.err .state{color:var(--err);font-weight:700}
   /* Freitext-Zeile: nur das Eingabefeld, kein Auswahlfeld daneben.
      Sonst konkurrieren zwei Felder um dieselbe Zeile und auf 1080 px
