@@ -38,6 +38,11 @@
     'C:\\Windows': { dirs: ['System32'], files: ['system.ini'] },
     'C:\\Papierkorb': { dirs: [], files: [] },
   };
+  // File contents live beside the directory listing. The Explorer used to
+  // hold bare name strings, so "Öffnen" could only toast the name — there was
+  // nothing to show and nothing to save back to. Bodies default to an empty
+  // string, which reads as "empty file" instead of crashing on a missing key.
+  const fsContent = {};
   const trashPath = 'C:\\Papierkorb';
   let curPath = 'C:\\Users\\macrohard\\Desktop';
 
@@ -1710,6 +1715,11 @@
     const saveBtn = document.getElementById('npSaveBtn');
     if (saveBtn)
       saveBtn.addEventListener('click', function () {
+        // A file opened from the Explorer must write back into the virtual FS,
+        // not only into the Notepad's own localStorage draft.
+        if (typeof window.__explorerSave === 'function' && area.dataset.fsKey) {
+          window.__explorerSave();
+        }
         try {
           localStorage.setItem(NS, area.value);
           toast('Gespeichert');
@@ -3145,6 +3155,9 @@
         });
         this.classList.add('selected');
       });
+      el.addEventListener('dblclick', function () {
+        openExplorerFile(curPath, f);
+      });
       el.addEventListener('dragstart', function (e) {
         e.dataTransfer.setData(
           'text/plain',
@@ -3158,6 +3171,67 @@
       });
       grid.appendChild(el);
     });
+  }
+
+  /* Explorer — open a file into the right app */
+  // Text-ish extensions go to the Notepad, images to the Viewer, anything
+  // else lands in the Notepad as a read-only-looking note explaining that no
+  // app handles the format. Opening is only half of it: the Explorer registers
+  // a save handler so Ctrl+S / the Save button writes back into fsContent.
+  const EXPLORER_TEXT_EXT = [
+    'txt', 'md', 'js', 'json', 'css', 'html', 'csv', 'py', 'sh', 'yml', 'yaml',
+    'log', 'ini', 'xml',
+  ];
+  const EXPLORER_IMAGE_EXT = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'];
+
+  function explorerFileKey(path, name) {
+    return path + '\\' + name;
+  }
+
+  function openExplorerFile(path, name) {
+    const key = explorerFileKey(path, name);
+    const ext = name.split('.').pop().toLowerCase();
+    if (!(key in fsContent)) {
+      // First open of a seeded file: give it a body so the editor is not
+      // blank. Binary placeholders stay empty and are marked as such.
+      if (EXPLORER_IMAGE_EXT.includes(ext)) {
+        fsContent[key] = '';
+      } else {
+        fsContent[key] =
+          name +
+          '\n\n' +
+          'Datei aus dem Explorer geöffnet. ' +
+          'Bearbeiten und mit Strg+S (oder 💾) speichern.\n';
+      }
+    }
+    if (EXPLORER_IMAGE_EXT.includes(ext)) {
+      openApp('viewer');
+      const img = document.getElementById('vwImg');
+      if (img) {
+        if (fsContent[key]) img.src = fsContent[key];
+        else img.removeAttribute('src');
+      }
+      toast('Geöffnet: ' + name + ' (kein Bildinhalt hinterlegt)');
+      return;
+    }
+    const isText = EXPLORER_TEXT_EXT.includes(ext);
+    openApp('notepad');
+    const area = document.getElementById('npArea');
+    if (area) {
+      area.value = fsContent[key];
+      area.dataset.fsKey = key;
+      area.dataset.fsName = name;
+    }
+    window.__explorerSave = function () {
+      const a = document.getElementById('npArea');
+      if (!a || !a.dataset.fsKey) return false;
+      fsContent[a.dataset.fsKey] = a.value;
+      toast('Gespeichert: ' + (a.dataset.fsName || a.dataset.fsKey));
+      return true;
+    };
+    const st = document.getElementById('npStatus');
+    if (st) st.textContent = 'Explorer: ' + name + (isText ? '' : ' (Format nicht unterstützt)');
+    toast('Geöffnet: ' + name);
   }
 
   /* Kontextmenü für Dateien */
@@ -3175,7 +3249,7 @@
       item.addEventListener('click', function () {
         const act = item.dataset.act;
         if (act === 'open') {
-          toast('Öffne: ' + f);
+          openExplorerFile(path, f);
         } else if (act === 'rename') {
           const nn = prompt('Neuer Name:', f);
           if (nn && nn !== f) {
@@ -3440,10 +3514,29 @@
     pCtx.lineWidth = 3;
     pCtx.lineCap = 'round';
     saveState();
+    // getPos must map a viewport point onto the canvas BITMAP, not onto the
+    // CSS box. Three corrections were missing, which is why strokes landed
+    // offset from the touch (measured: 400x260 bitmap in a 419x273.8 CSS box,
+    // plus a 2px border the rect already includes):
+    //   1. divide by the scale factor (CSS size / bitmap size)
+    //   2. subtract the border width, which getBoundingClientRect includes
+    //   3. clamp, so a touch that slides off the canvas cannot draw a stroke
+    //      thousands of pixels away
     function getPos(e) {
       const r = canvas.getBoundingClientRect();
       const t = e.touches ? e.touches[0] : e;
-      return { x: t.clientX - r.left, y: t.clientY - r.top };
+      // touchend carries no live touches, only changedTouches.
+      const pt = t || e.changedTouches?.[0];
+      if (!pt) return { x: 0, y: 0 };
+      const cs = window.getComputedStyle(canvas);
+      const bw = parseFloat(cs.borderLeftWidth) || 0;
+      const bh = parseFloat(cs.borderTopWidth) || 0;
+      const sx = canvas.width / (r.width - 2 * bw);
+      const sy = canvas.height / (r.height - 2 * bh);
+      return {
+        x: Math.max(0, Math.min(canvas.width, (pt.clientX - r.left - bw) * sx)),
+        y: Math.max(0, Math.min(canvas.height, (pt.clientY - r.top - bh) * sy)),
+      };
     }
     canvas.addEventListener('mousedown', function (e) {
       saveState();
@@ -3531,9 +3624,10 @@
       function (e) {
         if (!painting) return;
         if (pTool !== 'pen' && pTool !== 'eraser' && pTool !== 'fill' && pStart) {
-          const t = e.changedTouches[0];
-          const r = canvas.getBoundingClientRect();
-          const pos = { x: t.clientX - r.left, y: t.clientY - r.top };
+          // Reuse getPos so the shape endpoint is scaled and clamped exactly
+          // like the mousedown/mousemove path. This branch had its own raw
+          // rect subtraction, which is why touch shapes were offset.
+          const pos = getPos(e);
           commitShape(pStart, pos);
         }
         painting = false;
