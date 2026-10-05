@@ -20,8 +20,9 @@
       "purpose": "any"
     }
   ],
-  "version": "2.11.54",
+  "version": "2.11.55",
   "changelog": {
+    "v2.11.55": "Paint input no longer lands offset from the finger: the coordinate mapping now applies the CSS scale factor, subtracts the canvas border and clamps; touch shapes reuse it instead of recomputing their own position. Explorer files can finally be opened and saved \u2014 \u00d6ffnen was a toast, and the virtual FS held only bare file names",
     "v2.11.54": "The start-menu footer reads its version from APP_VERSION instead of a hardcoded literal that survived four releases; a browser smoke test that opens all 25 apps in Chromium and states what it cannot see",
     "v2.11.53": "Four duplicate element ids split apart (stGrid, ieRotate, musEq, beatpadBpm, mdPreview): the grid setting now survives close and reload, the rotate slider works, opening Music no longer deletes the visualizer canvas, the two BPM fields stay in step, and the ten dead Docs toolbar buttons are wired",
     "v2.11.52": "PWA icons added (manifest, favicon, apple-touch) and precached by the service worker; the TDZ scanner now finishes in under a second",
