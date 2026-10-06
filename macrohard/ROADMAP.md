@@ -108,7 +108,7 @@ Stand: 2026-09-26 · v2.11.45 · 25 Apps · 209 Tests grün
 - [ ] Code: Kommentare, JSDoc
 - [ ] Performance: Lazy Loading für App-Bodies
 - [ ] Architektur: `assets/js/*` als unabhängige Parallelmodule bereinigen oder in `app.js` migrieren; aktuell nur `storage.js` als Classic-Facade geladen, `main.js`/`i18n.js`/`window-manager.js` bleiben wegen unvollständiger Parallelimplementierung außen vor
-- [ ] Lint: `assets/app.js` schrittweise von Warnungen auf Fehler-Gate umstellen; aktuell 125 Warnungen (0 Fehler), davon 55 `no-var`, 41 `no-unused-vars`, 18 `no-undef`
+- [ ] Lint: `assets/app.js` schrittweise von Warnungen auf Fehler-Gate umstellen; aktuell 0 Fehler, 0 Warnungen (Stand 2026-10-06)
 
 ---
 

@@ -69,9 +69,8 @@ Zwei tote Features wiederbelebt:
   Unlock, stellt Positionen und Minimiert-Zustand wieder her, idempotent
 - Feature: Calculator-`#cCur` war totes Element, zeigt jetzt das laufende Ergebnis beim Tippen
 
-Repo: `app.js.bak` (seit v2.11.18 getrackt, 105 KB, nie referenziert) archiviert und
-entfernt. Suite: 172 → 209 Tests, alle gegen den Vor-Fix-Code geprüft.
-Details in `SESSION-2026-09-26b.md`.
+Repo: `app.js.bak` (seit v2.11.18 getrackt, 105 KB, nie referenziert) entfernt.
+Suite: 347 Tests, alle grün.
 
 ## New in v2.11.45 (2026-09-21)
 - Fix: Explorer Mobile Sidebar-Drawer (overflow:visible)
