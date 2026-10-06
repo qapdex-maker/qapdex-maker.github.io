@@ -1239,6 +1239,94 @@ function Sketch({ t }) {
   );
 }
 
+// ---------- YAML Preview (virtualized, worker-backed) ----------
+/* The openapi specs are 42 MB. Opening one in a phone browser or text editor
+ * OOMs the process and takes other apps down with it. This panel loads the
+ * file in the worker and renders only the visible window, so the main thread
+ * never holds more than ~50 lines. */
+function YamlPreview({ t }) {
+  const [variant, setVariant] = useState('beta');
+  const [total, setTotal] = useState(null);
+  const [lines, setLines] = useState([]);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [st, setSt] = useState({ kind: 'loading' });
+  const wref = useRef(null);
+  const ROW_H = 22;
+  const VIEW_H = 480;
+  const fileMap = {
+    'v1.0': RELEASE + SPEC['v1.0'],
+    beta: RELEASE + SPEC.beta,
+  };
+
+  useEffect(() => {
+    const w = new Worker('assets/worker.js');
+    wref.current = w;
+    w.onmessage = (e) => {
+      const d = e.data;
+      if (d.type === 'yaml-count') {
+        if (d.ok) { setTotal(d.count); setSt({ kind: 'ok' }); }
+        else setSt({ kind: 'err', msg: String(d.error) });
+        return;
+      }
+      if (d.type === 'yaml-lines') {
+        if (d.ok) {
+          setLines(d.lines);
+          setSt({ kind: 'ok' });
+        } else setSt({ kind: 'err', msg: String(d.error) });
+      }
+    };
+    return () => w.terminate();
+  }, []);
+
+  useEffect(() => {
+    setLines([]);
+    setTotal(null);
+    setSt({ kind: 'loading' });
+    wref.current?.postMessage({ type: 'yaml-count', file: fileMap[variant] });
+  }, [variant]);
+
+  // Load the visible window whenever scroll or variant changes
+  useEffect(() => {
+    if (total === null) return;
+    const loadStart = Math.max(0, Math.floor(scrollTop / ROW_H) - 10);
+    const count = Math.ceil(VIEW_H / ROW_H) + 20;
+    wref.current?.postMessage({ type: 'yaml-lines', file: fileMap[variant], start: loadStart, count });
+  }, [scrollTop, variant, total]);
+
+  const loadStart = Math.max(0, Math.floor(scrollTop / ROW_H) - 10);
+  const displayStart = Math.max(0, Math.floor(scrollTop / ROW_H) - 4);
+  const displayEnd = Math.min(total || 0, Math.ceil((scrollTop + VIEW_H) / ROW_H) + 4);
+  const visible = lines.slice(displayStart - loadStart, displayEnd - loadStart);
+
+  const status = st.kind === 'err' ? t.err + ' ' + st.msg
+    : st.kind === 'ok' ? (total !== null ? total + ' Zeilen' : '')
+    : t.loading;
+
+  return (
+    <div className="panel-inner">
+      <h2 className="sect">YAML Preview</h2>
+      <p className="hint">Vorschau der OpenAPI-Spec (virtualisiert — läuft im Worker, kein Freeze).</p>
+      <div className="ref-tabs">
+        <button className={'reftab' + (variant === 'v1.0' ? ' active' : '')} onClick={() => setVariant('v1.0')}>v1.0</button>
+        <button className={'reftab' + (variant === 'beta' ? ' active' : '')} onClick={() => setVariant('beta')}>beta</button>
+      </div>
+      <div className="badges"><span className="badge">{status}</span></div>
+      <div style={{ height: VIEW_H, overflowY: 'auto', border: '1px solid var(--line)', fontFamily: 'var(--mono)', fontSize: 13 }}
+           onScroll={e => setScrollTop(e.currentTarget.scrollTop)}>
+        <div style={{ height: (total || 0) * ROW_H, position: 'relative' }}>
+          <div style={{ transform: `translateY(${displayStart * ROW_H}px)` }}>
+            {visible.map((line, i) => (
+              <div key={displayStart + i} style={{ height: ROW_H, whiteSpace: 'pre', overflow: 'hidden', textOverflow: 'ellipsis', padding: '0 8px', lineHeight: ROW_H + 'px' }}>
+                {line}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---------- App shell ----------
 const TABS = [
   ['hub', 'Hub', Hub],
@@ -1251,7 +1339,7 @@ const TABS = [
 // Two entry points for one panel would mean the tab bar shows six entries the
 // user cannot predict, and the ARIA tablist would contain a tab with no label.
 // It is therefore not in TABS; the render switch below handles it separately.
-const EXTRA_PANELS = { sketch: Sketch };
+const EXTRA_PANELS = { sketch: Sketch, preview: YamlPreview };
 function App() {
   const [tab, setTab] = useState('hub');
   const [lang, setLang] = useState(() => { try { return localStorage.getItem('msgraph_lang') || 'de'; } catch { return 'de'; } });
@@ -1309,6 +1397,7 @@ function App() {
           <div className="themeswitch">
             <span id="liveDot" className={'livedot ' + (m?.syncDate ? 'on' : '')}>{m?.syncDate ? t.live.replace('{d}', m.syncDate) : (m === null ? t.live_loading : t.live_err)}</span>
             <button className="tbtn" id="sketchBtn" onClick={() => setTab('sketch')}>{t.sketch}</button>
+            <button className="tbtn" id="previewBtn" onClick={() => setTab('preview')}>YAML</button>
             <button className="btn-ignite" id="igniteBtn" aria-pressed={ignite} onClick={() => setIgnite(v => !v)}><span className="toggle-dot"></span>{t.ignite}</button>
             <button className="tbtn" id="langBtn" aria-pressed={lang === 'en'} onClick={() => setLang(l => l === 'de' ? 'en' : 'de')}>{lang === 'en' ? t.de : t.en}</button>
           </div>
@@ -1322,6 +1411,7 @@ function App() {
         {tab === 'permissions' && <Permissions t={t} lang={lang} />}
         {tab === 'radar' && <Radar t={t} lang={lang} />}
         {tab === 'sketch' && <Sketch t={t} />}
+        {tab === 'preview' && <YamlPreview t={t} />}
       </main>
 
       <footer className="foot">{t.footer}{m && m.siteVersion ? ' · v' + m.siteVersion : ''}</footer>

@@ -5,6 +5,13 @@
 //   { type: 'console',  file }           -> same list PLUS opId (Console uses operationId)
 //   { type: 'csdl', file }               -> type COUNTS + entity-set join for one sketch (XML)
 //   { type: 'segments', file }           -> the set of last path segments in an index JSON
+//   { type: 'yaml-lines', file, start, count } -> lines [start, start+count) of a YAML file
+//   { type: 'yaml-count', file }         -> total line count of a YAML file
+//
+// The YAML branch exists because the openapi specs are 42 MB. Opening one in a
+// phone browser or text editor OOMs the process and takes other apps down with
+// it. The preview panel loads the file in the worker and renders only the
+// visible window, so the main thread never holds more than ~50 lines.
 //
 // The last one exists because the sketch panel and the reference list are
 // separate React trees: the panel cannot see Reference's parsed `items`. Rather
@@ -122,6 +129,33 @@ self.onmessage = async (e) => {
         segs[seg] = (segs[seg] || 0) + 1;
       }
       self.postMessage({ type, file, ok: true, segments: segs });
+    } catch (err) {
+      self.postMessage({ type, file, ok: false, error: String(err) });
+    }
+    return;
+  }
+  if (type === 'yaml-count') {
+    try {
+      const res = await fetch(file);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const text = await res.text();
+      const lines = text.split('\n').length;
+      self.postMessage({ type, file, ok: true, count: lines });
+    } catch (err) {
+      self.postMessage({ type, file, ok: false, error: String(err) });
+    }
+    return;
+  }
+  if (type === 'yaml-lines') {
+    try {
+      const res = await fetch(file);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const text = await res.text();
+      const all = text.split('\n');
+      const start = e.data.start || 0;
+      const count = e.data.count || 50;
+      const slice = all.slice(start, start + count);
+      self.postMessage({ type, file, ok: true, lines: slice, start, total: all.length });
     } catch (err) {
       self.postMessage({ type, file, ok: false, error: String(err) });
     }
