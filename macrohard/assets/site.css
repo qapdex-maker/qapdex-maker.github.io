@@ -472,7 +472,14 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
 
 /* ===== resize handles ===== */
 .wnd-resize{position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize;z-index:5}
-.wnd-resize::after{content:'⬢';position:absolute;right:2px;bottom:1px;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);opacity:.5;font-size:10px;line-height:8px;text-align:center}
+/* Measured on the real phone layout (500px viewport, per the 2026-10-05
+   screenshot): the grip was a 16px box holding a "⬢" at opacity .5 in a
+   mid-grey, which reads as nothing at all. Two problems, not one:
+     1. the ::after inherited the base 2px/10px size even when the box grew,
+        so a 48px hit area still showed an 8px glyph
+     2. opacity .5 on a grey glyph against a light surface is near invisible
+   The glyph now scales with the box and gets a solid, contrasting colour. */
+.wnd-resize::after{content:'⬢';position:absolute;right:2px;bottom:1px;width:8px;height:8px;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);opacity:1;font-size:10px;line-height:8px;text-align:center}
 
 /* ===== mobile ===== */
 @media(max-width:760px){
@@ -548,7 +555,13 @@ npArea{width:100%;height:100%;min-height:100%;border:none;resize:none;padding:8p
   .tbIcon{min-width:50px;height:40px}
   .dskApp{min-width:64px;min-height:76px}
   .wclose,.wmin,.wmax{width:28px;height:28px;font-size:14px}
-  .wnd-resize{width:24px;height:24px}
+  /* This block used to say 24px, overriding the 48px from the max-width:760px
+     rule above — it comes later in the file, so on a real phone the grip
+     ended up at 24px with a 2px border. Measured: the 48px hit area never
+     reached the handset. Same 48px as the phone-width rule, and the glyph
+     scales to match instead of staying at the base 8px. */
+  .wnd-resize{width:48px;height:48px;right:-8px;bottom:-8px}
+  .wnd-resize::after{width:24px;height:24px;font-size:18px;line-height:24px;border-width:3px}
 }
 
 /* ===== prefers-reduced-motion ===== */
