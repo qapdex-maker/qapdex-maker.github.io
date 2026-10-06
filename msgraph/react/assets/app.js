@@ -138,6 +138,20 @@ const I18N = {
     llm_list_busy: 'lade Katalog…',
     llm_busy_full: 'Modell gerade ausgelastet (nicht dein Limit) — kurz warten',
     llm_probe_left: 'Rest',
+    // Live-Test gegen die echte Graph-Instanz (2026-10-05). Token bleibt im
+    // Browser (sessionStorage) — Graph erlaubt CORS mit `*`, also braucht es
+    // keinen Proxy. Jeder neue Key braucht einen EN-Zwilling, sonst leakt er
+    // als Rohtext ins UI (F3, i18n-completeness-Test deckt das ab).
+    gx_key_ph: 'Graph-Token einfügen',
+    gx_key_set: 'Token setzen',
+    gx_key_ok: 'Token gespeichert (nur diese Sitzung)',
+    gx_run: 'Live aufrufen',
+    gx_busy: 'ruft Graph…',
+    gx_result: 'Antwort',
+    gx_clear: 'Token löschen',
+    gx_hint: 'Eigener delegated Graph-Token (.Read-Scopes, kein Admin-Token). Bleibt im Browser (sessionStorage), geht nur an graph.microsoft.com. Nie committet, nie an uns gesendet. Ohne Token kein Live-Test.',
+    gx_needkey: 'Kein Token — oben einfügen.',
+    gx_items: 'Einträge',
     perm: 'Permission Intelligence',
     perm_hint: 'Kuratiert (OpenAPI hier hat keine strukturierten scopes). Jede Permission mit least-privilege-Empfehlung.',
     perm_ph: 'Permission suchen…',
@@ -273,6 +287,16 @@ const I18N = {
     llm_list_busy: 'loading catalogue…',
     llm_busy_full: 'model at capacity right now (not your limit) — wait a moment',
     llm_probe_left: 'left',
+    gx_key_ph: 'paste Graph token',
+    gx_key_set: 'Set token',
+    gx_key_ok: 'token stored (this session only)',
+    gx_run: 'Call live',
+    gx_busy: 'calling Graph…',
+    gx_result: 'Response',
+    gx_clear: 'Clear token',
+    gx_hint: 'Your own delegated Graph token (.Read scopes, never an admin token). Stays in your browser (sessionStorage), goes only to graph.microsoft.com. Never committed, never sent to us. No live test without a token.',
+    gx_needkey: 'No token — paste one above.',
+    gx_items: 'entries',
     perm: 'Permission Intelligence',
     perm_hint: 'Curated (the OpenAPI here has no structured scopes). Least-privilege note per permission.',
     perm_ph: 'Search permission…',
@@ -555,6 +579,16 @@ function ConsolePanel({
   const [llmErr, setLlmErr] = useState(null);
   const [probe, setProbe] = useState(null);
   const [cat, setCat] = useState(null);
+  // Live-Test gegen die echte Graph-Instanz (2026-10-05). Graph erlaubt
+  // `Access-Control-Allow-Origin: *` (am 2026-10-05 frisch gemessen), also
+  // braucht es keinen Proxy und keinen zweiten Server. Der Token ist ein
+  // delegated .Read-Token und bleibt im sessionStorage — dieselbe Behandlung
+  // wie der LLM-Key, und aus demselben Grund: er darf nie deployt werden,
+  // weil jede Datei auf GitHub Pages öffentlich ist.
+  const [gxKey, setGxKey] = useState(() => sessionStorage.getItem('graph_token') || '');
+  const [gxOk, setGxOk] = useState('');
+  const [gxBusy, setGxBusy] = useState(false);
+  const [gxRes, setGxRes] = useState(null);
   // '' = nothing said yet, 'ok' = a key is stored for the current provider.
   // Reset on provider switch, because the answer would otherwise describe the
   // provider the user just left.
@@ -770,6 +804,99 @@ function ConsolePanel({
       }).slice(0, 6).map(m => m.id)
     };
   }
+
+  /* Guard for live calls.
+  *
+  * The endpoint picker offers all 17,531 endpoints from the index JSON, and NL
+  * mapping produces a path too. A live call sends the OWNER'S token, so an
+  * unrestricted picker would happily call `/users` or another user's mailbox —
+  * not a security hole in the classic sense (the token already has those
+  * scopes), but the UI must not silently widen what the user asked for. Only
+  * `/me`-anchored, read paths pass.
+  *
+  * `$select`/`$top` query strings are allowed through; the anchor is checked on
+  * the pathname only. A path is matched literally — no normalisation — so
+  * `/me/../users` cannot slip past.
+  */
+  function livePathAllowed(path) {
+    if (typeof path !== 'string' || !path.startsWith('/')) return false;
+    if (path.includes('..')) return false;
+    const bare = path.split('?')[0].replace(/\/$/, '');
+    if (bare === '/me') return true;
+    if (!bare.startsWith('/me/')) return false;
+    // Writes are not reachable through the live button at all.
+    if (/\/(sendMail|sendReply|sendForward)$/i.test(bare)) return false;
+    return true;
+  }
+
+  /* Live-Aufruf gegen die echte Graph-Instanz.
+  *
+  * Kein Proxy, kein deploytes Geheimnis — genau deshalb ist das sicher genug,
+  * um es hier zu bauen: der Token verlässt den Browser nur in genau einem
+  * Request, und dieser geht an genau eine Domain.
+  *
+  * Warum die Fehler hier nicht zu einem "gefailed" zusammengefasst werden
+  * (gelernt am LLM-Probe, 2026-10-01): Graph antwortet auf einen abgelaufenen
+  * oder falschen Scope mit 401 und einem `error.code` im Body, auf ein Token
+  * ohne jeden Scope mit 403, und auf ein gültiges Token mit fehlendem
+  * einzelnes Feld mit 400 + einer Feldliste. "Fehler" allein sagt dem Nutzer
+  * nichts darüber, was er tun soll. Deshalb werden Status, Code und Meldung
+  * getrennt durchgereicht. */
+  async function graphCall(path, token) {
+    const t0 = performance.now();
+    if (!livePathAllowed(path)) {
+      return {
+        ok: false,
+        denied: true,
+        msg: 'path not allowed: ' + path
+      };
+    }
+    try {
+      const res = await fetch('https://graph.microsoft.com/v1.0' + path, {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Accept': 'application/json'
+        }
+      });
+      const ms = Math.round(performance.now() - t0);
+      const hdr = {};
+      res.headers.forEach((v, k) => {
+        hdr[k.toLowerCase()] = v;
+      });
+      let body = null;
+      try {
+        body = await res.json();
+      } catch {/* kein JSON */}
+      if (!res.ok) {
+        return {
+          ok: false,
+          status: res.status,
+          ms,
+          code: String(body?.error?.code || '').slice(0, 80),
+          msg: String(body?.error?.message || '').slice(0, 200),
+          cid: hdr['client-request-id'] || hdr['request-id'] || null
+        };
+      }
+      return {
+        ok: true,
+        status: res.status,
+        ms,
+        body,
+        // Eine Antwort ohne value-Array ist kein Fehler, aber sie ist auch
+        // kein Treffer — z.B. /me/photo liefert Binärdata. Das muss unterscheidbar
+        // bleiben, sonst meldet die UI "leer" bei einem erfolgreichen Aufruf.
+        count: Array.isArray(body?.value) ? body.value.length : null,
+        cid: hdr['client-request-id'] || hdr['request-id'] || null
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        msg: String(e.message || e).slice(0, 140),
+        ms: Math.round(performance.now() - t0)
+      };
+    }
+  }
   function runNl() {
     setLlmErr(null);
     if (llmKey && nl.trim()) {
@@ -947,7 +1074,65 @@ function ConsolePanel({
     className: "s",
     key: i,
     onClick: () => selectEndpoint(s)
-  }, s.method, " ", s.path)))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, s.method, " ", s.path))), /*#__PURE__*/React.createElement("div", {
+    className: "llm-row"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "lbl"
+  }, t.gx_key_set), /*#__PURE__*/React.createElement("input", {
+    type: "password",
+    className: "epinput",
+    value: gxKey,
+    placeholder: t.gx_key_ph,
+    onChange: e => {
+      setGxKey(e.target.value);
+      if (e.target.value) {
+        sessionStorage.setItem('graph_token', e.target.value);
+        setGxOk('ok');
+      } else {
+        sessionStorage.removeItem('graph_token');
+        setGxOk('');
+      }
+      setGxRes(null);
+    }
+  }), gxOk === 'ok' && /*#__PURE__*/React.createElement("p", {
+    className: "hint ok"
+  }, t.gx_key_ok), /*#__PURE__*/React.createElement("div", {
+    className: "llm-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "ghost",
+    disabled: gxBusy,
+    onClick: () => {
+      if (!gxKey) {
+        setGxRes({
+          ok: false,
+          needKey: true
+        });
+        return;
+      }
+      setGxBusy(true);
+      setGxRes(null);
+      graphCall(ep.path, gxKey).then(setGxRes).finally(() => setGxBusy(false));
+    }
+  }, gxBusy ? t.gx_busy : t.gx_run), /*#__PURE__*/React.createElement("button", {
+    className: "ghost",
+    disabled: !gxKey,
+    onClick: () => {
+      setGxKey('');
+      sessionStorage.removeItem('graph_token');
+      setGxOk('');
+      setGxRes(null);
+    }
+  }, t.gx_clear)), gxRes && gxRes.needKey && /*#__PURE__*/React.createElement("p", {
+    className: "hint err"
+  }, t.gx_needkey), gxRes && !gxRes.needKey && gxRes.denied && /*#__PURE__*/React.createElement("p", {
+    className: "hint err"
+  }, gxRes.msg), gxRes && !gxRes.needKey && !gxRes.denied && gxRes.ok && /*#__PURE__*/React.createElement("p", {
+    className: "hint ok"
+  }, t.gx_result, ": ", gxRes.status, " (", gxRes.ms, " ms)", gxRes.count === null ? '' : ' · ' + gxRes.count + ' ' + t.gx_items, gxRes.cid ? ' · ' + gxRes.cid : ''), gxRes && !gxRes.needKey && !gxRes.denied && !gxRes.ok && /*#__PURE__*/React.createElement("p", {
+    className: "hint err"
+  }, t.gx_result, ": HTTP ", gxRes.status || '—', " \xB7 ", gxRes.code || gxRes.msg || 'Fehler', gxRes.cid ? ' · ' + gxRes.cid : ''), /*#__PURE__*/React.createElement("p", {
+    className: "hint"
+  }, t.gx_hint))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     className: "result-head"
   }, /*#__PURE__*/React.createElement("span", {
     className: "mth"
