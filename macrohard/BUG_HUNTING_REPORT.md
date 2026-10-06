@@ -1,10 +1,10 @@
 # MakerOS Bug-Hunting Report
 
-Stand: 2026-09-27, Release 2.11.50. 25 Desktop-Apps, 302 Unit-Tests,
+Stand: 2026-10-06, Release 2.11.55. 25 Desktop-Apps, 347 Unit-Tests,
 0 ESLint-Fehler, 0 Warnungen.
 
-Dieser Bericht ersetzt den Stand vom 18. September. Er dokumentiert die
-Bugs der letzten beiden Bug-Hunting-Läufe, wie sie **tatsächlich gefunden und
+Dieser Bericht ersetzt den Stand vom 27. September. Er dokumentiert die
+Bugs der letzten Bug-Hunting-Läufe, wie sie **tatsächlich gefunden und
 verifiziert** wurden — nicht als Absichtserklärung.
 
 ---
@@ -312,12 +312,24 @@ nicht in den Standardlauf. Sie werden separat benannt und bewusst ausgeführt.
 | Punkt | Grund |
 |---|---|
 | Radio akustisch prüfen | headless Chromium blockiert Autoplay; braucht echtes Gerät |
-| Browser-Blockier-Erkennung | technisch unmöglich; `⚠` als manueller Weg |
-| `find-tdz-traps.mjs` | O(n³), diagnostisch, nicht Teil von `npm test` |
+| Musik + Taskmanager | im Headless-Chromium nicht reproduzierbar; AudioContext bleibt suspended, 0 Scheduler-Ticks. Ursache offen, braucht Messung auf dem echten Gerät. |
+| Glow | Screenshot fehlt noch — Code ist sauber, Tests bestätigen entfernt. Zwei Stellen haben noch Glow-Optik (ami-bios-setup.html CRT-Vignette, site.css backdrop-filter). |
+| `find-tdz-traps.mjs` | O(n³), diagnostisch, nicht Teil de `npm test` |
 | `assets/app.js` unformatiert | Prettier meldet es schon im HEAD; ein Format-Lauf wäre ~2000 Zeilen Fremd-Diff und gehört in einen eigenen Commit |
-| `#stGrid` („Desktop-Raster") | steuert die Klasse `show-grid`, für die es keine CSS-Regel gibt. Toter Schalter, bewusst nicht angefasst; `tests/settings-checkbox-timing.test.mjs` hält den Zustand fest und schlägt in beide Richtungen an |
+| `#stGrid` („Desktop-Raster“) | steuert die Klasse `show-grid`, für die es keine CSS-Regel gibt. Toter Schalter, bewusst nicht angefasst; `tests/settings-checkbox-timing.test.mjs` hält den Zustand fest und schlägt in beide Richtungen an |
+| Editor + Explorer: Fenster-Overflow | ragt aus dem Bild — nicht reproduziert, braucht Screenshot |
+| Notepad: Fenstergröße/Resize | nicht reproduziert, braucht Screenshot |
 
-**Abgehakt (2026-09-27):** die 20 `no-unused-vars` und 6 `prefer-const` sind
+**Abgehakt (2026-10-06):** Die 20 `no-unused-vars` und 6 `prefer-const` sind
 weg (Commit b7bb808), der `no-undef` in `buildSysinfo()` ist behoben
 (Commit 9414caa). Beide waren in dieser Tabelle als „klassifiziert, kein
-Laufzeitrisiko" geführt — die Einordnung war falsch, siehe 2.4 Nr. 12.
+Laufzeitrisiko“ geführt — die Einordnung war falsch, siehe 2.4 Nr. 12.
+
+**Abgehakt (2026-10-05):** Paint-Eingabe-Offset behoben (Commit 44b5c78),
+Explorer-Öffnen/Speichern behoben (Commit 44b5c78), Resize-Grip Touch-Trefferfläche
+48px + Glyphe skaliert (Commit 9e6ac3a). 11 neue Tests, 347/347 grün.
+
+**Abgehakt (2026-09-27):** Die 20 `no-unused-vars` und 6 `prefer-const` sind
+weg (Commit b7bb808), der `no-undef` in `buildSysinfo()` ist behoben
+(Commit 9414caa). Beide waren in dieser Tabelle als „klassifiziert, kein
+Laufzeitrisiko“ geführt — die Einordnung war falsch, siehe 2.4 Nr. 12.
