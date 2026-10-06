@@ -2720,7 +2720,7 @@
                 path: path,
                 icon: '📁',
                 action: function () {
-                  curPath = path === 'C:\\' ? 'C:\\' + dir : path + '\\' + dir;
+                  pushHistory(path === 'C:\\' ? 'C:\\' + dir : path + '\\' + dir);
                   renderExplorer();
                   openApp('explorer');
                   ov.remove();
@@ -2736,7 +2736,7 @@
                 path: path,
                 icon: '📄',
                 action: function () {
-                  curPath = path;
+                  pushHistory(path);
                   renderExplorer();
                   openApp('explorer');
                   ov.remove();
@@ -2789,6 +2789,17 @@
     }
   }
 
+  let historyStack = [];
+  let historyIndex = -1;
+
+  function pushHistory(newPath) {
+    if (curPath === newPath) return;
+    historyStack = historyStack.slice(0, historyIndex + 1);
+    historyStack.push(newPath);
+    historyIndex = historyStack.length - 1;
+    curPath = newPath;
+  }
+
   function buildExplorer() {
     if (EXPLOADER_INITIALIZED) {
       renderExplorer();
@@ -2797,8 +2808,8 @@
     EXPLOADER_INITIALIZED = true;
 
     /* History stack for Back/Forward */
-    const historyStack = [curPath];
-    let historyIndex = 0;
+    historyStack = [curPath];
+    historyIndex = 0;
 
     const inp = document.getElementById('fePath');
     if (inp)
@@ -2863,7 +2874,7 @@
 
     function navigateTo(path) {
       if (fsData[path]) {
-        curPath = path;
+        pushHistory(path);
         renderExplorer();
       } else {
         toast('Pfad nicht gefunden');
@@ -2873,7 +2884,7 @@
       const parts = curPath.split('\\').filter(Boolean);
       if (parts.length > 1) {
         parts.pop();
-        curPath = 'C:\\' + parts.join('\\');
+        pushHistory('C:\\' + parts.join('\\'));
         renderExplorer();
       }
     }
@@ -3020,7 +3031,7 @@
     });
     side.querySelectorAll('.feItem').forEach(function (el) {
       el.addEventListener('click', function () {
-        curPath = el.dataset.path;
+        pushHistory(el.dataset.path);
         renderExplorer();
       });
     });
@@ -3052,12 +3063,12 @@
         });
         this.classList.add('selected');
         const newPath = curPath === 'C:\\' ? 'C:\\' + dir : curPath + '\\' + dir;
-        curPath = newPath;
+        pushHistory(newPath);
         renderExplorer();
       });
       el.addEventListener('dblclick', function () {
         const newPath = curPath === 'C:\\' ? 'C:\\' + dir : curPath + '\\' + dir;
-        curPath = newPath;
+        pushHistory(newPath);
         renderExplorer();
       });
       el.addEventListener('dragstart', function (e) {
@@ -3316,7 +3327,7 @@
       item.addEventListener('click', function () {
         const act = item.dataset.act;
         if (act === 'open') {
-          curPath = path === 'C:\\' ? 'C:\\' + dir : path + '\\' + dir;
+          pushHistory(path === 'C:\\' ? 'C:\\' + dir : path + '\\' + dir);
           renderExplorer();
         } else if (act === 'rename') {
           const nn = prompt('Neuer Name:', dir);
