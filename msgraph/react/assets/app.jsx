@@ -1304,14 +1304,12 @@ function YamlPreview({ t, variant: variantProp }) {
       <div className="badges"><span className="badge">{status}</span></div>
       <div style={{ height: VIEW_H, overflowY: 'auto', border: '1px solid var(--line)', fontFamily: 'var(--mono)', fontSize: 13 }}
            onScroll={e => setScrollTop(e.currentTarget.scrollTop)}>
-        <div style={{ height: (total || 0) * ROW_H, position: 'relative' }}>
-          <div style={{ transform: `translateY(${displayStart * ROW_H}px)` }}>
-            {visible.map((line, i) => (
-              <div key={displayStart + i} style={{ height: ROW_H, whiteSpace: 'pre', overflow: 'hidden', textOverflow: 'ellipsis', padding: '0 8px', lineHeight: ROW_H + 'px' }}>
-                {line}
-              </div>
-            ))}
-          </div>
+        <div style={{ height: Math.min((total || 0) * ROW_H, 5000000), position: 'relative' }}>
+          {visible.map((line, i) => (
+            <div key={displayStart + i} style={{ position: 'absolute', top: (displayStart + i) * ROW_H, height: ROW_H, whiteSpace: 'pre', overflow: 'hidden', textOverflow: 'ellipsis', padding: '0 8px', lineHeight: ROW_H + 'px' }}>
+              {line}
+            </div>
+          ))}
         </div>
       </div>
     </div>

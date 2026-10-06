@@ -1946,16 +1946,14 @@ function YamlPreview({
     onScroll: e => setScrollTop(e.currentTarget.scrollTop)
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      height: (total || 0) * ROW_H,
+      height: Math.min((total || 0) * ROW_H, 5000000),
       position: 'relative'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      transform: `translateY(${displayStart * ROW_H}px)`
     }
   }, visible.map((line, i) => /*#__PURE__*/React.createElement("div", {
     key: displayStart + i,
     style: {
+      position: 'absolute',
+      top: (displayStart + i) * ROW_H,
       height: ROW_H,
       whiteSpace: 'pre',
       overflow: 'hidden',
@@ -1963,7 +1961,7 @@ function YamlPreview({
       padding: '0 8px',
       lineHeight: ROW_H + 'px'
     }
-  }, line))))));
+  }, line)))));
 }
 
 // ---------- App shell ----------
