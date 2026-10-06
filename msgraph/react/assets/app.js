@@ -393,10 +393,23 @@ const I18N = {
 function Hub({
   t,
   m,
-  lang
+  lang,
+  onPreview
 }) {
   const projects = m?.projects || [];
-  const dls = [['OpenAPI v1.0', RELEASE + SPEC['v1.0']], ['OpenAPI beta', RELEASE + SPEC.beta], ['Type-Mappings v1.0', RAW + TYPEMAP]];
+  const dls = [{
+    name: 'OpenAPI v1.0',
+    variant: 'v1.0',
+    preview: true
+  }, {
+    name: 'OpenAPI beta',
+    variant: 'beta',
+    preview: true
+  }, {
+    name: 'Type-Mappings v1.0',
+    href: RAW + TYPEMAP,
+    preview: false
+  }];
   return /*#__PURE__*/React.createElement("div", {
     className: "panel-inner"
   }, /*#__PURE__*/React.createElement("h1", {
@@ -430,12 +443,15 @@ function Hub({
     className: "sect"
   }, t.downloads), /*#__PURE__*/React.createElement("div", {
     className: "cards"
-  }, dls.map(([n, href]) => /*#__PURE__*/React.createElement("div", {
+  }, dls.map(d => /*#__PURE__*/React.createElement("div", {
     className: "card",
-    key: n
-  }, /*#__PURE__*/React.createElement("h3", null, n), /*#__PURE__*/React.createElement("a", {
+    key: d.name
+  }, /*#__PURE__*/React.createElement("h3", null, d.name), d.preview ? /*#__PURE__*/React.createElement("button", {
     className: "dl",
-    href: href,
+    onClick: () => onPreview(d.variant)
+  }, "Vorschau \u2197") : /*#__PURE__*/React.createElement("a", {
+    className: "dl",
+    href: d.href,
     target: "_blank",
     rel: "noopener"
   }, t.raw)))));
@@ -1847,9 +1863,9 @@ function Sketch({
  * file in the worker and renders only the visible window, so the main thread
  * never holds more than ~50 lines. */
 function YamlPreview({
-  t
+  t,
+  variant: variantProp
 }) {
-  const [variant, setVariant] = useState('beta');
   const [total, setTotal] = useState(null);
   const [lines, setLines] = useState([]);
   const [scrollTop, setScrollTop] = useState(0);
@@ -1863,6 +1879,7 @@ function YamlPreview({
     'v1.0': RELEASE + SPEC['v1.0'],
     beta: RELEASE + SPEC.beta
   };
+  const variant = variantProp || 'beta';
   useEffect(() => {
     const w = new Worker('assets/worker.js');
     wref.current = w;
@@ -1930,14 +1947,6 @@ function YamlPreview({
   }, "YAML Preview"), /*#__PURE__*/React.createElement("p", {
     className: "hint"
   }, "Vorschau der OpenAPI-Spec (virtualisiert \u2014 l\xE4uft im Worker, kein Freeze)."), /*#__PURE__*/React.createElement("div", {
-    className: "ref-tabs"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: 'reftab' + (variant === 'v1.0' ? ' active' : ''),
-    onClick: () => setVariant('v1.0')
-  }, "v1.0"), /*#__PURE__*/React.createElement("button", {
-    className: 'reftab' + (variant === 'beta' ? ' active' : ''),
-    onClick: () => setVariant('beta')
-  }, "beta")), /*#__PURE__*/React.createElement("div", {
     className: "badges"
   }, /*#__PURE__*/React.createElement("span", {
     className: "badge"
@@ -1993,6 +2002,7 @@ function App() {
   });
   const [ignite, setIgnite] = useState(false);
   const [m, setM] = useState(null);
+  const [previewVariant, setPreviewVariant] = useState('beta');
   useEffect(() => {
     fetch('data/manifest.json').then(r => r.json()).then(setM).catch(() => setM({}));
   }, []);
@@ -2020,6 +2030,10 @@ function App() {
     if (trail) trail.style.display = 'block';
     return () => window.removeEventListener('mousemove', move);
   }, []);
+  const onPreview = variant => {
+    setPreviewVariant(variant);
+    setTab('preview');
+  };
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "trail",
     id: "trail",
@@ -2103,7 +2117,8 @@ function App() {
   }, tab === 'hub' && /*#__PURE__*/React.createElement(Hub, {
     t: t,
     m: m,
-    lang: lang
+    lang: lang,
+    onPreview: onPreview
   }), tab === 'reference' && /*#__PURE__*/React.createElement(Reference, {
     t: t
   }), tab === 'console' && /*#__PURE__*/React.createElement(ConsolePanel, {
@@ -2117,7 +2132,8 @@ function App() {
   }), tab === 'sketch' && /*#__PURE__*/React.createElement(Sketch, {
     t: t
   }), tab === 'preview' && /*#__PURE__*/React.createElement(YamlPreview, {
-    t: t
+    t: t,
+    variant: previewVariant
   })), /*#__PURE__*/React.createElement("footer", {
     className: "foot"
   }, t.footer, m && m.siteVersion ? ' · v' + m.siteVersion : ''));

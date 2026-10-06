@@ -204,12 +204,12 @@ const I18N = {
 };
 
 // ---------- Hub ----------
-function Hub({ t, m, lang }) {
+function Hub({ t, m, lang, onPreview }) {
   const projects = m?.projects || [];
   const dls = [
-    ['OpenAPI v1.0', RELEASE + SPEC['v1.0']],
-    ['OpenAPI beta', RELEASE + SPEC.beta],
-    ['Type-Mappings v1.0', RAW + TYPEMAP]
+    { name: 'OpenAPI v1.0', variant: 'v1.0', preview: true },
+    { name: 'OpenAPI beta', variant: 'beta', preview: true },
+    { name: 'Type-Mappings v1.0', href: RAW + TYPEMAP, preview: false },
   ];
   return (
     <div className="panel-inner">
@@ -234,10 +234,14 @@ function Hub({ t, m, lang }) {
       </div>
       <h2 className="sect">{t.downloads}</h2>
       <div className="cards">
-        {dls.map(([n, href]) => (
-          <div className="card" key={n}>
-            <h3>{n}</h3>
-            <a className="dl" href={href} target="_blank" rel="noopener">{t.raw}</a>
+        {dls.map(d => (
+          <div className="card" key={d.name}>
+            <h3>{d.name}</h3>
+            {d.preview ? (
+              <button className="dl" onClick={() => onPreview(d.variant)}>Vorschau ↗</button>
+            ) : (
+              <a className="dl" href={d.href} target="_blank" rel="noopener">{t.raw}</a>
+            )}
           </div>
         ))}
       </div>
@@ -1244,8 +1248,7 @@ function Sketch({ t }) {
  * OOMs the process and takes other apps down with it. This panel loads the
  * file in the worker and renders only the visible window, so the main thread
  * never holds more than ~50 lines. */
-function YamlPreview({ t }) {
-  const [variant, setVariant] = useState('beta');
+function YamlPreview({ t, variant: variantProp }) {
   const [total, setTotal] = useState(null);
   const [lines, setLines] = useState([]);
   const [scrollTop, setScrollTop] = useState(0);
@@ -1257,6 +1260,7 @@ function YamlPreview({ t }) {
     'v1.0': RELEASE + SPEC['v1.0'],
     beta: RELEASE + SPEC.beta,
   };
+  const variant = variantProp || 'beta';
 
   useEffect(() => {
     const w = new Worker('assets/worker.js');
@@ -1306,10 +1310,6 @@ function YamlPreview({ t }) {
     <div className="panel-inner">
       <h2 className="sect">YAML Preview</h2>
       <p className="hint">Vorschau der OpenAPI-Spec (virtualisiert — läuft im Worker, kein Freeze).</p>
-      <div className="ref-tabs">
-        <button className={'reftab' + (variant === 'v1.0' ? ' active' : '')} onClick={() => setVariant('v1.0')}>v1.0</button>
-        <button className={'reftab' + (variant === 'beta' ? ' active' : '')} onClick={() => setVariant('beta')}>beta</button>
-      </div>
       <div className="badges"><span className="badge">{status}</span></div>
       <div style={{ height: VIEW_H, overflowY: 'auto', border: '1px solid var(--line)', fontFamily: 'var(--mono)', fontSize: 13 }}
            onScroll={e => setScrollTop(e.currentTarget.scrollTop)}>
@@ -1345,6 +1345,7 @@ function App() {
   const [lang, setLang] = useState(() => { try { return localStorage.getItem('msgraph_lang') || 'de'; } catch { return 'de'; } });
   const [ignite, setIgnite] = useState(false);
   const [m, setM] = useState(null);
+  const [previewVariant, setPreviewVariant] = useState('beta');
 
   useEffect(() => {
     fetch('data/manifest.json').then(r => r.json()).then(setM).catch(() => setM({}));
@@ -1368,6 +1369,11 @@ function App() {
     if (trail) trail.style.display = 'block';
     return () => window.removeEventListener('mousemove', move);
   }, []);
+
+  const onPreview = (variant) => {
+    setPreviewVariant(variant);
+    setTab('preview');
+  };
 
   return (
     <>
@@ -1405,13 +1411,13 @@ function App() {
       </header>
 
       <main id={'panel-'+tab} role="tabpanel" aria-labelledby={'tab-'+tab}>
-        {tab === 'hub' && <Hub t={t} m={m} lang={lang} />}
+        {tab === 'hub' && <Hub t={t} m={m} lang={lang} onPreview={onPreview} />}
         {tab === 'reference' && <Reference t={t} />}
         {tab === 'console' && <ConsolePanel t={t} />}
         {tab === 'permissions' && <Permissions t={t} lang={lang} />}
         {tab === 'radar' && <Radar t={t} lang={lang} />}
         {tab === 'sketch' && <Sketch t={t} />}
-        {tab === 'preview' && <YamlPreview t={t} />}
+        {tab === 'preview' && <YamlPreview t={t} variant={previewVariant} />}
       </main>
 
       <footer className="foot">{t.footer}{m && m.siteVersion ? ' · v' + m.siteVersion : ''}</footer>

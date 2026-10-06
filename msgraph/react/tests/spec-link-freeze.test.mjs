@@ -91,22 +91,21 @@ test('the spec links point at the release assets', () => {
   assert.match(srcCode, /const RELEASE = 'https:\/\/github\.com\/[^']+\/releases\/download\/spec-\d{4}-\d{2}-\d{2}\/'/);
   assert.match(srcCode, /const SPEC = \{[^}]*'v1\.0': 'openapi-v1\.0\.yaml'[^}]*beta: 'openapi-beta\.yaml'/s);
 
-  // Every href that carries a spec must use RELEASE, not RAW.
-  //
-  // Both a direct expression (href={RELEASE + SPEC[variant]}) and an
-  // indirection through the download list (href={href}, where the list is
-  // built from RELEASE) are legitimate. My first version matched only the
-  // literal `href={RELEASE` form and so failed the Hub, which is correct
-  // code — a test that insists on one spelling fails on correct code.
-  //
-  // So: assert the DATA, then assert that no spec data comes from RAW.
-  // The download list is the place where a raw URL could reappear.
+  // The download list no longer carries spec URLs — the specs are previewed
+  // in-app via YamlPreview, which uses RELEASE + SPEC. The list now only
+  // carries the type-mapping download (RAW + TYPEMAP) and preview entries.
   const listBlock = srcCode.match(/const dls = \[([\s\S]*?)\];/);
   assert.ok(listBlock, 'the Hub download list is gone');
   assert.ok(!/RAW\s*\+\s*SITE/.test(listBlock[1]), 'the download list builds a spec from RAW');
-  assert.match(listBlock[1], /RELEASE\s*\+\s*SPEC\['v1\.0'\]/);
-  assert.match(listBlock[1], /RELEASE\s*\+\s*SPEC\.beta/);
   assert.match(listBlock[1], /RAW\s*\+\s*TYPEMAP/);
+  assert.match(listBlock[1], /variant:\s*'v1\.0'/);
+  assert.match(listBlock[1], /variant:\s*'beta'/);
+
+  // The YamlPreview component must use RELEASE + SPEC for the spec URLs.
+  const yamlPreview = srcCode.match(/function YamlPreview[\s\S]*?const fileMap = \{([\s\S]*?)\};/);
+  assert.ok(yamlPreview, 'YamlPreview fileMap is missing');
+  assert.match(yamlPreview[1], /RELEASE\s*\+\s*SPEC\['v1\.0'\]/);
+  assert.match(yamlPreview[1], /RELEASE\s*\+\s*SPEC\.beta/);
 
   // The Reference button is the other spec href and must be RELEASE too.
   const refBtn = srcCode.match(/<a className="btn"[^>]*href=\{([^}]*)\}[^>]*>\{t\.ref_open\}/);
