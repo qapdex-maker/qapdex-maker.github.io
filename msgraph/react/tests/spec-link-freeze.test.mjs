@@ -27,14 +27,22 @@ import { fileURLToPath } from 'node:url';
  * header on a link, and it looked like an application hang because the link
  * opens in a new tab that stays alive while the app keeps working.
  *
+ * The fix: the WORKER fetches the spec from raw.githubusercontent.com as
+ * TEXT (res.text()). raw.githubusercontent serves `access-control-allow-origin: *`,
+ * so the worker's fetch() succeeds from any origin. The worker never builds
+ * a DOM, so there is no freeze. The old release-asset approach failed with
+ * "TypeError: Failed to fetch" because github.com/releases/download sets
+ * no CORS headers.
+ *
  * So these tests assert the LINK SHAPE, not the app behaviour. There is
- * nothing to unit-test about a browser's renderer; what we can pin is that no
- * user-visible link sends the user to a URL that freezes their browser.
+ * nothing to unit-test about a browser's renderer; what we can pin is that
+ * no user-visible link sends the user to a URL that freezes their browser.
  *
  * The rule these encode: a raw.githubusercontent.com link is only allowed for
  * a file small enough to render. The CSDL documents (5-8 MB) go through the
  * worker and measured fine, so they stay on RAW. The type mapping is 335 KB.
- * The two OpenAPI specs are 42 and 67 MB and must never be a raw link again.
+ * The two OpenAPI specs are 42 and 67 MB and are loaded by the WORKER as
+ * text — they stay on RAW too, because the worker never renders them.
  */
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -64,6 +72,7 @@ function code(file) {
     .filter((l) => !/^\s*(\/\*|\*|\*\/|\/\/)/.test(l))
     .join('\n');
 }
+
 const srcCode = code(src);
 const appCode = code(app);
 
@@ -80,19 +89,31 @@ test('no user-visible link points a spec at raw.githubusercontent', () => {
       !/RAW\s*\+\s*SITE/.test(text),
       `${name} still builds a spec URL from RAW + SITE`,
     );
+    // No <a> or <button> may carry a raw spec URL — the browser would render
+    // 42 MB as a document and freeze. The worker is the only allowed consumer.
+    // The SPEC constant string 'openapi/v1.0/openapi.yaml' is fine — it is
+    // a worker path, not a user-visible link.
     assert.ok(
-      !/['"][^'"]*openapi\/(v1\.0|beta)\/openapi\.yaml['"]/.test(text),
-      `${name} contains a literal raw openapi/*.yaml URL`,
+      !/<a[^>]*href=\{[^}]*RAW[^}]*SPEC/.test(text),
+      `${name} has an <a> tag linking to a raw spec URL`,
+    );
+    assert.ok(
+      !/<button[^>]*onClick=\{[^}]*RAW[^}]*SPEC/.test(text),
+      `${name} has a <button> linking to a raw spec URL`,
     );
   }
 });
 
-test('the spec links point at the release assets', () => {
-  assert.match(srcCode, /const RELEASE = 'https:\/\/github\.com\/[^']+\/releases\/download\/spec-\d{4}-\d{2}-\d{2}\/'/);
-  assert.match(srcCode, /const SPEC = \{[^}]*'v1\.0': 'openapi-v1\.0\.yaml'[^}]*beta: 'openapi-beta\.yaml'/s);
+test('the spec links point at raw.githubusercontent (CORS: *)', () => {
+  // The specs must be on raw.githubusercontent.com, not on github.com/releases.
+  // raw.githubusercontent serves `access-control-allow-origin: *`, so the
+  // worker's fetch() succeeds. github.com/releases/download sets no CORS
+  // headers, so the worker's fetch() fails with "TypeError: Failed to fetch".
+  assert.match(srcCode, /const RAW = 'https:\/\/raw\.githubusercontent\.com\/qapdex-maker\/metadata\/master\/'/);
+  assert.match(srcCode, /const SPEC = \{[^}]*'v1\.0': 'openapi\/v1\.0\/openapi\.yaml'[^}]*beta: 'openapi\/beta\/openapi\.yaml'/s);
 
   // The download list no longer carries spec URLs — the specs are previewed
-  // in-app via YamlPreview, which uses RELEASE + SPEC. The list now only
+  // in-app via YamlPreview, which uses RAW + SPEC. The list now only
   // carries the type-mapping download (RAW + TYPEMAP) and preview entries.
   const listBlock = srcCode.match(/const dls = \[([\s\S]*?)\];/);
   assert.ok(listBlock, 'the Hub download list is gone');
@@ -101,23 +122,27 @@ test('the spec links point at the release assets', () => {
   assert.match(listBlock[1], /variant:\s*'v1\.0'/);
   assert.match(listBlock[1], /variant:\s*'beta'/);
 
-  // The YamlPreview component must use RELEASE + SPEC for the spec URLs.
+  // The YamlPreview component must use RAW + SPEC for the spec URLs.
   const yamlPreview = srcCode.match(/function YamlPreview[\s\S]*?const fileMap = \{([\s\S]*?)\};/);
   assert.ok(yamlPreview, 'YamlPreview fileMap is missing');
-  assert.match(yamlPreview[1], /RELEASE\s*\+\s*SPEC\['v1\.0'\]/);
-  assert.match(yamlPreview[1], /RELEASE\s*\+\s*SPEC\.beta/);
+  assert.match(yamlPreview[1], /RAW\s*\+\s*SPEC\['v1\.0'\]/);
+  assert.match(yamlPreview[1], /RAW\s*\+\s*SPEC\.beta/);
 
-  // The Reference button is the other spec href and must be RELEASE too.
-  const refBtn = srcCode.match(/<a className="btn"[^>]*href=\{([^}]*)\}[^>]*>\{t\.ref_open\}/);
-  assert.ok(refBtn, 'the Reference "open raw spec" button is gone');
-  assert.match(refBtn[1], /^RELEASE\s*\+\s*SPEC\[variant\]$/,
-    `the Reference spec button must use RELEASE + SPEC[variant], got: ${refBtn[1]}`);
+  // The Reference "open raw spec" button is GONE — it was a user-visible link
+  // that would render 42 MB in the browser. The worker is the only consumer.
+  // The I18n key ref_open may still exist in the table (unused keys are not
+  // harmful), but it must not be referenced in any JSX.
+  assert.ok(
+    !/t\.ref_open/.test(srcCode),
+    'the Reference "open raw spec" button must be removed — it would freeze the browser',
+  );
 
-  // Nothing anywhere may concatenate RAW onto a spec identifier.
-  for (const m of srcCode.matchAll(/RAW\s*\+\s*([A-Za-z_$][\w$.[\]'"]*)/g)) {
-    assert.ok(!/SPEC|SITE/.test(m[1]),
-      `RAW + ${m[1]} would send the user to a raw spec URL`);
-  }
+  // RAW + SPEC is allowed ONLY in the YamlPreview fileMap (worker context).
+  // It must never appear in an <a> or <button> — that would be a user-visible
+  // link that renders 42 MB in the browser. The first test above already
+  // guards <a> and <button>; this asserts the worker-only usage.
+  const rawSpecUses = [...srcCode.matchAll(/RAW\s*\+\s*SPEC/g)];
+  assert.ok(rawSpecUses.length === 2, `expected 2 RAW + SPEC uses (worker fileMap), got ${rawSpecUses.length}`);
 });
 
 test('the CSDL and type-mapping links stay on raw — they were measured fine', () => {
@@ -155,19 +180,19 @@ test('the dead SITE constant is gone', () => {
 test('app.js is the current compile of app.jsx (the F4 trap)', () => {
   // A stale app.js served from Pages while app.jsx says otherwise was a real
   // incident: curl saw 42382 bytes, the browser saw 32099. So this asserts
-  // the RELEASE constant reached the compiled output, not the whole hash.
-  assert.match(app, /releases\/download\/spec-\d{4}-\d{2}-\d{2}/);
+  // the RAW constant reached the compiled output, not the whole hash.
+  assert.match(app, /raw\.githubusercontent\.com\/qapdex-maker\/metadata\/master/);
   assert.ok(!/const SITE =/.test(app), 'compiled app.js still carries the dead SITE constant');
 });
 
-test('manifest specRaw carries the release URLs, and both agree with the app', () => {
+test('manifest specRaw carries the raw.githubusercontent URLs, and both agree with the app', () => {
   const raw = manifest.specRaw;
   assert.ok(raw && raw['v1.0'] && raw.beta, 'specRaw is missing a variant');
   for (const [variant, url] of Object.entries(raw)) {
-    assert.match(url, /releases\/download\/spec-\d{4}-\d{2}-\d{2}\//,
-      `specRaw.${variant} still points at raw: ${url}`);
-    assert.ok(!url.includes('raw.githubusercontent.com'),
-      `specRaw.${variant} is the freeze URL: ${url}`);
+    assert.match(url, /raw\.githubusercontent\.com\/qapdex-maker\/metadata\/master\/openapi\//,
+      `specRaw.${variant} still points at a release asset: ${url}`);
+    assert.ok(!url.includes('github.com/releases/download'),
+      `specRaw.${variant} is the CORS-failing URL: ${url}`);
     // The manifest and the app must name the same asset, or a future reader
     // cannot tell which one is authoritative.
     assert.ok(srcCode.includes(url.split('/').pop()),
@@ -175,7 +200,7 @@ test('manifest specRaw carries the release URLs, and both agree with the app', (
   }
   const ref = manifest.tabs.find((t) => t.id === 'reference');
   assert.ok(ref && ref.spec, 'the reference tab lost its spec URL');
-  assert.match(ref.spec, /releases\/download\/spec-\d{4}-\d{2}-\d{2}\//);
+  assert.match(ref.spec, /raw\.githubusercontent\.com\/qapdex-maker\/metadata\/master\/openapi\//);
   assert.ok(ref.specBeta, 'the beta spec URL is missing from the reference tab');
 });
 

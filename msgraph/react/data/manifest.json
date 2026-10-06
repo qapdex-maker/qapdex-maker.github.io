@@ -32,9 +32,9 @@
       "id": "reference",
       "label": "Reference",
       "type": "reference",
-      "spec": "https://github.com/qapdex-maker/metadata-msgraph/releases/download/spec-2026-10-01/openapi-v1.0.yaml",
-      "specBeta": "https://github.com/qapdex-maker/metadata-msgraph/releases/download/spec-2026-10-01/openapi-beta.yaml",
-      "specNote": "Release-Asset, nicht raw.githubusercontent: raw liefert text/plain und der Renderer friert bei 42 MB ein. content-disposition: attachment erzwingt Download. Gemessen 2026-10-01."
+      "spec": "https://raw.githubusercontent.com/qapdex-maker/metadata/master/openapi/v1.0/openapi.yaml",
+      "specBeta": "https://raw.githubusercontent.com/qapdex-maker/metadata/master/openapi/beta/openapi.yaml",
+      "specNote": "raw.githubusercontent.com mit CORS: *. Der Worker liest die Spec als Text (res.text()), nie als Browser-Dokument — kein Freeze. Die alten Release-Assets scheiterten mit 'TypeError: Failed to fetch' (keine CORS-Header auf github.com/releases/download)."
     },
     {
       "id": "console",
@@ -53,8 +53,8 @@
     }
   ],
   "specRaw": {
-    "v1.0": "https://github.com/qapdex-maker/metadata-msgraph/releases/download/spec-2026-10-01/openapi-v1.0.yaml",
-    "beta": "https://github.com/qapdex-maker/metadata-msgraph/releases/download/spec-2026-10-01/openapi-beta.yaml"
+    "v1.0": "https://raw.githubusercontent.com/qapdex-maker/metadata/master/openapi/v1.0/openapi.yaml",
+    "beta": "https://raw.githubusercontent.com/qapdex-maker/metadata/master/openapi/beta/openapi.yaml"
   },
   "schemaVersionNote": "Aus den Schema-Sync-Commits des Forks abgeleitet, nicht aus dem OpenAPI-Header: der Spec nennt nur 'v1.0' bzw. 'beta'. Stand 2026-10-01, Commit b8cbef92.",
   "specRelease": {

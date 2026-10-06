@@ -6,33 +6,25 @@ const {
   useRef,
   useMemo
 } = React;
-const RAW = 'https://raw.githubusercontent.com/qapdex-maker/metadata-msgraph/master/';
+const RAW = 'https://raw.githubusercontent.com/qapdex-maker/metadata/master/';
 
-/* The two OpenAPI specs come from the RELEASE, not from raw.githubusercontent.
+/* The two OpenAPI specs are loaded by the WORKER from raw.githubusercontent.
+ * raw.githubusercontent serves `access-control-allow-origin: *`, so the
+ * worker's fetch() succeeds from any origin. The worker reads the file as
+ * TEXT (res.text()), never as a browser document — so there is no freeze.
  *
  * Measured 2026-10-01 in Chromium 149 headless, 412x915 @2.625, CPU x4:
- *   raw .../openapi/v1.0/openapi.yaml (42.3 MB)
+ *   raw .../openapi/v1.0/openapi.yaml (42.3 MB) as a browser navigation
  *     -> readyState "loading" after 212 s, never finished
- *     -> a single Runtime.evaluate took 27.3 s (slow4g) / 49.3 s (fast4g)
  *     -> document.body.innerText sat at 14.8 - 17.0 MB
- *   the same file as a release asset
- *     -> content-disposition: attachment, application/octet-stream
+ *   the same file fetched in a worker as text
+ *     -> works, because the worker never builds a DOM
  *
- * The difference is one response header. raw.githubusercontent serves
- * text/plain, so the browser RENDERS a 42 MB body instead of downloading it.
- * A release asset carries `attachment`, so the browser downloads and never
- * builds a document out of it. There is no other lever: GitHub sets no
- * content-disposition on raw, GitHub Pages sets no headers at all, and the
- * CSDL files are served from the worker, which measured fine (5.6 MB loads in
- * 40 s, evaluate 153 ms) -- so RAW stays for those.
- *
- * The tag moves with the content, so one edit here re-points every spec link
- * after a metadata sync. It is stale once the fork syncs again; rebuild with
- * the command in the release notes. */
-const RELEASE = 'https://github.com/qapdex-maker/metadata-msgraph/releases/download/spec-2026-10-01/';
+ * The old release-asset approach failed with "TypeError: Failed to fetch"
+ * because github.com/releases/download sets no CORS headers. */
 const SPEC = {
-  'v1.0': 'openapi-v1.0.yaml',
-  beta: 'openapi-beta.yaml'
+  'v1.0': 'openapi/v1.0/openapi.yaml',
+  beta: 'openapi/beta/openapi.yaml'
 };
 /* Type mappings are 335 KB -- an order of magnitude below the threshold, and
  * the JSON is nicer to read in the browser than a 42 MB download dialog. It
@@ -104,7 +96,6 @@ const I18N = {
     reference: 'API Reference',
     ref_hint: 'Durchsuchbare Endpoint-Liste aus den echten Metadaten (im Web Worker geladen → kein Freeze).',
     ref_ph: 'Endpoint suchen (z.B. /me, team)…',
-    ref_open: '↗ rohe Spec öffnen',
     console: 'Semantics Console',
     console_hint: 'Gib natürliche Sprache oder einen Endpoint ein → curl + idun-Befehl.',
     nl: 'Natürliche Sprache',
@@ -259,7 +250,6 @@ const I18N = {
     reference: 'API Reference',
     ref_hint: 'Searchable endpoint list from the real metadata (loaded in a Web Worker → no freeze).',
     ref_ph: 'Search endpoint (e.g. /me, team)…',
-    ref_open: '↗ open raw spec',
     console: 'Semantics Console',
     console_hint: 'Enter natural language or an endpoint → curl + idun command.',
     nl: 'Natural Language',
@@ -534,12 +524,7 @@ function Reference({
     placeholder: t.ref_ph,
     value: q,
     onChange: e => setQ(e.target.value)
-  }), /*#__PURE__*/React.createElement("a", {
-    className: "btn",
-    target: "_blank",
-    rel: "noopener",
-    href: RELEASE + SPEC[variant]
-  }, t.ref_open)), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     className: "badges"
   }, /*#__PURE__*/React.createElement("span", {
     className: "badge"
@@ -1876,8 +1861,8 @@ function YamlPreview({
   const ROW_H = 22;
   const VIEW_H = 480;
   const fileMap = {
-    'v1.0': RELEASE + SPEC['v1.0'],
-    beta: RELEASE + SPEC.beta
+    'v1.0': RAW + SPEC['v1.0'],
+    beta: RAW + SPEC.beta
   };
   const variant = variantProp || 'beta';
   useEffect(() => {
