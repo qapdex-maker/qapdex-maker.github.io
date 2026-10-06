@@ -211,3 +211,40 @@ Ein statisches Pages-Repo ist der falsche Ort für ein Geheimnis. Das ist keine
 Einschränkung, die man umgehen sollte, sondern eine Eigenschaft der Architektur —
 jede Datei ist öffentlich. Geheimnisse gehören in einen Server oder bleiben im
 Browser.
+
+## Stand 2026-10-06 — Specs auf raw.githubusercontent.com, YAML Preview Fix
+
+### CORS-Fix: Specs von raw.githubusercontent.com laden
+
+**Problem:** Der Worker versuchte, die OpenAPI-Specs von
+`github.com/releases/download/...` zu laden. GitHub Release-Assets setzen
+keine CORS-Header → `TypeError: Failed to fetch` (gemessen in Chromium auf
+Android, Screenshots in `~/storage/downloads/msgraph/bugs/`).
+
+**Lösung:** Specs auf `raw.githubusercontent.com/qapdex-maker/metadata/master/`
+gehostet (neues Repo). `raw.githubusercontent.com` setzt
+`access-control-allow-origin: *`, also funktioniert der Worker's `fetch()`
+von jedem Origin. Der Worker liest die Datei als Text (`res.text()`), nie
+als Browser-Dokument → kein Freeze.
+
+**Änderungen:**
+- `app.jsx`: `RAW` zeigt auf `raw.githubusercontent.com/qapdex-maker/metadata/master/`
+- `app.jsx`: `SPEC` = `{ 'v1.0': 'openapi/v1.0/openapi.yaml', beta: 'openapi/beta/openapi.yaml' }`
+- `manifest.json`: `specRaw` und `reference.spec`/`specBeta` aktualisiert
+- `spec-link-freeze.test.mjs`: angepasst — Worker darf raw-Links für Specs,
+  aber kein `<a>`/`<button>` darf einen raw spec Link haben
+- Reference-Button "↗ rohe Spec öffnen" entfernt (wäre ein user-visible Link → Freeze-Gefahr)
+
+### YAML Preview Scroll-Crash Fix
+
+**Problem:** Die YAML Preview baute einen Spacer-Div mit
+`height: total * ROW_H` auf. Bei ~500.000 Zeilen × 22 px waren das ~11 Millionen
+Pixel Höhe. Der Browser muss ein so riesiges Element im DOM halten — beim
+Scrollen crasht er.
+
+**Lösung:** Zeilen werden jetzt absolut positioniert
+(`position: absolute`, `top: (displayStart + i) * ROW_H`) und die Spacer-Höhe
+ist auf 5.000.000 px begrenzt. Der Scroll-Container bleibt `height: VIEW_H`
+(480 px), aber das innere DOM-Element ist jetzt maximal 5 Mio. px statt 11 Mio. px.
+
+**Verifiziert:** Alle 96 Tests grün, `app.js` neu kompiliert (79049 Bytes).
