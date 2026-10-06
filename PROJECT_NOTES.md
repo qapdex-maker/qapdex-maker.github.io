@@ -345,7 +345,7 @@ der Shell nicht unterscheidbar. Notizen: `msgraph/react/NOTES-API-PROXY.md`.
 macrohard 312 · msgraph/react 15 (sketch 9, radar 6) · Gate 6. Alle grün,
 `node deploy-hygiene.js` inklusive echtem Babel-Transpile.
 
-> Stand 2026-09-30: macrohard 332 (siehe Session unten). Die 312 oben sind der
+> Stand 2026-09-30: macrohard 347 (siehe Session unten). Die 312 oben sind der
 > Messwert dieses Tages und bleiben als Protokoll stehen.
 
 ## Session 2026-09-28 — show-grid war ein toter Schalter, RAM-Deckel, Signal 9
@@ -459,7 +459,7 @@ statt `unregister()`, denn ein zweites `navigate` direkt danach blieb bei
 Text hat. Dazu ein Testfehler, bei dem `veraendert: true` neben identischen
 ersten 90 Zeichen stand — mein Vergleichslängen, nicht das Verhalten.
 
-Stand des Duplicate-ID-Audits: 330 Tests zu diesem Zeitpunkt, heute 332 nach
+Stand des Duplicate-ID-Audits: 330 Tests zu diesem Zeitpunkt, heute 347 nach
 den Versions-Tests (siehe übernächster Abschnitt). Gepusht als `16846af`.
 
 ## Session 2026-09-30 (b) — Foto vom Gerät: die Fußzeile lügt
@@ -686,8 +686,8 @@ Dateien.
 ### Testzahlen (2026-10-03)
 
     29 Tests in tests/*.test.mjs      (6 Gate + 23 jsmol)
-    macrohard                          332 Tests
-    msgraph/react                       61 Tests
+    macrohard                          347 Tests
+    msgraph/react                       96 Tests
     jsmol/                             50 MB von 60 MB Budget
 
 Gegenproben sind bei den jsmol-Tests wichtiger als die Testzahl: ein

@@ -13,8 +13,8 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
   pepememe, **jsmol** (Workbench · MolGrid · Konsole · Reaktions-Sandbox)
 
 ### Weitere Bereiche — siehe eigene Abschnitte
-- macrohard/ (MakerOS v2.11.54, 26 Apps, 332 Tests)
-- msgraph/react (Graph Metadata Hub, 61 Tests)
+- macrohard/ (MakerOS v2.11.55, 26 Apps, 347 Tests)
+- msgraph/react (Graph Metadata Hub, 96 Tests)
 - jsmol/ (vier Seiten, 50 MB, 29 Tests) → eigener Abschnitt am Ende
 
 ### macrohard/ (v2.11.29, aktiv entwickelt)
@@ -164,9 +164,19 @@ curl -s -o /dev/null -w "%{http_code}" https://qapdex-maker.github.io/macrohard/
   Ursache des Signal 9, der Kill ließ sich aus diesem Repo nicht reproduzieren.
 - **Stash 44ee21e aufgeräumt**: Inhalt war nachweislich in HEAD, Backup liegt
   unter `/data/data/com.termux/files/usr/tmp/stash-44ee21e-backup.patch`.
-- Offen und unangetastet: der API-Proxy für msgraph wartet weiter auf den
-  GitHub-Plan (Functions sind auf diesem Account per Shell nicht von "kein
-  Plan" unterscheidbar). Details in `msgraph/react/NOTES-API-PROXY.md`.
+- **ERLEDIGT 2026-10-05 — kein Proxy nötig.** Der API-Proxy für msgraph wartet
+  nicht mehr auf einen GitHub-Plan. Zwei Wege wurden gebaut, und der
+  Direktaufruf hat gewonnen:
+  - **Gewählt:** Live-Test direkt aus dem Browser an `graph.microsoft.com`.
+    Graph erlaubt `Access-Control-Allow-Origin: *`, also braucht es weder
+    Server noch deploytes Geheimnis. Token nur im `sessionStorage`,
+    `/me`-verankerte Read-Pfade, 401/403/400 getrennt beantwortet.
+  - **Verworfen:** ein Cloudflare-Worker-Proxy. Gebaut und mit 33 Tests
+    abgesichert, liegt als Reserve in `~/github/repo/msgraph-proxy`, aber
+    **nicht deployt** — er wäre eine zweite Zugangsberechtigung ohne
+    Zusatznutzen gewesen. Ein Wrangler-Deploy scheitert auf Termux ohnehin
+    (`workerd: Unsupported platform: android arm64`).
+  Details in `msgraph/react/NOTES-API-PROXY.md`.
 
 
 ---
