@@ -158,15 +158,23 @@ test('the CSDL and type-mapping links stay on raw — they were measured fine', 
   // 8 MB CSDL is fine while a 42 MB spec is not: only one of them becomes a
   // browser document. So the guard belongs on "no main-thread fetch", below.
   assert.match(srcCode, /RAW\s*\+\s*TYPEMAP/);
-  assert.match(srcCode, /RAW\s*\+\s*'schemas\/'\s*\+\s*s\.name/);
+  assert.match(srcCode, /SKETCH_RAW\s*\+\s*'schemas\/'\s*\+\s*s\.name/);
+  // The sketches are NOT in the slim `metadata` repo RAW points at — its
+  // schemas/ holds only type-mappings/. They live in the fork, so the sketch
+  // base URL must name it. Building from RAW produced 404 on every card.
+  assert.match(
+    srcCode,
+    /const SKETCH_RAW = 'https:\/\/raw\.githubusercontent\.com\/qapdex-maker\/metadata-msgraph\/master\/'/,
+    'the sketches live in the metadata-msgraph fork, not in RAW',
+  );
   // The worker must be the only path that touches a CSDL.
   assert.ok(
-    !/fetch\(\s*RAW/.test(srcCode),
-    'a main-thread fetch on RAW would parse 5-8 MB on the UI thread',
+    !/fetch\(\s*(RAW|SKETCH_RAW)/.test(srcCode),
+    'a main-thread fetch on RAW/SKETCH_RAW would parse 5-8 MB on the UI thread',
   );
   // And the panel must keep the one-file-per-click rule: a loop over all 17
   // would be ~90 MB in one worker message.
-  assert.match(srcCode, /postMessage\(\{\s*type:\s*'csdl',\s*file:\s*RAW/);
+  assert.match(srcCode, /postMessage\(\{\s*type:\s*'csdl',\s*file:\s*SKETCH_RAW/);
 });
 
 test('the dead SITE constant is gone', () => {

@@ -187,7 +187,7 @@ test('the worker result is stored under the key the render reads', () => {
   assert.ok(sent, 'the panel must post a csdl request to the worker');
   assert.match(
     sent[1],
-    /RAW \+ 'schemas\/' \+ s\.name/,
+    /SKETCH_RAW \+ 'schemas\/' \+ s\.name/,
     'the request must name exactly one sketch, built from s.name',
   );
   const lookup = /const c = counts\[([^\]]+)\]/.exec(panel);

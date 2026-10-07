@@ -22,6 +22,27 @@ const SPEC = { 'v1.0': 'openapi/v1.0/openapi.yaml', beta: 'openapi/beta/openapi.
  * stays on raw. */
 const TYPEMAP = 'schemas/type-mappings/v1.0-entity-types.json';
 
+/* The cloud sketches live in the FORK, not in the slim `metadata` repo.
+ *
+ * RAW points at qapdex-maker/metadata (4 MB: the two OpenAPI specs plus the
+ * type mappings) because commit a8524a4 moved the specs there to fix a CORS
+ * failure on the release assets. That repo has no schemas/*.csdl at all --
+ * its schemas/ holds only type-mappings/. The 17 CSDL documents (5-8 MB each,
+ * ~90 MB total) were never copied over; they exist only in the 1.5 GB fork
+ * qapdex-maker/metadata-msgraph (branch master).
+ *
+ * So the sketches need their own base URL. Building them from RAW produced
+ * exactly the bug this constant fixes: every card answered "load failed:
+ * Error: HTTP 404", because raw.githubusercontent.com/qapdex-maker/metadata/
+ * .../schemas/beta-Mooncake.csdl does not exist. Both repos serve
+ * `access-control-allow-origin: *`, so the worker's fetch() works from either.
+ *
+ * The fork is a moving target: it syncs from microsoftgraph/msgraph-metadata,
+ * so a sketch's byte size can change under us. The panel's sizes are a static
+ * list (no HEAD per row) and may drift; the count is always read from the
+ * document that was actually loaded. */
+const SKETCH_RAW = 'https://raw.githubusercontent.com/qapdex-maker/metadata-msgraph/master/';
+
 /* Absolute URL for a data file next to the page.
  *
  * window.location.href may carry a query string or a hash, and both break the
@@ -1066,7 +1087,7 @@ function Sketch({ t }) {
     if (busy) return;
     setBusy(s.name);
     setErrs((prev) => { const n = { ...prev }; delete n[s.name]; return n; });
-    wref.current.postMessage({ type: 'csdl', file: RAW + 'schemas/' + s.name });
+    wref.current.postMessage({ type: 'csdl', file: SKETCH_RAW + 'schemas/' + s.name });
   }
 
   const shown = SKETCHES.filter((s) => filter === 'all' || s.variant === filter);
