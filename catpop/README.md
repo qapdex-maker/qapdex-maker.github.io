@@ -1,19 +1,20 @@
 # catpop — CatPop Announcement Seite
 
-## Stand: 2026-09-12
+## Stand: 2026-10-07 (Inhalt unverändert seit 2026-09-12)
 
-Lokale Arbeitsversion: `~/idun/qapdex-maker.github.io/catpop/`
+Arbeitskopie: `~/github/repo/qapdex-maker.github.io/catpop/`
 Live: `https://qapdex-maker.github.io/catpop/`
-Letzter Commit: `194c641 docs(catpop): add catpop README`
+Letzter Commit auf `catpop/`: `882b163 catpop: H2 PLAN → CATWALK` (2026-09-12)
 
 ## Dateien
-- `index.html` = Seite (50 KB, inline CSS+JS, kein Build)
-- `popnomics.jpg` = Bild nach Popnomics-Sektion (116 KB)
+- `index.html` = Seite (~59 KB, inline CSS+JS, Tailwind-CDN, kein Build)
+- `popnomics.jpg` = Bild nach Popnomics-Sektion (113 KB)
 - `linktr/index.html` = Linktree-Subseite (`/catpop/linktr/`)
 
 ## Features
 - Badge: `WALL STREET TRADING PIT ANNOUNCEMENT`
-- Theme-Palette: `default`, `green`, `ink`, `sunset`, `mono`, `paper`, `berry`, `frost` (8 Themes)
+- Theme-Palette (8): `fourmeme`, `default`, `green`, `ink`, `sunset`, `mono`,
+  `paper`, `berry` — Reihenfolge im Code: `fourmeme,default,green,ink,sunset,mono,paper,berry`
 - Theme-Toggle per Klick, gespeichert in `localStorage('catpop_theme')`
 - Telegram entfernt; CTA-Link: `https://linktr.ee/hereismytelegram`
 - Buy-CTA + User-Button entfernt; Header = Nav + Theme-Button
@@ -29,3 +30,8 @@ Die 5 internen Nav-Links (About/Meme, Tokenomics, How to Buy, Live Chart, Meme G
 
 ## Nächstes
 - `/pepemem/` Seite (nach dem Push)
+
+> Korrektur 2026-10-07: Der frühere Eintrag nannte die Theme-Palette mit
+> `frost` und den letzten Commit `194c641`. Beides war veraltet — `frost` kommt
+> im aktuellen `index.html` nicht mehr vor, `fourmeme` ist neu, und der letzte
+> `catpop/`-Commit ist `882b163`.

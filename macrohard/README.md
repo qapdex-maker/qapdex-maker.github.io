@@ -1,12 +1,12 @@
 # MakerOS — qapdex-maker.github.io/macrohard/
 
-Stand 2026-09-26 · v2.11.45 · Cache `?v=64`.
+Stand 2026-10-07 · v2.11.55 · Cache `app.js?v=75`, `site.css?v=52`.
 
 ## Live
 - **URL**: https://qapdex-maker.github.io/macrohard/
 - **Branch**: `main`
-- **Tests**: 209/209 passing (`npm test`)
-- **Cache-Bust**: `?v=64`
+- **Tests**: 347/347 passing (`npm test`)
+- **Cache-Bust**: `?v=75` (sw.js `macrohard-v2-11-55`)
 
 ## Domain
 - **qapdex.com**: Gekauft am 2026-09-19 (0,87 Cent für 1 Jahr, checkdomain.de)
@@ -24,7 +24,7 @@ Stand 2026-09-26 · v2.11.45 · Cache `?v=64`.
 - `sw.js` — service worker (stale-while-revalidate, network-first, quota check, offline fallback)
 - `assets/ami-bios-setup.html` — AMIBIOS Setup utility (Award BIOS simulation, CRT-style)
 - `assets/samples/` — 31 drum samples (MP3 + WAV) für Pattern Sequencer
-- `tests/` — 165 Tests (`npm test`), darunter echte app.js-, Storage-, Safe-Evaluator-, XSS-, Music-, Close-, Hardening-, Notes-Crypto- und Editor-Regressionen
+- `tests/` — 347 Tests (`npm test`), darunter echte app.js-, Storage-, Safe-Evaluator-, XSS-, Music-, Close-, Hardening-, Notes-Crypto- und Editor-Regressionen
 
 ## Apps (25 Apps)
 
@@ -132,6 +132,13 @@ Suite: 347 Tests, alle grün.
 - Neo-Brutalist Komponenten (.btn, .input, .card, .pill)
 
 ## Version History
+- v2.11.55 (2026-10-06): Paint-Offset + Explorer-Öffnen, Cache-Buster
+- v2.11.54 (2026-10-06): Startmenü-Fußzeile liest Version aus `APP_VERSION`
+- v2.11.53 (2026-10-06): Version-Bump + Cache-Buster
+- v2.11.52 (2026-09-28): show-grid repariert, Testdeckel `--test-concurrency=4`
+- v2.11.51 (2026-09-27): Systeminfo-Fix, Service Worker geleert
+- v2.11.50 (2026-09-27): Dark/Light + Palette entkoppelt, eine Version-Quelle
+- v2.11.49/48/47/46 (2026-09-27): Cache-Buster-Serie (v=68…65)
 - v2.11.45 (2026-09-21): Fix Explorer Mobile Sidebar-Drawer
 - v2.11.44 (2026-09-21): Mobile UX — Touch-Resize, Pinch, Window-Drag, Explorer Drawer, Terminal große Eingabe
 - v2.11.43 (2026-09-21): Audio Pipeline Cleanup, Beatpad BPM Input, Radio API-Load
@@ -139,6 +146,9 @@ Suite: 347 Tests, alle grün.
 - v2.11.42 (2026-09-19): Alle 25 Apps refaktoriert, i18n, A11y, Performance, Explorer v3.0
 - v2.11.41 (2026-09-19): Notepad + Calculator v2.0
 - v2.11.40 (2026-09-19): Systeminfo, Kalender, Chat, Browser, Radio
+
+(Die Einträge ab v2.11.46 stammen aus den Release-Commit-Messages; Details
+in `git log -- macrohard/package.json`.)
 
 ## License
 MIT License

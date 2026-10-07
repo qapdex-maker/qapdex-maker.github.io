@@ -1,6 +1,6 @@
 # VISION — qapdex-maker.github.io
 
-Stand: 2026-09-21 · qapdex-maker/qapdex-maker.github.io (Branch `main`)
+Stand: 2026-10-07 · qapdex-maker/qapdex-maker.github.io (Branch `main`)
 
 ---
 
@@ -8,23 +8,25 @@ Stand: 2026-09-21 · qapdex-maker/qapdex-maker.github.io (Branch `main`)
 
 | # | Pfad | Projekt | Stack | Zeilen | Live |
 |---|------|---------|-------|--------|------|
-| 1 | `/` (root) | Portal | HTML+CSS+JS, Neo-Brutalist | ~437 | https://qapdex-maker.github.io/ |
-| 2 | `macrohard/` | **MakerOS v2.11.45** | Vanilla JS, 25 Apps, PWA | ~7.8K | https://qapdex-maker.github.io/macrohard/ |
-| 3 | `msgraph/react/` | Graph Metadata Hub | React 18 UMD, Web Worker, vorkompiliert | ~976 | https://qapdex-maker.github.io/msgraph/react/ |
+| 1 | `/` (root) | Portal | HTML+CSS+JS, Neo-Brutalist | ~447 | https://qapdex-maker.github.io/ |
+| 2 | `macrohard/` | **MakerOS v2.11.55** | Vanilla JS, 25 Apps, PWA | ~10.4K | https://qapdex-maker.github.io/macrohard/ |
+| 3 | `msgraph/react/` | Graph Metadata Hub | React 18 UMD, Web Worker, vorkompiliert | ~1.4K | https://qapdex-maker.github.io/msgraph/react/ |
 | 4 | `catpop/` | CatPop Announcement | HTML+CSS+JS, 8 Themes | ~642 | https://qapdex-maker.github.io/catpop/ |
-| 5 | `catpop/linktr/` | CatPop Linktree | HTML+CSS | ~200 | https://qapdex-maker.github.io/catpop/linktr/ |
+| 5 | `catpop/linktr/` | CatPop Linktree | HTML+CSS | ~157 | https://qapdex-maker.github.io/catpop/linktr/ |
 | 6 | `idun/` | idun Console | HTML+CSS | ~270 | https://qapdex-maker.github.io/idun/ |
 | 7 | `pepemem/` | MEMEPEPE Linktree | HTML+CSS+JS | ~550 | https://qapdex-maker.github.io/pepemem/ |
 | 8 | `pepememe/` | PEPEMEME Linktree | HTML+CSS | ~117 | https://qapdex-maker.github.io/pepememe/ |
+| 9 | `exil/` | EXiL 126 (Party-Teaser) | HTML+CSS, kein JS | ~68 | https://qapdex-maker.github.io/exil/ |
+| 10 | `jsmol/` | JSmol Viewer (4 Seiten) | Vendor JS, 50 MB | — | https://qapdex-maker.github.io/jsmol/ |
 
-**Gesamtgröße**: ~10.8K Zeilen Code, 8 Live-Subdomains.
+**Gesamtgröße**: ~14K Zeilen Code (ohne JSmol-Vendor), 10 Live-Pfade.
 
 ---
 
 ## 2. Aktueller Status — Was läuft stabil
 
 ### MakerOS (macrohard/) — Kernprojekt
-- 25 Apps, 68 Unit-Tests grün
+- 25 Apps, 347 Tests grün (`npm test`)
 - PWA (Service Worker, offline-fähig)
 - Neo-Brutalist Design, 4 Themes, Dark Mode
 - Mobile UX: Touch-Resize, Pinch, Drawer-Sidebar, Window-Drag
@@ -34,8 +36,10 @@ Stand: 2026-09-21 · qapdex-maker/qapdex-maker.github.io (Branch `main`)
 ### msgraph/react/
 - Vorkompiliertes React 18 (UMD von unpkg)
 - Web Worker + virtualisierte Liste (2870 beta-Pfade)
-- Hub / Reference / Console / Permissions / Breaking Radar
-- Self-hosted auf GitHub Pages
+- Hub / Reference / Console / Permissions / Breaking Radar + **Skizzen-Panel**
+- Zwei Datenquellen: Specs+Type-Mappings aus `metadata` (`RAW`),
+  17 CSDL-Sketches aus dem Fork `metadata-msgraph` (`SKETCH_RAW`)
+- 96 Tests; Live-Test gegen echtes Graph direkt aus dem Browser (Token im sessionStorage)
 
 ### CatPop
 - 8 Theme-Paletten, localStorage-Persistenz
@@ -46,7 +50,7 @@ Stand: 2026-09-21 · qapdex-maker/qapdex-maker.github.io (Branch `main`)
 
 ## 3. Fahrplan — MakerOS (macrohard/) Weiterentwicklung
 
-**Neueste Version**: v2.11.45 (2026-09-21) — Mobile UX, Explorer Drawer Fix
+**Neueste Version**: v2.11.55 (2026-10-06) — 347 Tests, Skizzen-/YAML-Fixes
 
 ### Phase A: Mobile UX Vertiefung (nächste Schritte)
 | # | Feature | Aufwand | Impact |
@@ -172,6 +176,8 @@ Stand: 2026-09-21 · qapdex-maker/qapdex-maker.github.io (Branch `main`)
 - Tests: E2E-Tests mit Browser-Automation
 - Performance: IntersectionObserver für App-Grid
 - Code: JSDoc, Kommentare, saubere Typen
+- msgraph/react: Sketch-Größenliste ist statisch (kein HEAD pro Karte) — die
+  Byte-Größen im Fork können driften, die Zählung selbst ist immer live
 
 ---
 
@@ -198,4 +204,4 @@ Stand: 2026-09-21 · qapdex-maker/qapdex-maker.github.io (Branch `main`)
 
 ---
 
-_Letzte Aktualisierung: 2026-09-21 · Autor: Hermes Agent (qapdex-maker)_
+_Letzte Aktualisierung: 2026-10-07 · Autor: Hermes Agent (qapdex-maker)_

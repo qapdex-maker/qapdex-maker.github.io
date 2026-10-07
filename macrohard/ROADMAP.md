@@ -1,8 +1,8 @@
 # ROADMAP — macrohard/ (MakerOS)
 
-Stand: 2026-09-26 · v2.11.45 · 25 Apps · 209 Tests grün
+Stand: 2026-10-07 · v2.11.55 · 25 Apps · 347 Tests grün
 
-## 1. Aktueller Status (v2.11.45)
+## 1. Aktueller Status (v2.11.55)
 
 ### Stabil (2026-09-21)
 
@@ -113,6 +113,17 @@ Stand: 2026-09-26 · v2.11.45 · 25 Apps · 209 Tests grün
 ---
 
 ## 4. Changelog
+
+### v2.11.55 (2026-10-06)
+- Paint-Offset und Explorer-Öffnen, Cache-Buster
+- Startmenü-Fußzeile liest Version aus `APP_VERSION` (v2.11.54)
+- Version-Bump + Cache-Buster (v2.11.53)
+- Testdeckel `--test-concurrency=4` (v2.11.52)
+- show-grid repariert: Desktop-Raster 84x94 + Mobile 100x110 (v2.11.52)
+- Dark/Light + Palette entkoppelt, eine Version-Quelle (v2.11.50)
+- Systeminfo-Fix, Service Worker geleert (v2.11.51)
+- 347 Tests grün (Stand 2026-10-06)
+  (Details: `git log --oneline -- macrohard/package.json`)
 
 ### v2.11.45 (2026-09-25)
 - Fix: Music-Beatpad AudioContext-Kontext und Synth-Start/Stop-Reihenfolge

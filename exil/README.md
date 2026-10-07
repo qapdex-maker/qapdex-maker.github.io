@@ -3,8 +3,9 @@
 Teaser-Seite für eine Party, deren Datum noch nicht steht. Wird später zur
 Party-Seite ausgebaut; die Struktur ist darauf ausgelegt.
 
-**Stand 2026-09-30:** veröffentlicht als Teaser. Seite bleibt vorerst genau so,
-wie sie ist — Datum, Ort und Line-Up kommen erst, wenn sie feststehen.
+**Stand 2026-10-07:** unverändert seit dem 2026-09-30. Seite bleibt vorerst genau
+so, wie sie ist — Datum, Ort und Line-Up kommen erst, wenn sie feststehen.
+Letzter Commit auf `exil/`: `d8fe957`.
 
 Live: <https://qapdex-maker.github.io/exil/>
 

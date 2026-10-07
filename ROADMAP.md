@@ -1,6 +1,6 @@
 # ROADMAP — qapdex-maker.github.io (Portal + msgraph/react + jsmol)
 
-Stand: 2026-10-03. Arbeitsstand, NICHT push-pflichtig.
+Stand: 2026-10-07. Arbeitsstand, NICHT push-pflichtig.
 Lokaler HEAD: siehe `git log`.
 Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 
@@ -13,12 +13,12 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
   pepememe, **jsmol** (Workbench · MolGrid · Konsole · Reaktions-Sandbox)
 
 ### Weitere Bereiche — siehe eigene Abschnitte
-- macrohard/ (MakerOS v2.11.55, 26 Apps, 347 Tests)
+- macrohard/ (MakerOS v2.11.55, 25 Apps, 347 Tests)
 - msgraph/react (Graph Metadata Hub, 96 Tests)
 - jsmol/ (vier Seiten, 50 MB, 29 Tests) → eigener Abschnitt am Ende
 
-### macrohard/ (v2.11.29, aktiv entwickelt)
-- 22 Apps (11 Foundation + 11 Extension Pack), ES6-Module, PWA
+### macrohard/ (v2.11.55, aktiv entwickelt)
+- 25 Apps (11 Foundation + 14 Extension Pack), ES6-Module, PWA
 - v2.11.23: Browser iframe fix (brLoaded-Flag)
 - v2.11.24: Docs "Made by Alexander Kleine"
 - v2.11.25: Music Player Rewrite (Upload, Radio, Favoriten, Tabs)
@@ -36,16 +36,18 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 - Karten aus `pages`-Array; Kategorie-Chip-Filter muss exakt mit `catLabel` matchen.
 - 13 Karten verifiziert (11 live, 1 soon, 1 Platzhalter).
 
-### B. macrohard/ (AKTIV, v2.11.30)
+### B. macrohard/ (AKTIV, v2.11.55)
 - Windows-Style Desktop OS im Browser
-- 22 Apps, PWA, Taskbar, Fenster-Management
+- 25 Apps, PWA, Taskbar, Fenster-Management
 - ES6-Module, ESLint + Prettier, Unit-Tests, CI/CD
-- Alle 26 Komponenten verifiziert (26/26 grün)
+- 347 Tests (npm test), alle grün
 
 ### C. msgraph/react (AKTIV verlinkt, "Graph Metadata Hub")
 - React 18 UMD + vorkompiliertes app.js via build_appjs.sh
-- Tabs: Hub/Reference/Console/Permissions/Breaking Radar
+- Tabs: Hub/Reference/Console/Permissions/Breaking Radar + Skizzen-Panel
 - Worker-basiertes Parsing, virtuelle Liste, i18n DE/EN
+- Zwei Datenquellen: Specs+Type-Mapping aus `metadata` (`RAW`),
+  CSDL-Sketches aus dem Fork `metadata-msgraph` (`SKETCH_RAW`)
 
 ### D. idun/
 - Azure AI Foundry Client + Multi-LLM-Console
@@ -98,7 +100,7 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 - [x] Music Player Rewrite + Fixes (v2.11.25-v2.11.28)
 - [x] Explorer Navigation Fix (v2.11.26)
 - [x] Mobile Apps sichtbar (v2.11.29)
-- [x] Alle 26 Komponenten verifiziert (26/26 grün)
+- [x] Alle 25 Apps verifiziert (Smoke: „ALLE 25 APPS OK")
 
 ## 3. Offene Punkte / Tech Debt
 
@@ -145,9 +147,9 @@ curl -s -o /dev/null -w "%{http_code}" https://qapdex-maker.github.io/macrohard/
 
 - **Font:** Space Grotesk + IBM Plex Sans + IBM Plex Mono
 - **Kolors:** Kobalt #2547ff, Gelb #ffd400, Paper #f1ede3
-- **Cache-Bust:** app.js?v=35, site.css?v=36
+- **Cache-Bust:** app.js?v=75, site.css?v=52 (Stand 2026-10-07; sw.js `macrohard-v2-11-55`)
 - **PWA:** sw.js stale-while-revalidate
-- **Tests:** 7/7 grün (storeSet, osIntervals, apps count, fsData, filter, shuffle)
+- **Tests:** 347/347 grün (`cd macrohard && npm test`)
 - **Live:** https://qapdex-maker.github.io/macrohard/
 
 ## Nachtrag 2026-09-28 (verifiziert, nach Push freigegeben)
