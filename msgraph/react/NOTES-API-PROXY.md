@@ -248,3 +248,47 @@ ist auf 5.000.000 px begrenzt. Der Scroll-Container bleibt `height: VIEW_H`
 (480 px), aber das innere DOM-Element ist jetzt maximal 5 Mio. px statt 11 Mio. px.
 
 **Verifiziert:** Alle 96 Tests grün, `app.js` neu kompiliert (79049 Bytes).
+
+## Stand 2026-10-07 — Cloud-Skizzen: eigener Basis-URL für den Fork
+
+### Der 404 auf allen 17 Sketch-Karten
+
+**Symptom (Gerät, Screenshot):** Jede Karte im Skizzen-Panel meldete
+`load failed: Error: HTTP 404`. Keine Karte zählte Typen.
+
+**Ursache:** Der Sketch-Ladepfad baute die CSDL-URL aus `RAW`. `RAW` zeigt
+seit Commit `a8524a4` auf `raw.githubusercontent.com/qapdex-maker/metadata/`
+(das schlanke Repo, 4 MB: die zwei OpenAPI-Specs plus die Type-Mappings). Der
+CORS-Fix für die Specs hat die Sketches gebrochen, ohne dass es auffiel — das
+schlanke `metadata`-Repo hat **kein** `schemas/*.csdl`; sein `schemas/` enthält
+nur `type-mappings/`.
+
+Die 17 CSDL-Dokumente (5-8 MB je, ~90 MB gesamt) liegen ausschließlich im
+1,5-GB-Fork `qapdex-maker/metadata-msgraph` (Branch `master`, Fork von
+microsoftgraph/msgraph-metadata). Sie wurden beim Anlegen des schlanken Repos
+nicht mitkopiert.
+
+**Fix:** Eigene Konstante `SKETCH_RAW` für die Sketches. `RAW` bleibt für
+Specs und Type-Mapping auf dem schlanken Repo — die bewusste
+`a8524a4`-Entscheidung bleibt erhalten, der Sketch-Pfad ist korrekt.
+
+```js
+const RAW       = '.../qapdex-maker/metadata/master/';          // Specs + Type-Mapping
+const SKETCH_RAW = '.../qapdex-maker/metadata-msgraph/master/'; // 17 CSDL-Sketches
+```
+
+**Verifiziert (echter curl, kein Code-Lesen):**
+- alle 17 CSDL-URLs unter `SKETCH_RAW` → HTTP 200
+- beide Repos senden `access-control-allow-origin: *` → Worker-`fetch()` ok
+- 96/96 Tests grün (`sketch-panel`, `spec-link-freeze` angepasst)
+- `app.js` neu kompiliert, `node --check` OK, `deploy-hygiene.js` sauber
+
+**Test-Anpassung:** `spec-link-freeze.test.mjs` prüft jetzt, dass `SKETCH_RAW`
+den Fork nennt und der csdl-`postMessage` aus `SKETCH_RAW` baut (vorher `RAW`).
+`sketch-panel.test.mjs` ebenso.
+
+**Lehre:** Ein Repo-Umzug ist nicht fertig, wenn die *eine* Datei lädt, die man
+im Blick hatte. `a8524a4` hat die Specs korrekt umgestellt — und dabei still
+einen zweiten Pfad gebrochen, der dasselbe Präfix benutzte. Die grüne Suite
+fand es nicht, weil `spec-link-freeze` den Sketch-Pfad nur als *Form*
+(`RAW + 'schemas/' + s.name`) festnagelte, nicht als *Ziel*.

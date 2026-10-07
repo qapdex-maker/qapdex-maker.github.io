@@ -28,8 +28,14 @@ https://docs.github.com/de/pages/quickstart
 Hub · Reference (17.531 Endpoints, im Worker geparst) · Console (NL→Graph,
 optional eigener API-Key des **gewählten Anbieters** — OpenRouter oder Nous
 Portal, je ein eigener Key-Slot) · Permissions · Breaking Radar ·
-**Skizzen** (17 Cloud-CSDL-Dokumente aus metadata-msgraph; pro Klick genau
-eine Datei im Worker zählen, zusammen ~90 MB).
+**Skizzen** (17 Cloud-CSDL-Dokumente aus dem Fork `metadata-msgraph`; pro Klick
+genau eine Datei im Worker zählen, zusammen ~90 MB).
+
+Datenquellen sind zwei Repos: die OpenAPI-Specs + Type-Mappings liegen im
+schlanken `qapdex-maker/metadata` (`RAW`), die 17 CSDL-Sketches nur im
+1,5-GB-Fork `qapdex-maker/metadata-msgraph` (`SKETCH_RAW`). Beide werden über
+`raw.githubusercontent.com` geladen (CORS `*`), im Worker als Text — nie als
+Browser-Dokument, sonst friert die 42-MB-Spec den Tab ein.
 
 **Live-Test gegen echtes Graph** (2026-10-05): in der Console ein Token-
 Feld („Live aufrufen"), der Aufruf geht **direkt aus dem Browser** an

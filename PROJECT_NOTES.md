@@ -1,9 +1,21 @@
 # PROJECT_NOTES — qapdex-maker.github.io (Portal + msgraph/react)
 
-Stand: 2026-09-26 (MakerOS-Session abgeschlossen, Push-Tip `fee79f2`).
-Letztes Push-Tip: `fee79f2`; lokaler und remote `main` waren nach dem Push identisch.
-Vollständiges Protokoll: `macrohard/SESSION-2026-09-26.md`
+Stand: 2026-10-07 (Cloud-Skizzen-404 behoben, Push-Tip `a6d48d2`).
+Letztes Push-Tip: `a6d48d2`; lokaler und remote `main` waren nach dem Push identisch.
+Ältere Sessions: `macrohard/SESSION-2026-09-26.md` (Protokoll).
 Detaillierter Fahrplan + tiefe Bereiche: siehe ROADMAP.md (im Repo-Root).
+
+## Datenquellen (msgraph/react)
+- **Specs + Type-Mappings**: `qapdex-maker/metadata` (Branch `main`, ~4 MB) — nur
+  `openapi/v1.0/openapi.yaml`, `openapi/beta/openapi.yaml`,
+  `schemas/type-mappings/v1.0-entity-types.json`. Geladen über
+  `raw.githubusercontent.com` (CORS `*`), im Worker als Text.
+- **CSDL-Sketches**: `qapdex-maker/metadata-msgraph` (Branch `master`, 1,5 GB,
+  Fork von microsoftgraph/msgraph-metadata) — die 17 `schemas/*.csdl`
+  (5-8 MB je). Eigene Konstante `SKETCH_RAW`, **nicht** `RAW`: das schlanke
+  `metadata`-Repo enthält keine CSDL-Dateien.
+- **Index/Deprecations**: `data/index.*.json` + `data/deprecations.*.json`,
+  erzeugt aus dem Fork (`syncDate` 2026-08-26), ausgeliefert lokal von Pages.
 
 ## Architektur
 - User-Page: Repo `qapdex-maker/qapdex-maker.github.io`, Branch `main`, Root-Veröffentlichung.
@@ -34,8 +46,12 @@ Detaillierter Fahrplan + tiefe Bereiche: siehe ROADMAP.md (im Repo-Root).
   `display:none` sein — sonst Tabs auf Mobile unerreichbar!).
 - Daten: `data/manifest.json`, `data/index.v1.0.json` (1387 Pfade), `data/index.beta.json` (2870),
   `data/deprecations.v1.0.json`, `data/deprecations.beta.json`.
-  Sync-Quelle: `~/github/repo/metadata-msgraph` (Fork von microsoftgraph/msgraph-metadata,
-  Schema 1.4.711.0, Stand 2026-08-26).
+  Sync-Quelle: `~/github/repo/metadata-msgraph` (Fork von microsoftgraph/msgraph-metadata).
+  `index.*.json` trägt `schemaVersion` 1.4.759.0 / `syncDate` 2026-08-26 (Stand der
+  Extraktion). Der aktuelle Sync-Stand steht in `manifest.json`: `schemaVersion`
+  1.4.759.0, `syncDate` 2026-09-18. Die Specs + Type-Mappings werden für die Seite
+  aus dem separaten, schlanken Repo `~/github/repo/metadata` geladen (siehe
+  Abschnitt „Datenquellen" unten).
 
 ## Kritische Bugs (behoben, nicht vergessen)
 1. **Worker relative fetch → 404-JSON-Parse-Fehler.** Fix: absolute URLs an Worker.
@@ -98,6 +114,9 @@ Re-Check aller 9 dokumentierten Bugs + Regressions-Screen. Alle GRÜN.
   → Portal-Daten aktuell bezüglich Quelle, kein Re-Sync nötig.
 - manifest.json: schemaVersion 1.4.711.0, syncDate 2026-08-26 (passt zu Quell-Stand
   2026-08-25/26). CSDL-Schema Version="4.0".
+  *(Aktualisiert 2026-10-07: manifest trägt inzwischen schemaVersion 1.4.759.0 /
+  syncDate 2026-09-18 — siehe „Datenquellen" am Dateikopf. Der Wert oben ist der
+  Messstand dieses Tages.)*
 - deprecations-Status-Enum: Daten nutzen nur {removed, planned, soon}; Code-Enum
   (I18N.de/en.status) deckt alle ab. card-Klasse mappt removed/soon/planned korrekt.
 - Fazit: Phase 2 ohne Änderung abgeschlossen — Daten sind frisch + konsistent.
@@ -233,13 +252,14 @@ Alles unten ist echter Tool-Output, keine Annahme:
     - `GAGA Chart` → `https://dexscreener.com/base/0x27d8744e5208c1580ca296af239e5720f6bba363`
   - Footer „Divine Council & Citadel“: `https://pepecoin.com/` ergänzt
 
-## catpop — CatPop Announcement Seite (Stand 2026-09-12)
+## catpop — CatPop Announcement Seite (Stand 2026-10-07, Inhalt seit 2026-09-12 unverändert)
 - Pfad: `catpop/index.html`, Bild: `catpop/popnomics.jpg`
 - README: `catpop/README.md` (aktuell)
 - Ticker: `$CATPOP` (gewollter Platzhalter für Meme-Coin-Symbol, wie $DOGE/$PEPE)
 - Titel: `<title>$CATPOP — CatPop Meme Token</title>` (Ticker + Name, korrekt)
 - Badge: `WALL STREET TRADING PIT ANNOUNCEMENT`
-- Theme-Palette: `default`, `green`, `ink`, `sunset`, `mono`, `paper`, `berry`, `frost` (8 Themes)
+- Theme-Palette (8): `fourmeme`, `default`, `green`, `ink`, `sunset`, `mono`, `paper`, `berry`
+  (im Code: `fourmeme,default,green,ink,sunset,mono,paper,berry`)
 - Theme-Toggle per Klick, gespeichert in `localStorage('catpop_theme')`
 - Telegram entfernt. CTA-Link: `https://linktr.ee/hereismytelegram`
 - Buy-CTA + User-Button entfernt; Header = Nav + Theme-Button
@@ -250,7 +270,10 @@ Alles unten ist echter Tool-Output, keine Annahme:
 - Bitget-Affiliate-Link in Wallet-Schritt 1
 - Interne Nav-Links (About/Tokenomics/How-to-Buy/Live-Chart/Meme-Generator) sind Platzhalter (`#`) — Same-Page-Sektionen noch nicht angelegt
 - Linktr-Subseite: `/catpop/linktr/` → `$CATPOP — Kapow Linktree`
-- Letzter Commit: `194c641 docs(catpop): add catpop README` (READMEDatei hinzugefügt)
+- Letzter Commit auf `catpop/`: `882b163 catpop: H2 PLAN → CATWALK` (2026-09-12)
+- Korrektur 2026-10-07: früher stand hier `frost` in der Palette und `194c641`
+  als letzter Commit. `frost` existiert im aktuellen `index.html` nicht mehr
+  (0 Treffer), `fourmeme` ist neu; letzter Commit ist `882b163`.
 
 ## Session 2026-09-27 — macrohard Dark/Light + msgraph Radar, Skizzen, Gate
 
@@ -694,3 +717,51 @@ Gegenproben sind bei den jsmol-Tests wichtiger als die Testzahl: ein
 Test, der nichts prüft, behauptet eine Sicherung, die nicht da ist.
 Von 13 angelegten Prüfungen fangen 10 den eingebauten Fehler; die drei
 Ausnahmen stehen als LÜCKEN im Dateikopf.
+
+## Session 2026-10-07 — Cloud-Skizzen 404: RAW zeigt auf das falsche Repo
+
+**Der Fund kam vom Gerät, nicht aus der Suite.** Screenshot vom Handy: jede
+Karte im Skizzen-Panel meldete `load failed: Error: HTTP 404`. Keine Karte
+zählte Typen. Die 96 Tests waren grün.
+
+### Ursache
+
+Der Sketch-Ladepfad baute die CSDL-URL aus `RAW`. `RAW` zeigt seit Commit
+`a8524a4` (2026-10-07, CORS-Fix) auf `qapdex-maker/metadata` — das schlanke
+Repo mit 4 MB (zwei OpenAPI-Specs + Type-Mappings). Dieses Repo hat **kein**
+`schemas/*.csdl`; sein `schemas/` enthält nur `type-mappings/`. Die 17
+CSDL-Dokumente (5-8 MB je, ~90 MB) liegen nur im 1,5-GB-Fork
+`qapdex-maker/metadata-msgraph` (Branch `master`).
+
+Der Spec-Umzug war korrekt und blieb es — er hat nur still einen zweiten
+Pfad gebrochen, der dasselbe Präfix benutzte.
+
+### Fix
+
+Eigene Konstante `SKETCH_RAW` für die Sketches; `RAW` bleibt für Specs und
+Type-Mapping. Kein Rückbau der `a8524a4`-Entscheidung.
+
+    const RAW        = '.../qapdex-maker/metadata/master/'          // Specs + Type-Mapping
+    const SKETCH_RAW = '.../qapdex-maker/metadata-msgraph/master/'  // 17 CSDL-Sketches
+
+### Verifiziert (echter curl, kein Code-Lesen)
+
+- alle 17 CSDL-URLs unter `SKETCH_RAW` → HTTP 200
+- beide Repos senden `access-control-allow-origin: *`
+- 96/96 msgraph-Tests grün (`sketch-panel` + `spec-link-freeze` angepasst)
+- `app.js` neu kompiliert (80317 Bytes), `node --check` OK
+- `deploy-hygiene.js` sauber; live auf Pages bestätigt
+  (`const SKETCH_RAW = '.../metadata-msgraph/master/'` in ausgeliefertem app.js)
+
+### Warum die Suite es nicht fand
+
+`spec-link-freeze.test.mjs` nagelte den Sketch-Pfad nur als *Form* fest
+(`RAW + 'schemas/' + s.name`), nicht als *Ziel*. Eine Form-Assertion ist grün,
+egal wohin `RAW` zeigt. Der Test prüft jetzt, dass `SKETCH_RAW` den Fork nennt.
+
+### Testzahlen (2026-10-07)
+
+    macrohard                          347 Tests
+    msgraph/react                       96 Tests
+    tests/                              35 Tests (6 Gate + 29 jsmol)
+    jsmol/                             50 MB von 60 MB Budget
