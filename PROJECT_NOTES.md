@@ -710,7 +710,7 @@ Dateien.
 
     29 Tests in tests/*.test.mjs      (6 Gate + 23 jsmol)
     macrohard                          347 Tests
-    msgraph/react                       96 Tests
+    msgraph/react                       102 Tests
     jsmol/                             50 MB von 60 MB Budget
 
 Gegenproben sind bei den jsmol-Tests wichtiger als die Testzahl: ein
@@ -762,6 +762,6 @@ egal wohin `RAW` zeigt. Der Test prüft jetzt, dass `SKETCH_RAW` den Fork nennt.
 ### Testzahlen (2026-10-07)
 
     macrohard                          347 Tests
-    msgraph/react                       96 Tests
+    msgraph/react                       102 Tests
     tests/                              35 Tests (6 Gate + 29 jsmol)
     jsmol/                             50 MB von 60 MB Budget

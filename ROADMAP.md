@@ -14,7 +14,7 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 
 ### Weitere Bereiche — siehe eigene Abschnitte
 - macrohard/ (MakerOS v2.11.55, 25 Apps, 347 Tests)
-- msgraph/react (Graph Metadata Hub, 96 Tests)
+- msgraph/react (Graph Metadata Hub, 102 Tests)
 - jsmol/ (vier Seiten, 50 MB, 29 Tests) → eigener Abschnitt am Ende
 
 ### macrohard/ (v2.11.55, aktiv entwickelt)

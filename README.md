@@ -67,7 +67,7 @@ node deploy-hygiene.js                              # Gate
 node --test tests/deploy-hygiene-gate.test.mjs     # 6
 node --test tests/jsmol-pages.test.mjs             # 29
 cd macrohard && npm test                           # 347
-cd msgraph/react && node --test tests/*.test.mjs   # 96
+cd msgraph/react && node --test tests/*.test.mjs   # 102
 ```
 
 Vor einem Push: `node deploy-hygiene.js`. Das Gate blockiert bei Exit 1.
