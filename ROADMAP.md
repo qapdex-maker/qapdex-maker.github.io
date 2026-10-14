@@ -113,8 +113,8 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 
 | Thema | Status | Notiz |
 |-------|--------|-------|
-| macrohard: AudioGraph reset bei Track-Wechsel | 🔴 Offen | setupAudio() crasht wenn Song nicht geladen |
-| macrohard: Beatpad ohne Song | 🔴 Offen | eigener AudioContext nötig |
+| macrohard: AudioGraph reset bei Track-Wechsel | ✅ Code ok | setupAudio() baut Node/Listener sauber neu auf, onError fängt ab. Kein Crash. Akustisch unbestätigt (headless startet AudioContext nicht) |
+| macrohard: Beatpad ohne Song | ✅ Code ok | SEQ.ctx wird lazy beim ersten Play angelegt (Zeile 4250), eigener Kontext nicht nötig. Akustisch unbestätigt |
 | macrohard: Radio Progress duration=Infinity | ✅ Behoben | isFinite-Guard zeigt „● LIVE" (app.js onTimeUpdate) |
 | macrohard: Visualizer doppelter Loop | ✅ Behoben | visRafId wird vor Neustart gecancelt (initVisualizer) |
 | Portal: catpop-Entwicklungs-Commits | 🟡 Lokal | Nicht gepusht, nicht push-pflichtig |
