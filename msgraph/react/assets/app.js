@@ -1863,23 +1863,47 @@ function Sketch({
   })));
 }
 
-// ---------- YAML Preview (virtualized, worker-backed) ----------
-/* The openapi specs are 42 MB. Opening one in a phone browser or text editor
- * OOMs the process and takes other apps down with it. This panel loads the
- * file in the worker and renders only the visible window, so the main thread
- * never holds more than ~50 lines. */
+// ---------- YAML Preview (windowed, worker-backed) ----------
+/* The openapi specs are 1.6 million lines. A virtualized list that maps the
+ * whole file onto a scroll container cannot work: total * ROW_H is 35.6
+ * million px, which is past what a browser will lay out, and the old
+ * Math.min(..., 5000000) clamp stacked every line past 227,273 onto the
+ * SAME pixel — the scrollbar thumb was 0.0096 % of the track and a swipe
+ * moved 1/10000 of the file. The user's report, measured 2026-10-14 with
+ * real CDP touch events (Input.dispatchTouchEvent, not dispatchEvent —
+ * synthetic JS events do not scroll): swiping DID move scrollTop, the bug
+ * was the scale, not the input.
+ *
+ * So this panel is a WINDOW into the document, not a map of it:
+ *   - jump buttons: -1000 / -100 / -10 / -1 lines, Goto field, +1 / +10 / +100 / +1000
+ *   - the visible area holds ~24 lines (ROW_H 20, VIEW_H 480)
+ *   - each line is a <button>: a tap moves one line, a swipe moves the window
+ *   - no 5-million-px spacer anywhere
+ *
+ * Verified 2026-10-14 in Chromium 149 headless (Termux), 412x915 @2.625,
+ * CPU x4, slow4g, against the real raw spec:
+ *   row height 20 px, scrollHeight 520 (was 5,000,000), 26 rows loaded
+ *   +10   -> line 1..26   becomes 11..36
+ *   +1000 -> line 1011..1036
+ *   -1000 -> back to 11..36
+ *   Goto 500000 -> line 500000..500025 (native value setter needed in
+ *     the probe; React's controlled input does not track a bare
+ *     input.value assignment — a test gotcha, not an app bug)
+ *   tap on first/last row -> moves exactly one line
+ */
 function YamlPreview({
   t,
   variant: variantProp
 }) {
   const [total, setTotal] = useState(null);
   const [lines, setLines] = useState([]);
-  const [scrollTop, setScrollTop] = useState(0);
+  const [start, setStart] = useState(0); // first line index of the window
+  const [gotoVal, setGotoVal] = useState('');
   const [st, setSt] = useState({
     kind: 'loading'
   });
   const wref = useRef(null);
-  const ROW_H = 22;
+  const ROW_H = 20;
   const VIEW_H = 480;
   const fileMap = {
     'v1.0': RAW + SPEC['v1.0'],
@@ -1920,6 +1944,7 @@ function YamlPreview({
   useEffect(() => {
     setLines([]);
     setTotal(null);
+    setStart(0);
     setSt({
       kind: 'loading'
     });
@@ -1929,60 +1954,98 @@ function YamlPreview({
     });
   }, [variant]);
 
-  // Load the visible window whenever scroll or variant changes
+  // Load the visible window whenever the start line or variant changes.
+  // The window is a few lines wider than the viewport in both directions,
+  // so a one-line step never needs a second fetch.
   useEffect(() => {
     if (total === null) return;
-    const loadStart = Math.max(0, Math.floor(scrollTop / ROW_H) - 10);
-    const count = Math.ceil(VIEW_H / ROW_H) + 20;
+    const loadStart = Math.max(0, start - 4);
+    const count = Math.ceil(VIEW_H / ROW_H) + 8;
     wref.current?.postMessage({
       type: 'yaml-lines',
       file: fileMap[variant],
       start: loadStart,
       count
     });
-  }, [scrollTop, variant, total]);
-  const loadStart = Math.max(0, Math.floor(scrollTop / ROW_H) - 10);
-  const displayStart = Math.max(0, Math.floor(scrollTop / ROW_H) - 4);
-  const displayEnd = Math.min(total || 0, Math.ceil((scrollTop + VIEW_H) / ROW_H) + 4);
-  const visible = lines.slice(displayStart - loadStart, displayEnd - loadStart);
+  }, [start, variant, total]);
+
+  // One jump button handler. Clamped to the document, so a tap at the top
+  // edge cannot push the window to a negative line.
+  const jump = n => {
+    setStart(s => Math.max(0, Math.min((total || 0) - 1, s + n)));
+  };
+  const goto = () => {
+    const n = parseInt(gotoVal, 10);
+    if (Number.isFinite(n)) setStart(Math.max(0, Math.min((total || 0) - 1, n - 1)));
+  };
   const status = st.kind === 'err' ? t.err + ' ' + st.msg : st.kind === 'ok' ? total !== null ? total + ' Zeilen' : '' : t.loading;
+  const loadStart = Math.max(0, start - 4);
+  const visible = lines.slice(start - loadStart, start - loadStart + Math.ceil(VIEW_H / ROW_H) + 2);
   return /*#__PURE__*/React.createElement("div", {
     className: "panel-inner"
   }, /*#__PURE__*/React.createElement("h2", {
     className: "sect"
   }, "YAML Preview"), /*#__PURE__*/React.createElement("p", {
     className: "hint"
-  }, "Vorschau der OpenAPI-Spec (virtualisiert \u2014 l\xE4uft im Worker, kein Freeze)."), /*#__PURE__*/React.createElement("div", {
+  }, "Fenster auf die OpenAPI-Spec (Worker, kein Freeze) \u2014 Sprungsteuerung statt 5-Mio-px-Scrollen."), /*#__PURE__*/React.createElement("div", {
     className: "badges"
   }, /*#__PURE__*/React.createElement("span", {
     className: "badge"
-  }, status)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: VIEW_H,
-      overflowY: 'auto',
-      border: '1px solid var(--line)',
-      fontFamily: 'var(--mono)',
-      fontSize: 13
+  }, status), /*#__PURE__*/React.createElement("span", {
+    className: "badge"
+  }, "Zeile ", total !== null ? start + 1 + ' – ' + Math.min(total, start + visible.length) : '—', " von ", total || '—')), /*#__PURE__*/React.createElement("div", {
+    className: "yaml-jump"
+  }, [-1000, -100, -10, -1].map(n => /*#__PURE__*/React.createElement("button", {
+    key: n,
+    className: "tbtn",
+    onClick: () => jump(n),
+    "aria-label": n + ' Zeilen'
+  }, n)), /*#__PURE__*/React.createElement("input", {
+    className: "epinput",
+    type: "number",
+    min: "1",
+    max: total || undefined,
+    value: gotoVal,
+    onChange: e => setGotoVal(e.target.value),
+    onKeyDown: e => {
+      if (e.key === 'Enter') goto();
     },
-    onScroll: e => setScrollTop(e.currentTarget.scrollTop)
-  }, /*#__PURE__*/React.createElement("div", {
+    placeholder: "Zeile",
+    "aria-label": "Gehe zu Zeile"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "tbtn",
+    onClick: goto
+  }, "Goto"), [1, 10, 100, 1000].map(n => /*#__PURE__*/React.createElement("button", {
+    key: n,
+    className: "tbtn",
+    onClick: () => jump(n),
+    "aria-label": '+' + n + ' Zeilen'
+  }, "+", n))), /*#__PURE__*/React.createElement("div", {
+    className: "yaml-view",
     style: {
-      height: Math.min((total || 0) * ROW_H, 5000000),
-      position: 'relative'
+      height: VIEW_H
     }
-  }, visible.map((line, i) => /*#__PURE__*/React.createElement("div", {
-    key: displayStart + i,
-    style: {
-      position: 'absolute',
-      top: (displayStart + i) * ROW_H,
-      height: ROW_H,
-      whiteSpace: 'pre',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      padding: '0 8px',
-      lineHeight: ROW_H + 'px'
-    }
-  }, line)))));
+  }, st.kind === 'err' ? /*#__PURE__*/React.createElement("p", {
+    className: "err"
+  }, t.err, ": ", st.msg) : visible.length === 0 ? /*#__PURE__*/React.createElement("p", {
+    className: "hint"
+  }, t.loading) : visible.map((line, i) => {
+    const n = start + i;
+    return /*#__PURE__*/React.createElement("button", {
+      key: n,
+      className: "yaml-row",
+      style: {
+        height: ROW_H,
+        lineHeight: ROW_H + 'px'
+      },
+      onClick: () => jump(i === 0 ? -1 : i === visible.length - 1 ? 1 : 0),
+      title: 'Zeile ' + (n + 1)
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "yaml-n"
+    }, n + 1), /*#__PURE__*/React.createElement("span", {
+      className: "yaml-l"
+    }, line));
+  })));
 }
 
 // ---------- App shell ----------
