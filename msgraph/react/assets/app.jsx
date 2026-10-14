@@ -151,6 +151,18 @@ const I18N = {
     sketch_navonly: 'nur über Navigation',
     sketch_types: 'Typen mit Verknüpfung',
     sketch_more: '+ {n} weitere', sketch_less: 'weniger anzeigen',
+    // YAML Preview (2026-10-14). Der Bug: das Panel war komplett hart auf
+    // Deutsch verdrahtet — Titel, Beschreibung, Badge, Goto-Button, Zeile-
+    // Felder. Der i18n-Test prueft nur, dass definierte Schluessel in BEIDEN
+    // Tabellen stehen; hartcodierte Literale sieht er nicht. Der Nutzer hat
+    // es gemerkt: "Der Beschreibungstext aendert sich auf der YAML Seite
+    // nicht, wenn ich oben EN druecke." Jeder neue Key braucht sofort einen
+    // EN-Zwilling.
+    yaml: 'YAML Preview',
+    yaml_hint: 'Fenster auf die OpenAPI-Spec (Worker, kein Freeze) — Sprungsteuerung statt 5-Mio-px-Scrollen.',
+    yaml_line: 'Zeile', yaml_of: 'von', yaml_lines: 'Zeilen',
+    yaml_goto: 'Goto', yaml_goto_ph: 'Zeile', yaml_goto_aria: 'Gehe zu Zeile',
+    yaml_title_line: 'Zeile ',
     nl_reasons: { teams: 'Teams', mails: 'Mails', calendar: 'Kalender', onedrive: 'OneDrive', photo: 'Profilfoto', default: 'Standard', llm: 'LLM-Zuordnung' },
   },
   en: {
@@ -212,6 +224,12 @@ const I18N = {
     sketch_types: 'linked types',
     sketch_more: '+ {n} more',
     sketch_less: 'show less',
+    // YAML Preview (2026-10-14) — see the DE table above.
+    yaml: 'YAML Preview',
+    yaml_hint: 'Window into the OpenAPI spec (worker, no freeze) — jump controls instead of a 5-million-px scroll.',
+    yaml_line: 'Line', yaml_of: 'of', yaml_lines: 'lines',
+    yaml_goto: 'Goto', yaml_goto_ph: 'Line', yaml_goto_aria: 'Go to line',
+    yaml_title_line: 'Line ',
     nl_reasons: { teams: 'Teams', mails: 'Mails', calendar: 'Calendar', onedrive: 'OneDrive', photo: 'Profile photo', default: 'Default', llm: 'LLM mapping' },
   }
 };
@@ -1345,7 +1363,7 @@ function YamlPreview({ t, variant: variantProp }) {
   };
 
   const status = st.kind === 'err' ? t.err + ' ' + st.msg
-    : st.kind === 'ok' ? (total !== null ? total + ' Zeilen' : '')
+    : st.kind === 'ok' ? (total !== null ? total + ' ' + t.yaml_lines : '')
     : t.loading;
 
   const loadStart = Math.max(0, start - 4);
@@ -1353,23 +1371,23 @@ function YamlPreview({ t, variant: variantProp }) {
 
   return (
     <div className="panel-inner">
-      <h2 className="sect">YAML Preview</h2>
-      <p className="hint">Fenster auf die OpenAPI-Spec (Worker, kein Freeze) — Sprungsteuerung statt 5-Mio-px-Scrollen.</p>
+      <h2 className="sect">{t.yaml}</h2>
+      <p className="hint">{t.yaml_hint}</p>
       <div className="badges">
         <span className="badge">{status}</span>
-        <span className="badge">Zeile {total !== null ? (start + 1) + ' – ' + Math.min(total, start + visible.length) : '—'} von {total || '—'}</span>
+        <span className="badge">{t.yaml_line} {total !== null ? (start + 1) + ' – ' + Math.min(total, start + visible.length) : '—'} {t.yaml_of} {total || '—'}</span>
       </div>
       <div className="yaml-jump">
         {[-1000, -100, -10, -1].map(n => (
-          <button key={n} className="tbtn" onClick={() => jump(n)} aria-label={n + ' Zeilen'}>{n}</button>
+          <button key={n} className="tbtn" onClick={() => jump(n)} aria-label={n + ' ' + t.yaml_lines}>{n}</button>
         ))}
         <input className="epinput" type="number" min="1" max={total || undefined}
                value={gotoVal} onChange={e => setGotoVal(e.target.value)}
                onKeyDown={e => { if (e.key === 'Enter') goto(); }}
-               placeholder="Zeile" aria-label="Gehe zu Zeile" />
-        <button className="tbtn" onClick={goto}>Goto</button>
+               placeholder={t.yaml_goto_ph} aria-label={t.yaml_goto_aria} />
+        <button className="tbtn" onClick={goto}>{t.yaml_goto}</button>
         {[1, 10, 100, 1000].map(n => (
-          <button key={n} className="tbtn" onClick={() => jump(n)} aria-label={'+' + n + ' Zeilen'}>+{n}</button>
+          <button key={n} className="tbtn" onClick={() => jump(n)} aria-label={'+' + n + ' ' + t.yaml_lines}>+{n}</button>
         ))}
       </div>
       <div className="yaml-view" style={{ height: VIEW_H }}>
@@ -1382,7 +1400,7 @@ function YamlPreview({ t, variant: variantProp }) {
                 return (
                   <button key={n} className="yaml-row" style={{ height: ROW_H, lineHeight: ROW_H + 'px' }}
                           onClick={() => jump(i === 0 ? -1 : i === visible.length - 1 ? 1 : 0)}
-                          title={'Zeile ' + (n + 1)}>
+                          title={t.yaml_title_line + (n + 1)}>
                     <span className="yaml-n">{n + 1}</span>
                     <span className="yaml-l">{line}</span>
                   </button>

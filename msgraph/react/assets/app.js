@@ -248,6 +248,22 @@ const I18N = {
     sketch_types: 'Typen mit Verknüpfung',
     sketch_more: '+ {n} weitere',
     sketch_less: 'weniger anzeigen',
+    // YAML Preview (2026-10-14). Der Bug: das Panel war komplett hart auf
+    // Deutsch verdrahtet — Titel, Beschreibung, Badge, Goto-Button, Zeile-
+    // Felder. Der i18n-Test prueft nur, dass definierte Schluessel in BEIDEN
+    // Tabellen stehen; hartcodierte Literale sieht er nicht. Der Nutzer hat
+    // es gemerkt: "Der Beschreibungstext aendert sich auf der YAML Seite
+    // nicht, wenn ich oben EN druecke." Jeder neue Key braucht sofort einen
+    // EN-Zwilling.
+    yaml: 'YAML Preview',
+    yaml_hint: 'Fenster auf die OpenAPI-Spec (Worker, kein Freeze) — Sprungsteuerung statt 5-Mio-px-Scrollen.',
+    yaml_line: 'Zeile',
+    yaml_of: 'von',
+    yaml_lines: 'Zeilen',
+    yaml_goto: 'Goto',
+    yaml_goto_ph: 'Zeile',
+    yaml_goto_aria: 'Gehe zu Zeile',
+    yaml_title_line: 'Zeile ',
     nl_reasons: {
       teams: 'Teams',
       mails: 'Mails',
@@ -388,6 +404,16 @@ const I18N = {
     sketch_types: 'linked types',
     sketch_more: '+ {n} more',
     sketch_less: 'show less',
+    // YAML Preview (2026-10-14) — see the DE table above.
+    yaml: 'YAML Preview',
+    yaml_hint: 'Window into the OpenAPI spec (worker, no freeze) — jump controls instead of a 5-million-px scroll.',
+    yaml_line: 'Line',
+    yaml_of: 'of',
+    yaml_lines: 'lines',
+    yaml_goto: 'Goto',
+    yaml_goto_ph: 'Line',
+    yaml_goto_aria: 'Go to line',
+    yaml_title_line: 'Line ',
     nl_reasons: {
       teams: 'Teams',
       mails: 'Mails',
@@ -1978,28 +2004,28 @@ function YamlPreview({
     const n = parseInt(gotoVal, 10);
     if (Number.isFinite(n)) setStart(Math.max(0, Math.min((total || 0) - 1, n - 1)));
   };
-  const status = st.kind === 'err' ? t.err + ' ' + st.msg : st.kind === 'ok' ? total !== null ? total + ' Zeilen' : '' : t.loading;
+  const status = st.kind === 'err' ? t.err + ' ' + st.msg : st.kind === 'ok' ? total !== null ? total + ' ' + t.yaml_lines : '' : t.loading;
   const loadStart = Math.max(0, start - 4);
   const visible = lines.slice(start - loadStart, start - loadStart + Math.ceil(VIEW_H / ROW_H) + 2);
   return /*#__PURE__*/React.createElement("div", {
     className: "panel-inner"
   }, /*#__PURE__*/React.createElement("h2", {
     className: "sect"
-  }, "YAML Preview"), /*#__PURE__*/React.createElement("p", {
+  }, t.yaml), /*#__PURE__*/React.createElement("p", {
     className: "hint"
-  }, "Fenster auf die OpenAPI-Spec (Worker, kein Freeze) \u2014 Sprungsteuerung statt 5-Mio-px-Scrollen."), /*#__PURE__*/React.createElement("div", {
+  }, t.yaml_hint), /*#__PURE__*/React.createElement("div", {
     className: "badges"
   }, /*#__PURE__*/React.createElement("span", {
     className: "badge"
   }, status), /*#__PURE__*/React.createElement("span", {
     className: "badge"
-  }, "Zeile ", total !== null ? start + 1 + ' – ' + Math.min(total, start + visible.length) : '—', " von ", total || '—')), /*#__PURE__*/React.createElement("div", {
+  }, t.yaml_line, " ", total !== null ? start + 1 + ' – ' + Math.min(total, start + visible.length) : '—', " ", t.yaml_of, " ", total || '—')), /*#__PURE__*/React.createElement("div", {
     className: "yaml-jump"
   }, [-1000, -100, -10, -1].map(n => /*#__PURE__*/React.createElement("button", {
     key: n,
     className: "tbtn",
     onClick: () => jump(n),
-    "aria-label": n + ' Zeilen'
+    "aria-label": n + ' ' + t.yaml_lines
   }, n)), /*#__PURE__*/React.createElement("input", {
     className: "epinput",
     type: "number",
@@ -2010,16 +2036,16 @@ function YamlPreview({
     onKeyDown: e => {
       if (e.key === 'Enter') goto();
     },
-    placeholder: "Zeile",
-    "aria-label": "Gehe zu Zeile"
+    placeholder: t.yaml_goto_ph,
+    "aria-label": t.yaml_goto_aria
   }), /*#__PURE__*/React.createElement("button", {
     className: "tbtn",
     onClick: goto
-  }, "Goto"), [1, 10, 100, 1000].map(n => /*#__PURE__*/React.createElement("button", {
+  }, t.yaml_goto), [1, 10, 100, 1000].map(n => /*#__PURE__*/React.createElement("button", {
     key: n,
     className: "tbtn",
     onClick: () => jump(n),
-    "aria-label": '+' + n + ' Zeilen'
+    "aria-label": '+' + n + ' ' + t.yaml_lines
   }, "+", n))), /*#__PURE__*/React.createElement("div", {
     className: "yaml-view",
     style: {
@@ -2039,7 +2065,7 @@ function YamlPreview({
         lineHeight: ROW_H + 'px'
       },
       onClick: () => jump(i === 0 ? -1 : i === visible.length - 1 ? 1 : 0),
-      title: 'Zeile ' + (n + 1)
+      title: t.yaml_title_line + (n + 1)
     }, /*#__PURE__*/React.createElement("span", {
       className: "yaml-n"
     }, n + 1), /*#__PURE__*/React.createElement("span", {
