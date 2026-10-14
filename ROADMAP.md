@@ -44,8 +44,13 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 
 ### C. msgraph/react (AKTIV verlinkt, "Graph Metadata Hub")
 - React 18 UMD + vorkompiliertes app.js via build_appjs.sh
-- Tabs: Hub/Reference/Console/Permissions/Breaking Radar + Skizzen-Panel
-- Worker-basiertes Parsing, virtuelle Liste, i18n DE/EN
+- Tabs: Hub/Reference/Console/Permissions/Breaking Radar
+- Extrapanels: Skizzen (Header-Button) + YAML Preview (Hub "Vorschau ↗" + Header "YAML")
+- Worker-basiertes Parsing, virtuelle Liste, i18n DE/EN (102 Tests)
+- YAML Preview: Fenster ins 1,6-Mio-Zeilen-Dokument (Sprung-Buttons + Goto),
+  KEIN 5-Mio-px-Scroller (2026-10-14, Commit 5fcee61)
+- Live-Graph-Aufruf: sessionStorage-Token, /me-verankerte Read-Pfade,
+  Direktaufruf an graph.microsoft.com (CORS *), kein Proxy (2026-10-05)
 - Zwei Datenquellen: Specs+Type-Mapping aus `metadata` (`RAW`),
   CSDL-Sketches aus dem Fork `metadata-msgraph` (`SKETCH_RAW`)
 
@@ -81,8 +86,10 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 - [x] Breaking Radar: scrollbarer .radar-scroll
 - [x] NL→Graph nlMap erweitert
 
-### Phase 4 — Live-Mode / Backend (AUFGESCHOBEN bis IGNITE)
-- [ ] Echter Graph-Live-Mode (Azure-Tenant-Token + App-Registration)
+### Phase 4 — Live-Mode / Backend (TEILWEISE FERTIG, Rest aufgeschoben)
+- [x] Live-Test direkt aus dem Browser an graph.microsoft.com (2026-10-05,
+      Direktaufruf gewonnen, Proxy verworfen — siehe Nachtrag unten)
+- [ ] Echter Tenant-weiter Graph-Live-Mode (Azure-Tenant-Token + App-Registration)
 - [ ] NL→Graph echte LLM-Bridge via idun-multi
 - [ ] Phase-7 justbash-Sandbox (pnpm-Bundle nur Desktop)
 
@@ -108,10 +115,10 @@ Push/Deploy zu GitHub Pages NUR auf Auftrag ("Bescheid"/"uebertragen").
 |-------|--------|-------|
 | macrohard: AudioGraph reset bei Track-Wechsel | 🔴 Offen | setupAudio() crasht wenn Song nicht geladen |
 | macrohard: Beatpad ohne Song | 🔴 Offen | eigener AudioContext nötig |
-| macrohard: Radio Progress springt | 🔴 Offen | duration=Infinity bei Streams |
-| macrohard: Visualizer doppelter Loop | 🔴 Offen | requestAnimationFrame dedupliziert |
+| macrohard: Radio Progress duration=Infinity | ✅ Behoben | isFinite-Guard zeigt „● LIVE" (app.js onTimeUpdate) |
+| macrohard: Visualizer doppelter Loop | ✅ Behoben | visRafId wird vor Neustart gecancelt (initVisualizer) |
 | Portal: catpop-Entwicklungs-Commits | 🟡 Lokal | Nicht gepusht, nicht push-pflichtig |
-| Phase 4 (Live-Mode, LLM-Bridge, Sandbox) | 🔴 Aufgeschoben | Wartet auf IGNITE |
+| Phase 4 (Live-Mode, LLM-Bridge, Sandbox) | 🟡 Teilweise | Direktaufruf erledigt 2026-10-05; Rest (Tenant-weit, LLM-Bridge, Sandbox) offen |
 
 ## 4. Wiederverwendbare Checks (lokál ausführbar)
 
@@ -149,7 +156,9 @@ curl -s -o /dev/null -w "%{http_code}" https://qapdex-maker.github.io/macrohard/
 - **Kolors:** Kobalt #2547ff, Gelb #ffd400, Paper #f1ede3
 - **Cache-Bust:** app.js?v=75, site.css?v=52 (Stand 2026-10-07; sw.js `macrohard-v2-11-55`)
 - **PWA:** sw.js stale-while-revalidate
-- **Tests:** 347/347 grün (`cd macrohard && npm test`)
+- **Tests:** macrohard 347/347 grün (`cd macrohard && npm test`),
+  msgraph/react 102/102 (`cd msgraph/react && node --test tests/*.test.mjs`),
+  jsmol 29/29 (`node --test tests/jsmol-pages.test.mjs`)
 - **Live:** https://qapdex-maker.github.io/macrohard/
 
 ## Nachtrag 2026-09-28 (verifiziert, nach Push freigegeben)
